@@ -90,6 +90,14 @@ class _InstancesList extends HookConsumerWidget {
       messenger.showSnackBar(SnackBar(content: const Text('Instance removed')));
     }
 
+    Future<void> handleDeleteAll() async {
+      final messenger = ScaffoldMessenger.of(context);
+      await db.managers.defguardInstances.delete();
+      messenger.showSnackBar(
+        SnackBar(content: const Text("All instances removed")),
+      );
+    }
+
     return asyncInstances.when(
       data: (instances) {
         if (instances.isEmpty) {
@@ -99,6 +107,21 @@ class _InstancesList extends HookConsumerWidget {
         return CustomScrollView(
           slivers: [
             SliverToBoxAdapter(child: SizedBox(height: DgSpacing.m)),
+            SliverToBoxAdapter(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                spacing: DgSpacing.s,
+                children: [
+                  ElevatedButton(
+                    onPressed: () {
+                      handleDeleteAll();
+                    },
+                    child: Text("Delete all instances"),
+                  ),
+                ],
+              ),
+            ),
+            SliverToBoxAdapter(child: SizedBox(height: DgSpacing.s)),
             SliverList.separated(
               itemCount: instances.length,
               separatorBuilder: (_, _) => SizedBox(height: DgSpacing.s),
@@ -119,7 +142,7 @@ class _InstancesList extends HookConsumerWidget {
 class _InstanceItem extends HookConsumerWidget {
   final DefguardInstance instance;
 
-  const _InstanceItem({super.key, required this.instance});
+  const _InstanceItem({required this.instance});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -141,7 +164,7 @@ class _InstanceItem extends HookConsumerWidget {
           ),
           child: Row(
             children: [
-              DgIconConnection(),
+              DgIconConnection(variant: DgIconConnectionVariant.disconnected),
               SizedBox(width: 18),
               LimitedText(text: instance.name, style: DgText.sideBar),
               SizedBox(width: 10),

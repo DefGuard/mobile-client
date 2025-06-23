@@ -1,21 +1,18 @@
 import 'dart:math' as math;
-import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+import 'package:mobile_client/open/widgets/icons/dg_icon.dart';
 import 'package:mobile_client/open/widgets/icons/icon_rotation.dart';
 
-class DgIconArrowSingle extends StatelessWidget {
-  final double width;
-  final double height;
+class DgIconArrowSingle extends DgIcon {
   final DgIconDirection direction;
 
-  const DgIconArrowSingle({
+  DgIconArrowSingle({
     super.key,
-    this.width = 24,
-    this.height = 24,
     this.direction = DgIconDirection.right,
-  });
+    super.asset = "assets/icons/arrow-single.svg",
+    super.size = 24,
+  }) : super(rotation: _getRotation(direction));
 
-  double _getRotation() {
+  static double _getRotation(DgIconDirection direction) {
     switch (direction) {
       case DgIconDirection.right:
         return 0;
@@ -28,17 +25,5 @@ class DgIconArrowSingle extends StatelessWidget {
         // TODO: Handle this case.
         throw UnimplementedError();
     }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Transform.rotate(
-      angle: _getRotation(),
-      child: SvgPicture.asset(
-        "assets/icons/arrow-single.svg",
-        width: width,
-        height: height,
-      ),
-    );
   }
 }

@@ -6,7 +6,7 @@ Future<void> deleteDbForDev() async {
   final directory = await getApplicationSupportDirectory();
   final dbPath = path.join(directory.path, 'defguard.sqlite');
   final dbFile = File(dbPath);
-  if(await dbFile.exists()) {
+  if (await dbFile.exists()) {
     await dbFile.delete();
     print("Local DB Deleted");
   }

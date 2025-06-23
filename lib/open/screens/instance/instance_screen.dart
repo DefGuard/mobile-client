@@ -77,7 +77,7 @@ class InstanceScreen extends HookConsumerWidget {
 class _ScreenContent extends HookConsumerWidget {
   final _ScreenData screenData;
 
-  const _ScreenContent({super.key, required this.screenData});
+  const _ScreenContent({required this.screenData});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -126,7 +126,7 @@ class _ScreenContent extends HookConsumerWidget {
 class _LocationItem extends HookConsumerWidget {
   final Location location;
 
-  const _LocationItem({super.key, required this.location});
+  const _LocationItem({required this.location});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

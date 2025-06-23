@@ -1,38 +1,27 @@
 import 'package:mobile_client/theme/color.dart';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+
+import 'dg_icon.dart';
 
 enum DgIconConnectionVariant { connected, disconnected }
 
-class DgIconConnection extends StatelessWidget {
-  final double width;
-  final double height;
+class DgIconConnection extends DgIcon {
   final DgIconConnectionVariant variant;
 
-  const DgIconConnection({
+  DgIconConnection({
     super.key,
-    this.variant = DgIconConnectionVariant.disconnected,
-    this.width = 24,
-    this.height = 24,
-  });
+    super.size = 24,
+    super.asset = "assets/icons/icon-connection.svg",
+    required this.variant,
+  }) : super(color: _getIconColor(variant));
 
-  Color _getIconColor() {
+  static Color _getIconColor(DgIconConnectionVariant variant) {
     switch (variant) {
-      case DgIconConnectionVariant.disconnected:
-        return DgColor.important;
       case DgIconConnectionVariant.connected:
         return DgColor.positivePrimary;
+      case DgIconConnectionVariant.disconnected:
+        return DgColor.important;
     }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return SvgPicture.asset(
-      "assets/icons/icon-connection.svg",
-      width: width,
-      height: height,
-      colorFilter: ColorFilter.mode(_getIconColor(), BlendMode.srcIn),
-    );
   }
 }

@@ -1,22 +1,30 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:mobile_client/data/proxy/qr_register.dart';
 import 'package:mobile_client/router/routes.dart';
 import 'package:mobile_client/theme.dart';
+import 'package:app_links/app_links.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(ProviderScope(child: MyApp()));
+  runApp(ProviderScope(child: _App()));
 }
 
-final _router = GoRouter(routes: $appRoutes);
+final _routerNavigatorKey = GlobalKey<NavigatorState>();
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class _App extends ConsumerWidget {
+  final _router = GoRouter(
+    routes: $appRoutes,
+    navigatorKey: _routerNavigatorKey,
+  );
 
-  // This widget is the root of your application.
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    ref.watch(_deepLinkProvider);
+
     return MaterialApp.router(
       routerConfig: _router,
       theme: defguardThemeData,
@@ -24,3 +32,46 @@ class MyApp extends StatelessWidget {
     );
   }
 }
+
+final _deepLinkProcessorProvider = Provider<void Function(Uri)>((ref) {
+  return (uri) {
+    if (uri.host == 'register') {
+      final encoded = uri.queryParameters['data'];
+      if (encoded == null) return;
+
+      try {
+        final jsonString = utf8.decode(base64Url.decode(encoded));
+        final data = QrInstanceRegistration.fromJson(jsonDecode(jsonString));
+
+        final ctx = _routerNavigatorKey.currentContext;
+        if (ctx != null) {
+          RegisterFromQrScreenRoute(data).go(ctx);
+        } else {
+          debugPrint("❗ Router context is not yet available.");
+        }
+      } catch (e) {
+        debugPrint("Invalid QR deep link: $e");
+      }
+    }
+  };
+});
+
+final _deepLinkProvider = Provider((ref) {
+  final appLinks = AppLinks();
+
+  // Listen to stream
+  appLinks.uriLinkStream.listen((uri) {
+    debugPrint("Link received from stream $uri");
+    ref.read(_deepLinkProcessorProvider)(uri);
+  });
+
+  // Handle initial link
+  appLinks.getInitialLink().then((uri) {
+    debugPrint("INITIAL Link received from stream $uri");
+    if (uri != null) {
+      ref.read(_deepLinkProcessorProvider)(uri);
+    }
+  });
+
+  return appLinks;
+});

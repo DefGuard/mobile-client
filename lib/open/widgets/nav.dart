@@ -121,6 +121,12 @@ class DgDrawer extends StatelessWidget {
                         AddInstanceScreenRoute().go(context);
                       },
                     ),
+                    _MenuButton(
+                      text: "Scan Instance",
+                      onPressed: () {
+                        ScanInstanceQrRoute().go(context);
+                      },
+                    ),
                   ],
                 ),
               ],
@@ -136,7 +142,7 @@ class _MenuButton extends StatelessWidget {
   final String text;
   final VoidCallback onPressed;
 
-  const _MenuButton({super.key, required this.text, required this.onPressed});
+  const _MenuButton({required this.text, required this.onPressed});
 
   @override
   Widget build(BuildContext context) {
@@ -163,7 +169,7 @@ class _MenuButton extends StatelessWidget {
 }
 
 class _IconX extends StatelessWidget {
-  const _IconX({super.key});
+  const _IconX();
 
   @override
   Widget build(BuildContext context) {
