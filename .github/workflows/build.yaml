@@ -1,0 +1,42 @@
+name: 'Build app'
+on:
+  push:
+    branches:
+      - main
+      - dev
+  pull_request:
+    branches:
+      - main
+      - dev
+
+jobs:
+  build:
+    runs-on: [self-hosted, macOS]
+    steps:
+      - uses: actions/checkout@4
+
+      - name: set flutter env
+        run: fvm use 3.32.4
+
+      - name: install deps
+        run: fvm flutter pub get
+
+      - name: build android
+        run: fvm flutter build apk
+
+      - name: build ios
+        run: fvm flutter build ipa --release --obfuscate --split-debug-info=build/debug-info
+
+      - name: upload android artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: android
+          retention-days: 14
+          path: build/app/outputs/apk/release/app-release.apk
+
+      - name: upload ios artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios
+          retention-days: 14
+          path: build/ios/ipa/*.ipa

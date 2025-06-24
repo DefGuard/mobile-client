@@ -8,7 +8,6 @@ import 'package:mobile_client/open/widgets/icons/icon_rotation.dart';
 import '../../../../theme/color.dart';
 import '../../../widgets/nav.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
-import 'package:mobile_client/data/db/database.dart';
 import 'package:mobile_client/data/proxy/enrollment.dart';
 import 'package:mobile_client/open/api.dart';
 import 'package:mobile_client/open/screens/add_instance/screens/name_device_screen.dart';
@@ -81,7 +80,6 @@ class _AddInstanceForm extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final db = ref.read(databaseProvider);
     final formKey = useMemoized(() => GlobalKey<FormState>());
     final urlController = useTextEditingController(
       text: "http://10.0.2.2:8080",

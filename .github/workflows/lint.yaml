@@ -1,0 +1,29 @@
+name: Flutter Lint
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+  pull_request:
+    branches:
+      - main
+      - dev
+
+jobs:
+  lint:
+    name: Lint project
+    runs-on: [ self-hosted, macOS ]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: setup flutter env
+        run: fvm use 3.32.4
+
+      - name: get deps
+        run: fvm flutter pub get
+
+      - name: run lint
+        run: fvm flutter analyze
