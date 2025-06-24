@@ -19,11 +19,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: setup flutter env
-        run: fvm use 3.32.4
+      - name: setup flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.32.4
 
       - name: get deps
-        run: fvm flutter pub get
+        run: flutter pub get
 
       - name: run lint
-        run: fvm flutter analyze
+        run: flutter analyze
