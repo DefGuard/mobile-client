@@ -27,6 +27,7 @@ jobs:
       - name: build ios
         run: fvm flutter build ipa --release --obfuscate --split-debug-info=build/debug-info
 
+
       - name: upload android artifact
         uses: actions/upload-artifact@v4
         with:
