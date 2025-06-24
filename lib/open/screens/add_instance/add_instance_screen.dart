@@ -28,6 +28,7 @@ class AddInstanceScreen extends StatelessWidget {
               text: "Scan QR Code",
               variant: DgButtonVariant.primary,
               size: DgButtonSize.big,
+              width: double.infinity,
               icon: DgIconQr(),
               onTap: () {
                 ScanInstanceQrRoute().go(context);
@@ -40,6 +41,7 @@ class AddInstanceScreen extends StatelessWidget {
               text: "Add instance Manually",
               variant: DgButtonVariant.secondary,
               size: DgButtonSize.big,
+              width: double.infinity,
               onTap: () {
                 AddInstanceFormScreenRoute().go(context);
               },

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mobile_client/data/db/database.dart';
+import 'package:mobile_client/open/widgets/buttons/dg_button.dart';
 import 'package:mobile_client/open/widgets/icons/arrow_single.dart';
 import 'package:mobile_client/open/widgets/icons/connection.dart';
 import 'package:mobile_client/open/widgets/icons/icon_rotation.dart';
@@ -87,18 +88,23 @@ class _ScreenContent extends HookConsumerWidget {
           child: Padding(
             padding: EdgeInsets.symmetric(
               vertical: DgSpacing.m,
-              horizontal: DgSpacing.s,
+              horizontal: DgSpacing.m,
             ),
             child: Column(
-              spacing: DgSpacing.s,
+              spacing: DgSpacing.m,
               children: [
-                ElevatedButton.icon(
-                  onPressed: () {
+                DgButton(
+                  width: double.infinity,
+                  variant: DgButtonVariant.secondary,
+                  size: DgButtonSize.standard,
+                  text: "Back to instances list",
+                  icon: DgIconArrowSingle(
+                    size: 18,
+                    direction: DgIconDirection.left,
+                  ),
+                  onTap: () {
                     HomeScreenRoute().go(context);
                   },
-                  label: Text("Back to instances list", style: DgText.buttonS),
-                  icon: DgIconArrowSingle(direction: DgIconDirection.left),
-                  iconAlignment: IconAlignment.start,
                 ),
                 Center(
                   child: Text(
@@ -132,23 +138,25 @@ class _LocationItem extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return Padding(
       padding: EdgeInsets.symmetric(vertical: 0, horizontal: DgSpacing.m),
-      child: InkWell(
-        child: Container(
-          constraints: BoxConstraints(minHeight: 64, maxHeight: 100),
-          padding: EdgeInsets.symmetric(vertical: 0, horizontal: DgSpacing.s),
-          decoration: BoxDecoration(
-            color: DgColor.navBg,
-            borderRadius: BorderRadius.all(Radius.circular(10)),
-          ),
-          child: Row(
-            spacing: 18,
-            children: <Widget>[
-              DgIconConnection(variant: DgIconConnectionVariant.disconnected),
-              LimitedText(text: location.name, style: DgText.sideBar),
-              Spacer(),
-              TextButton(onPressed: () {}, child: Text("Connect")),
-            ],
-          ),
+      child: Container(
+        constraints: BoxConstraints(minHeight: 64, maxHeight: 100),
+        padding: EdgeInsets.symmetric(vertical: 0, horizontal: DgSpacing.s),
+        decoration: BoxDecoration(
+          color: DgColor.navBg,
+          borderRadius: BorderRadius.all(Radius.circular(10)),
+        ),
+        child: Row(
+          spacing: 18,
+          children: <Widget>[
+            DgIconConnection(variant: DgIconConnectionVariant.disconnected),
+            LimitedText(text: location.name, style: DgText.sideBar),
+            Spacer(),
+            DgButton(
+              size: DgButtonSize.small,
+              variant: DgButtonVariant.secondary,
+              text: "Connect",
+            ),
+          ],
         ),
       ),
     );

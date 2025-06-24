@@ -5,6 +5,7 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mobile_client/data/db/database.dart';
+import 'package:mobile_client/open/widgets/buttons/dg_button.dart';
 import 'package:mobile_client/open/widgets/circular_progress.dart';
 import 'package:mobile_client/open/widgets/icons/arrow_single.dart';
 import 'package:mobile_client/open/widgets/icons/connection.dart';
@@ -42,30 +43,13 @@ class HomeScreen extends StatelessWidget {
         ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-      body: Container(color: DgColor.frameBg, child: _InstancesList()),
-    );
-  }
-}
-
-class _ClearButton extends HookConsumerWidget {
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final db = ref.read(databaseProvider);
-    final isLoading = useState(false);
-
-    Future<void> clearDb() async {
-      final messenger = ScaffoldMessenger.of(context);
-      isLoading.value = true;
-      await db.defguardInstances.deleteAll();
-      isLoading.value = false;
-      messenger.showSnackBar(
-        const SnackBar(content: Text("Instances deleted")),
-      );
-    }
-
-    return ElevatedButton(
-      onPressed: isLoading.value ? null : clearDb,
-      child: Text("Clear instances"),
+      body: Container(
+        color: DgColor.frameBg,
+        child: Padding(
+          padding: const EdgeInsets.all(DgSpacing.m),
+          child: _InstancesList(),
+        ),
+      ),
     );
   }
 }
@@ -107,19 +91,15 @@ class _InstancesList extends HookConsumerWidget {
 
         return CustomScrollView(
           slivers: [
-            SliverToBoxAdapter(child: SizedBox(height: DgSpacing.m)),
             SliverToBoxAdapter(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                spacing: DgSpacing.s,
-                children: [
-                  ElevatedButton(
-                    onPressed: () {
-                      handleDeleteAll();
-                    },
-                    child: Text("Delete all instances"),
-                  ),
-                ],
+              child: DgButton(
+                variant: DgButtonVariant.secondary,
+                size: DgButtonSize.big,
+                text: "Delete all instances",
+                width: double.infinity,
+                onTap: () {
+                  handleDeleteAll();
+                },
               ),
             ),
             SliverToBoxAdapter(child: SizedBox(height: DgSpacing.s)),
@@ -147,32 +127,29 @@ class _InstanceItem extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 0, horizontal: DgSpacing.m),
-      child: InkWell(
-        onTap: () {
-          InstanceScreenRoute(id: instance.id.toString()).go(context);
-        },
-        child: Container(
-          constraints: BoxConstraints(minHeight: 64, maxHeight: 100),
-          padding: EdgeInsetsDirectional.symmetric(
-            vertical: 0,
-            horizontal: DgSpacing.m,
-          ),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(10),
-            color: DgColor.navBg,
-          ),
-          child: Row(
-            children: [
-              DgIconConnection(variant: DgIconConnectionVariant.disconnected),
-              SizedBox(width: 18),
-              LimitedText(text: instance.name, style: DgText.sideBar),
-              SizedBox(width: 10),
-              Spacer(),
-              DgIconArrowSingle(),
-            ],
-          ),
+    return InkWell(
+      onTap: () {
+        InstanceScreenRoute(id: instance.id.toString()).go(context);
+      },
+      child: Container(
+        constraints: BoxConstraints(minHeight: 64, maxHeight: 100),
+        padding: EdgeInsetsDirectional.symmetric(
+          vertical: 0,
+          horizontal: DgSpacing.m,
+        ),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(10),
+          color: DgColor.navBg,
+        ),
+        child: Row(
+          children: [
+            DgIconConnection(variant: DgIconConnectionVariant.disconnected),
+            SizedBox(width: 18),
+            LimitedText(text: instance.name, style: DgText.sideBar),
+            SizedBox(width: 10),
+            Spacer(),
+            DgIconArrowSingle(),
+          ],
         ),
       ),
     );

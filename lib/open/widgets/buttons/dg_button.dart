@@ -20,16 +20,16 @@ class DgButton extends StatelessWidget {
   final DgButtonVariant variant;
   final DgButtonSize size;
   final double height;
-  final double width;
+  final double? width;
   final double spacing;
   final TextStyle textStyle;
   final bool disabled;
+  final double padding;
 
   const DgButton._({
     super.key,
     required this.text,
     required this.variant,
-    required this.width,
     required this.height,
     required this.borderRadius,
     required this.color,
@@ -37,6 +37,8 @@ class DgButton extends StatelessWidget {
     required this.textStyle,
     required this.size,
     required this.disabled,
+    required this.padding,
+    this.width,
     this.loading = false,
     this.icon,
     this.onTap,
@@ -50,11 +52,11 @@ class DgButton extends StatelessWidget {
     Color? color,
     Color? iconColor,
     double? spacing,
+    double? width,
     TextStyle? textStyle,
     onTap,
     bool loading = false,
     bool disabled = false,
-    double width = double.infinity,
     DgButtonSize size = DgButtonSize.standard,
   }) {
     double height;
@@ -64,22 +66,26 @@ class DgButton extends StatelessWidget {
     TextStyle textStyleInner;
     Color textColor;
     Color iconColorInner;
+    double padding;
 
     switch (size) {
       case DgButtonSize.big:
         height = 60;
         borderRadius = BorderRadius.all(Radius.circular(10));
         textStyleInner = DgText.buttonL;
+        padding = 48;
         break;
       case DgButtonSize.standard:
-        height = 42;
+        height = 40;
         borderRadius = BorderRadius.all(Radius.circular(10));
         textStyleInner = DgText.buttonS;
+        padding = DgSpacing.xs;
         break;
       case DgButtonSize.small:
         height = 32;
         borderRadius = BorderRadius.all(Radius.circular(8));
         textStyleInner = DgText.buttonXS;
+        padding = DgSpacing.xs;
         break;
     }
     if (textStyle != null) {
@@ -125,7 +131,6 @@ class DgButton extends StatelessWidget {
       loading: loading,
       icon: icon?.copyWith(color: iconColor ?? iconColorInner),
       onTap: onTap,
-      width: width,
       height: height,
       borderRadius: borderRadius,
       color: backgroundColor,
@@ -133,6 +138,8 @@ class DgButton extends StatelessWidget {
       textStyle: textStyleInner.copyWith(color: textColor),
       size: size,
       disabled: disabled,
+      padding: padding,
+      width: width,
     );
   }
 
@@ -199,11 +206,14 @@ class DgButton extends StatelessWidget {
           child: InkWell(
             onTap: isInteractive ? onTap : null,
             borderRadius: borderRadius,
-            child: Row(
-              spacing: spacing,
-              mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: _getRow(),
+            child: Padding(
+              padding: EdgeInsets.symmetric(vertical: 0, horizontal: padding),
+              child: Row(
+                spacing: spacing,
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: _getRow(),
+              ),
             ),
           ),
         ),

@@ -5,6 +5,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mobile_client/data/db/database.dart';
 import 'package:mobile_client/data/proxy/enrollment.dart';
 import 'package:mobile_client/open/screens/add_instance/generate_wireguard.dart';
+import 'package:mobile_client/open/widgets/buttons/dg_button.dart';
 import 'package:mobile_client/open/widgets/nav.dart';
 import 'package:mobile_client/router/routes.dart';
 import 'package:mobile_client/theme/color.dart';
@@ -89,50 +90,56 @@ class NameDeviceScreen extends HookConsumerWidget {
       drawer: DgDrawer(),
       body: Container(
         color: DgColor.frameBg,
-        child: Column(
-          children: [
-            Form(
-              key: formKey,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                spacing: DgSpacing.s,
-                children: [
-                  TextFormField(
-                    controller: nameController,
-                    decoration: const InputDecoration(
-                      labelText: 'Name',
-                      border: OutlineInputBorder(),
+        child: Padding(
+          padding: const EdgeInsets.all(DgSpacing.m),
+          child: Column(
+            children: [
+              Form(
+                key: formKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  spacing: DgSpacing.m,
+                  children: [
+                    TextFormField(
+                      controller: nameController,
+                      decoration: const InputDecoration(
+                        labelText: 'Name',
+                        border: OutlineInputBorder(),
+                      ),
                     ),
-                  ),
-                  ElevatedButton(
-                    onPressed: () async {
-                      final messenger = ScaffoldMessenger.of(context);
-                      try {
-                        final instanceName = await _handleRegistration(
-                          context,
-                          db,
-                          nameController.text.trim(),
-                        );
-                        messenger.showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              "Instance $instanceName registered successfully.",
+                    DgButton(
+                      variant: DgButtonVariant.primary,
+                      size: DgButtonSize.big,
+                      width: double.infinity,
+                      text: "Submit",
+                      onTap: () async {
+                        final messenger = ScaffoldMessenger.of(context);
+                        try {
+                          final instanceName = await _handleRegistration(
+                            context,
+                            db,
+                            nameController.text.trim(),
+                          );
+                          messenger.showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                "Instance $instanceName registered successfully.",
+                              ),
                             ),
-                          ),
-                        );
-                        if (context.mounted) {
-                          HomeScreenRoute().go(context);
+                          );
+                          if (context.mounted) {
+                            HomeScreenRoute().go(context);
+                          }
+                        } catch (e) {
+                          debugPrint("Registration failed, Reason:\n$e");
                         }
-                      } catch (e) {
-                        debugPrint("Registration failed, Reason:\n$e");
-                      }
-                    },
-                    child: Text("Submit"),
-                  ),
-                ],
+                      },
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
