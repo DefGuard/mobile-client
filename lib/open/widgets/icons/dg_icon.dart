@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
-import '../../../theme/color.dart';
-
 class DgIcon extends StatelessWidget {
-  final Color color;
+  final Color? color;
   final String asset;
   final double size;
   final double? rotation;
@@ -13,11 +11,16 @@ class DgIcon extends StatelessWidget {
     super.key,
     required this.size,
     required this.asset,
-    this.color = DgColor.iconPrimary,
+    this.color,
     this.rotation,
   });
 
-  DgIcon copyWith({Color? color, double? size, double? rotation}) {
+  DgIcon copyWith({
+    Color? color,
+    double? size,
+    double? rotation,
+    ColorMapper? colorMapper,
+  }) {
     return DgIcon(
       color: color ?? this.color,
       size: size ?? this.size,
@@ -26,13 +29,20 @@ class DgIcon extends StatelessWidget {
     );
   }
 
+  ColorMapper? getColorMapper() {
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
     Widget result = SvgPicture.asset(
       asset,
       height: size,
       width: size,
-      colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
+      colorFilter: color != null
+          ? ColorFilter.mode(color!, BlendMode.srcIn)
+          : null,
+      colorMapper: getColorMapper(),
     );
 
     if (rotation != null) {

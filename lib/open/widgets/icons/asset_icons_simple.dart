@@ -28,3 +28,12 @@ class DgIconPlus extends DgIcon {
     super.asset = "$_defaultPath/icon-plus.svg",
   });
 }
+
+class DgIconAsterisk extends DgIcon {
+  const DgIconAsterisk({
+    super.key,
+    super.size = 22,
+    super.asset = "$_defaultPath/icon-asterisk.svg",
+    super.color = DgColor.modalAccent,
+  });
+}

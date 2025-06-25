@@ -42,4 +42,9 @@ class DgText {
     fontSize: 10,
     fontWeight: FontWeight.w300,
   );
+  static TextStyle input = TextStyle(
+    fontFamily: _roboto,
+    fontSize: 15,
+    fontWeight: FontWeight.w400,
+  );
 }

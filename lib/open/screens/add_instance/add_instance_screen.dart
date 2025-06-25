@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_client/open/widgets/buttons/dg_button.dart';
+import 'package:mobile_client/open/widgets/dg_message_box.dart';
 import 'package:mobile_client/open/widgets/nav.dart';
 import 'package:mobile_client/router/routes.dart';
 import 'package:mobile_client/theme/color.dart';
@@ -22,7 +23,18 @@ class AddInstanceScreen extends StatelessWidget {
         child: Column(
           children: [
             SizedBox(height: 120),
-            Text("Please, enter instance URL", style: DgText.body1),
+            Text(
+              "Please, scan QR Code to add instance",
+              style: DgText.body1,
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: DgSpacing.l),
+            DgMessageBox(
+              variant: DgMessageBoxVariant.info,
+              width: double.infinity,
+              text:
+                  "To activate this device, you need to add your Defguard instance. You can Add a new device  in your Defguard profile, or, if you are completing the enrollment process, the instance details should already be displayed.",
+            ),
             SizedBox(height: DgSpacing.l),
             DgButton(
               text: "Scan QR Code",
