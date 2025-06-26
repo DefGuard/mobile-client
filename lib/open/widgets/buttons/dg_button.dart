@@ -6,7 +6,7 @@ import 'package:mobile_client/theme/text.dart';
 
 import '../icons/dg_icon.dart';
 
-enum DgButtonVariant { primary, secondary }
+enum DgButtonVariant { primary, secondary, alert }
 
 enum DgButtonSize { big, standard, small }
 
@@ -53,13 +53,14 @@ class DgButton extends StatelessWidget {
     Color? iconColor,
     double? spacing,
     double? width,
+    double? height,
     TextStyle? textStyle,
     onTap,
     bool loading = false,
     bool disabled = false,
     DgButtonSize size = DgButtonSize.standard,
   }) {
-    double height;
+    double heightInner;
     BorderRadius borderRadius;
     Color backgroundColor;
     double spacingInner;
@@ -70,19 +71,19 @@ class DgButton extends StatelessWidget {
 
     switch (size) {
       case DgButtonSize.big:
-        height = 60;
+        heightInner = 60;
         borderRadius = BorderRadius.all(Radius.circular(10));
         textStyleInner = DgText.buttonL;
         padding = 48;
         break;
       case DgButtonSize.standard:
-        height = 40;
+        heightInner = 40;
         borderRadius = BorderRadius.all(Radius.circular(10));
         textStyleInner = DgText.buttonS;
         padding = DgSpacing.xs;
         break;
       case DgButtonSize.small:
-        height = 32;
+        heightInner = 32;
         borderRadius = BorderRadius.all(Radius.circular(8));
         textStyleInner = DgText.buttonXS;
         padding = DgSpacing.xs;
@@ -113,6 +114,16 @@ class DgButton extends StatelessWidget {
         }
         iconColorInner = DgColor.iconPrimary;
         textColor = DgColor.textButtonPrimary;
+        break;
+      case DgButtonVariant.alert:
+        if (color == null) {
+          backgroundColor = DgColor.alertPrimary;
+        } else {
+          backgroundColor = color;
+        }
+        iconColorInner = DgColor.iconSecondary;
+        textColor = DgColor.textButtonSecondary;
+        break;
     }
     if (spacing == null) {
       if (size == DgButtonSize.small) {
@@ -131,7 +142,7 @@ class DgButton extends StatelessWidget {
       loading: loading,
       icon: icon?.copyWith(color: iconColor ?? iconColorInner),
       onTap: onTap,
-      height: height,
+      height: height ?? heightInner,
       borderRadius: borderRadius,
       color: backgroundColor,
       spacing: spacingInner,
@@ -176,6 +187,9 @@ class DgButton extends StatelessWidget {
           break;
         case DgButtonVariant.secondary:
           iconColor = DgColor.iconPrimary;
+          break;
+        case DgButtonVariant.alert:
+          iconColor = DgColor.iconSecondary;
           break;
       }
       return [

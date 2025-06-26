@@ -37,3 +37,28 @@ class DgIconAsterisk extends DgIcon {
     super.color = DgColor.modalAccent,
   });
 }
+
+class DgIconRadio extends DgIcon {
+  const DgIconRadio({
+    super.key,
+    super.size = 18,
+    super.asset = "$_defaultPath/radio.svg",
+  });
+}
+
+class DgIconRadioActive extends DgIcon {
+  const DgIconRadioActive({
+    super.key,
+    super.size = 18,
+    super.asset = "$_defaultPath/radio-active.svg",
+  });
+}
+
+class DgIconCheckmark extends DgIcon {
+  const DgIconCheckmark({
+    super.key,
+    super.size = 18,
+    super.asset = "$_defaultPath/checkmark.svg",
+    super.color = DgColor.iconSecondary,
+  });
+}

@@ -14,6 +14,7 @@ List<RouteBase> get $appRoutes => [
   $addInstanceFormScreenRoute,
   $addInstanceScreenRoute,
   $registerFromQrScreenRoute,
+  $talkerScreenRoute,
 ];
 
 RouteBase get $homeScreenRoute =>
@@ -211,4 +212,31 @@ mixin _$RegisterFromQrScreenRoute on GoRouteData {
   @override
   void replace(BuildContext context) =>
       context.replace(location, extra: _self.$extra);
+}
+
+RouteBase get $talkerScreenRoute => GoRouteData.$route(
+  path: '/talker',
+
+  factory: _$TalkerScreenRoute._fromState,
+);
+
+mixin _$TalkerScreenRoute on GoRouteData {
+  static TalkerScreenRoute _fromState(GoRouterState state) =>
+      TalkerScreenRoute();
+
+  @override
+  String get location => GoRouteData.$location('/talker');
+
+  @override
+  void go(BuildContext context) => context.go(location);
+
+  @override
+  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
+
+  @override
+  void pushReplacement(BuildContext context) =>
+      context.pushReplacement(location);
+
+  @override
+  void replace(BuildContext context) => context.replace(location);
 }

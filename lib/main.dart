@@ -1,12 +1,15 @@
 import 'dart:convert';
 
+import 'package:app_links/app_links.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile_client/data/proxy/qr_register.dart';
 import 'package:mobile_client/router/routes.dart';
 import 'package:mobile_client/theme.dart';
-import 'package:app_links/app_links.dart';
+import 'package:talker_flutter/talker_flutter.dart';
+
+final talker = TalkerFlutter.init();
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();

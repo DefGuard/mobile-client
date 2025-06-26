@@ -49,6 +49,7 @@ class DgColor {
   static const Color borderPrimary = _Primitive.greyscale20;
   static const Color borderAlert = _Primitive.error;
   static const Color borderSeparator = _Primitive.greyscale40;
+  static const Color borderSeparator2 = Color(0xffd9d9d9);
   static const Color borderSecondary = _Primitive.greyscale20;
 
   // Surface

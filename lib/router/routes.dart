@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile_client/data/proxy/qr_register.dart';
+import 'package:mobile_client/main.dart';
 import 'package:mobile_client/open/screens/add_instance/add_instance_screen.dart';
 import 'package:mobile_client/open/screens/add_instance/screens/add_instance_form.dart';
+import 'package:mobile_client/open/screens/add_instance/screens/name_device_screen.dart';
 import 'package:mobile_client/open/screens/add_instance/screens/register_from_qr_screen.dart';
 import 'package:mobile_client/open/screens/add_instance/screens/scan_qr_screen.dart';
 import 'package:mobile_client/open/screens/home/home_screen.dart';
 import 'package:mobile_client/open/screens/instance/instance_screen.dart';
-import 'package:mobile_client/open/screens/add_instance/screens/name_device_screen.dart';
+import 'package:talker_flutter/talker_flutter.dart';
 
 part 'routes.g.dart';
 
@@ -89,5 +91,14 @@ class RegisterFromQrScreenRoute extends GoRouteData
   @override
   Widget build(BuildContext context, GoRouterState state) {
     return RegisterFromQrScreen(instanceRegistration: $extra);
+  }
+}
+
+@TypedGoRoute<TalkerScreenRoute>(path: "/talker")
+@immutable
+class TalkerScreenRoute extends GoRouteData with _$TalkerScreenRoute {
+  @override
+  Widget build(BuildContext context, GoRouterState state) {
+    return TalkerScreen(talker: talker);
   }
 }

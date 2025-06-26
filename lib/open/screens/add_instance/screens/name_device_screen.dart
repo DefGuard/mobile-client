@@ -6,6 +6,7 @@ import 'package:mobile_client/data/db/database.dart';
 import 'package:mobile_client/data/proxy/enrollment.dart';
 import 'package:mobile_client/open/screens/add_instance/generate_wireguard.dart';
 import 'package:mobile_client/open/widgets/buttons/dg_button.dart';
+import 'package:mobile_client/open/widgets/dg_text_form_field.dart';
 import 'package:mobile_client/open/widgets/nav.dart';
 import 'package:mobile_client/router/routes.dart';
 import 'package:mobile_client/theme/color.dart';
@@ -97,15 +98,13 @@ class NameDeviceScreen extends HookConsumerWidget {
               Form(
                 key: formKey,
                 child: Column(
-                  mainAxisSize: MainAxisSize.min,
+                  mainAxisSize: MainAxisSize.max,
+                  mainAxisAlignment: MainAxisAlignment.center,
                   spacing: DgSpacing.m,
                   children: [
-                    TextFormField(
+                    DgTextFormField(
                       controller: nameController,
-                      decoration: const InputDecoration(
-                        labelText: 'Name',
-                        border: OutlineInputBorder(),
-                      ),
+                      hintText: "Name",
                     ),
                     DgButton(
                       variant: DgButtonVariant.primary,

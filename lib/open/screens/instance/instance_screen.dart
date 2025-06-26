@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mobile_client/data/db/database.dart';
+import 'package:mobile_client/open/screens/instance/widgets/connect_dialog.dart';
+import 'package:mobile_client/open/screens/instance/widgets/delete_instance_dialog.dart';
 import 'package:mobile_client/open/widgets/buttons/dg_button.dart';
 import 'package:mobile_client/open/widgets/icons/arrow_single.dart';
 import 'package:mobile_client/open/widgets/icons/connection.dart';
@@ -62,7 +64,10 @@ class InstanceScreen extends HookConsumerWidget {
               });
               return SizedBox();
             }
-            return _ScreenContent(screenData: screenData);
+            return _ScreenContent(
+              screenData: screenData,
+              instance: screenData.instance,
+            );
           },
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (err, _) {
@@ -77,8 +82,9 @@ class InstanceScreen extends HookConsumerWidget {
 
 class _ScreenContent extends HookConsumerWidget {
   final _ScreenData screenData;
+  final DefguardInstance instance;
 
-  const _ScreenContent({required this.screenData});
+  const _ScreenContent({required this.screenData, required this.instance});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -124,6 +130,46 @@ class _ScreenContent extends HookConsumerWidget {
             return _LocationItem(location: location);
           },
         ),
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: EdgeInsets.only(
+              top: DgSpacing.s,
+              left: DgSpacing.l,
+              right: DgSpacing.l,
+            ),
+            child: Container(
+              constraints: BoxConstraints(minHeight: 48),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: GestureDetector(
+                  onTap: () {
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return DeleteInstanceDialog(instance: instance);
+                      },
+                    );
+                  },
+                  child: Container(
+                    decoration: BoxDecoration(
+                      border: Border(
+                        bottom: BorderSide(
+                          width: 0.5,
+                          color: DgColor.textAlert,
+                        ),
+                      ),
+                    ),
+                    child: Text(
+                      "Delete This Instance",
+                      style: DgText.buttonXS.copyWith(color: DgColor.textAlert),
+                      textAlign: TextAlign.left,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
       ],
     );
   }
@@ -155,6 +201,14 @@ class _LocationItem extends HookConsumerWidget {
               size: DgButtonSize.small,
               variant: DgButtonVariant.secondary,
               text: "Connect",
+              onTap: () {
+                showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return const ConnectDialog();
+                  },
+                );
+              },
             ),
           ],
         ),
