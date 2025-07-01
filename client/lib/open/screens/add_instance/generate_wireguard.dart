@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:cryptography_plus/cryptography_plus.dart';
-import 'package:mobile_client/data/proxy/enrollment.dart';
+import 'package:mobile/data/proxy/enrollment.dart';
 
 Future<WireguardEncodedKeyPair> generateWireguardKeyPair() async {
   final algorithm = X25519();

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:mobile_client/theme/color.dart';
+import 'package:mobile/theme/color.dart';
 
 class DgCircularProgress extends StatelessWidget {
   final Color color;

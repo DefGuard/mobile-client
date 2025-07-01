@@ -1,4 +1,4 @@
-import 'package:mobile_client/data/plugin/plugin.dart';
+import 'package:mobile/data/plugin/plugin.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'plugin.g.dart';

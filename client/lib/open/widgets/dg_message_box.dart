@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:mobile_client/open/widgets/icons/icon_info.dart';
-import 'package:mobile_client/theme/color.dart';
-import 'package:mobile_client/theme/spacing.dart';
-import 'package:mobile_client/theme/text.dart';
+import 'package:mobile/open/widgets/icons/icon_info.dart';
+import 'package:mobile/theme/color.dart';
+import 'package:mobile/theme/spacing.dart';
+import 'package:mobile/theme/text.dart';
 
 enum DgMessageBoxVariant { info, infoOutlined, important, alert }
 

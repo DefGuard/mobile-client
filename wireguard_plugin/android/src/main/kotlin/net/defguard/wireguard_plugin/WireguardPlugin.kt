@@ -160,7 +160,7 @@ class WireguardPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
     private fun emitEvent(eventType: WireguardPluginEvent, data: String?) {
         scope.launch(Dispatchers.Main) {
             val message = mapOf(
-                "event" to eventType,
+                "event" to eventType.value,
                 "data" to data
             )
             eventSink?.success(message)
@@ -244,7 +244,10 @@ class WireguardPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
                 activeTunnel = tunnel
                 activeLocationId = configData.locationId
                 activeInstanceId = configData.instanceId
-                updateTunnelStatusWithState(state = Tunnel.State.UP)
+
+                // send event
+                val eventData = TunnelEventData(locationId = configData.locationId, instanceId = configData.instanceId);
+                emitEvent(WireguardPluginEvent.TUNNEL_UP, json.encodeToString(eventData));
 
                 result.success(null)
 

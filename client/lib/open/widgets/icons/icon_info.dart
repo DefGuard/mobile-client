@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:mobile_client/theme/color.dart';
+import 'package:mobile/theme/color.dart';
 
 import 'dg_icon.dart';
 

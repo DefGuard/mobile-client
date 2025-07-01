@@ -7,7 +7,9 @@ import 'wireguard_plugin_platform_interface.dart';
 class MethodChannelWireguardPlugin extends WireguardPluginPlatform {
   /// The method channel used to interact with the native platform.
   @visibleForTesting
-  final methodChannel = const MethodChannel('wireguard_plugin');
+  final methodChannel = const MethodChannel(
+    'net.defguard.wireguard_plugin/channel',
+  );
 
   static const EventChannel _eventChannel = EventChannel(
     'net.defguard.wireguard_plugin/event',
@@ -26,7 +28,7 @@ class MethodChannelWireguardPlugin extends WireguardPluginPlatform {
 
   @override
   Future<void> closeTunnel() async {
-    await methodChannel.invokeMethod('closeMethod');
+    await methodChannel.invokeMethod('closeTunnel');
   }
 
   @override
