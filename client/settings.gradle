@@ -1,0 +1,2 @@
+include ':wireguard_plugin_android'
+project(':wireguard_plugin_android').projectDir = new File(rootDir, 'plugins/wireguard_plugin/android/build.gradle')
