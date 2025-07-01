@@ -4,6 +4,7 @@ on:
     branches:
       - main
       - dev
+      - wireguard-plugin
   pull_request:
     branches:
       - main
@@ -12,6 +13,9 @@ on:
 jobs:
   build-ios:
     runs-on: [self-hosted, macOS]
+    defaults:
+      run:
+        working-directory: ./client
     steps:
       - uses: actions/checkout@v4
 
@@ -20,6 +24,9 @@ jobs:
         with:
           channel: stable
           flutter-version: 3.32.4
+
+      - name: check flutter state
+        run: flutter doctor
 
       - name: install deps
         run: flutter pub get
@@ -32,7 +39,7 @@ jobs:
         with:
           name: ios
           retention-days: 14
-          path: build/ios/ipa/*.ipa
+          path: client/build/ios/ipa/*.ipa
 
   build-android:
     runs-on: [self-hosted, macOS]
