@@ -4,6 +4,7 @@ on:
     branches:
       - main
       - dev
+      - wireguard-plugin
   pull_request:
     branches:
       - main
