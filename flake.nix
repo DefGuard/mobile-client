@@ -75,8 +75,16 @@
             androidSdk # The customized SDK that we've made above
             jdk17
           ];
+          packages = [
+            emulatorPkg
+          ];
           shellHook = ''
             export PATH=${flutterDevPkg.outPath}/bin:$PATH
+            export _JAVA_AWT_WM_NONREPARENTING=1
+            export AWT_TOOLKIT=MToolkit
+            export GDK_BACKEND=x11
+            export LANG=en_US.UTF-8
+            export QT_QPA_PLATFORM=xcb
           '';
         };
     });
