@@ -13,6 +13,9 @@ on:
 jobs:
   build-ios:
     runs-on: [self-hosted, macOS]
+    defaults:
+      run:
+        working-directory: ./client
     steps:
       - uses: actions/checkout@v4
 
@@ -33,7 +36,7 @@ jobs:
         with:
           name: ios
           retention-days: 14
-          path: build/ios/ipa/*.ipa
+          path: client/build/ios/ipa/*.ipa
 
   build-android:
     runs-on: [self-hosted, macOS]
