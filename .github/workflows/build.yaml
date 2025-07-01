@@ -25,6 +25,9 @@ jobs:
           channel: stable
           flutter-version: 3.32.4
 
+      - name: check flutter state
+        run: flutter doctor
+
       - name: install deps
         run: flutter pub get
 
