@@ -4,11 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mobile_client/data/plugin/plugin.dart';
-import 'package:mobile_client/main.dart';
 import 'package:mobile_client/open/widgets/buttons/dg_button.dart';
 import 'package:mobile_client/open/widgets/dg_message_box.dart';
 import 'package:mobile_client/open/widgets/dg_radio_box.dart';
 import 'package:mobile_client/open/widgets/dg_separator.dart';
+import 'package:mobile_client/plugin.dart';
 import 'package:mobile_client/theme/color.dart';
 import 'package:mobile_client/theme/spacing.dart';
 import 'package:mobile_client/theme/text.dart';
@@ -30,6 +30,7 @@ class ConnectDialog extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final wireguardPlugin = ref.watch(wireguardPluginProvider);
     final connectionType = useState(_ConnectionType.predefined);
     final connecting = useState(false);
 
@@ -99,7 +100,6 @@ class ConnectDialog extends HookConsumerWidget {
                         } finally {
                           connecting.value = false;
                         }
-
                         if (context.mounted) {
                           Navigator.of(context).pop();
                         }

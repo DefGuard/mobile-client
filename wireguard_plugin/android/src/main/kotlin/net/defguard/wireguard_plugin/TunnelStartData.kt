@@ -1,5 +1,4 @@
 package net.defguard.wireguard_plugin
-import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.Serializable
 
 @Serializable

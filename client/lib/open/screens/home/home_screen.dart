@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mobile_client/data/db/database.dart';
+import 'package:mobile_client/open/riverpod/plugin/plugin.dart';
 import 'package:mobile_client/open/widgets/buttons/dg_button.dart';
 import 'package:mobile_client/open/widgets/circular_progress.dart';
 import 'package:mobile_client/open/widgets/icons/arrow_single.dart';
@@ -65,6 +66,7 @@ class _InstancesList extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final db = ref.read(databaseProvider);
     final asyncInstances = ref.watch(allInstancesProvider);
+    final activeTunnel = ref.watch(pluginActiveTunnelStateProvider);
 
     Future<void> handleDelete(int instanceId) async {
       final messenger = ScaffoldMessenger.of(context);
@@ -107,7 +109,13 @@ class _InstancesList extends HookConsumerWidget {
               separatorBuilder: (_, _) => SizedBox(height: DgSpacing.s),
               itemBuilder: (BuildContext context, int index) {
                 final instance = instances[index];
-                return _InstanceItem(instance: instance);
+                final bool isConnected;
+                if(activeTunnel != null) {
+                  isConnected = instance.id == activeTunnel.instanceId;
+                } else {
+                  isConnected = false;
+                }
+                return _InstanceItem(instance: instance, isConnected: isConnected,);
               },
             ),
           ],
@@ -121,8 +129,9 @@ class _InstancesList extends HookConsumerWidget {
 
 class _InstanceItem extends HookConsumerWidget {
   final DefguardInstance instance;
+  final bool isConnected;
 
-  const _InstanceItem({required this.instance});
+  const _InstanceItem({required this.instance, required this.isConnected});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -142,7 +151,7 @@ class _InstanceItem extends HookConsumerWidget {
         ),
         child: Row(
           children: [
-            DgIconConnection(variant: DgIconConnectionVariant.disconnected),
+            DgIconConnection(variant: isConnected ? DgIconConnectionVariant.connected : DgIconConnectionVariant.disconnected),
             SizedBox(width: 18),
             LimitedText(text: instance.name, style: DgText.sideBar),
             SizedBox(width: 10),

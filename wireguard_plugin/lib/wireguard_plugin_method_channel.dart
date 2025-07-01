@@ -9,6 +9,10 @@ class MethodChannelWireguardPlugin extends WireguardPluginPlatform {
   @visibleForTesting
   final methodChannel = const MethodChannel('wireguard_plugin');
 
+  static const EventChannel _eventChannel = EventChannel(
+    'net.defguard.wireguard_plugin/event',
+  );
+
   @override
   Future<bool> requestPermissions() async {
     final result = await methodChannel.invokeMethod<bool>('requestPermissions');
@@ -16,11 +20,17 @@ class MethodChannelWireguardPlugin extends WireguardPluginPlatform {
   }
 
   @override
-  Future<bool> startTunnel(String config) async {
-    final result = await methodChannel.invokeMethod<bool>(
-      'startTunnel',
-      config,
-    );
-    return result ?? false;
+  Future<void> startTunnel(String config) async {
+    await methodChannel.invokeMethod('startTunnel', config);
   }
+
+  @override
+  Future<void> closeTunnel() async {
+    await methodChannel.invokeMethod('closeMethod');
+  }
+
+  @override
+  Stream<Map<String, dynamic>> get eventStream => _eventChannel
+      .receiveBroadcastStream()
+      .map((dynamic event) => Map<String, dynamic>.from(event as Map));
 }

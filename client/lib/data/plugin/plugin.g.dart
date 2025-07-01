@@ -67,3 +67,30 @@ Map<String, dynamic> _$PluginConnectPayloadToJson(
   'location_id': instance.locationId,
   'instance_id': instance.instanceId,
 };
+
+PluginTunnelEventData _$PluginTunnelEventDataFromJson(
+  Map<String, dynamic> json,
+) => $checkedCreate(
+  'PluginTunnelEventData',
+  json,
+  ($checkedConvert) {
+    final val = PluginTunnelEventData(
+      instanceId: $checkedConvert('instance_id', (v) => (v as num).toInt()),
+      locationId: $checkedConvert('location_id', (v) => (v as num).toInt()),
+    );
+    return val;
+  },
+  fieldKeyMap: const {'instanceId': 'instance_id', 'locationId': 'location_id'},
+);
+
+const _$PluginTunnelEventDataFieldMap = <String, String>{
+  'instanceId': 'instance_id',
+  'locationId': 'location_id',
+};
+
+Map<String, dynamic> _$PluginTunnelEventDataToJson(
+  PluginTunnelEventData instance,
+) => <String, dynamic>{
+  'instance_id': instance.instanceId,
+  'location_id': instance.locationId,
+};

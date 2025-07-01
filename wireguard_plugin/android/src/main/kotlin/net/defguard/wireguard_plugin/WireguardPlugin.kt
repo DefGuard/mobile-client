@@ -49,7 +49,7 @@ class WireguardPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
     private lateinit var channel: MethodChannel
     private var havePermission = false
     private var activity: Activity? = null
-    private var pendingResult: MethodChannel.Result? = null
+    private var pendingResult: Result? = null
     private lateinit var eventChannel: EventChannel
     private var eventSink: EventChannel.EventSink? = null
     private var activeTunnel: Tunnel? = null
@@ -73,7 +73,7 @@ class WireguardPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
             }
         }
         channel.setMethodCallHandler(this)
-        eventChannel.setStreamHandler(object: EventChannel.StreamHandler {
+        eventChannel.setStreamHandler(object : EventChannel.StreamHandler {
             override fun onListen(arguments: Any?, events: EventChannel.EventSink?) {
                 eventSink = events
             }
@@ -121,19 +121,36 @@ class WireguardPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
                 }
             }
 
+            "closeTunnel" -> {
+                if (activeTunnel != null) {
+                    scope.launch(Dispatchers.IO) {
+                        activeTunnel?.let {
+                            closeTunnel(it);
+                            result.success(null);
+                        }
+                    }
+                } else {
+                    result.error(
+                        "TUNNEL_NOT_RUNNING",
+                        "Error disconnect command sent when no tunnel was active",
+                        null
+                    );
+                }
+            }
+
             else -> result.notImplemented()
         }
     }
 
     private fun createBackend(): GoBackend {
-        if(backend == null) {
+        if (backend == null) {
             backend = GoBackend(context);
         }
         return backend as GoBackend;
     }
 
     private fun getActiveTunnelContext(): TunnelEventData? {
-        if(activeLocationId != null && activeInstanceId != null) {
+        if (activeLocationId != null && activeInstanceId != null) {
             val data = TunnelEventData(activeInstanceId!!, activeLocationId!!);
             return data;
         }
@@ -150,10 +167,10 @@ class WireguardPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
         }
     }
 
-    private fun updateTunnelStatusWithState(status: Tunnel.State) {
+    private fun updateTunnelStatusWithState(state: Tunnel.State) {
         scope.launch(Dispatchers.Main) {
-            val eventData: String? = getActiveTunnelContext()?.let {Json.encodeToString(it)};
-            when (status) {
+            val eventData: String? = getActiveTunnelContext()?.let { Json.encodeToString(it) };
+            when (state) {
                 Tunnel.State.UP -> emitEvent(WireguardPluginEvent.TUNNEL_UP, eventData)
                 Tunnel.State.DOWN -> emitEvent(WireguardPluginEvent.TUNNEL_DOWN, eventData)
                 Tunnel.State.TOGGLE -> emitEvent(WireguardPluginEvent.TUNNEL_WAITING, eventData)
@@ -161,7 +178,7 @@ class WireguardPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
         }
     }
 
-    private fun requestPermissions(result: MethodChannel.Result) {
+    private fun requestPermissions(result: Result) {
         if (havePermission) {
             result.success(true)
         } else {
@@ -178,28 +195,32 @@ class WireguardPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
         }
     }
 
-    private fun startTunnel(configData: TunnelStartData, result: MethodChannel.Result) {
+    private suspend fun closeTunnel(tunnel: Tunnel) {
+        futureBackend.await().setState(tunnel, Tunnel.State.DOWN, null)
+        activeInstanceId = null
+        activeLocationId = null
+        activeTunnel = null
+        updateTunnelStatusWithState(state = Tunnel.State.DOWN)
+    }
+
+    private fun startTunnel(configData: TunnelStartData, result: Result) {
         scope.launch(Dispatchers.IO) {
             try {
-
                 // Stop previous tunnel if one is running
                 activeTunnel?.let {
-                    futureBackend.await().setState(it, Tunnel.State.DOWN, null)
+                    closeTunnel(it);
                 }
 
-                // Build Interface config
                 val interfaceBuilder = Interface.Builder()
                     .parsePrivateKey(configData.privateKey)
                     .parseAddresses(configData.address)
 
-                // set DNS for interface
                 if (!configData.dns.isNullOrBlank()) {
                     interfaceBuilder.parseDnsServers(configData.dns)
                 }
 
                 val iface = interfaceBuilder.build()
 
-                // Build Peer config
                 val peerBuilder = Peer.Builder()
                     .parsePublicKey(configData.publicKey)
                     .parseEndpoint(configData.endpoint)
@@ -214,18 +235,18 @@ class WireguardPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
 
                 val tunnel = SimpleTunnel("dg0")
 
-                // Compose full config
                 val config = Config.Builder()
                     .setInterface(iface)
                     .addPeer(peer)
                     .build()
 
-                // Use locationName as the tunnel identifier
                 futureBackend.await().setState(tunnel, Tunnel.State.UP, config)
-
                 activeTunnel = tunnel
+                activeLocationId = configData.locationId
+                activeInstanceId = configData.instanceId
+                updateTunnelStatusWithState(state = Tunnel.State.UP)
 
-                result.success(true)
+                result.success(null)
 
             } catch (e: Exception) {
                 e.printStackTrace()

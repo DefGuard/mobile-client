@@ -8,11 +8,8 @@ import 'package:mobile_client/data/proxy/qr_register.dart';
 import 'package:mobile_client/router/routes.dart';
 import 'package:mobile_client/theme.dart';
 import 'package:talker_flutter/talker_flutter.dart';
-import 'package:wireguard_plugin/wireguard_plugin.dart';
 
 final talker = TalkerFlutter.init();
-
-final wireguardPlugin = WireguardPlugin();
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();

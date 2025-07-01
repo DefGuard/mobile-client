@@ -27,7 +27,9 @@ abstract class WireguardPluginPlatform extends PlatformInterface {
   Future<bool> requestPermissions();
 
   // starts wireguard tunnel via given config
-  Future<bool> startTunnel(String config);
+  Future<void> startTunnel(String config);
+
+  Future<void> closeTunnel();
 
   Stream<Map<String, dynamic>> get eventStream {
     throw UnimplementedError('eventStream has not been implemented.');
