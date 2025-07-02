@@ -47,5 +47,7 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NsCameraUsageDescription</key>
+	<string>Your camera is used to scan QR codes making it easy to add new VPN instances.</string>
 </dict>
 </plist>
