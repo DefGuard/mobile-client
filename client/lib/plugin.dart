@@ -25,7 +25,12 @@ class PluginEventRouter extends StateNotifier<void> {
   }
 
   void handleEvent(String event, Map<String, dynamic>? data) {
-    talker.debug("Event $event received by event router");
+    talker.debug("EventRouter Event $event received by event router");
+    if (data != null) {
+      talker.debug("EventRouter: Data received: $data");
+    } else {
+      talker.debug("Event had no data");
+    }
     switch (event) {
       case "tunnel_down":
         ref.read(pluginActiveTunnelStateProvider.notifier).clear();

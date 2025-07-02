@@ -22,6 +22,10 @@ PluginConnectPayload _$PluginConnectPayloadFromJson(
       locationName: $checkedConvert('location_name', (v) => v as String),
       locationId: $checkedConvert('location_id', (v) => (v as num).toInt()),
       instanceId: $checkedConvert('instance_id', (v) => (v as num).toInt()),
+      traffic: $checkedConvert(
+        'traffic',
+        (v) => $enumDecode(_$TunnelTrafficEnumMap, v),
+      ),
       dns: $checkedConvert('dns', (v) => v as String?),
       presharedKey: $checkedConvert('preshared_key', (v) => v as String?),
     );
@@ -50,6 +54,7 @@ const _$PluginConnectPayloadFieldMap = <String, String>{
   'locationName': 'location_name',
   'locationId': 'location_id',
   'instanceId': 'instance_id',
+  'traffic': 'traffic',
 };
 
 Map<String, dynamic> _$PluginConnectPayloadToJson(
@@ -66,6 +71,12 @@ Map<String, dynamic> _$PluginConnectPayloadToJson(
   'location_name': instance.locationName,
   'location_id': instance.locationId,
   'instance_id': instance.instanceId,
+  'traffic': _$TunnelTrafficEnumMap[instance.traffic]!,
+};
+
+const _$TunnelTrafficEnumMap = {
+  TunnelTraffic.all: 'all',
+  TunnelTraffic.predefined: 'predefined',
 };
 
 PluginTunnelEventData _$PluginTunnelEventDataFromJson(
@@ -77,6 +88,10 @@ PluginTunnelEventData _$PluginTunnelEventDataFromJson(
     final val = PluginTunnelEventData(
       instanceId: $checkedConvert('instance_id', (v) => (v as num).toInt()),
       locationId: $checkedConvert('location_id', (v) => (v as num).toInt()),
+      traffic: $checkedConvert(
+        'traffic',
+        (v) => $enumDecode(_$TunnelTrafficEnumMap, v),
+      ),
     );
     return val;
   },
@@ -86,6 +101,7 @@ PluginTunnelEventData _$PluginTunnelEventDataFromJson(
 const _$PluginTunnelEventDataFieldMap = <String, String>{
   'instanceId': 'instance_id',
   'locationId': 'location_id',
+  'traffic': 'traffic',
 };
 
 Map<String, dynamic> _$PluginTunnelEventDataToJson(
@@ -93,4 +109,5 @@ Map<String, dynamic> _$PluginTunnelEventDataToJson(
 ) => <String, dynamic>{
   'instance_id': instance.instanceId,
   'location_id': instance.locationId,
+  'traffic': _$TunnelTrafficEnumMap[instance.traffic]!,
 };

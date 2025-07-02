@@ -117,12 +117,12 @@ class $DefguardInstancesTable extends DefguardInstances
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _privKeyMeta = const VerificationMeta(
-    'privKey',
+  static const VerificationMeta _privateKeyMeta = const VerificationMeta(
+    'privateKey',
   );
   @override
-  late final GeneratedColumn<String> privKey = GeneratedColumn<String>(
-    'priv_key',
+  late final GeneratedColumn<String> privateKey = GeneratedColumn<String>(
+    'private_key',
     aliasedName,
     false,
     type: DriftSqlType.string,
@@ -140,7 +140,7 @@ class $DefguardInstancesTable extends DefguardInstances
     disableAllTraffic,
     enterpriseEnabled,
     pubKey,
-    privKey,
+    privateKey,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -235,13 +235,13 @@ class $DefguardInstancesTable extends DefguardInstances
     } else if (isInserting) {
       context.missing(_pubKeyMeta);
     }
-    if (data.containsKey('priv_key')) {
+    if (data.containsKey('private_key')) {
       context.handle(
-        _privKeyMeta,
-        privKey.isAcceptableOrUnknown(data['priv_key']!, _privKeyMeta),
+        _privateKeyMeta,
+        privateKey.isAcceptableOrUnknown(data['private_key']!, _privateKeyMeta),
       );
     } else if (isInserting) {
-      context.missing(_privKeyMeta);
+      context.missing(_privateKeyMeta);
     }
     return context;
   }
@@ -292,9 +292,9 @@ class $DefguardInstancesTable extends DefguardInstances
         DriftSqlType.string,
         data['${effectivePrefix}pub_key'],
       )!,
-      privKey: attachedDatabase.typeMapping.read(
+      privateKey: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
-        data['${effectivePrefix}priv_key'],
+        data['${effectivePrefix}private_key'],
       )!,
     );
   }
@@ -317,7 +317,7 @@ class DefguardInstance extends DataClass
   final bool disableAllTraffic;
   final bool enterpriseEnabled;
   final String pubKey;
-  final String privKey;
+  final String privateKey;
   const DefguardInstance({
     required this.id,
     required this.name,
@@ -329,7 +329,7 @@ class DefguardInstance extends DataClass
     required this.disableAllTraffic,
     required this.enterpriseEnabled,
     required this.pubKey,
-    required this.privKey,
+    required this.privateKey,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -344,7 +344,7 @@ class DefguardInstance extends DataClass
     map['disable_all_traffic'] = Variable<bool>(disableAllTraffic);
     map['enterprise_enabled'] = Variable<bool>(enterpriseEnabled);
     map['pub_key'] = Variable<String>(pubKey);
-    map['priv_key'] = Variable<String>(privKey);
+    map['private_key'] = Variable<String>(privateKey);
     return map;
   }
 
@@ -360,7 +360,7 @@ class DefguardInstance extends DataClass
       disableAllTraffic: Value(disableAllTraffic),
       enterpriseEnabled: Value(enterpriseEnabled),
       pubKey: Value(pubKey),
-      privKey: Value(privKey),
+      privateKey: Value(privateKey),
     );
   }
 
@@ -380,7 +380,7 @@ class DefguardInstance extends DataClass
       disableAllTraffic: serializer.fromJson<bool>(json['disable_all_traffic']),
       enterpriseEnabled: serializer.fromJson<bool>(json['enterprise_enabled']),
       pubKey: serializer.fromJson<String>(json['pubKey']),
-      privKey: serializer.fromJson<String>(json['privKey']),
+      privateKey: serializer.fromJson<String>(json['privateKey']),
     );
   }
   @override
@@ -397,7 +397,7 @@ class DefguardInstance extends DataClass
       'disable_all_traffic': serializer.toJson<bool>(disableAllTraffic),
       'enterprise_enabled': serializer.toJson<bool>(enterpriseEnabled),
       'pubKey': serializer.toJson<String>(pubKey),
-      'privKey': serializer.toJson<String>(privKey),
+      'privateKey': serializer.toJson<String>(privateKey),
     };
   }
 
@@ -412,7 +412,7 @@ class DefguardInstance extends DataClass
     bool? disableAllTraffic,
     bool? enterpriseEnabled,
     String? pubKey,
-    String? privKey,
+    String? privateKey,
   }) => DefguardInstance(
     id: id ?? this.id,
     name: name ?? this.name,
@@ -424,7 +424,7 @@ class DefguardInstance extends DataClass
     disableAllTraffic: disableAllTraffic ?? this.disableAllTraffic,
     enterpriseEnabled: enterpriseEnabled ?? this.enterpriseEnabled,
     pubKey: pubKey ?? this.pubKey,
-    privKey: privKey ?? this.privKey,
+    privateKey: privateKey ?? this.privateKey,
   );
   DefguardInstance copyWithCompanion(DefguardInstancesCompanion data) {
     return DefguardInstance(
@@ -442,7 +442,9 @@ class DefguardInstance extends DataClass
           ? data.enterpriseEnabled.value
           : this.enterpriseEnabled,
       pubKey: data.pubKey.present ? data.pubKey.value : this.pubKey,
-      privKey: data.privKey.present ? data.privKey.value : this.privKey,
+      privateKey: data.privateKey.present
+          ? data.privateKey.value
+          : this.privateKey,
     );
   }
 
@@ -459,7 +461,7 @@ class DefguardInstance extends DataClass
           ..write('disableAllTraffic: $disableAllTraffic, ')
           ..write('enterpriseEnabled: $enterpriseEnabled, ')
           ..write('pubKey: $pubKey, ')
-          ..write('privKey: $privKey')
+          ..write('privateKey: $privateKey')
           ..write(')'))
         .toString();
   }
@@ -476,7 +478,7 @@ class DefguardInstance extends DataClass
     disableAllTraffic,
     enterpriseEnabled,
     pubKey,
-    privKey,
+    privateKey,
   );
   @override
   bool operator ==(Object other) =>
@@ -492,7 +494,7 @@ class DefguardInstance extends DataClass
           other.disableAllTraffic == this.disableAllTraffic &&
           other.enterpriseEnabled == this.enterpriseEnabled &&
           other.pubKey == this.pubKey &&
-          other.privKey == this.privKey);
+          other.privateKey == this.privateKey);
 }
 
 class DefguardInstancesCompanion extends UpdateCompanion<DefguardInstance> {
@@ -506,7 +508,7 @@ class DefguardInstancesCompanion extends UpdateCompanion<DefguardInstance> {
   final Value<bool> disableAllTraffic;
   final Value<bool> enterpriseEnabled;
   final Value<String> pubKey;
-  final Value<String> privKey;
+  final Value<String> privateKey;
   const DefguardInstancesCompanion({
     this.id = const Value.absent(),
     this.name = const Value.absent(),
@@ -518,7 +520,7 @@ class DefguardInstancesCompanion extends UpdateCompanion<DefguardInstance> {
     this.disableAllTraffic = const Value.absent(),
     this.enterpriseEnabled = const Value.absent(),
     this.pubKey = const Value.absent(),
-    this.privKey = const Value.absent(),
+    this.privateKey = const Value.absent(),
   });
   DefguardInstancesCompanion.insert({
     this.id = const Value.absent(),
@@ -531,7 +533,7 @@ class DefguardInstancesCompanion extends UpdateCompanion<DefguardInstance> {
     required bool disableAllTraffic,
     required bool enterpriseEnabled,
     required String pubKey,
-    required String privKey,
+    required String privateKey,
   }) : name = Value(name),
        uuid = Value(uuid),
        url = Value(url),
@@ -541,7 +543,7 @@ class DefguardInstancesCompanion extends UpdateCompanion<DefguardInstance> {
        disableAllTraffic = Value(disableAllTraffic),
        enterpriseEnabled = Value(enterpriseEnabled),
        pubKey = Value(pubKey),
-       privKey = Value(privKey);
+       privateKey = Value(privateKey);
   static Insertable<DefguardInstance> custom({
     Expression<int>? id,
     Expression<String>? name,
@@ -553,7 +555,7 @@ class DefguardInstancesCompanion extends UpdateCompanion<DefguardInstance> {
     Expression<bool>? disableAllTraffic,
     Expression<bool>? enterpriseEnabled,
     Expression<String>? pubKey,
-    Expression<String>? privKey,
+    Expression<String>? privateKey,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -566,7 +568,7 @@ class DefguardInstancesCompanion extends UpdateCompanion<DefguardInstance> {
       if (disableAllTraffic != null) 'disable_all_traffic': disableAllTraffic,
       if (enterpriseEnabled != null) 'enterprise_enabled': enterpriseEnabled,
       if (pubKey != null) 'pub_key': pubKey,
-      if (privKey != null) 'priv_key': privKey,
+      if (privateKey != null) 'private_key': privateKey,
     });
   }
 
@@ -581,7 +583,7 @@ class DefguardInstancesCompanion extends UpdateCompanion<DefguardInstance> {
     Value<bool>? disableAllTraffic,
     Value<bool>? enterpriseEnabled,
     Value<String>? pubKey,
-    Value<String>? privKey,
+    Value<String>? privateKey,
   }) {
     return DefguardInstancesCompanion(
       id: id ?? this.id,
@@ -594,7 +596,7 @@ class DefguardInstancesCompanion extends UpdateCompanion<DefguardInstance> {
       disableAllTraffic: disableAllTraffic ?? this.disableAllTraffic,
       enterpriseEnabled: enterpriseEnabled ?? this.enterpriseEnabled,
       pubKey: pubKey ?? this.pubKey,
-      privKey: privKey ?? this.privKey,
+      privateKey: privateKey ?? this.privateKey,
     );
   }
 
@@ -631,8 +633,8 @@ class DefguardInstancesCompanion extends UpdateCompanion<DefguardInstance> {
     if (pubKey.present) {
       map['pub_key'] = Variable<String>(pubKey.value);
     }
-    if (privKey.present) {
-      map['priv_key'] = Variable<String>(privKey.value);
+    if (privateKey.present) {
+      map['private_key'] = Variable<String>(privateKey.value);
     }
     return map;
   }
@@ -650,7 +652,7 @@ class DefguardInstancesCompanion extends UpdateCompanion<DefguardInstance> {
           ..write('disableAllTraffic: $disableAllTraffic, ')
           ..write('enterpriseEnabled: $enterpriseEnabled, ')
           ..write('pubKey: $pubKey, ')
-          ..write('privKey: $privKey')
+          ..write('privateKey: $privateKey')
           ..write(')'))
         .toString();
   }
@@ -1394,7 +1396,7 @@ typedef $$DefguardInstancesTableCreateCompanionBuilder =
       required bool disableAllTraffic,
       required bool enterpriseEnabled,
       required String pubKey,
-      required String privKey,
+      required String privateKey,
     });
 typedef $$DefguardInstancesTableUpdateCompanionBuilder =
     DefguardInstancesCompanion Function({
@@ -1408,7 +1410,7 @@ typedef $$DefguardInstancesTableUpdateCompanionBuilder =
       Value<bool> disableAllTraffic,
       Value<bool> enterpriseEnabled,
       Value<String> pubKey,
-      Value<String> privKey,
+      Value<String> privateKey,
     });
 
 final class $$DefguardInstancesTableReferences
@@ -1505,8 +1507,8 @@ class $$DefguardInstancesTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<String> get privKey => $composableBuilder(
-    column: $table.privKey,
+  ColumnFilters<String> get privateKey => $composableBuilder(
+    column: $table.privateKey,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -1595,8 +1597,8 @@ class $$DefguardInstancesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<String> get privKey => $composableBuilder(
-    column: $table.privKey,
+  ColumnOrderings<String> get privateKey => $composableBuilder(
+    column: $table.privateKey,
     builder: (column) => ColumnOrderings(column),
   );
 }
@@ -1644,8 +1646,10 @@ class $$DefguardInstancesTableAnnotationComposer
   GeneratedColumn<String> get pubKey =>
       $composableBuilder(column: $table.pubKey, builder: (column) => column);
 
-  GeneratedColumn<String> get privKey =>
-      $composableBuilder(column: $table.privKey, builder: (column) => column);
+  GeneratedColumn<String> get privateKey => $composableBuilder(
+    column: $table.privateKey,
+    builder: (column) => column,
+  );
 
   Expression<T> locationsRefs<T extends Object>(
     Expression<T> Function($$LocationsTableAnnotationComposer a) f,
@@ -1716,7 +1720,7 @@ class $$DefguardInstancesTableTableManager
                 Value<bool> disableAllTraffic = const Value.absent(),
                 Value<bool> enterpriseEnabled = const Value.absent(),
                 Value<String> pubKey = const Value.absent(),
-                Value<String> privKey = const Value.absent(),
+                Value<String> privateKey = const Value.absent(),
               }) => DefguardInstancesCompanion(
                 id: id,
                 name: name,
@@ -1728,7 +1732,7 @@ class $$DefguardInstancesTableTableManager
                 disableAllTraffic: disableAllTraffic,
                 enterpriseEnabled: enterpriseEnabled,
                 pubKey: pubKey,
-                privKey: privKey,
+                privateKey: privateKey,
               ),
           createCompanionCallback:
               ({
@@ -1742,7 +1746,7 @@ class $$DefguardInstancesTableTableManager
                 required bool disableAllTraffic,
                 required bool enterpriseEnabled,
                 required String pubKey,
-                required String privKey,
+                required String privateKey,
               }) => DefguardInstancesCompanion.insert(
                 id: id,
                 name: name,
@@ -1754,7 +1758,7 @@ class $$DefguardInstancesTableTableManager
                 disableAllTraffic: disableAllTraffic,
                 enterpriseEnabled: enterpriseEnabled,
                 pubKey: pubKey,
-                privKey: privKey,
+                privateKey: privateKey,
               ),
           withReferenceMapper: (p0) => p0
               .map(

@@ -9,7 +9,8 @@ enum class WireguardPluginEvent(val value: String) {
 }
 
 @Serializable
-data class TunnelEventData(
+data class ActiveTunnelData(
     val instanceId: Int,
     val locationId: Int,
+    val traffic: TunnelTraffic,
 )

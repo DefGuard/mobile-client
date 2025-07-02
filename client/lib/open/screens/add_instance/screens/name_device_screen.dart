@@ -47,7 +47,7 @@ class NameDeviceScreen extends HookConsumerWidget {
       (o) => o(
         id: drift.Value.absent(),
         pubKey: keyPair.pubKey,
-        privKey: keyPair.privKey,
+        privateKey: keyPair.privKey,
         name: createResponse.instance.name,
         uuid: createResponse.instance.id,
         enterpriseEnabled: createResponse.instance.enterpriseEnabled,

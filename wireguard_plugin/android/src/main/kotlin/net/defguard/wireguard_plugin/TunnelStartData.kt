@@ -1,5 +1,16 @@
 package net.defguard.wireguard_plugin
+
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+
+@Serializable
+enum class TunnelTraffic {
+    @SerialName("all")
+    ALL,
+
+    @SerialName("predefined")
+    PREDEFINED,
+}
 
 @Serializable
 data class TunnelStartData(
@@ -12,6 +23,7 @@ data class TunnelStartData(
     val allowedIps: String,
     val keepalive: Int,
     val presharedKey: String?,
+    val traffic: TunnelTraffic,
     // context
     val locationName: String,
     val locationId: Int,
