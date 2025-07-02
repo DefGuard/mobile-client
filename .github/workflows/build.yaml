@@ -28,6 +28,12 @@ jobs:
       - name: check which flutter
         run: which flutter
 
+      - name: check which ruby
+        run: which ruby
+
+      - name: check which pod
+        run: which pod
+
       - name: check flutter state
         run: flutter doctor
 
