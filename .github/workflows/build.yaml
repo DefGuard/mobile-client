@@ -25,14 +25,19 @@ jobs:
           channel: stable
           flutter-version: 3.32.4
 
-      - name: check flutter state
-        run: flutter doctor
+      - name: use homebrew ruby
+        run: |
+          echo "/opt/homebrew/opt/ruby/bin" >> $GITHUB_PATH
+          echo "/opt/homebrew/bin" >> $GITHUB_PATH
 
       - name: install deps
         run: flutter pub get
 
+      - name: unlock keychain
+        run: security -v unlock-keychain -p "${{ secrets.KEYCHAIN_PASSWORD }}" /Users/admin/Library/Keychains/login.keychain
+
       - name: build ios
-        run: flutter build ipa --release --obfuscate --split-debug-info=build/debug-info
+        run: flutter build ipa --release --obfuscate --split-debug-info=build/debug-info --build-number=${{ github.run_number }}
 
       - name: upload ios artifact
         uses: actions/upload-artifact@v4
@@ -40,6 +45,15 @@ jobs:
           name: ios
           retention-days: 14
           path: client/build/ios/ipa/*.ipa
+
+      - name: upload app to TestFlight
+        uses: apple-actions/upload-testflight-build@v3
+        with: 
+          app-path: 'client/build/ios/ipa/mobile_client.ipa' 
+          issuer-id: ${{ secrets.API_ISSUER_ID }}
+          api-key-id: ${{ secrets.ASC_API_KEY_ID }}
+          api-private-key: ${{ secrets.PRIVATE_KEY_CONTENTS }}
+
 
   build-android:
     runs-on: [self-hosted, macOS]
