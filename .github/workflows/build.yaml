@@ -46,19 +46,13 @@ jobs:
           retention-days: 14
           path: client/build/ios/ipa/*.ipa
 
-      - name: Upload to App Store Connect
-        run: |
-          mkdir -p ~/.private_keys
-          echo "${{ secrets.ASC_PRIVATE_KEY_P8 }}" > ~/.private_keys/AuthKey_${{ secrets.ASC_API_KEY_ID }}.p8
-
-          xcrun altool \
-            --upload-app \
-            --type ios \
-            --file client/build/ios/ipa/mobile_client.ipa \
-            --apiKey ${{ secrets.ASC_API_KEY_ID }} \
-            --apiIssuer ${{ secrets.ASC_API_ISSUER_ID }}
-
-          rm -f ~/.private_keys/AuthKey_${{ secrets.ASC_API_KEY_ID }}.p8
+      - name: upload app to TestFlight
+        uses: apple-actions/upload-testflight-build@v3
+        with: 
+          app-path: 'client/build/ios/ipa/mobile_client.ipa' 
+          issuer-id: ${{ secrets.API_ISSUER_ID }}
+          api-key-id: ${{ secrets.ASC_API_KEY_ID }}
+          api-private-key: ${{ secrets.PRIVATE_KEY_CONTENTS }}
 
 
   build-android:
