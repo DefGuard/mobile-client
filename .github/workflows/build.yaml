@@ -25,6 +25,9 @@ jobs:
           channel: stable
           flutter-version: 3.32.4
 
+      - name: check which flutter
+        run: which flutter
+
       - name: check flutter state
         run: flutter doctor
 
