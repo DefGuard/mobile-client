@@ -4,15 +4,13 @@ import 'package:app_links/app_links.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:mobile_client/data/proxy/qr_register.dart';
-import 'package:mobile_client/router/routes.dart';
-import 'package:mobile_client/theme.dart';
+import 'package:mobile/data/proxy/qr_register.dart';
+import 'package:mobile/plugin.dart';
+import 'package:mobile/router/routes.dart';
+import 'package:mobile/theme.dart';
 import 'package:talker_flutter/talker_flutter.dart';
-import 'package:wireguard_plugin/wireguard_plugin.dart';
 
 final talker = TalkerFlutter.init();
-
-final wireguardPlugin = WireguardPlugin();
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -30,6 +28,7 @@ class _App extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     ref.watch(_deepLinkProvider);
+    ref.watch(pluginEventRouterProvider);
 
     return MaterialApp.router(
       routerConfig: _router,

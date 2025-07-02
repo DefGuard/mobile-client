@@ -38,3 +38,19 @@ class PluginConnectPayload {
 
   Map<String, dynamic> toJson() => _$PluginConnectPayloadToJson(this);
 }
+
+
+@JsonSerializable()
+class PluginTunnelEventData {
+  final int instanceId;
+  final int locationId;
+
+  const PluginTunnelEventData({
+    required this.instanceId,
+    required this.locationId,
+  });
+
+  factory PluginTunnelEventData.fromJson(Map<String, dynamic> json) => _$PluginTunnelEventDataFromJson(json);
+
+  Map<String, dynamic> toJson() => _$PluginTunnelEventDataToJson(this);
+}

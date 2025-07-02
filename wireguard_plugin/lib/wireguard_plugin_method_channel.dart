@@ -7,7 +7,13 @@ import 'wireguard_plugin_platform_interface.dart';
 class MethodChannelWireguardPlugin extends WireguardPluginPlatform {
   /// The method channel used to interact with the native platform.
   @visibleForTesting
-  final methodChannel = const MethodChannel('wireguard_plugin');
+  final methodChannel = const MethodChannel(
+    'net.defguard.wireguard_plugin/channel',
+  );
+
+  static const EventChannel _eventChannel = EventChannel(
+    'net.defguard.wireguard_plugin/event',
+  );
 
   @override
   Future<bool> requestPermissions() async {
@@ -16,11 +22,17 @@ class MethodChannelWireguardPlugin extends WireguardPluginPlatform {
   }
 
   @override
-  Future<bool> startTunnel(String config) async {
-    final result = await methodChannel.invokeMethod<bool>(
-      'startTunnel',
-      config,
-    );
-    return result ?? false;
+  Future<void> startTunnel(String config) async {
+    await methodChannel.invokeMethod('startTunnel', config);
   }
+
+  @override
+  Future<void> closeTunnel() async {
+    await methodChannel.invokeMethod('closeTunnel');
+  }
+
+  @override
+  Stream<Map<String, dynamic>> get eventStream => _eventChannel
+      .receiveBroadcastStream()
+      .map((dynamic event) => Map<String, dynamic>.from(event as Map));
 }

@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:talker/talker.dart';
 import 'dart:async';
 
 import 'package:wireguard_plugin/wireguard_plugin.dart';
+
+final talker = Talker();
 
 void main() {
   runApp(const MyApp());
@@ -15,7 +18,7 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  final _wireguardPlugin = WireguardPlugin();
+  final _wireguardPlugin = WireguardPlugin(talker: talker);
   bool permissionsGranted = false;
 
   @override

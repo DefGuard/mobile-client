@@ -1,4 +1,4 @@
-package net.defguard.mobile_client
+package net.defguard.mobile
 
 import io.flutter.embedding.android.FlutterActivity
 

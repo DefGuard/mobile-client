@@ -1,15 +1,15 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:mobile_client/data/proxy/enrollment.dart';
-import 'package:mobile_client/data/proxy/qr_register.dart';
-import 'package:mobile_client/open/api.dart';
-import 'package:mobile_client/open/screens/add_instance/screens/name_device_screen.dart';
-import 'package:mobile_client/open/widgets/circular_progress.dart';
-import 'package:mobile_client/router/routes.dart';
-import 'package:mobile_client/theme/color.dart';
-import 'package:mobile_client/theme/spacing.dart';
-import 'package:mobile_client/theme/text.dart';
+import 'package:mobile/data/proxy/enrollment.dart';
+import 'package:mobile/data/proxy/qr_register.dart';
+import 'package:mobile/open/api.dart';
+import 'package:mobile/open/screens/add_instance/screens/name_device_screen.dart';
+import 'package:mobile/open/widgets/circular_progress.dart';
+import 'package:mobile/router/routes.dart';
+import 'package:mobile/theme/color.dart';
+import 'package:mobile/theme/spacing.dart';
+import 'package:mobile/theme/text.dart';
 
 class RegisterFromQrScreen extends HookConsumerWidget {
   final QrInstanceRegistration instanceRegistration;

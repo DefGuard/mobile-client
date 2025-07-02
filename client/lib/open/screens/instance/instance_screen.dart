@@ -1,20 +1,25 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:mobile_client/data/db/database.dart';
-import 'package:mobile_client/data/plugin/plugin.dart';
-import 'package:mobile_client/open/screens/instance/widgets/connect_dialog.dart';
-import 'package:mobile_client/open/screens/instance/widgets/delete_instance_dialog.dart';
-import 'package:mobile_client/open/widgets/buttons/dg_button.dart';
-import 'package:mobile_client/open/widgets/icons/arrow_single.dart';
-import 'package:mobile_client/open/widgets/icons/connection.dart';
-import 'package:mobile_client/open/widgets/icons/icon_rotation.dart';
-import 'package:mobile_client/open/widgets/limited_text.dart';
-import 'package:mobile_client/open/widgets/nav.dart';
-import 'package:mobile_client/router/routes.dart';
-import 'package:mobile_client/theme/color.dart';
-import 'package:mobile_client/theme/spacing.dart';
-import 'package:mobile_client/theme/text.dart';
-import 'package:wireguard_plugin/wireguard_plugin.dart';
+import 'package:mobile/data/db/database.dart';
+import 'package:mobile/data/plugin/plugin.dart';
+import 'package:mobile/main.dart';
+import 'package:mobile/open/riverpod/plugin/plugin.dart';
+import 'package:mobile/open/screens/instance/widgets/connect_dialog.dart';
+import 'package:mobile/open/screens/instance/widgets/delete_instance_dialog.dart';
+import 'package:mobile/open/widgets/buttons/dg_button.dart';
+import 'package:mobile/open/widgets/icons/arrow_single.dart';
+import 'package:mobile/open/widgets/icons/asset_icons_simple.dart';
+import 'package:mobile/open/widgets/icons/connection.dart';
+import 'package:mobile/open/widgets/icons/icon_rotation.dart';
+import 'package:mobile/open/widgets/limited_text.dart';
+import 'package:mobile/open/widgets/nav.dart';
+import 'package:mobile/plugin.dart';
+import 'package:mobile/router/routes.dart';
+import 'package:mobile/theme/color.dart';
+import 'package:mobile/theme/spacing.dart';
+import 'package:mobile/theme/text.dart';
 
 class _ScreenData {
   final DefguardInstance instance;
@@ -88,8 +93,21 @@ class _ScreenContent extends HookConsumerWidget {
 
   const _ScreenContent({required this.screenData, required this.instance});
 
+  bool getLocationConnected(
+    PluginTunnelEventData? activeTunnel,
+    int instanceId,
+    int locationId,
+  ) {
+    if (activeTunnel != null) {
+      return activeTunnel.instanceId == instanceId &&
+          activeTunnel.locationId == locationId;
+    }
+    return false;
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final activeTunnel = ref.watch(pluginActiveTunnelStateProvider);
     return CustomScrollView(
       slivers: [
         SliverToBoxAdapter(
@@ -129,7 +147,16 @@ class _ScreenContent extends HookConsumerWidget {
           separatorBuilder: (_, _) => SizedBox(height: DgSpacing.s),
           itemBuilder: (BuildContext context, int index) {
             final location = screenData.locations[index];
-            return _LocationItem(location: location, instance: instance);
+            final isConnected = getLocationConnected(
+              activeTunnel,
+              instance.id,
+              location.id,
+            );
+            return _LocationItem(
+              location: location,
+              instance: instance,
+              isConnected: isConnected,
+            );
           },
         ),
         SliverToBoxAdapter(
@@ -178,11 +205,15 @@ class _ScreenContent extends HookConsumerWidget {
 }
 
 class _LocationItem extends HookConsumerWidget {
-  final _wireguardPlugin = WireguardPlugin();
   final Location location;
   final DefguardInstance instance;
+  final bool isConnected;
 
-  _LocationItem({required this.location, required this.instance});
+  const _LocationItem({
+    required this.location,
+    required this.instance,
+    required this.isConnected,
+  });
 
   PluginConnectPayload makePayload() {
     return PluginConnectPayload(
@@ -201,6 +232,9 @@ class _LocationItem extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final wireguardPlugin = ref.watch(wireguardPluginProvider);
+    final isLoading = useState(false);
+
     return Padding(
       padding: EdgeInsets.symmetric(vertical: 0, horizontal: DgSpacing.m),
       child: Container(
@@ -213,25 +247,50 @@ class _LocationItem extends HookConsumerWidget {
         child: Row(
           spacing: 18,
           children: <Widget>[
-            DgIconConnection(variant: DgIconConnectionVariant.disconnected),
+            DgIconConnection(
+              variant: isConnected
+                  ? DgIconConnectionVariant.connected
+                  : DgIconConnectionVariant.disconnected,
+            ),
             LimitedText(text: location.name, style: DgText.sideBar),
             Spacer(),
             DgButton(
               size: DgButtonSize.small,
               variant: DgButtonVariant.secondary,
-              text: "Connect",
+              iconColor: DgColor.textAlert,
+              icon: isConnected ? DgIconX().copyWith(size: 12) : null,
+              text: isConnected ? "Disconnect" : "Connect",
+              loading: isLoading.value,
               onTap: () async {
-                final permissionsGranted = await _wireguardPlugin
-                    .requestPermissions();
-                if (permissionsGranted) {
-                  if (context.mounted) {
-                    showDialog(
-                      context: context,
-                      builder: (BuildContext context) {
-                        final payload = makePayload();
-                        return ConnectDialog(payload: payload);
-                      },
+                if (isConnected) {
+                  isLoading.value = true;
+                  try {
+                    await wireguardPlugin.closeTunnel();
+                  } on PlatformException catch (e) {
+                    talker.error(
+                      "Closing tunnel for ${instance.name} - ${location.name} Failed ! Reason: ${e.message}",
                     );
+                  } finally {
+                    isLoading.value = false;
+                  }
+                } else {
+                  try {
+                    isLoading.value = true;
+                    final permissionsGranted = await wireguardPlugin
+                        .requestPermissions();
+                    if (permissionsGranted) {
+                      if (context.mounted) {
+                        showDialog(
+                          context: context,
+                          builder: (BuildContext context) {
+                            final payload = makePayload();
+                            return ConnectDialog(payload: payload);
+                          },
+                        );
+                      }
+                    }
+                  } finally {
+                    isLoading.value = false;
                   }
                 }
               },

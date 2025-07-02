@@ -1,6 +1,6 @@
 import 'dart:math' as math;
-import 'package:mobile_client/open/widgets/icons/dg_icon.dart';
-import 'package:mobile_client/open/widgets/icons/icon_rotation.dart';
+import 'package:mobile/open/widgets/icons/dg_icon.dart';
+import 'package:mobile/open/widgets/icons/icon_rotation.dart';
 
 class DgIconArrowSingle extends DgIcon {
   final DgIconDirection direction;

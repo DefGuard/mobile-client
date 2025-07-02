@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:mobile_client/open/widgets/icons/asset_icons_simple.dart';
-import 'package:mobile_client/theme/color.dart';
-import 'package:mobile_client/theme/spacing.dart';
-import 'package:mobile_client/theme/text.dart';
+import 'package:mobile/open/widgets/icons/asset_icons_simple.dart';
+import 'package:mobile/theme/color.dart';
+import 'package:mobile/theme/spacing.dart';
+import 'package:mobile/theme/text.dart';
 
 class DgRadioBox extends StatelessWidget {
   final String text;

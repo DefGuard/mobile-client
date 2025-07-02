@@ -3,8 +3,8 @@ import 'dart:io';
 import 'package:cookie_jar/cookie_jar.dart';
 import 'package:dio/dio.dart';
 import 'package:dio_cookie_manager/dio_cookie_manager.dart';
-import 'package:mobile_client/data/proxy/enrollment.dart';
-import 'package:mobile_client/main.dart';
+import 'package:mobile/data/proxy/enrollment.dart';
+import 'package:mobile/main.dart';
 import 'package:talker_dio_logger/talker_dio_logger_interceptor.dart';
 
 final enrollmentPathSegments = ['api', 'v1', 'enrollment'];

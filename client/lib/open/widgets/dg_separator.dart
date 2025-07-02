@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:mobile_client/theme/color.dart';
-import 'package:mobile_client/theme/spacing.dart';
+import 'package:mobile/theme/color.dart';
+import 'package:mobile/theme/spacing.dart';
 
 class DgSeparator extends StatelessWidget {
   const DgSeparator({super.key});
