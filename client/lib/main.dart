@@ -23,6 +23,7 @@ class _App extends ConsumerWidget {
   final _router = GoRouter(
     routes: $appRoutes,
     navigatorKey: _routerNavigatorKey,
+    observers: [TalkerRouteObserver(talker)],
   );
 
   @override

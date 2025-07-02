@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -8,14 +6,11 @@ import 'package:mobile/open/widgets/buttons/dg_button.dart';
 import 'package:mobile/open/widgets/dg_message_box.dart';
 import 'package:mobile/open/widgets/dg_radio_box.dart';
 import 'package:mobile/open/widgets/dg_separator.dart';
-import 'package:mobile/plugin.dart';
 import 'package:mobile/theme/color.dart';
 import 'package:mobile/theme/spacing.dart';
 import 'package:mobile/theme/text.dart';
 
 import '../../../widgets/icons/asset_icons_simple.dart';
-
-enum _ConnectionType { predefined, all }
 
 final String _predefinedMessage =
     "Only send selected traffic (e.g., company services or internal apps) through the VPN. Faster for general browsing. Ideal for hybrid work.";
@@ -30,9 +25,7 @@ class ConnectDialog extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final wireguardPlugin = ref.watch(wireguardPluginProvider);
-    final connectionType = useState(_ConnectionType.predefined);
-    final connecting = useState(false);
+    final connectionType = useState<TunnelTraffic>(TunnelTraffic.predefined);
 
     return Dialog(
       backgroundColor: DgColor.defaultModal,
@@ -51,9 +44,9 @@ class ConnectDialog extends HookConsumerWidget {
               children: [
                 DgRadioBox(
                   text: "Predefined Traffic",
-                  active: connectionType.value == _ConnectionType.predefined,
+                  active: connectionType.value == TunnelTraffic.predefined,
                   onTap: () {
-                    connectionType.value = _ConnectionType.predefined;
+                    connectionType.value = TunnelTraffic.predefined;
                   },
                 ),
                 DgMessageBox(
@@ -63,9 +56,9 @@ class ConnectDialog extends HookConsumerWidget {
                 DgSeparator(),
                 DgRadioBox(
                   text: "All Traffic",
-                  active: connectionType.value == _ConnectionType.all,
+                  active: connectionType.value == TunnelTraffic.all,
                   onTap: () {
-                    connectionType.value = _ConnectionType.all;
+                    connectionType.value = TunnelTraffic.all;
                   },
                 ),
                 DgMessageBox(
@@ -90,19 +83,10 @@ class ConnectDialog extends HookConsumerWidget {
                       variant: DgButtonVariant.primary,
                       size: DgButtonSize.standard,
                       icon: DgIconCheckmark(),
-                      loading: connecting.value,
-                      onTap: () async {
-                        connecting.value = true;
-                        try {
-                          final config = jsonEncode(payload.toJson());
-                          debugPrint("Starting tunnel with config: $config");
-                          await wireguardPlugin.startTunnel(config);
-                        } finally {
-                          connecting.value = false;
-                        }
-                        if (context.mounted) {
-                          Navigator.of(context).pop();
-                        }
+                      onTap: () {
+                        var connectData = payload;
+                        connectData.traffic = connectionType.value;
+                        Navigator.of(context).pop(connectData);
                       },
                     ),
                   ],

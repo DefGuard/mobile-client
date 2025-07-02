@@ -30,9 +30,11 @@ class DefguardInstances extends Table with AutoIncrementingPrimaryKey {
   @JsonKey('enterprise_enabled')
   BoolColumn get enterpriseEnabled => boolean()();
 
+  // user public key
   TextColumn get pubKey => text()();
 
-  TextColumn get privKey => text()();
+  // user private key
+  TextColumn get privateKey => text()();
 }
 
 @DataClassName('Location')

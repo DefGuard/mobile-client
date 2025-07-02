@@ -7,6 +7,7 @@ import 'package:mobile/data/plugin/plugin.dart';
 import 'package:mobile/main.dart';
 import 'package:mobile/open/riverpod/plugin/plugin.dart';
 import 'package:mobile/open/screens/instance/widgets/connect_dialog.dart';
+import 'package:mobile/open/screens/instance/widgets/connection_conflict_dialog.dart';
 import 'package:mobile/open/screens/instance/widgets/delete_instance_dialog.dart';
 import 'package:mobile/open/widgets/buttons/dg_button.dart';
 import 'package:mobile/open/widgets/icons/arrow_single.dart';
@@ -20,6 +21,7 @@ import 'package:mobile/router/routes.dart';
 import 'package:mobile/theme/color.dart';
 import 'package:mobile/theme/spacing.dart';
 import 'package:mobile/theme/text.dart';
+import 'dart:convert';
 
 class _ScreenData {
   final DefguardInstance instance;
@@ -93,21 +95,8 @@ class _ScreenContent extends HookConsumerWidget {
 
   const _ScreenContent({required this.screenData, required this.instance});
 
-  bool getLocationConnected(
-    PluginTunnelEventData? activeTunnel,
-    int instanceId,
-    int locationId,
-  ) {
-    if (activeTunnel != null) {
-      return activeTunnel.instanceId == instanceId &&
-          activeTunnel.locationId == locationId;
-    }
-    return false;
-  }
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final activeTunnel = ref.watch(pluginActiveTunnelStateProvider);
     return CustomScrollView(
       slivers: [
         SliverToBoxAdapter(
@@ -147,16 +136,7 @@ class _ScreenContent extends HookConsumerWidget {
           separatorBuilder: (_, _) => SizedBox(height: DgSpacing.s),
           itemBuilder: (BuildContext context, int index) {
             final location = screenData.locations[index];
-            final isConnected = getLocationConnected(
-              activeTunnel,
-              instance.id,
-              location.id,
-            );
-            return _LocationItem(
-              location: location,
-              instance: instance,
-              isConnected: isConnected,
-            );
+            return _LocationItem(location: location, instance: instance);
           },
         ),
         SliverToBoxAdapter(
@@ -207,18 +187,13 @@ class _ScreenContent extends HookConsumerWidget {
 class _LocationItem extends HookConsumerWidget {
   final Location location;
   final DefguardInstance instance;
-  final bool isConnected;
 
-  const _LocationItem({
-    required this.location,
-    required this.instance,
-    required this.isConnected,
-  });
+  const _LocationItem({required this.location, required this.instance});
 
   PluginConnectPayload makePayload() {
     return PluginConnectPayload(
       publicKey: location.pubKey,
-      privateKey: instance.privKey,
+      privateKey: instance.privateKey,
       address: location.address,
       dns: location.dns,
       endpoint: location.endpoint,
@@ -227,13 +202,42 @@ class _LocationItem extends HookConsumerWidget {
       locationName: location.name,
       locationId: location.id,
       instanceId: instance.id,
+      traffic: TunnelTraffic.predefined,
     );
+  }
+
+  bool checkConnected(PluginTunnelEventData? activeTunnel) {
+    if (activeTunnel == null) return false;
+    return activeTunnel.instanceId == instance.id &&
+        activeTunnel.locationId == location.id;
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final wireguardPlugin = ref.watch(wireguardPluginProvider);
+    final activeTunnel = ref.watch(pluginActiveTunnelStateProvider);
+    final isConnected = useState<bool>(checkConnected(activeTunnel));
     final isLoading = useState(false);
+    final trafficLabel = useState<String?>(null);
+
+    // set connected flag
+    useEffect(() {
+      final connected = checkConnected(activeTunnel);
+      isConnected.value = connected;
+      if (connected && activeTunnel != null) {
+        switch (activeTunnel.traffic) {
+          case TunnelTraffic.all:
+            trafficLabel.value = "All Traffic";
+            break;
+          case TunnelTraffic.predefined:
+            trafficLabel.value = "Predefined Traffic";
+            break;
+        }
+      } else {
+        trafficLabel.value = null;
+      }
+      return null;
+    }, [activeTunnel]);
 
     return Padding(
       padding: EdgeInsets.symmetric(vertical: 0, horizontal: DgSpacing.m),
@@ -248,21 +252,36 @@ class _LocationItem extends HookConsumerWidget {
           spacing: 18,
           children: <Widget>[
             DgIconConnection(
-              variant: isConnected
+              variant: isConnected.value
                   ? DgIconConnectionVariant.connected
                   : DgIconConnectionVariant.disconnected,
             ),
-            LimitedText(text: location.name, style: DgText.sideBar),
-            Spacer(),
+            Expanded(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  LimitedText(text: location.name, style: DgText.sideBar),
+                  if (trafficLabel.value != null)
+                    LimitedText(
+                      text: trafficLabel.value!,
+                      style: DgText.buttonXS.copyWith(
+                        color: DgColor.textBodySecondary,
+                      ),
+                    ),
+                ],
+              ),
+            ),
             DgButton(
               size: DgButtonSize.small,
               variant: DgButtonVariant.secondary,
               iconColor: DgColor.textAlert,
-              icon: isConnected ? DgIconX().copyWith(size: 12) : null,
-              text: isConnected ? "Disconnect" : "Connect",
+              icon: isConnected.value ? DgIconX().copyWith(size: 12) : null,
+              text: isConnected.value ? "Disconnect" : "Connect",
               loading: isLoading.value,
               onTap: () async {
-                if (isConnected) {
+                if (isConnected.value) {
                   isLoading.value = true;
                   try {
                     await wireguardPlugin.closeTunnel();
@@ -274,21 +293,51 @@ class _LocationItem extends HookConsumerWidget {
                     isLoading.value = false;
                   }
                 } else {
+                  if (activeTunnel != null) {
+                    final bool? changeConnection = await showDialog<bool>(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return ConnectionConflictDialog();
+                      },
+                    );
+                    if (changeConnection == null || changeConnection == false) {
+                      return;
+                    }
+                  }
                   try {
                     isLoading.value = true;
                     final permissionsGranted = await wireguardPlugin
                         .requestPermissions();
                     if (permissionsGranted) {
                       if (context.mounted) {
-                        showDialog(
-                          context: context,
-                          builder: (BuildContext context) {
-                            final payload = makePayload();
-                            return ConnectDialog(payload: payload);
-                          },
-                        );
+                        // means instance allows users to pick what type of traffic they want to use
+                        // otherwise skip traffic option dialog and just start tunnel with predefined traffic
+                        if (!instance.disableAllTraffic) {
+                          final dialogResult =
+                              await showDialog<PluginConnectPayload?>(
+                                context: context,
+                                builder: (BuildContext context) {
+                                  final payload = makePayload();
+                                  return ConnectDialog(payload: payload);
+                                },
+                              );
+                          if (dialogResult != null) {
+                            await wireguardPlugin.startTunnel(
+                              jsonEncode(dialogResult.toJson()),
+                            );
+                          }
+                        } else {
+                          final tunnelConfig = makePayload();
+                          await wireguardPlugin.startTunnel(
+                            jsonEncode(tunnelConfig.toJson()),
+                          );
+                        }
                       }
                     }
+                  } catch (e) {
+                    talker.error(
+                      "Failed to connect into ${instance.name}-${location.name} ! Reason: $e",
+                    );
                   } finally {
                     isLoading.value = false;
                   }

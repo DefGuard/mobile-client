@@ -8,15 +8,13 @@ class LimitedText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
-      child: Tooltip(
-        message: text,
-        child: Text(
-          text,
-          overflow: TextOverflow.ellipsis,
-          maxLines: 1,
-          style: style,
-        ),
+    return Tooltip(
+      message: text,
+      child: Text(
+        text,
+        overflow: TextOverflow.ellipsis,
+        maxLines: 1,
+        style: style,
       ),
     );
   }

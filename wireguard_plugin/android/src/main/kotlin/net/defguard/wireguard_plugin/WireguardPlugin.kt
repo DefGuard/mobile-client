@@ -36,6 +36,8 @@ val json = Json {
 
 const val METHOD_CHANNEL_NAME = "net.defguard.wireguard_plugin/channel"
 const val METHOD_EVENT_NAME = "net.defguard.wireguard_plugin/event"
+const val DEFAULT_ROUTE_IPV4 = "0.0.0.0/0"
+const val DEFAULT_ROUTE_IPV6 = "::/0"
 const val VPN_PERMISSION_REQUEST_CODE = 1001
 const val LOG_TAG = "DG"
 
@@ -53,12 +55,11 @@ class WireguardPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
     private lateinit var eventChannel: EventChannel
     private var eventSink: EventChannel.EventSink? = null
     private var activeTunnel: Tunnel? = null
+    private var activeTunnelData: ActiveTunnelData? = null
     private var futureBackend = CompletableDeferred<GoBackend>()
     private var backend: GoBackend? = null
     private lateinit var context: Context
     private val scope = CoroutineScope(Job() + Dispatchers.Main.immediate)
-    private var activeInstanceId: Int? = null;
-    private var activeLocationId: Int? = null;
 
     override fun onAttachedToEngine(flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
         context = flutterPluginBinding.applicationContext
@@ -149,14 +150,6 @@ class WireguardPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
         return backend as GoBackend;
     }
 
-    private fun getActiveTunnelContext(): TunnelEventData? {
-        if (activeLocationId != null && activeInstanceId != null) {
-            val data = TunnelEventData(activeInstanceId!!, activeLocationId!!);
-            return data;
-        }
-        return null
-    }
-
     private fun emitEvent(eventType: WireguardPluginEvent, data: String?) {
         scope.launch(Dispatchers.Main) {
             val message = mapOf(
@@ -164,17 +157,6 @@ class WireguardPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
                 "data" to data
             )
             eventSink?.success(message)
-        }
-    }
-
-    private fun updateTunnelStatusWithState(state: Tunnel.State) {
-        scope.launch(Dispatchers.Main) {
-            val eventData: String? = getActiveTunnelContext()?.let { Json.encodeToString(it) };
-            when (state) {
-                Tunnel.State.UP -> emitEvent(WireguardPluginEvent.TUNNEL_UP, eventData)
-                Tunnel.State.DOWN -> emitEvent(WireguardPluginEvent.TUNNEL_DOWN, eventData)
-                Tunnel.State.TOGGLE -> emitEvent(WireguardPluginEvent.TUNNEL_WAITING, eventData)
-            }
         }
     }
 
@@ -197,10 +179,10 @@ class WireguardPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
 
     private suspend fun closeTunnel(tunnel: Tunnel) {
         futureBackend.await().setState(tunnel, Tunnel.State.DOWN, null)
-        activeInstanceId = null
-        activeLocationId = null
         activeTunnel = null
-        updateTunnelStatusWithState(state = Tunnel.State.DOWN)
+        activeTunnelData = null
+        // inform ui
+        emitEvent(WireguardPluginEvent.TUNNEL_DOWN, null)
     }
 
     private fun startTunnel(configData: TunnelStartData, result: Result) {
@@ -221,10 +203,15 @@ class WireguardPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
 
                 val iface = interfaceBuilder.build()
 
+                val allowedIps: String = when (configData.traffic) {
+                    TunnelTraffic.ALL -> "$DEFAULT_ROUTE_IPV4,$DEFAULT_ROUTE_IPV6"
+                    TunnelTraffic.PREDEFINED -> configData.allowedIps
+                }
+
                 val peerBuilder = Peer.Builder()
                     .parsePublicKey(configData.publicKey)
                     .parseEndpoint(configData.endpoint)
-                    .parseAllowedIPs(configData.allowedIps)
+                    .parseAllowedIPs(allowedIps)
                     .setPersistentKeepalive(configData.keepalive)
 
                 if (!configData.presharedKey.isNullOrBlank()) {
@@ -240,14 +227,18 @@ class WireguardPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
                     .addPeer(peer)
                     .build()
 
+                val tunnelData = ActiveTunnelData(
+                    locationId = configData.locationId,
+                    instanceId = configData.instanceId,
+                    traffic = configData.traffic
+                )
+
                 futureBackend.await().setState(tunnel, Tunnel.State.UP, config)
                 activeTunnel = tunnel
-                activeLocationId = configData.locationId
-                activeInstanceId = configData.instanceId
+                activeTunnelData = tunnelData
 
-                // send event
-                val eventData = TunnelEventData(locationId = configData.locationId, instanceId = configData.instanceId);
-                emitEvent(WireguardPluginEvent.TUNNEL_UP, json.encodeToString(eventData));
+                // send event to UI
+                emitEvent(WireguardPluginEvent.TUNNEL_UP, json.encodeToString(tunnelData));
 
                 result.success(null)
 
