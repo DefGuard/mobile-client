@@ -25,22 +25,10 @@ jobs:
           channel: stable
           flutter-version: 3.32.4
 
-      - name: check which flutter
-        run: which flutter
-
       - name: use homebrew ruby
         run: |
           echo "/opt/homebrew/opt/ruby/bin" >> $GITHUB_PATH
           echo "/opt/homebrew/bin" >> $GITHUB_PATH
-
-      - name: check which ruby
-        run: which ruby
-      
-      - name: check which pod
-        run: which pod
-
-      - name: check flutter state
-        run: flutter doctor
 
       - name: install deps
         run: flutter pub get
