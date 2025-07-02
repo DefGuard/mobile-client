@@ -13,6 +13,8 @@ on:
 jobs:
   build-ios:
     runs-on: [self-hosted, macOS]
+    env:
+      RUNNER_TOOL_CACHE: /Users/admin/actions-runner/_work/_tool
     defaults:
       run:
         working-directory: ./client
