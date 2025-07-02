@@ -28,8 +28,17 @@ jobs:
       - name: check which flutter
         run: which flutter
 
+      - name: setup ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.4'
+          bundler-cache: true
+
       - name: check which ruby
         run: which ruby
+      
+      - name: install CocoaPods
+        run: gem install cocoapods
 
       - name: check which pod
         run: which pod
