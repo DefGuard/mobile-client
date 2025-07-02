@@ -13,9 +13,6 @@ on:
 jobs:
   build-ios:
     runs-on: [self-hosted, macOS]
-    env:
-      RUNNER_TOOL_CACHE: /Users/admin/actions-runner/_work/_tool
-      RUNNER_TEMP: /Users/admin/actions-runner/_work/_temp
     defaults:
       run:
         working-directory: ./client
@@ -31,18 +28,12 @@ jobs:
       - name: check which flutter
         run: which flutter
 
-      - name: setup ruby
-        uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: 3.2
-          bundler-cache: false
+      - name: use homebrew ruby
+        run: echo "/opt/homebrew/opt/ruby/bin" >> $GITHUB_PATH
 
       - name: check which ruby
         run: which ruby
       
-      - name: install CocoaPods
-        run: gem install cocoapods
-
       - name: check which pod
         run: which pod
 
