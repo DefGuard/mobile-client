@@ -33,6 +33,9 @@ jobs:
       - name: install deps
         run: flutter pub get
 
+      - name: unlock keychain
+        run: security -v unlock-keychain -p "${{ secrets.KEYCHAIN_PASSWORD }}" /Users/admin/Library/Keychains/login.keychain
+
       - name: build ios
         run: flutter build ipa --release --obfuscate --split-debug-info=build/debug-info
 
