@@ -4,7 +4,7 @@ on:
     branches:
       - main
       - dev
-      - android-auto-build
+      - android-audo-build
   pull_request:
     branches:
       - main
