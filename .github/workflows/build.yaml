@@ -64,6 +64,12 @@ jobs:
           channel: stable
           flutter-version: 3.32.5
 
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "17"
+
       - name: install deps main app
         run: |
           cd ./client
@@ -87,4 +93,6 @@ jobs:
       - name: build android
         run: |
           cd ./client
+          flutter clean
+          flutter pub get
           flutter build appbundle --debug --verbose
