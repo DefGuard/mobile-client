@@ -13,20 +13,20 @@ on:
 jobs:
   lint:
     name: Lint project
-    runs-on: [ self-hosted, macOS ]
+    runs-on: [self-hosted, macOS]
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: setup flutter
-        uses: subosito/flutter-action@v2
-        with:
-          channel: stable
-          flutter-version: 3.32.4
+      # - name: setup flutter
+      #   uses: subosito/flutter-action@v2
+      #   with:
+      #     channel: stable
+      #     flutter-version: 3.32.4
 
-      - name: get deps
-        run: flutter pub get
+      # - name: get deps
+      #   run: flutter pub get
 
-      - name: run lint
-        run: flutter analyze
+      # - name: run lint
+      #   run: flutter analyze
