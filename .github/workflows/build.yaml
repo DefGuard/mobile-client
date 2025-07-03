@@ -4,55 +4,55 @@ on:
     branches:
       - main
       - dev
-      - wireguard-plugin
+      - android-auto-build
   pull_request:
     branches:
       - main
       - dev
 
 jobs:
-  build-ios:
-    runs-on: [self-hosted, macOS]
-    defaults:
-      run:
-        working-directory: ./client
-    steps:
-      - uses: actions/checkout@v4
+  # build-ios:
+  #   runs-on: [self-hosted, macOS]
+  #   defaults:
+  #     run:
+  #       working-directory: ./client
+  #   steps:
+  #     - uses: actions/checkout@v4
 
-      - name: setup flutter
-        uses: subosito/flutter-action@v2
-        with:
-          channel: stable
-          flutter-version: 3.32.4
+  #     - name: setup flutter
+  #       uses: subosito/flutter-action@v2
+  #       with:
+  #         channel: stable
+  #         flutter-version: 3.32.4
 
-      - name: use homebrew ruby
-        run: |
-          echo "/opt/homebrew/opt/ruby/bin" >> $GITHUB_PATH
-          echo "/opt/homebrew/bin" >> $GITHUB_PATH
+  #     - name: use homebrew ruby
+  #       run: |
+  #         echo "/opt/homebrew/opt/ruby/bin" >> $GITHUB_PATH
+  #         echo "/opt/homebrew/bin" >> $GITHUB_PATH
 
-      - name: install deps
-        run: flutter pub get
+  #     - name: install deps
+  #       run: flutter pub get
 
-      - name: unlock keychain
-        run: security -v unlock-keychain -p "${{ secrets.KEYCHAIN_PASSWORD }}" /Users/admin/Library/Keychains/login.keychain
+  #     - name: unlock keychain
+  #       run: security -v unlock-keychain -p "${{ secrets.KEYCHAIN_PASSWORD }}" /Users/admin/Library/Keychains/login.keychain
 
-      - name: build ios
-        run: flutter build ipa --release --obfuscate --split-debug-info=build/debug-info --build-number=${{ github.run_number }}
+  #     - name: build ios
+  #       run: flutter build ipa --release --obfuscate --split-debug-info=build/debug-info --build-number=${{ github.run_number }}
 
-      - name: upload ios artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: ios
-          retention-days: 14
-          path: client/build/ios/ipa/*.ipa
+  #     - name: upload ios artifact
+  #       uses: actions/upload-artifact@v4
+  #       with:
+  #         name: ios
+  #         retention-days: 14
+  #         path: client/build/ios/ipa/*.ipa
 
-      - name: upload app to TestFlight
-        uses: apple-actions/upload-testflight-build@v3
-        with: 
-          app-path: 'client/build/ios/ipa/mobile_client.ipa' 
-          issuer-id: ${{ secrets.API_ISSUER_ID }}
-          api-key-id: ${{ secrets.ASC_API_KEY_ID }}
-          api-private-key: ${{ secrets.PRIVATE_KEY_CONTENTS }}
+  #     - name: upload app to TestFlight
+  #       uses: apple-actions/upload-testflight-build@v3
+  #       with: 
+  #         app-path: 'client/build/ios/ipa/mobile_client.ipa' 
+  #         issuer-id: ${{ secrets.API_ISSUER_ID }}
+  #         api-key-id: ${{ secrets.ASC_API_KEY_ID }}
+  #         api-private-key: ${{ secrets.PRIVATE_KEY_CONTENTS }}
 
 
   build-android:
