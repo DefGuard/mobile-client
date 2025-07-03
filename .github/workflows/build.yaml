@@ -57,6 +57,9 @@ jobs:
 
   build-android:
     runs-on: [self-hosted, macOS]
+    defaults:
+      run:
+        working-directory: ./client
     steps:
     - uses: actions/checkout@v4
 
@@ -77,4 +80,4 @@ jobs:
       with:
         name: android
         retention-days: 14
-        path: build/app/outputs/apk/release/app-release.apk
+        path: client/build/app/outputs/apk/release/app-release.apk

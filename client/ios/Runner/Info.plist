@@ -49,5 +49,7 @@
 	</array>
 	<key>NSCameraUsageDescription</key>
 	<string>Your camera is used to scan QR codes making it easy to add new VPN instances.</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 </dict>
 </plist>
