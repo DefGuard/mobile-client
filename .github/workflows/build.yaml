@@ -1,10 +1,9 @@
-name: 'Build app'
+name: "Build app"
 on:
   push:
     branches:
       - main
       - dev
-      - wireguard-plugin
   pull_request:
     branches:
       - main
@@ -23,7 +22,7 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: stable
-          flutter-version: 3.32.4
+          flutter-version: 3.32.5
 
       - name: use homebrew ruby
         run: |
@@ -48,12 +47,11 @@ jobs:
 
       - name: upload app to TestFlight
         uses: apple-actions/upload-testflight-build@v3
-        with: 
-          app-path: 'client/build/ios/ipa/mobile_client.ipa' 
+        with:
+          app-path: "client/build/ios/ipa/mobile_client.ipa"
           issuer-id: ${{ secrets.API_ISSUER_ID }}
           api-key-id: ${{ secrets.ASC_API_KEY_ID }}
           api-private-key: ${{ secrets.PRIVATE_KEY_CONTENTS }}
-
 
   build-android:
     runs-on: [self-hosted, macOS]
@@ -61,23 +59,16 @@ jobs:
       run:
         working-directory: ./client
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - name: setup flutter
-      uses: subosito/flutter-action@v2
-      with:
-        channel: stable
-        flutter-version: 3.32.4
+      - name: setup flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.32.5
 
-    - name: install deps
-      run: flutter pub get
+      - name: install deps
+        run: flutter pub get
 
-    - name: build android
-      run: flutter build apk
-
-    - name: upload android artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: android
-        retention-days: 14
-        path: client/build/app/outputs/apk/release/app-release.apk
+      - name: build android
+        run: flutter build appbundle
