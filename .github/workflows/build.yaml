@@ -87,4 +87,4 @@ jobs:
       - name: build android
         run: |
           cd ./client
-          flutter build appbundle --release
+          flutter build appbundle --debug --stacktrace --scan
