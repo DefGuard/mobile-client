@@ -57,6 +57,9 @@ jobs:
 
   build-android:
     runs-on: [self-hosted, macOS]
+    env:
+      ANDROID_HOME: /Users/admin/Library/Android/sdk
+      ANDROID_SDK_ROOT: /Users/admin/Library/Android/sdk
     defaults:
       run:
         working-directory: ./client
