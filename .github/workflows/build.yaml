@@ -78,7 +78,7 @@ jobs:
     - name: setup flutter
       uses: subosito/flutter-action@v2
       with:
-        channel: master
+        channel: stable
         flutter-version: 3.32.4
 
     - name: which flutter
