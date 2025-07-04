@@ -87,6 +87,13 @@ jobs:
     - name: accept licenses
       run: yes | flutter doctor --android-licenses
 
+    - name: Check Android SDK
+      run: |
+        ls -al $ANDROID_HOME
+        ls -al $ANDROID_HOME/build-tools
+        ls -al $ANDROID_HOME/platforms
+
+
     - name: clean flutter
       run: flutter clean
 
