@@ -25,16 +25,23 @@ class AddInstanceFormScreen extends HookConsumerWidget {
     return Scaffold(
       appBar: DgAppBar(title: "Add instance"),
       drawer: DgDrawer(),
-      body: Container(
-        color: DgColor.frameBg,
+      backgroundColor: DgColor.frameBg,
+      body: SingleChildScrollView(
         child: Padding(
-          padding: const EdgeInsets.all(DgSpacing.m),
+          padding: EdgeInsets.fromLTRB(
+            DgSpacing.m,
+            DgSpacing.m,
+            DgSpacing.m,
+            MediaQuery.of(context).viewInsets.bottom,
+          ),
           child: Column(
+            mainAxisSize: MainAxisSize.max,
             children: [
               SizedBox(height: DgSpacing.xl),
-              Text("Please, enter instance URL and token", style: DgText.body1),
+              Text("Please, enter instance URL and token", style: DgText.body1, textAlign: TextAlign.center,),
               SizedBox(height: DgSpacing.m),
               _AddInstanceForm(),
+              SizedBox(height: DgSpacing.m,)
             ],
           ),
         ),
