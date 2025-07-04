@@ -69,6 +69,12 @@ jobs:
         channel: master
         flutter-version: 3.32.4
 
+    - name: which flutter
+      run: which flutter
+
+    - name: clean flutter
+      run: flutter clean
+
     - name: install deps
       run: flutter pub get
 
