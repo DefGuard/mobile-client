@@ -63,6 +63,18 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
+    - name: Set up Java and Android
+      uses: actions/setup-java@v3
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+
+    - name: which java
+      run: which java
+
+    - name: java version
+      run: java -version
+
     - name: setup flutter
       uses: subosito/flutter-action@v2
       with:
