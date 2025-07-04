@@ -81,6 +81,9 @@ jobs:
         channel: master
         flutter-version: 3.32.4
 
+    - name: clean gradle
+      run: ./android/gradlew clean
+
     - name: which flutter
       run: which flutter
 
