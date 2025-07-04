@@ -81,12 +81,6 @@ jobs:
         channel: master
         flutter-version: 3.32.4
 
-    - name: make gradle executable
-      run: chmod +x ./gradlew
-
-    - name: clean gradle
-      run: ./gradlew clean
-
     - name: which flutter
       run: which flutter
 
