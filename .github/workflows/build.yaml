@@ -72,6 +72,9 @@ jobs:
     - name: which flutter
       run: which flutter
 
+    - name: accept licenses
+      run: yes | flutter doctor --android-licenses
+
     - name: clean flutter
       run: flutter clean
 
