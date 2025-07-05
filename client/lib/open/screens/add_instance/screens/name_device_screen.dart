@@ -102,6 +102,8 @@ class NameDeviceScreen extends HookConsumerWidget {
             child: ConstrainedBox(
               constraints: BoxConstraints(minHeight: constrains.maxHeight),
               child: Column(
+                mainAxisSize: MainAxisSize.max,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Form(
                     key: formKey,
@@ -112,7 +114,7 @@ class NameDeviceScreen extends HookConsumerWidget {
                       children: [
                         DgTextFormField(
                           controller: nameController,
-                          hintText: "Name",
+                          hintText: "Name this device",
                         ),
                         DgButton(
                           variant: DgButtonVariant.primary,

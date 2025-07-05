@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/open/widgets/buttons/dg_button.dart';
 import 'package:mobile/open/widgets/dg_message_box.dart';
+import 'package:mobile/open/widgets/dg_single_child_scroll_view.dart';
 import 'package:mobile/open/widgets/nav.dart';
 import 'package:mobile/router/routes.dart';
-import 'package:mobile/theme/color.dart';
 import 'package:mobile/theme/spacing.dart';
 import 'package:mobile/theme/text.dart';
 
@@ -17,9 +17,7 @@ class AddInstanceScreen extends StatelessWidget {
     return Scaffold(
       appBar: DgAppBar(title: "Add Instance"),
       drawer: DgDrawer(),
-      body: Container(
-        padding: EdgeInsets.all(DgSpacing.s),
-        color: DgColor.frameBg,
+      body: DgSingleChildScrollView(
         child: Column(
           children: [
             SizedBox(height: 120),
@@ -43,7 +41,7 @@ class AddInstanceScreen extends StatelessWidget {
               width: double.infinity,
               icon: DgIconQr(),
               onTap: () {
-                ScanInstanceQrRoute().go(context);
+                ScanInstanceQrRoute().push(context);
               },
             ),
             SizedBox(height: DgSpacing.m),
@@ -55,7 +53,7 @@ class AddInstanceScreen extends StatelessWidget {
               size: DgButtonSize.big,
               width: double.infinity,
               onTap: () {
-                AddInstanceFormScreenRoute().go(context);
+                AddInstanceFormScreenRoute().push(context);
               },
             ),
           ],

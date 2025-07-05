@@ -21,14 +21,14 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: DgAppBar(title: "Home"),
+      appBar: DgAppBar(title: "Instances"),
       drawer: DgDrawer(),
       floatingActionButton: SizedBox(
         height: 60,
         width: 60,
         child: FloatingActionButton(
           onPressed: () {
-            AddInstanceScreenRoute().go(context);
+            AddInstanceScreenRoute().push(context);
           },
           backgroundColor: DgColor.mainPrimary,
           shape: RoundedRectangleBorder(
@@ -44,9 +44,12 @@ class HomeScreen extends StatelessWidget {
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       body: Container(
         color: DgColor.frameBg,
-        child: Padding(
-          padding: const EdgeInsets.all(DgSpacing.m),
-          child: _InstancesList(),
+        child: SafeArea(
+          top: false,
+          child: Padding(
+            padding: const EdgeInsets.all(DgSpacing.m),
+            child: _InstancesList(),
+          ),
         ),
       ),
     );

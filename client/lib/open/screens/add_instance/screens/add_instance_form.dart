@@ -6,6 +6,7 @@ import 'package:mobile/open/api.dart';
 import 'package:mobile/open/screens/add_instance/screens/name_device_screen.dart';
 import 'package:mobile/open/widgets/buttons/dg_button.dart';
 import 'package:mobile/open/widgets/dg_message_box.dart';
+import 'package:mobile/open/widgets/dg_single_child_scroll_view.dart';
 import 'package:mobile/open/widgets/dg_text_form_field.dart';
 import 'package:mobile/open/widgets/icons/arrow_single.dart';
 import 'package:mobile/open/widgets/icons/asset_icons_simple.dart';
@@ -14,7 +15,6 @@ import 'package:mobile/router/routes.dart';
 import 'package:mobile/theme/spacing.dart';
 import 'package:mobile/theme/text.dart';
 
-import '../../../../theme/color.dart';
 import '../../../widgets/nav.dart';
 
 class AddInstanceFormScreen extends HookConsumerWidget {
@@ -25,25 +25,20 @@ class AddInstanceFormScreen extends HookConsumerWidget {
     return Scaffold(
       appBar: DgAppBar(title: "Add instance"),
       drawer: DgDrawer(),
-      backgroundColor: DgColor.frameBg,
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: EdgeInsets.fromLTRB(
-            DgSpacing.m,
-            DgSpacing.m,
-            DgSpacing.m,
-            MediaQuery.of(context).viewInsets.bottom,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.max,
-            children: [
-              SizedBox(height: DgSpacing.xl),
-              Text("Please, enter instance URL and token", style: DgText.body1, textAlign: TextAlign.center,),
-              SizedBox(height: DgSpacing.m),
-              _AddInstanceForm(),
-              SizedBox(height: DgSpacing.m,)
-            ],
-          ),
+      body: DgSingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.max,
+          children: [
+            SizedBox(height: DgSpacing.xl),
+            Text(
+              "Please, enter instance URL and token",
+              style: DgText.body1,
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: DgSpacing.m),
+            _AddInstanceForm(),
+            SizedBox(height: DgSpacing.m),
+          ],
         ),
       ),
     );
@@ -73,7 +68,7 @@ Future<void> _handleSubmit(
     proxyUrl: uri,
   );
   if (context.mounted) {
-    NameDeviceScreenRoute(routeData).go(context);
+    NameDeviceScreenRoute(routeData).push(context);
   }
 }
 
@@ -172,7 +167,7 @@ class _AddInstanceForm extends HookConsumerWidget {
                   size: 36,
                 ),
                 onTap: () {
-                  AddInstanceScreenRoute().go(context);
+                  Navigator.of(context).pop();
                 },
               ),
             ],

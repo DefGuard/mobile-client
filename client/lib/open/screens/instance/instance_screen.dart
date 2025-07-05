@@ -98,89 +98,94 @@ class _ScreenContent extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return CustomScrollView(
-      slivers: [
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: EdgeInsets.symmetric(
-              vertical: DgSpacing.m,
-              horizontal: DgSpacing.m,
-            ),
-            child: Column(
-              spacing: DgSpacing.m,
-              children: [
-                DgButton(
-                  width: double.infinity,
-                  variant: DgButtonVariant.secondary,
-                  size: DgButtonSize.standard,
-                  text: "Back to instances list",
-                  icon: DgIconArrowSingle(
-                    size: 18,
-                    direction: DgIconDirection.left,
+    return SafeArea(
+      top: false,
+      child: CustomScrollView(
+        slivers: [
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: EdgeInsets.symmetric(
+                vertical: DgSpacing.m,
+                horizontal: DgSpacing.m,
+              ),
+              child: Column(
+                spacing: DgSpacing.m,
+                children: [
+                  DgButton(
+                    width: double.infinity,
+                    variant: DgButtonVariant.secondary,
+                    size: DgButtonSize.standard,
+                    text: "Back to instances list",
+                    icon: DgIconArrowSingle(
+                      size: 18,
+                      direction: DgIconDirection.left,
+                    ),
+                    onTap: () {
+                      HomeScreenRoute().go(context);
+                    },
                   ),
-                  onTap: () {
-                    HomeScreenRoute().go(context);
-                  },
-                ),
-                Center(
-                  child: Text(
-                    "${screenData.instance.name} instance locations:",
-                    style: DgText.sideBar,
+                  Center(
+                    child: Text(
+                      "${screenData.instance.name} instance locations:",
+                      style: DgText.sideBar,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
-        ),
-        SliverList.separated(
-          itemCount: screenData.locations.length,
-          separatorBuilder: (_, _) => SizedBox(height: DgSpacing.s),
-          itemBuilder: (BuildContext context, int index) {
-            final location = screenData.locations[index];
-            return _LocationItem(location: location, instance: instance);
-          },
-        ),
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: EdgeInsets.only(
-              top: DgSpacing.s,
-              left: DgSpacing.l,
-              right: DgSpacing.l,
-            ),
-            child: Container(
-              constraints: BoxConstraints(minHeight: 48),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: GestureDetector(
-                  onTap: () {
-                    showDialog(
-                      context: context,
-                      builder: (BuildContext context) {
-                        return DeleteInstanceDialog(instance: instance);
-                      },
-                    );
-                  },
-                  child: Container(
-                    decoration: BoxDecoration(
-                      border: Border(
-                        bottom: BorderSide(
-                          width: 0.5,
-                          color: DgColor.textAlert,
+          SliverList.separated(
+            itemCount: screenData.locations.length,
+            separatorBuilder: (_, _) => SizedBox(height: DgSpacing.s),
+            itemBuilder: (BuildContext context, int index) {
+              final location = screenData.locations[index];
+              return _LocationItem(location: location, instance: instance);
+            },
+          ),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: EdgeInsets.only(
+                top: DgSpacing.s,
+                left: DgSpacing.l,
+                right: DgSpacing.l,
+              ),
+              child: Container(
+                constraints: BoxConstraints(minHeight: 48),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: GestureDetector(
+                    onTap: () {
+                      showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return DeleteInstanceDialog(instance: instance);
+                        },
+                      );
+                    },
+                    child: Container(
+                      decoration: BoxDecoration(
+                        border: Border(
+                          bottom: BorderSide(
+                            width: 0.5,
+                            color: DgColor.textAlert,
+                          ),
                         ),
                       ),
-                    ),
-                    child: Text(
-                      "Delete This Instance",
-                      style: DgText.buttonXS.copyWith(color: DgColor.textAlert),
-                      textAlign: TextAlign.left,
+                      child: Text(
+                        "Delete This Instance",
+                        style: DgText.buttonXS.copyWith(
+                          color: DgColor.textAlert,
+                        ),
+                        textAlign: TextAlign.left,
+                      ),
                     ),
                   ),
                 ),
               ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
