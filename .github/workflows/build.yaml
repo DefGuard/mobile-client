@@ -3,12 +3,6 @@ on:
   push:
     branches:
       - main
-      - dev
-      - wireguard-plugin
-  pull_request:
-    branches:
-      - main
-      - dev
 
 jobs:
   build-ios:
@@ -19,34 +13,34 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: setup flutter
+      - name: Setup flutter
         uses: subosito/flutter-action@v2
         with:
           channel: stable
           flutter-version: 3.32.4
 
-      - name: use homebrew ruby
+      - name: Use homebrew ruby
         run: |
           echo "/opt/homebrew/opt/ruby/bin" >> $GITHUB_PATH
           echo "/opt/homebrew/bin" >> $GITHUB_PATH
 
-      - name: install deps
+      - name: Install deps
         run: flutter pub get
 
-      - name: unlock keychain
+      - name: Unlock Keychain
         run: security -v unlock-keychain -p "${{ secrets.KEYCHAIN_PASSWORD }}" /Users/admin/Library/Keychains/login.keychain
 
-      - name: build ios
+      - name: Build iOS
         run: flutter build ipa --release --obfuscate --split-debug-info=build/debug-info --build-number=${{ github.run_number }}
 
-      - name: upload ios artifact
+      - name: Upload iOS artifact
         uses: actions/upload-artifact@v4
         with:
           name: ios
           retention-days: 14
           path: client/build/ios/ipa/*.ipa
 
-      - name: upload app to TestFlight
+      - name: Upload app to TestFlight
         uses: apple-actions/upload-testflight-build@v3
         with: 
           app-path: 'client/build/ios/ipa/mobile_client.ipa' 
@@ -57,27 +51,60 @@ jobs:
 
   build-android:
     runs-on: [self-hosted, macOS]
+    env:
+      ANDROID_HOME: /Users/admin/Library/Android/sdk
+      ANDROID_SDK_ROOT: /Users/admin/Library/Android/sdk
     defaults:
       run:
         working-directory: ./client
     steps:
     - uses: actions/checkout@v4
 
-    - name: setup flutter
+    - name: Set up Java
+      uses: actions/setup-java@v3
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+
+    - name: Setup flutter
       uses: subosito/flutter-action@v2
       with:
         channel: stable
-        flutter-version: 3.32.4
+        flutter-version: 3.32.5
 
-    - name: install deps
+    - name: Accept licenses
+      run: yes | flutter doctor --android-licenses
+
+    - name: Clean flutter
+      run: flutter clean
+
+    - name: Install deps
       run: flutter pub get
 
-    - name: build android
-      run: flutter build apk
+    - name: Build android
+      run: flutter build appbundle --release --build-number=${{ github.run_number }}
 
-    - name: upload android artifact
+    - name: Sign AAB
+      uses: r0adkll/sign-android-release@v1
+      with:
+        releaseDirectory: client/build/app/outputs/bundle/release
+        signingKeyBase64: '${{ secrets.ANDROID_SIGNING_KEY_BASE64 }}'
+        alias: '${{ secrets.ANDROID_SIGNING_KEY_ALIAS }}'
+        keyStorePassword: '${{ secrets.ANDROID_KEYSTORE_PASSWORD }}'
+        keyPassword: '${{ secrets.ANDROID_KEYSTORE_PASSWORD }}'
+
+    - name: Upload android artifact
       uses: actions/upload-artifact@v4
       with:
         name: android
         retention-days: 14
-        path: client/build/app/outputs/apk/release/app-release.apk
+        path: client/build/app/outputs/bundle/release/app-release.aab
+
+    - name: Publish to Play Store
+      uses: r0adkll/upload-google-play@v1
+      with:
+        serviceAccountJsonPlainText: '${{ secrets.ANDROID_SERVICE_ACCOUNT_JSON }}'
+        packageName: net.defguard.mobile
+        releaseFiles: client/build/app/outputs/bundle/release/app-release.aab
+        status: draft
+        track: internal
