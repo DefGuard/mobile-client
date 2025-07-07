@@ -88,7 +88,7 @@ jobs:
       run: flutter pub get
 
     - name: build android
-      run: flutter build appBundle
+      run: flutter build appbundle
 
     - name: Sign AAB
       uses: r0adkll/sign-android-release@v1
