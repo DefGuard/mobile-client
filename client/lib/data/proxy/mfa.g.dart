@@ -41,3 +41,33 @@ const _$StartMfaResponseFieldMap = <String, String>{'token': 'token'};
 
 Map<String, dynamic> _$StartMfaResponseToJson(StartMfaResponse instance) =>
     <String, dynamic>{'token': instance.token};
+
+FinishMfaRequest _$FinishMfaRequestFromJson(Map<String, dynamic> json) =>
+    $checkedCreate('FinishMfaRequest', json, ($checkedConvert) {
+      final val = FinishMfaRequest(
+        token: $checkedConvert('token', (v) => v as String),
+        code: $checkedConvert('code', (v) => v as String),
+      );
+      return val;
+    });
+
+const _$FinishMfaRequestFieldMap = <String, String>{
+  'token': 'token',
+  'code': 'code',
+};
+
+Map<String, dynamic> _$FinishMfaRequestToJson(FinishMfaRequest instance) =>
+    <String, dynamic>{'token': instance.token, 'code': instance.code};
+
+FinishMfaResponse _$FinishMfaResponseFromJson(Map<String, dynamic> json) =>
+    $checkedCreate('FinishMfaResponse', json, ($checkedConvert) {
+      final val = FinishMfaResponse(
+        token: $checkedConvert('token', (v) => v as String),
+      );
+      return val;
+    });
+
+const _$FinishMfaResponseFieldMap = <String, String>{'token': 'token'};
+
+Map<String, dynamic> _$FinishMfaResponseToJson(FinishMfaResponse instance) =>
+    <String, dynamic>{'token': instance.token};

@@ -9,7 +9,8 @@ import 'package:mobile/open/riverpod/plugin/plugin.dart';
 import 'package:mobile/open/screens/instance/widgets/connect_dialog.dart';
 import 'package:mobile/open/screens/instance/widgets/connection_conflict_dialog.dart';
 import 'package:mobile/open/screens/instance/widgets/delete_instance_dialog.dart';
-import 'package:mobile/open/screens/instance/widgets/mfa_dialog.dart';
+import 'package:mobile/open/screens/instance/widgets/mfa/mfa_dialog.dart';
+import 'package:mobile/open/screens/instance/widgets/mfa/totp_dialog.dart';
 import 'package:mobile/open/widgets/buttons/dg_button.dart';
 import 'package:mobile/open/widgets/icons/arrow_single.dart';
 import 'package:mobile/open/widgets/icons/asset_icons_simple.dart';
@@ -347,11 +348,7 @@ class _LocationItem extends HookConsumerWidget {
                                   final code = await showDialog(
                                     context: context,
                                     builder: (BuildContext context) {
-                                      return MfaStartDialog(
-                                        publicKey: dialogResult.devicePublicKey,
-                                        locationId: dialogResult.networkId,
-                                        method: 0,
-                                      );
+                                      return TotpDialog(token: token);
                                     },
                                   );
                                   break;

@@ -31,3 +31,31 @@ class StartMfaResponse {
 
   const StartMfaResponse({required this.token});
 }
+
+@JsonSerializable()
+class FinishMfaRequest {
+  final String token;
+  final String code;
+
+  const FinishMfaRequest({
+    required this.token,
+    required this.code,
+  });
+
+  factory FinishMfaRequest.fromJson(Map<String, dynamic> json) =>
+      _$FinishMfaRequestFromJson(json);
+
+  Map<String, dynamic> toJson() => _$FinishMfaRequestToJson(this);
+}
+
+@JsonSerializable()
+class FinishMfaResponse {
+  final String token;
+
+  factory FinishMfaResponse.fromJson(Map<String, dynamic> json) =>
+      _$FinishMfaResponseFromJson(json);
+
+  Map<String, dynamic> toJson() => _$FinishMfaResponseToJson(this);
+
+  const FinishMfaResponse({required this.token});
+}
