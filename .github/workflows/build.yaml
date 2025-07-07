@@ -72,30 +72,14 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
-    - name: which java
-      run: which java
-
-    - name: java version
-      run: java -version
-
     - name: setup flutter
       uses: subosito/flutter-action@v2
       with:
         channel: stable
         flutter-version: 3.32.5
 
-    - name: which flutter
-      run: which flutter
-
     - name: accept licenses
       run: yes | flutter doctor --android-licenses
-
-    - name: Check Android SDK
-      run: |
-        ls -al $ANDROID_HOME
-        ls -al $ANDROID_HOME/build-tools
-        ls -al $ANDROID_HOME/platforms
-
 
     - name: clean flutter
       run: flutter clean
@@ -104,11 +88,20 @@ jobs:
       run: flutter pub get
 
     - name: build android
-      run: flutter build apk
+      run: flutter build appBundle
+
+    - name: Sign AAB
+      uses: r0adkll/sign-android-release@v1
+      with:
+        releaseDirectory: client/build/app/outputs/bundle/release
+        signingKeyBase64: '${{ secrets.ANDROID_SIGNING_KEY_BASE64 }}'
+        alias: '${{ secrets.ANDROID_SIGNING_KEY_ALIAS }}'
+        keyStorePassword: '${{ secrets.ANDROID_KEYSTORE_PASSWORD }}'
+        keyPassword: '${{ secrets.ANDROID_KEYSTORE_PASSWORD }}'
 
     - name: upload android artifact
       uses: actions/upload-artifact@v4
       with:
         name: android
         retention-days: 14
-        path: client/build/app/outputs/apk/release/app-release.apk
+        path: client/build/app/outputs/bundle/release/app-release.aab
