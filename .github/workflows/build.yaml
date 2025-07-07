@@ -66,28 +66,28 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - name: Set up Java and Android
+    - name: Set up Java
       uses: actions/setup-java@v3
       with:
         distribution: 'temurin'
         java-version: '17'
 
-    - name: setup flutter
+    - name: Setup flutter
       uses: subosito/flutter-action@v2
       with:
         channel: stable
         flutter-version: 3.32.5
 
-    - name: accept licenses
+    - name: Accept licenses
       run: yes | flutter doctor --android-licenses
 
-    - name: clean flutter
+    - name: Clean flutter
       run: flutter clean
 
-    - name: install deps
+    - name: Install deps
       run: flutter pub get
 
-    - name: build android
+    - name: Build android
       run: flutter build appbundle
 
     - name: Sign AAB
@@ -99,9 +99,17 @@ jobs:
         keyStorePassword: '${{ secrets.ANDROID_KEYSTORE_PASSWORD }}'
         keyPassword: '${{ secrets.ANDROID_KEYSTORE_PASSWORD }}'
 
-    - name: upload android artifact
+    - name: Upload android artifact
       uses: actions/upload-artifact@v4
       with:
         name: android
         retention-days: 14
         path: client/build/app/outputs/bundle/release/app-release.aab
+
+    - name: Publish to Play Store
+      uses: r0adkll/upload-google-play@v1
+      with:
+        serviceAccountJsonPlainText: '${{ secrets.ANDROID_SERVICE_ACCOUNT_JSON }}'
+        packageName: net.defguard.mobile
+        releaseFiles: client/build/app/outputs/bundle/release/app-release.aab
+        track: alpha
