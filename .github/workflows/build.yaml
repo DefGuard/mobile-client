@@ -113,3 +113,4 @@ jobs:
         packageName: net.defguard.mobile
         releaseFiles: client/build/app/outputs/bundle/release/app-release.aab
         track: alpha
+        status: draft
