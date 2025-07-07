@@ -331,6 +331,7 @@ class _LocationItem extends HookConsumerWidget {
                                 context: context,
                                 builder: (BuildContext context) {
                                   return MfaStartDialog(
+                                    url: instance.proxyUrl,
                                     publicKey: dialogResult.devicePublicKey,
                                     locationId: dialogResult.networkId,
                                     method: 0,
@@ -343,13 +344,20 @@ class _LocationItem extends HookConsumerWidget {
                               }
                               switch (method) {
                                 case MfaMethod.totp:
-                                  talker.error("TOTP");
+                                  talker.error("TOTP, proxyUrl:", instance.proxyUrl);
                                   // TODO call client-mfa/start endpoint
-                                  final code = await showDialog(
+                                  final presharedKey = await showDialog(
                                     context: context,
                                     builder: (BuildContext context) {
-                                      return TotpDialog(token: token);
+                                      return TotpDialog(token: token, url: instance.proxyUrl);
                                     },
+                                  );
+                                  talker.info(
+                                    "TOTP authentication successful, configuring wg interface",
+                                  );
+                                  dialogResult.presharedKey = presharedKey;
+                                  await wireguardPlugin.startTunnel(
+                                    jsonEncode(dialogResult.toJson()),
                                   );
                                   break;
                                 case MfaMethod.email:

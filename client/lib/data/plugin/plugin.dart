@@ -21,7 +21,7 @@ class PluginConnectPayload {
   final String endpoint;
   final String allowedIps;
   final int keepalive;
-  final String? presharedKey;
+  String? presharedKey;
 
   // context
   final String locationName;
