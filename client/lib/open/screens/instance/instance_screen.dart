@@ -9,6 +9,7 @@ import 'package:mobile/open/riverpod/plugin/plugin.dart';
 import 'package:mobile/open/screens/instance/widgets/connect_dialog.dart';
 import 'package:mobile/open/screens/instance/widgets/connection_conflict_dialog.dart';
 import 'package:mobile/open/screens/instance/widgets/delete_instance_dialog.dart';
+import 'package:mobile/open/screens/instance/widgets/mfa_dialog.dart';
 import 'package:mobile/open/widgets/buttons/dg_button.dart';
 import 'package:mobile/open/widgets/icons/arrow_single.dart';
 import 'package:mobile/open/widgets/icons/asset_icons_simple.dart';
@@ -193,6 +194,7 @@ class _LocationItem extends HookConsumerWidget {
   PluginConnectPayload makePayload() {
     return PluginConnectPayload(
       publicKey: location.pubKey,
+      devicePublicKey: instance.pubKey,
       privateKey: instance.privateKey,
       address: location.address,
       dns: location.dns,
@@ -201,6 +203,7 @@ class _LocationItem extends HookConsumerWidget {
       keepalive: location.keepAliveInterval,
       locationName: location.name,
       locationId: location.id,
+      networkId: location.networkId,
       instanceId: instance.id,
       traffic: TunnelTraffic.predefined,
     );
@@ -322,9 +325,50 @@ class _LocationItem extends HookConsumerWidget {
                                 },
                               );
                           if (dialogResult != null) {
-                            await wireguardPlugin.startTunnel(
-                              jsonEncode(dialogResult.toJson()),
-                            );
+                            if (location.mfaEnabled) {
+                              final (method, token) = await showDialog(
+                                context: context,
+                                builder: (BuildContext context) {
+                                  return MfaStartDialog(
+                                    publicKey: dialogResult.devicePublicKey,
+                                    locationId: dialogResult.networkId,
+                                    method: 0,
+                                  );
+                                },
+                              );
+                              if (method == null) {
+                                // User dismissed the dialog
+                                return;
+                              }
+                              switch (method) {
+                                case MfaMethod.totp:
+                                  talker.error("TOTP");
+                                  // TODO call client-mfa/start endpoint
+                                  final code = await showDialog(
+                                    context: context,
+                                    builder: (BuildContext context) {
+                                      return MfaStartDialog(
+                                        publicKey: dialogResult.devicePublicKey,
+                                        locationId: dialogResult.networkId,
+                                        method: 0,
+                                      );
+                                    },
+                                  );
+                                  break;
+                                case MfaMethod.email:
+                                  talker.error("Email");
+                                  break;
+                              }
+                            } else {
+                              if (location.mfaEnabled) {
+                                // TODO
+                                talker.error("MFA Enabled, showing dialog");
+                              } else {
+                                await wireguardPlugin.startTunnel(
+                                  jsonEncode(dialogResult.toJson()),
+                                );
+                              }
+                            }
                           }
                         } else {
                           final tunnelConfig = makePayload();
