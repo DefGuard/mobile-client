@@ -89,57 +89,69 @@ class NameDeviceScreen extends HookConsumerWidget {
     return Scaffold(
       appBar: DgAppBar(title: "Add instance"),
       drawer: DgDrawer(),
-      body: Container(
-        color: DgColor.frameBg,
-        child: Padding(
-          padding: const EdgeInsets.all(DgSpacing.m),
-          child: Column(
-            children: [
-              Form(
-                key: formKey,
-                child: Column(
-                  mainAxisSize: MainAxisSize.max,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  spacing: DgSpacing.m,
-                  children: [
-                    DgTextFormField(
-                      controller: nameController,
-                      hintText: "Name",
+      backgroundColor: DgColor.frameBg,
+      body: LayoutBuilder(
+        builder: (context, constrains) {
+          return SingleChildScrollView(
+            padding: EdgeInsets.fromLTRB(
+              DgSpacing.m,
+              DgSpacing.m,
+              DgSpacing.m,
+              DgSpacing.m + MediaQuery.of(context).viewInsets.bottom,
+            ),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: constrains.maxHeight),
+              child: Column(
+                mainAxisSize: MainAxisSize.max,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Form(
+                    key: formKey,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.max,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      spacing: DgSpacing.m,
+                      children: [
+                        DgTextFormField(
+                          controller: nameController,
+                          hintText: "Name this device",
+                        ),
+                        DgButton(
+                          variant: DgButtonVariant.primary,
+                          size: DgButtonSize.big,
+                          width: double.infinity,
+                          text: "Submit",
+                          onTap: () async {
+                            final messenger = ScaffoldMessenger.of(context);
+                            try {
+                              final instanceName = await _handleRegistration(
+                                context,
+                                db,
+                                nameController.text.trim(),
+                              );
+                              messenger.showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    "Instance $instanceName registered successfully.",
+                                  ),
+                                ),
+                              );
+                              if (context.mounted) {
+                                HomeScreenRoute().go(context);
+                              }
+                            } catch (e) {
+                              debugPrint("Registration failed, Reason:\n$e");
+                            }
+                          },
+                        ),
+                      ],
                     ),
-                    DgButton(
-                      variant: DgButtonVariant.primary,
-                      size: DgButtonSize.big,
-                      width: double.infinity,
-                      text: "Submit",
-                      onTap: () async {
-                        final messenger = ScaffoldMessenger.of(context);
-                        try {
-                          final instanceName = await _handleRegistration(
-                            context,
-                            db,
-                            nameController.text.trim(),
-                          );
-                          messenger.showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                "Instance $instanceName registered successfully.",
-                              ),
-                            ),
-                          );
-                          if (context.mounted) {
-                            HomeScreenRoute().go(context);
-                          }
-                        } catch (e) {
-                          debugPrint("Registration failed, Reason:\n$e");
-                        }
-                      },
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            ],
-          ),
-        ),
+            ),
+          );
+        },
       ),
     );
   }

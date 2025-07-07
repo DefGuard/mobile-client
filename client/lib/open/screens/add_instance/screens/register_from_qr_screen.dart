@@ -34,7 +34,7 @@ class RegisterFromQrScreen extends HookConsumerWidget {
         startResponse: registrationResponse,
       );
       if (context.mounted) {
-        NameDeviceScreenRoute(routeData).go(context);
+        NameDeviceScreenRoute(routeData).push(context);
       }
     } catch (e) {
       debugPrint("Enrollment start error! $e");
