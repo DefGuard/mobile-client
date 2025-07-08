@@ -10,6 +10,7 @@
 .history
 .svn/
 .swiftpm/
+.gradle
 migrate_working_dir/
 
 # IntelliJ related
@@ -47,3 +48,4 @@ app.*.map.json
 # direnv stuffAdd commentMore actions
 .direnv/
 .envrc
+local.properties

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:mobile/open/riverpod/package_info/package_info.dart';
 import 'package:mobile/router/routes.dart';
 import 'package:mobile/theme/color.dart';
 import 'package:mobile/theme/spacing.dart';
@@ -58,20 +60,36 @@ class DgAppBar extends StatelessWidget implements PreferredSizeWidget {
   }
 }
 
-class DgDrawer extends StatelessWidget {
-  const DgDrawer({super.key});
+class _DrawerLogo extends StatelessWidget {
+  const _DrawerLogo();
 
   @override
   Widget build(BuildContext context) {
+    return SvgPicture.asset(
+      'assets/icons/drawer-logo.svg',
+      colorFilter: ColorFilter.mode(DgColor.textBodyPrimary, BlendMode.srcIn),
+    );
+  }
+}
+
+class DgDrawer extends HookConsumerWidget {
+  const DgDrawer({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final year = DateTime.now().year;
+    final version = ref
+        .watch(packageInfoProvider)
+        .maybeWhen(orElse: () => '', data: (info) => "v${info.version}");
+
     return Container(
       color: DgColor.navBg,
-      child: Column(
-        spacing: DgSpacing.xs,
-        children: [
-          SafeArea(
-            bottom: false,
-            child: Container(
-              color: DgColor.navBg,
+      child: SafeArea(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          mainAxisSize: MainAxisSize.max,
+          children: [
+            Container(
               width: double.infinity,
               padding: EdgeInsetsGeometry.all(DgSpacing.s),
               child: Row(
@@ -100,39 +118,68 @@ class DgDrawer extends StatelessWidget {
                 ],
               ),
             ),
-          ),
-          Container(
-            color: DgColor.navBg,
-            padding: EdgeInsetsGeometry.all(DgSpacing.m),
-            child: Column(
-              children: [
-                Column(
-                  spacing: DgSpacing.s,
+            Expanded(
+              child: Container(
+                padding: EdgeInsets.all(DgSpacing.m),
+                child: Column(
+                  mainAxisSize: MainAxisSize.max,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    _MenuButton(
-                      text: "Home",
-                      onPressed: () {
-                        HomeScreenRoute().go(context);
-                      },
+                    Column(
+                      spacing: DgSpacing.s,
+                      children: [
+                        _MenuButton(
+                          text: "Instances",
+                          onPressed: () {
+                            HomeScreenRoute().go(context);
+                          },
+                        ),
+                        _MenuButton(
+                          text: "Add Instance",
+                          onPressed: () {
+                            AddInstanceScreenRoute().push(context);
+                          },
+                        ),
+                        _MenuButton(
+                          text: "View Application Logs",
+                          onPressed: () {
+                            TalkerScreenRoute().push(context);
+                          },
+                        ),
+                      ],
                     ),
-                    _MenuButton(
-                      text: "Add Instance",
-                      onPressed: () {
-                        AddInstanceScreenRoute().go(context);
-                      },
-                    ),
-                    _MenuButton(
-                      text: "Scan Instance",
-                      onPressed: () {
-                        ScanInstanceQrRoute().go(context);
-                      },
+                    Container(
+                      decoration: BoxDecoration(
+                        border: Border(
+                          top: BorderSide(
+                            width: 1,
+                            color: DgColor.borderPrimary,
+                          ),
+                        ),
+                      ),
+                      child: Padding(
+                        padding: EdgeInsets.all(DgSpacing.s),
+                        child: Row(
+                          spacing: DgSpacing.s,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            _DrawerLogo(),
+                            Text(
+                              "Copyright \u00a9 $year defguard\nApplication version: $version",
+                              style: DgText.copyright.copyWith(
+                                color: DgColor.textBodyPrimary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                   ],
                 ),
-              ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

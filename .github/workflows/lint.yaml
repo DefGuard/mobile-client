@@ -13,7 +13,10 @@ on:
 jobs:
   lint:
     name: Lint project
-    runs-on: [ self-hosted, macOS ]
+    runs-on: [self-hosted, macOS]
+    defaults:
+      run:
+        working-directory: ./client
 
     steps:
       - name: Checkout

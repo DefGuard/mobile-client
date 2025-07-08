@@ -23,7 +23,7 @@ class ScanInstanceQrScreen extends HookConsumerWidget {
     useEffect(() {
       final sub = controllerRef.value.stream.take(1).listen((data) {
         if (context.mounted) {
-          RegisterFromQrScreenRoute(data).go(context);
+          RegisterFromQrScreenRoute(data).push(context);
         }
       });
 

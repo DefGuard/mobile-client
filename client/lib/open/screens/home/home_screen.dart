@@ -5,7 +5,6 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mobile/data/db/database.dart';
 import 'package:mobile/open/riverpod/plugin/plugin.dart';
-import 'package:mobile/open/widgets/buttons/dg_button.dart';
 import 'package:mobile/open/widgets/circular_progress.dart';
 import 'package:mobile/open/widgets/icons/arrow_single.dart';
 import 'package:mobile/open/widgets/icons/connection.dart';
@@ -22,14 +21,14 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: DgAppBar(title: "Home"),
+      appBar: DgAppBar(title: "Instances"),
       drawer: DgDrawer(),
       floatingActionButton: SizedBox(
         height: 60,
         width: 60,
         child: FloatingActionButton(
           onPressed: () {
-            AddInstanceScreenRoute().go(context);
+            AddInstanceScreenRoute().push(context);
           },
           backgroundColor: DgColor.mainPrimary,
           shape: RoundedRectangleBorder(
@@ -45,9 +44,12 @@ class HomeScreen extends StatelessWidget {
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       body: Container(
         color: DgColor.frameBg,
-        child: Padding(
-          padding: const EdgeInsets.all(DgSpacing.m),
-          child: _InstancesList(),
+        child: SafeArea(
+          top: false,
+          child: Padding(
+            padding: const EdgeInsets.all(DgSpacing.m),
+            child: _InstancesList(),
+          ),
         ),
       ),
     );
@@ -92,17 +94,6 @@ class _InstancesList extends HookConsumerWidget {
 
         return CustomScrollView(
           slivers: [
-            SliverToBoxAdapter(
-              child: DgButton(
-                variant: DgButtonVariant.secondary,
-                size: DgButtonSize.big,
-                text: "Delete all instances",
-                width: double.infinity,
-                onTap: () {
-                  handleDeleteAll();
-                },
-              ),
-            ),
             SliverToBoxAdapter(child: SizedBox(height: DgSpacing.s)),
             SliverList.separated(
               itemCount: instances.length,

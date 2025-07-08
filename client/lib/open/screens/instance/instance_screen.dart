@@ -4,7 +4,6 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mobile/data/db/database.dart';
 import 'package:mobile/data/plugin/plugin.dart';
-import 'package:mobile/main.dart';
 import 'package:mobile/open/riverpod/plugin/plugin.dart';
 import 'package:mobile/open/screens/instance/widgets/connection_conflict_dialog.dart';
 import 'package:mobile/open/screens/instance/widgets/delete_instance_dialog.dart';
@@ -21,6 +20,8 @@ import 'package:mobile/router/routes.dart';
 import 'package:mobile/theme/color.dart';
 import 'package:mobile/theme/spacing.dart';
 import 'package:mobile/theme/text.dart';
+
+import '../../../logging.dart';
 
 class _ScreenData {
   final DefguardInstance instance;
@@ -96,89 +97,94 @@ class _ScreenContent extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return CustomScrollView(
-      slivers: [
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: EdgeInsets.symmetric(
-              vertical: DgSpacing.m,
-              horizontal: DgSpacing.m,
-            ),
-            child: Column(
-              spacing: DgSpacing.m,
-              children: [
-                DgButton(
-                  width: double.infinity,
-                  variant: DgButtonVariant.secondary,
-                  size: DgButtonSize.standard,
-                  text: "Back to instances list",
-                  icon: DgIconArrowSingle(
-                    size: 18,
-                    direction: DgIconDirection.left,
+    return SafeArea(
+      top: false,
+      child: CustomScrollView(
+        slivers: [
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: EdgeInsets.symmetric(
+                vertical: DgSpacing.m,
+                horizontal: DgSpacing.m,
+              ),
+              child: Column(
+                spacing: DgSpacing.m,
+                children: [
+                  DgButton(
+                    width: double.infinity,
+                    variant: DgButtonVariant.secondary,
+                    size: DgButtonSize.standard,
+                    text: "Back to instances list",
+                    icon: DgIconArrowSingle(
+                      size: 18,
+                      direction: DgIconDirection.left,
+                    ),
+                    onTap: () {
+                      HomeScreenRoute().go(context);
+                    },
                   ),
-                  onTap: () {
-                    HomeScreenRoute().go(context);
-                  },
-                ),
-                Center(
-                  child: Text(
-                    "${screenData.instance.name} instance locations:",
-                    style: DgText.sideBar,
+                  Center(
+                    child: Text(
+                      "${screenData.instance.name} instance locations:",
+                      style: DgText.sideBar,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
-        ),
-        SliverList.separated(
-          itemCount: screenData.locations.length,
-          separatorBuilder: (_, _) => SizedBox(height: DgSpacing.s),
-          itemBuilder: (BuildContext context, int index) {
-            final location = screenData.locations[index];
-            return _LocationItem(location: location, instance: instance);
-          },
-        ),
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: EdgeInsets.only(
-              top: DgSpacing.s,
-              left: DgSpacing.l,
-              right: DgSpacing.l,
-            ),
-            child: Container(
-              constraints: BoxConstraints(minHeight: 48),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: GestureDetector(
-                  onTap: () {
-                    showDialog(
-                      context: context,
-                      builder: (BuildContext context) {
-                        return DeleteInstanceDialog(instance: instance);
-                      },
-                    );
-                  },
-                  child: Container(
-                    decoration: BoxDecoration(
-                      border: Border(
-                        bottom: BorderSide(
-                          width: 0.5,
-                          color: DgColor.textAlert,
+          SliverList.separated(
+            itemCount: screenData.locations.length,
+            separatorBuilder: (_, _) => SizedBox(height: DgSpacing.s),
+            itemBuilder: (BuildContext context, int index) {
+              final location = screenData.locations[index];
+              return _LocationItem(location: location, instance: instance);
+            },
+          ),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: EdgeInsets.only(
+                top: DgSpacing.s,
+                left: DgSpacing.l,
+                right: DgSpacing.l,
+              ),
+              child: Container(
+                constraints: BoxConstraints(minHeight: 48),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: GestureDetector(
+                    onTap: () {
+                      showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return DeleteInstanceDialog(instance: instance);
+                        },
+                      );
+                    },
+                    child: Container(
+                      decoration: BoxDecoration(
+                        border: Border(
+                          bottom: BorderSide(
+                            width: 0.5,
+                            color: DgColor.textAlert,
+                          ),
                         ),
                       ),
-                    ),
-                    child: Text(
-                      "Delete This Instance",
-                      style: DgText.buttonXS.copyWith(color: DgColor.textAlert),
-                      textAlign: TextAlign.left,
+                      child: Text(
+                        "Delete This Instance",
+                        style: DgText.buttonXS.copyWith(
+                          color: DgColor.textAlert,
+                        ),
+                        textAlign: TextAlign.left,
+                      ),
                     ),
                   ),
                 ),
               ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

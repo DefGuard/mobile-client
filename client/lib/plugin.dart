@@ -3,7 +3,7 @@ import 'package:mobile/data/plugin/plugin.dart';
 import 'package:mobile/open/riverpod/plugin/plugin.dart';
 import 'package:wireguard_plugin/wireguard_plugin.dart';
 
-import 'main.dart';
+import 'logging.dart';
 
 final wireguardPluginProvider = Provider<WireguardPlugin>((ref) {
   final plugin = WireguardPlugin(talker: talker);
