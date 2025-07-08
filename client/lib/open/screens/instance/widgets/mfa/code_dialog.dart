@@ -131,7 +131,9 @@ class _CodeForm extends HookConsumerWidget {
                         token,
                         codeController.text.trim(),
                       );
-                      Navigator.of(context).pop(response.presharedKey);
+                      if(context.mounted) {
+                        Navigator.of(context).pop(response.presharedKey);
+                      }
                     } catch (e) {
                       print("Submit Error: $e");
                       messenger.showSnackBar(

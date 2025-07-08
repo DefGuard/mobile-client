@@ -4,8 +4,9 @@ import 'package:mobile/data/plugin/plugin.dart';
 import 'package:mobile/open/screens/instance/widgets/mfa/mfa_dialog.dart';
 import 'package:mobile/open/screens/instance/widgets/connect_dialog.dart';
 import 'package:mobile/open/screens/instance/widgets/mfa/code_dialog.dart';
-import 'package:mobile/main.dart';
 import 'dart:convert';
+
+import '../../../../logging.dart';
 
 enum MfaMethod {
   totp(0),

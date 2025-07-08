@@ -80,9 +80,11 @@ class MfaStartDialog extends HookConsumerWidget {
                           locationId,
                           MfaMethod.totp,
                         );
-                        Navigator.of(
-                          context,
-                        ).pop((MfaMethod.totp, response.token));
+                        if(context.mounted) {
+                          Navigator.of(
+                            context,
+                          ).pop((MfaMethod.totp, response.token));
+                        }
                       },
                     ),
                     DgButton(
@@ -96,9 +98,11 @@ class MfaStartDialog extends HookConsumerWidget {
                           locationId,
                           MfaMethod.email,
                         );
-                        Navigator.of(
-                          context,
-                        ).pop((MfaMethod.totp, response.token));
+                        if(context.mounted) {
+                          Navigator.of(
+                            context,
+                          ).pop((MfaMethod.totp, response.token));
+                        }
                       },
                     ),
                   ],

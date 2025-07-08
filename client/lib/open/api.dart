@@ -5,7 +5,6 @@ import 'package:dio/dio.dart';
 import 'package:dio_cookie_manager/dio_cookie_manager.dart';
 import 'package:mobile/data/proxy/enrollment.dart';
 import 'package:mobile/data/proxy/mfa.dart';
-import 'package:mobile/main.dart';
 
 import 'package:talker_dio_logger/talker_dio_logger_interceptor.dart';
 
