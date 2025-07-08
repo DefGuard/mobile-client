@@ -40,6 +40,9 @@ class TunnelService {
 
     // handle mfa
     if (location.mfaEnabled) {
+      if (!context.mounted) {
+        return;
+      }
       final presharedKey = await _handleMfaFlow(
         context: context,
         proxyUrl: instance.proxyUrl,
