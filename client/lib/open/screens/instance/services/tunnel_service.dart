@@ -45,6 +45,10 @@ class TunnelService {
         proxyUrl: instance.proxyUrl,
         payload: payload,
       );
+      if (presharedKey == null) {
+        // user dismissed the dialog
+        return;
+      }
       payload.presharedKey = presharedKey;
     }
 
