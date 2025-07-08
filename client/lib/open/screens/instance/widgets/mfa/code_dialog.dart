@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mobile/data/proxy/mfa.dart';
-import 'package:mobile/main.dart';
 import 'package:mobile/open/api.dart';
+import 'package:mobile/open/screens/instance/services/mfa_service.dart';
 import 'package:mobile/open/widgets/buttons/dg_button.dart';
 import 'package:mobile/open/widgets/dg_message_box.dart';
 import 'package:mobile/open/widgets/dg_text_form_field.dart';
@@ -15,14 +15,23 @@ import 'package:mobile/theme/spacing.dart';
 import 'package:mobile/theme/text.dart';
 
 final String _title = "Two-factor authentication";
-final String _msg =
-    "Paste the authentication code from your Authenticator Application.";
 
-class TotpDialog extends HookConsumerWidget {
+final Map<MfaMethod, String> _msg = {
+  MfaMethod.totp: "Paste the authentication code from your Authenticator Application.",
+  MfaMethod.email: "Paste the authentication code you received in the email.",
+};
+
+class CodeDialog extends HookConsumerWidget {
   final String token;
   final String url;
+  final MfaMethod method;
 
-  const TotpDialog({super.key, required this.token, required this.url});
+  const CodeDialog({
+    super.key,
+    required this.token,
+    required this.url,
+    required this.method,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -41,9 +50,9 @@ class TotpDialog extends HookConsumerWidget {
               children: [
                 DgMessageBox(
                   variant: DgMessageBoxVariant.infoOutlined,
-                  text: _msg,
+                  text: _msg[method],
                 ),
-                _TotpForm(token: token, url: url),
+                _CodeForm(token: token, url: url),
               ],
             ),
           ],
@@ -65,10 +74,10 @@ Future<FinishMfaResponse> _handleSubmit(
   return response;
 }
 
-class _TotpForm extends HookConsumerWidget {
+class _CodeForm extends HookConsumerWidget {
   final String token;
   final String url;
-  const _TotpForm({required this.token, required this.url});
+  const _CodeForm({required this.token, required this.url});
 
   String? _validateCode(String? value) {
     if (value == null || value.trim().isEmpty) {
@@ -92,10 +101,6 @@ class _TotpForm extends HookConsumerWidget {
         spacing: DgSpacing.m,
         mainAxisSize: MainAxisSize.min,
         children: [
-          DgMessageBox(
-            width: double.infinity,
-            text: "Please continue by entering a received URL and token below.",
-          ),
           Column(
             spacing: DgSpacing.l,
             children: [
@@ -127,7 +132,6 @@ class _TotpForm extends HookConsumerWidget {
                         token,
                         codeController.text.trim(),
                       );
-                      talker.error("FinishMfaResponse:", response);
                       Navigator.of(context).pop(response.presharedKey);
                     } catch (e) {
                       print("Submit Error: $e");
@@ -152,7 +156,7 @@ class _TotpForm extends HookConsumerWidget {
                   size: 36,
                 ),
                 onTap: () {
-                  AddInstanceScreenRoute().go(context);
+                  Navigator.of(context).pop();
                 },
               ),
             ],

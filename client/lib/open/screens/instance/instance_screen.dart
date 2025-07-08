@@ -315,36 +315,46 @@ class _LocationItem extends HookConsumerWidget {
                       if (context.mounted) {
                         // means instance allows users to pick what type of traffic they want to use
                         // otherwise skip traffic option dialog and just start tunnel with predefined traffic
+                        PluginConnectPayload payload = makePayload();
                         if (!instance.disableAllTraffic) {
-                          final dialogResult =
-                              await showDialog<PluginConnectPayload?>(
+                          // display traffic type selection dialog
+                          final traffic =
+                              await showDialog<TunnelTraffic?>(
                                 context: context,
                                 builder: (BuildContext context) {
-                                  final payload = makePayload();
-                                  return ConnectDialog(payload: payload);
+                                  return ConnectDialog();
                                 },
                               );
-                          if (dialogResult != null) {
+                          if (traffic != null) {
+                            payload.traffic = traffic;
                             if (location.mfaEnabled) {
+                              // connect MFA
                               await MfaService.connect(
                                 context: context,
                                 proxyUrl: instance.proxyUrl,
-                                devicePublicKey: dialogResult.devicePublicKey,
-                                networkId: dialogResult.networkId,
-                                payload: dialogResult,
+                                pluginConnectPayload: payload,
                                 wireguardPlugin: wireguardPlugin,
                               );
                             } else {
                               await wireguardPlugin.startTunnel(
-                                jsonEncode(dialogResult.toJson()),
+                                jsonEncode(payload.toJson()),
                               );
                             }
                           }
                         } else {
+                            if (location.mfaEnabled) {
+                              await MfaService.connect(
+                                context: context,
+                                proxyUrl: instance.proxyUrl,
+                                pluginConnectPayload: payload,
+                                wireguardPlugin: wireguardPlugin,
+                              );
+                            } else {
                           final tunnelConfig = makePayload();
                           await wireguardPlugin.startTunnel(
                             jsonEncode(tunnelConfig.toJson()),
                           );
+                            }
                         }
                       }
                     }
