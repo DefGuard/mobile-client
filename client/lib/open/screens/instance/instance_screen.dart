@@ -8,7 +8,7 @@ import 'package:mobile/main.dart';
 import 'package:mobile/open/riverpod/plugin/plugin.dart';
 import 'package:mobile/open/screens/instance/widgets/connection_conflict_dialog.dart';
 import 'package:mobile/open/screens/instance/widgets/delete_instance_dialog.dart';
-import 'package:mobile/open/screens/instance/services/mfa_service.dart';
+import 'package:mobile/open/screens/instance/services/tunnel_service.dart';
 import 'package:mobile/open/widgets/buttons/dg_button.dart';
 import 'package:mobile/open/widgets/icons/arrow_single.dart';
 import 'package:mobile/open/widgets/icons/asset_icons_simple.dart';
@@ -21,7 +21,6 @@ import 'package:mobile/router/routes.dart';
 import 'package:mobile/theme/color.dart';
 import 'package:mobile/theme/spacing.dart';
 import 'package:mobile/theme/text.dart';
-import 'dart:convert';
 
 class _ScreenData {
   final DefguardInstance instance;
