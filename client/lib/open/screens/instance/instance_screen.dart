@@ -6,7 +6,6 @@ import 'package:mobile/data/db/database.dart';
 import 'package:mobile/data/plugin/plugin.dart';
 import 'package:mobile/main.dart';
 import 'package:mobile/open/riverpod/plugin/plugin.dart';
-import 'package:mobile/open/screens/instance/widgets/connect_dialog.dart';
 import 'package:mobile/open/screens/instance/widgets/connection_conflict_dialog.dart';
 import 'package:mobile/open/screens/instance/widgets/delete_instance_dialog.dart';
 import 'package:mobile/open/screens/instance/services/mfa_service.dart';
@@ -313,49 +312,13 @@ class _LocationItem extends HookConsumerWidget {
                         .requestPermissions();
                     if (permissionsGranted) {
                       if (context.mounted) {
-                        // means instance allows users to pick what type of traffic they want to use
-                        // otherwise skip traffic option dialog and just start tunnel with predefined traffic
-                        PluginConnectPayload payload = makePayload();
-                        if (!instance.disableAllTraffic) {
-                          // display traffic type selection dialog
-                          final traffic =
-                              await showDialog<TunnelTraffic?>(
-                                context: context,
-                                builder: (BuildContext context) {
-                                  return ConnectDialog();
-                                },
-                              );
-                          if (traffic != null) {
-                            payload.traffic = traffic;
-                            if (location.mfaEnabled) {
-                              // connect MFA
-                              await MfaService.connect(
-                                context: context,
-                                proxyUrl: instance.proxyUrl,
-                                pluginConnectPayload: payload,
-                                wireguardPlugin: wireguardPlugin,
-                              );
-                            } else {
-                              await wireguardPlugin.startTunnel(
-                                jsonEncode(payload.toJson()),
-                              );
-                            }
-                          }
-                        } else {
-                            if (location.mfaEnabled) {
-                              await MfaService.connect(
-                                context: context,
-                                proxyUrl: instance.proxyUrl,
-                                pluginConnectPayload: payload,
-                                wireguardPlugin: wireguardPlugin,
-                              );
-                            } else {
-                          final tunnelConfig = makePayload();
-                          await wireguardPlugin.startTunnel(
-                            jsonEncode(tunnelConfig.toJson()),
-                          );
-                            }
-                        }
+                        await TunnelService.connect(
+                          context: context,
+                          instance: instance,
+                          location: location,
+                          payload: makePayload(),
+                          wireguardPlugin: wireguardPlugin,
+                        );
                       }
                     }
                   } catch (e) {

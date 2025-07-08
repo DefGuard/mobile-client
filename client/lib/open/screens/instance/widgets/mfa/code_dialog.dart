@@ -9,7 +9,6 @@ import 'package:mobile/open/widgets/dg_message_box.dart';
 import 'package:mobile/open/widgets/dg_text_form_field.dart';
 import 'package:mobile/open/widgets/icons/arrow_single.dart';
 import 'package:mobile/open/widgets/icons/icon_rotation.dart';
-import 'package:mobile/router/routes.dart';
 import 'package:mobile/theme/color.dart';
 import 'package:mobile/theme/spacing.dart';
 import 'package:mobile/theme/text.dart';
