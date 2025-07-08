@@ -1,0 +1,104 @@
+PODS:
+  - app_links (0.0.2):
+    - Flutter
+  - cryptography_flutter_plus (0.2.0):
+    - Flutter
+  - Flutter (1.0.0)
+  - flutter_native_splash (2.4.3):
+    - Flutter
+  - mobile_scanner (7.0.0):
+    - Flutter
+    - FlutterMacOS
+  - package_info_plus (0.4.5):
+    - Flutter
+  - path_provider_foundation (0.0.1):
+    - Flutter
+    - FlutterMacOS
+  - permission_handler_apple (9.3.0):
+    - Flutter
+  - share_plus (0.0.1):
+    - Flutter
+  - sqlite3 (3.50.1):
+    - sqlite3/common (= 3.50.1)
+  - sqlite3/common (3.50.1)
+  - sqlite3/dbstatvtab (3.50.1):
+    - sqlite3/common
+  - sqlite3/fts5 (3.50.1):
+    - sqlite3/common
+  - sqlite3/math (3.50.1):
+    - sqlite3/common
+  - sqlite3/perf-threadsafe (3.50.1):
+    - sqlite3/common
+  - sqlite3/rtree (3.50.1):
+    - sqlite3/common
+  - sqlite3_flutter_libs (0.0.1):
+    - Flutter
+    - FlutterMacOS
+    - sqlite3 (~> 3.50.1)
+    - sqlite3/dbstatvtab
+    - sqlite3/fts5
+    - sqlite3/math
+    - sqlite3/perf-threadsafe
+    - sqlite3/rtree
+  - wireguard_plugin (0.0.1):
+    - Flutter
+    - FlutterMacOS
+
+DEPENDENCIES:
+  - app_links (from `.symlinks/plugins/app_links/ios`)
+  - cryptography_flutter_plus (from `.symlinks/plugins/cryptography_flutter_plus/ios`)
+  - Flutter (from `Flutter`)
+  - flutter_native_splash (from `.symlinks/plugins/flutter_native_splash/ios`)
+  - mobile_scanner (from `.symlinks/plugins/mobile_scanner/darwin`)
+  - package_info_plus (from `.symlinks/plugins/package_info_plus/ios`)
+  - path_provider_foundation (from `.symlinks/plugins/path_provider_foundation/darwin`)
+  - permission_handler_apple (from `.symlinks/plugins/permission_handler_apple/ios`)
+  - share_plus (from `.symlinks/plugins/share_plus/ios`)
+  - sqlite3_flutter_libs (from `.symlinks/plugins/sqlite3_flutter_libs/darwin`)
+  - wireguard_plugin (from `.symlinks/plugins/wireguard_plugin/darwin`)
+
+SPEC REPOS:
+  trunk:
+    - sqlite3
+
+EXTERNAL SOURCES:
+  app_links:
+    :path: ".symlinks/plugins/app_links/ios"
+  cryptography_flutter_plus:
+    :path: ".symlinks/plugins/cryptography_flutter_plus/ios"
+  Flutter:
+    :path: Flutter
+  flutter_native_splash:
+    :path: ".symlinks/plugins/flutter_native_splash/ios"
+  mobile_scanner:
+    :path: ".symlinks/plugins/mobile_scanner/darwin"
+  package_info_plus:
+    :path: ".symlinks/plugins/package_info_plus/ios"
+  path_provider_foundation:
+    :path: ".symlinks/plugins/path_provider_foundation/darwin"
+  permission_handler_apple:
+    :path: ".symlinks/plugins/permission_handler_apple/ios"
+  share_plus:
+    :path: ".symlinks/plugins/share_plus/ios"
+  sqlite3_flutter_libs:
+    :path: ".symlinks/plugins/sqlite3_flutter_libs/darwin"
+  wireguard_plugin:
+    :path: ".symlinks/plugins/wireguard_plugin/darwin"
+
+SPEC CHECKSUMS:
+  app_links: 76b66b60cc809390ca1ad69bfd66b998d2387ac7
+  cryptography_flutter_plus: 44f4e9e4079395fcbb3e7809c0ac2c6ae2d9576f
+  Flutter: e0871f40cf51350855a761d2e70bf5af5b9b5de7
+  flutter_native_splash: c32d145d68aeda5502d5f543ee38c192065986cf
+  mobile_scanner: 9157936403f5a0644ca3779a38ff8404c5434a93
+  package_info_plus: af8e2ca6888548050f16fa2f1938db7b5a5df499
+  path_provider_foundation: 080d55be775b7414fd5a5ef3ac137b97b097e564
+  permission_handler_apple: 4ed2196e43d0651e8ff7ca3483a069d469701f2d
+  share_plus: 50da8cb520a8f0f65671c6c6a99b3617ed10a58a
+  sqlite3: 1d85290c3321153511f6e900ede7a1608718bbd5
+  sqlite3_flutter_libs: e7fc8c9ea2200ff3271f08f127842131746b70e2
+  wireguard_plugin: d68d7051f53096d3837306d4807731d8ef530703
+
+PODFILE CHECKSUM: 4305caec6b40dde0ae97be1573c53de1882a07e5
+
+COCOAPODS: 1.16.2
