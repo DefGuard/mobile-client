@@ -9,8 +9,7 @@ import 'package:mobile/open/riverpod/plugin/plugin.dart';
 import 'package:mobile/open/screens/instance/widgets/connect_dialog.dart';
 import 'package:mobile/open/screens/instance/widgets/connection_conflict_dialog.dart';
 import 'package:mobile/open/screens/instance/widgets/delete_instance_dialog.dart';
-import 'package:mobile/open/screens/instance/widgets/mfa/mfa_dialog.dart';
-import 'package:mobile/open/screens/instance/widgets/mfa/totp_dialog.dart';
+import 'package:mobile/open/screens/instance/services/mfa_service.dart';
 import 'package:mobile/open/widgets/buttons/dg_button.dart';
 import 'package:mobile/open/widgets/icons/arrow_single.dart';
 import 'package:mobile/open/widgets/icons/asset_icons_simple.dart';
@@ -327,52 +326,18 @@ class _LocationItem extends HookConsumerWidget {
                               );
                           if (dialogResult != null) {
                             if (location.mfaEnabled) {
-                              final (method, token) = await showDialog(
+                              await MfaService.connect(
                                 context: context,
-                                builder: (BuildContext context) {
-                                  return MfaStartDialog(
-                                    url: instance.proxyUrl,
-                                    publicKey: dialogResult.devicePublicKey,
-                                    locationId: dialogResult.networkId,
-                                    method: 0,
-                                  );
-                                },
+                                proxyUrl: instance.proxyUrl,
+                                devicePublicKey: dialogResult.devicePublicKey,
+                                networkId: dialogResult.networkId,
+                                payload: dialogResult,
+                                wireguardPlugin: wireguardPlugin,
                               );
-                              if (method == null) {
-                                // User dismissed the dialog
-                                return;
-                              }
-                              switch (method) {
-                                case MfaMethod.totp:
-                                  talker.error("TOTP, proxyUrl:", instance.proxyUrl);
-                                  // TODO call client-mfa/start endpoint
-                                  final presharedKey = await showDialog(
-                                    context: context,
-                                    builder: (BuildContext context) {
-                                      return TotpDialog(token: token, url: instance.proxyUrl);
-                                    },
-                                  );
-                                  talker.info(
-                                    "TOTP authentication successful, configuring wg interface",
-                                  );
-                                  dialogResult.presharedKey = presharedKey;
-                                  await wireguardPlugin.startTunnel(
-                                    jsonEncode(dialogResult.toJson()),
-                                  );
-                                  break;
-                                case MfaMethod.email:
-                                  talker.error("Email");
-                                  break;
-                              }
                             } else {
-                              if (location.mfaEnabled) {
-                                // TODO
-                                talker.error("MFA Enabled, showing dialog");
-                              } else {
-                                await wireguardPlugin.startTunnel(
-                                  jsonEncode(dialogResult.toJson()),
-                                );
-                              }
+                              await wireguardPlugin.startTunnel(
+                                jsonEncode(dialogResult.toJson()),
+                              );
                             }
                           }
                         } else {
