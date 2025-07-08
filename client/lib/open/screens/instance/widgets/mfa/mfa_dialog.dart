@@ -20,13 +20,13 @@ Future<StartMfaResponse> _handleSubmit(
   String url,
   String pubkey,
   int locationId,
-  int method,
+  MfaMethod method,
 ) async {
   debugPrint('Submitted: URL=$url, Token=$pubkey');
   final request = StartMfaRequest(
     pubkey: pubkey,
     locationId: locationId,
-    method: method,
+    method: method.value,
   );
 
   final uri = Uri.parse(url);
@@ -38,14 +38,12 @@ class MfaStartDialog extends HookConsumerWidget {
   final String url;
   final String publicKey;
   final int locationId;
-  final int method;
 
   const MfaStartDialog({
     super.key,
     required this.url,
     required this.publicKey,
     required this.locationId,
-    required this.method,
   });
 
   @override
@@ -80,7 +78,7 @@ class MfaStartDialog extends HookConsumerWidget {
                           url,
                           publicKey,
                           locationId,
-                          method,
+                          MfaMethod.totp,
                         );
                         Navigator.of(
                           context,
@@ -96,7 +94,7 @@ class MfaStartDialog extends HookConsumerWidget {
                           url,
                           publicKey,
                           locationId,
-                          method,
+                          MfaMethod.email,
                         );
                         Navigator.of(
                           context,

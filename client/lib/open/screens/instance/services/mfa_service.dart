@@ -5,7 +5,13 @@ import 'package:mobile/open/screens/instance/widgets/mfa/code_dialog.dart';
 import 'package:mobile/main.dart';
 import 'dart:convert';
 
-enum MfaMethod { totp, email }
+enum MfaMethod {
+  totp(0),
+  email(1);
+
+  final int value;
+  const MfaMethod(this.value);
+  }
 
 class MfaService {
   static Future<String?> _handleMfaFlow({
@@ -22,7 +28,6 @@ class MfaService {
             url: proxyUrl,
             publicKey: payload.devicePublicKey,
             locationId: payload.networkId,
-            method: 0,
           );
         },
       );
