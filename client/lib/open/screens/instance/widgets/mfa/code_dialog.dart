@@ -16,7 +16,8 @@ import 'package:mobile/theme/text.dart';
 final String _title = "Two-factor authentication";
 
 final Map<MfaMethod, String> _msg = {
-  MfaMethod.totp: "Paste the authentication code from your Authenticator Application.",
+  MfaMethod.totp:
+      "Paste the authentication code from your Authenticator Application.",
   MfaMethod.email: "Paste the authentication code you received in the email.",
 };
 
@@ -123,6 +124,7 @@ class _CodeForm extends HookConsumerWidget {
                 loading: isLoading.value,
                 onTap: () async {
                   final messenger = ScaffoldMessenger.of(context);
+                  final navigator = Navigator.of(context);
                   if (formKey.currentState?.validate() ?? false) {
                     isLoading.value = true;
                     try {
@@ -131,7 +133,7 @@ class _CodeForm extends HookConsumerWidget {
                         token,
                         codeController.text.trim(),
                       );
-                      Navigator.of(context).pop(response.presharedKey);
+                      navigator.pop(response.presharedKey);
                     } catch (e) {
                       print("Submit Error: $e");
                       messenger.showSnackBar(

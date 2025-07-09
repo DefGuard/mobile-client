@@ -4,8 +4,9 @@ import 'package:mobile/data/plugin/plugin.dart';
 import 'package:mobile/open/screens/instance/widgets/mfa/mfa_dialog.dart';
 import 'package:mobile/open/screens/instance/widgets/connect_dialog.dart';
 import 'package:mobile/open/screens/instance/widgets/mfa/code_dialog.dart';
-import 'package:mobile/main.dart';
 import 'dart:convert';
+
+import '../../../../logging.dart';
 
 enum MfaMethod {
   totp(0),
@@ -24,9 +25,9 @@ class TunnelService {
     required BuildContext context,
     required DefguardInstance instance,
     required Location location,
-    required PluginConnectPayload payload,
     required dynamic wireguardPlugin,
   }) async {
+    PluginConnectPayload payload = _makePayload(instance, location);
     // handle traffic type selection if necessary
     payload.traffic = instance.disableAllTraffic
         ? TunnelTraffic.predefined
@@ -40,9 +41,7 @@ class TunnelService {
 
     // handle mfa
     if (location.mfaEnabled) {
-      if (!context.mounted) {
-        return;
-      }
+      if (!context.mounted) return;
       final presharedKey = await _handleMfaFlow(
         context: context,
         proxyUrl: instance.proxyUrl,
@@ -57,6 +56,28 @@ class TunnelService {
 
     // start the tunnel
     await wireguardPlugin.startTunnel(jsonEncode(payload.toJson()));
+  }
+
+  /// Prepares wireguard plugin configuration
+  static PluginConnectPayload _makePayload(
+    DefguardInstance instance,
+    Location location,
+  ) {
+    return PluginConnectPayload(
+      publicKey: location.pubKey,
+      devicePublicKey: instance.pubKey,
+      privateKey: instance.privateKey,
+      address: location.address,
+      dns: location.dns,
+      endpoint: location.endpoint,
+      allowedIps: location.allowedIps,
+      keepalive: location.keepAliveInterval,
+      locationName: location.name,
+      locationId: location.id,
+      networkId: location.networkId,
+      instanceId: instance.id,
+      traffic: TunnelTraffic.predefined,
+    );
   }
 
   /// Displays mfa method selection and code input dialogs

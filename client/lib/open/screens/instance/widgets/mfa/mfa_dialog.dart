@@ -74,15 +74,14 @@ class MfaStartDialog extends HookConsumerWidget {
                       variant: DgButtonVariant.secondary,
                       size: DgButtonSize.standard,
                       onTap: () async {
+                        final navigator = Navigator.of(context);
                         final response = await _handleSubmit(
                           url,
                           publicKey,
                           locationId,
                           MfaMethod.totp,
                         );
-                        Navigator.of(
-                          context,
-                        ).pop((MfaMethod.totp, response.token));
+                        navigator.pop((MfaMethod.totp, response.token));
                       },
                     ),
                     DgButton(
@@ -90,15 +89,14 @@ class MfaStartDialog extends HookConsumerWidget {
                       variant: DgButtonVariant.secondary,
                       size: DgButtonSize.standard,
                       onTap: () async {
+                        final navigator = Navigator.of(context);
                         final response = await _handleSubmit(
                           url,
                           publicKey,
                           locationId,
                           MfaMethod.email,
                         );
-                        Navigator.of(
-                          context,
-                        ).pop((MfaMethod.totp, response.token));
+                        navigator.pop((MfaMethod.totp, response.token));
                       },
                     ),
                   ],

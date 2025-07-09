@@ -195,24 +195,6 @@ class _LocationItem extends HookConsumerWidget {
 
   const _LocationItem({required this.location, required this.instance});
 
-  PluginConnectPayload makePayload() {
-    return PluginConnectPayload(
-      publicKey: location.pubKey,
-      devicePublicKey: instance.pubKey,
-      privateKey: instance.privateKey,
-      address: location.address,
-      dns: location.dns,
-      endpoint: location.endpoint,
-      allowedIps: location.allowedIps,
-      keepalive: location.keepAliveInterval,
-      locationName: location.name,
-      locationId: location.id,
-      networkId: location.networkId,
-      instanceId: instance.id,
-      traffic: TunnelTraffic.predefined,
-    );
-  }
-
   bool checkConnected(PluginTunnelEventData? activeTunnel) {
     if (activeTunnel == null) return false;
     return activeTunnel.instanceId == instance.id &&
@@ -315,16 +297,13 @@ class _LocationItem extends HookConsumerWidget {
                     isLoading.value = true;
                     final permissionsGranted = await wireguardPlugin
                         .requestPermissions();
-                    if (permissionsGranted) {
-                      if (context.mounted) {
-                        await TunnelService.connect(
-                          context: context,
-                          instance: instance,
-                          location: location,
-                          payload: makePayload(),
-                          wireguardPlugin: wireguardPlugin,
-                        );
-                      }
+                    if (permissionsGranted && context.mounted) {
+                      await TunnelService.connect(
+                        context: context,
+                        instance: instance,
+                        location: location,
+                        wireguardPlugin: wireguardPlugin,
+                      );
                     }
                   } catch (e) {
                     talker.error(
