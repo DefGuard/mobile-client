@@ -13,6 +13,8 @@ jobs:
         working-directory: ./client
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
       - name: Setup flutter
         uses: subosito/flutter-action@v2
@@ -30,12 +32,6 @@ jobs:
 
       - name: Unlock Keychain
         run: security -v unlock-keychain -p "${{ secrets.KEYCHAIN_PASSWORD }}" /Users/admin/Library/Keychains/login.keychain
-
-      # - name: Generate boringtun bindings
-      #   run: ./
-      # init boringtun subodule in ./ios/boringtun
-      - name: Init boringtun
-        run: git submodule update --init ios/boringtun
 
       - name: Generate boringtun bindings
         run: cd ios/boringtun && ./bindings.sh
