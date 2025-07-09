@@ -4,11 +4,14 @@ import 'package:cookie_jar/cookie_jar.dart';
 import 'package:dio/dio.dart';
 import 'package:dio_cookie_manager/dio_cookie_manager.dart';
 import 'package:mobile/data/proxy/enrollment.dart';
+import 'package:mobile/data/proxy/mfa.dart';
+
 import 'package:talker_dio_logger/talker_dio_logger_interceptor.dart';
 
 import '../logging.dart';
 
 final enrollmentPathSegments = ['api', 'v1', 'enrollment'];
+final mfaPathSegments = ['api', 'v1', 'client-mfa'];
 
 class _ProxyApi {
   static final _ProxyApi _instance = _ProxyApi._internal();
@@ -79,6 +82,64 @@ class _ProxyApi {
     } catch (e) {
       throw FormatException(
         "Invalid JSON sent by create device endpoint! Error: $e",
+      );
+    }
+  }
+
+  Future<StartMfaResponse> startMfa(
+    Uri url,
+    StartMfaRequest data,
+  ) async {
+    final endpoint = url.replace(
+      pathSegments: [
+        ...url.pathSegments,
+        ...mfaPathSegments,
+        'start',
+      ],
+    );
+
+    try {
+      final response = await _dio.postUri(endpoint, data: data.toJson());
+      return StartMfaResponse.fromJson(response.data);
+    } on DioException catch (e) {
+      if (e.response != null) {
+        throw HttpException(
+          "Failed to start MFA. Status: ${e.response?.statusCode} Body: ${e.response?.data}",
+        );
+      }
+      rethrow;
+    } catch (e) {
+      throw FormatException(
+        "Invalid JSON sent by start MFA endpoint! Error: $e",
+      );
+    }
+  }
+
+  Future<FinishMfaResponse> finishMfa(
+    Uri url,
+    FinishMfaRequest data,
+  ) async {
+    final endpoint = url.replace(
+      pathSegments: [
+        ...url.pathSegments,
+        ...mfaPathSegments,
+        'finish',
+      ],
+    );
+
+    try {
+      final response = await _dio.postUri(endpoint, data: data.toJson());
+      return FinishMfaResponse.fromJson(response.data);
+    } on DioException catch (e) {
+      if (e.response != null) {
+        throw HttpException(
+          "Failed to finish MFA. Status: ${e.response?.statusCode} Body: ${e.response?.data}",
+        );
+      }
+      rethrow;
+    } catch (e) {
+      throw FormatException(
+        "Invalid JSON sent by finish MFA endpoint! Error: $e",
       );
     }
   }

@@ -19,9 +19,8 @@ final String _allMessage =
     "Route all your internet traffic through the VPN. Full encryption and privacy. Ideal for public networks.";
 
 class ConnectDialog extends HookConsumerWidget {
-  final PluginConnectPayload payload;
 
-  const ConnectDialog({super.key, required this.payload});
+  const ConnectDialog({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -84,9 +83,7 @@ class ConnectDialog extends HookConsumerWidget {
                       size: DgButtonSize.standard,
                       icon: DgIconCheckmark(),
                       onTap: () {
-                        var connectData = payload;
-                        connectData.traffic = connectionType.value;
-                        Navigator.of(context).pop(connectData);
+                        Navigator.of(context).pop(connectionType.value);
                       },
                     ),
                   ],

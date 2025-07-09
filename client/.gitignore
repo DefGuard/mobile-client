@@ -50,5 +50,5 @@ app.*.map.json
 .envrc
 
 local.properties
-# ios/boringtun
+ios/boringtun
 ios/VPNExtension/BoringTun

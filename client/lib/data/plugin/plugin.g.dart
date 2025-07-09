@@ -14,6 +14,7 @@ PluginConnectPayload _$PluginConnectPayloadFromJson(
   ($checkedConvert) {
     final val = PluginConnectPayload(
       publicKey: $checkedConvert('public_key', (v) => v as String),
+      devicePublicKey: $checkedConvert('device_public_key', (v) => v as String),
       privateKey: $checkedConvert('private_key', (v) => v as String),
       address: $checkedConvert('address', (v) => v as String),
       endpoint: $checkedConvert('endpoint', (v) => v as String),
@@ -26,6 +27,7 @@ PluginConnectPayload _$PluginConnectPayloadFromJson(
         'traffic',
         (v) => $enumDecode(_$TunnelTrafficEnumMap, v),
       ),
+      networkId: $checkedConvert('network_id', (v) => (v as num).toInt()),
       dns: $checkedConvert('dns', (v) => v as String?),
       presharedKey: $checkedConvert('preshared_key', (v) => v as String?),
     );
@@ -33,17 +35,20 @@ PluginConnectPayload _$PluginConnectPayloadFromJson(
   },
   fieldKeyMap: const {
     'publicKey': 'public_key',
+    'devicePublicKey': 'device_public_key',
     'privateKey': 'private_key',
     'allowedIps': 'allowed_ips',
     'locationName': 'location_name',
     'locationId': 'location_id',
     'instanceId': 'instance_id',
+    'networkId': 'network_id',
     'presharedKey': 'preshared_key',
   },
 );
 
 const _$PluginConnectPayloadFieldMap = <String, String>{
   'publicKey': 'public_key',
+  'devicePublicKey': 'device_public_key',
   'privateKey': 'private_key',
   'address': 'address',
   'dns': 'dns',
@@ -54,6 +59,7 @@ const _$PluginConnectPayloadFieldMap = <String, String>{
   'locationName': 'location_name',
   'locationId': 'location_id',
   'instanceId': 'instance_id',
+  'networkId': 'network_id',
   'traffic': 'traffic',
 };
 
@@ -61,6 +67,7 @@ Map<String, dynamic> _$PluginConnectPayloadToJson(
   PluginConnectPayload instance,
 ) => <String, dynamic>{
   'public_key': instance.publicKey,
+  'device_public_key': instance.devicePublicKey,
   'private_key': instance.privateKey,
   'address': instance.address,
   'dns': instance.dns,
@@ -71,6 +78,7 @@ Map<String, dynamic> _$PluginConnectPayloadToJson(
   'location_name': instance.locationName,
   'location_id': instance.locationId,
   'instance_id': instance.instanceId,
+  'network_id': instance.networkId,
   'traffic': _$TunnelTrafficEnumMap[instance.traffic]!,
 };
 

@@ -5,9 +5,9 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mobile/data/db/database.dart';
 import 'package:mobile/data/plugin/plugin.dart';
 import 'package:mobile/open/riverpod/plugin/plugin.dart';
-import 'package:mobile/open/screens/instance/widgets/connect_dialog.dart';
 import 'package:mobile/open/screens/instance/widgets/connection_conflict_dialog.dart';
 import 'package:mobile/open/screens/instance/widgets/delete_instance_dialog.dart';
+import 'package:mobile/open/screens/instance/services/tunnel_service.dart';
 import 'package:mobile/open/widgets/buttons/dg_button.dart';
 import 'package:mobile/open/widgets/icons/arrow_single.dart';
 import 'package:mobile/open/widgets/icons/asset_icons_simple.dart';
@@ -20,7 +20,6 @@ import 'package:mobile/router/routes.dart';
 import 'package:mobile/theme/color.dart';
 import 'package:mobile/theme/spacing.dart';
 import 'package:mobile/theme/text.dart';
-import 'dart:convert';
 
 import '../../../logging.dart';
 
@@ -196,22 +195,6 @@ class _LocationItem extends HookConsumerWidget {
 
   const _LocationItem({required this.location, required this.instance});
 
-  PluginConnectPayload makePayload() {
-    return PluginConnectPayload(
-      publicKey: location.pubKey,
-      privateKey: instance.privateKey,
-      address: location.address,
-      dns: location.dns,
-      endpoint: location.endpoint,
-      allowedIps: location.allowedIps,
-      keepalive: location.keepAliveInterval,
-      locationName: location.name,
-      locationId: location.id,
-      instanceId: instance.id,
-      traffic: TunnelTraffic.predefined,
-    );
-  }
-
   bool checkConnected(PluginTunnelEventData? activeTunnel) {
     if (activeTunnel == null) return false;
     return activeTunnel.instanceId == instance.id &&
@@ -314,31 +297,13 @@ class _LocationItem extends HookConsumerWidget {
                     isLoading.value = true;
                     final permissionsGranted = await wireguardPlugin
                         .requestPermissions();
-                    if (permissionsGranted) {
-                      if (context.mounted) {
-                        // means instance allows users to pick what type of traffic they want to use
-                        // otherwise skip traffic option dialog and just start tunnel with predefined traffic
-                        if (!instance.disableAllTraffic) {
-                          final dialogResult =
-                              await showDialog<PluginConnectPayload?>(
-                                context: context,
-                                builder: (BuildContext context) {
-                                  final payload = makePayload();
-                                  return ConnectDialog(payload: payload);
-                                },
-                              );
-                          if (dialogResult != null) {
-                            await wireguardPlugin.startTunnel(
-                              jsonEncode(dialogResult.toJson()),
-                            );
-                          }
-                        } else {
-                          final tunnelConfig = makePayload();
-                          await wireguardPlugin.startTunnel(
-                            jsonEncode(tunnelConfig.toJson()),
-                          );
-                        }
-                      }
+                    if (permissionsGranted && context.mounted) {
+                      await TunnelService.connect(
+                        context: context,
+                        instance: instance,
+                        location: location,
+                        wireguardPlugin: wireguardPlugin,
+                      );
                     }
                   } catch (e) {
                     talker.error(
