@@ -36,6 +36,8 @@ class DefguardInstances extends Table with AutoIncrementingPrimaryKey {
 
   // user private key
   TextColumn get privateKey => text()();
+
+  BoolColumn get useOpenidForMfa => boolean()();
 }
 
 @DataClassName('Location')

@@ -27,6 +27,8 @@ class TunnelService {
     required Location location,
     required dynamic wireguardPlugin,
   }) async {
+    talker.error("Instance:", instance);
+    talker.error("Locatin:", location);
     PluginConnectPayload payload = _makePayload(instance, location);
     // handle traffic type selection if necessary
     payload.traffic = instance.disableAllTraffic

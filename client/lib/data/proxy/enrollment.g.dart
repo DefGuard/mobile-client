@@ -375,6 +375,10 @@ InstanceInfo _$InstanceInfoFromJson(Map<String, dynamic> json) =>
             'disable_all_traffic',
             (v) => v as bool,
           ),
+          useOpenidForMfa: $checkedConvert(
+            'use_openid_for_mfa',
+            (v) => v as bool,
+          ),
         );
         return val;
       },
@@ -382,6 +386,7 @@ InstanceInfo _$InstanceInfoFromJson(Map<String, dynamic> json) =>
         'proxyUrl': 'proxy_url',
         'enterpriseEnabled': 'enterprise_enabled',
         'disableAllTraffic': 'disable_all_traffic',
+        'useOpenidForMfa': 'use_openid_for_mfa',
       },
     );
 
@@ -393,6 +398,7 @@ const _$InstanceInfoFieldMap = <String, String>{
   'username': 'username',
   'enterpriseEnabled': 'enterprise_enabled',
   'disableAllTraffic': 'disable_all_traffic',
+  'useOpenidForMfa': 'use_openid_for_mfa',
 };
 
 Map<String, dynamic> _$InstanceInfoToJson(InstanceInfo instance) =>
@@ -404,6 +410,7 @@ Map<String, dynamic> _$InstanceInfoToJson(InstanceInfo instance) =>
       'username': instance.username,
       'enterprise_enabled': instance.enterpriseEnabled,
       'disable_all_traffic': instance.disableAllTraffic,
+      'use_openid_for_mfa': instance.useOpenidForMfa,
     };
 
 AppInfoResponse _$AppInfoResponseFromJson(Map<String, dynamic> json) =>

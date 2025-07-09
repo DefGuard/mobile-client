@@ -56,6 +56,7 @@ class NameDeviceScreen extends HookConsumerWidget {
         url: screenData.startResponse.instance.url,
         username: createResponse.instance.username,
         token: createResponse.token,
+        useOpenidForMfa: createResponse.instance.useOpenidForMfa,
       ),
       mode: drift.InsertMode.insertOrFail,
     );
