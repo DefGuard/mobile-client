@@ -1,14 +1,10 @@
 import 'package:json_annotation/json_annotation.dart';
 
+import '../db/enums.dart';
+
 part 'plugin.g.dart';
 
-@JsonEnum()
-enum TunnelTraffic {
-  @JsonValue('all')
-  all,
-  @JsonValue('predefined')
-  predefined,
-}
+
 
 @JsonSerializable()
 class PluginConnectPayload {
@@ -28,7 +24,7 @@ class PluginConnectPayload {
   final int locationId;
   final int instanceId;
   final int networkId;
-  TunnelTraffic traffic;
+  LocationTrafficMethod traffic;
 
   PluginConnectPayload({
     required this.publicKey,
@@ -58,7 +54,7 @@ class PluginConnectPayload {
 class PluginTunnelEventData {
   final int instanceId;
   final int locationId;
-  final TunnelTraffic traffic;
+  final LocationTrafficMethod traffic;
 
   const PluginTunnelEventData({
     required this.instanceId,

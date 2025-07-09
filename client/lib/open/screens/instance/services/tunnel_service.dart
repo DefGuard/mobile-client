@@ -6,15 +6,9 @@ import 'package:mobile/open/screens/instance/widgets/connect_dialog.dart';
 import 'package:mobile/open/screens/instance/widgets/mfa/code_dialog.dart';
 import 'dart:convert';
 
+import '../../../../data/db/enums.dart';
 import '../../../../logging.dart';
 
-enum MfaMethod {
-  totp(0),
-  email(1);
-
-  final int value;
-  const MfaMethod(this.value);
-}
 
 /// Handles MFA flows and tunnel connection
 class TunnelService {
@@ -30,14 +24,14 @@ class TunnelService {
   }) async {
     // handle traffic type selection if necessary
     payload.traffic = instance.disableAllTraffic
-        ? TunnelTraffic.predefined
-        : (await showDialog<TunnelTraffic?>(
+        ? LocationTrafficMethod.predefined
+        : (await showDialog<LocationTrafficMethod?>(
                 context: context,
                 builder: (_) => ConnectDialog(),
               ))
               // in case the user dismisses the dialog
               ??
-              TunnelTraffic.predefined;
+              LocationTrafficMethod.predefined;
 
     // handle mfa
     if (location.mfaEnabled) {

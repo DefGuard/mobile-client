@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:mobile/data/plugin/plugin.dart';
+import 'package:mobile/data/db/enums.dart';
 import 'package:mobile/open/widgets/buttons/dg_button.dart';
 import 'package:mobile/open/widgets/dg_message_box.dart';
 import 'package:mobile/open/widgets/dg_radio_box.dart';
@@ -24,7 +24,7 @@ class ConnectDialog extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final connectionType = useState<TunnelTraffic>(TunnelTraffic.predefined);
+    final connectionType = useState<LocationTrafficMethod>(LocationTrafficMethod.predefined);
 
     return Dialog(
       backgroundColor: DgColor.defaultModal,
@@ -43,9 +43,9 @@ class ConnectDialog extends HookConsumerWidget {
               children: [
                 DgRadioBox(
                   text: "Predefined Traffic",
-                  active: connectionType.value == TunnelTraffic.predefined,
+                  active: connectionType.value == LocationTrafficMethod.predefined,
                   onTap: () {
-                    connectionType.value = TunnelTraffic.predefined;
+                    connectionType.value = LocationTrafficMethod.predefined;
                   },
                 ),
                 DgMessageBox(
@@ -55,9 +55,9 @@ class ConnectDialog extends HookConsumerWidget {
                 DgSeparator(),
                 DgRadioBox(
                   text: "All Traffic",
-                  active: connectionType.value == TunnelTraffic.all,
+                  active: connectionType.value == LocationTrafficMethod.all,
                   onTap: () {
-                    connectionType.value = TunnelTraffic.all;
+                    connectionType.value = LocationTrafficMethod.all;
                   },
                 ),
                 DgMessageBox(
