@@ -1,4 +1,3 @@
-//import FlutterMacOS
 import NetworkExtension
 
 #if os(macOS)
@@ -101,22 +100,20 @@ public class WireguardPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
                 return
             }
 
+            let appId = Bundle.main.bundleIdentifier ?? "net.defguard.mobile"
             let providerManager = managers?.first ?? NETunnelProviderManager()
             let tunnelProtocol = NETunnelProviderProtocol()
-            tunnelProtocol.providerBundleIdentifier = "net.defguard.mobile.VPNExtension"
+            tunnelProtocol.providerBundleIdentifier = "\(appId).VPNExtension"
             tunnelProtocol.serverAddress = config.endpoint
-
             tunnelProtocol.providerConfiguration = toDictionary(config)
             providerManager.protocolConfiguration = tunnelProtocol
             providerManager.localizedDescription = config.locationName
             providerManager.isEnabled = true
 
             let connection = providerManager.connection
-            print(connection.status)
             if connection.status == .connected || connection.status == .connecting {
                 connection.stopVPNTunnel()
                 print("Stopped running VPN tunnel to update config")
-                // Wait for the tunnel to fully disconnect before proceeding
                 self.waitForTunnelToDisconnect(connection: connection) {
                     self.saveAndStartTunnel(
                         providerManager: providerManager, config: config, result: result)

@@ -16,7 +16,7 @@ A new Flutter plugin project.
   s.source_files = 'Classes/**/*.{swift,h,m}'
   s.ios.dependency 'Flutter'
   s.osx.dependency 'FlutterMacOS'
-  s.ios.deployment_target = '14.0'
+  s.ios.deployment_target = '15.0'
   s.osx.deployment_target = '11.0'
 
   s.pod_target_xcconfig = { 
