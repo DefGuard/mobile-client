@@ -15,7 +15,7 @@ jobs:
       - name: Checkout main repo
         uses: actions/checkout@v4
         with:
-          submodules: true
+          submodules: 'recursive'
           token: ${{ secrets.PRIVATE_REPO_CLONING_TOKEN }}
 
       - name: Setup flutter
