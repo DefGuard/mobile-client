@@ -12,10 +12,20 @@ jobs:
       run:
         working-directory: ./client
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout main repo
+        uses: actions/checkout@v4
         with:
-          submodules: recursive
-          ssh-key: ${{ secrets.BORINGTUN_CLONE_KEY }}
+          submodules: false
+
+      - name: Setup SSH cloning keys
+        run: |
+          eval `ssh-agent -s`
+          ssh-add - <<< '${{ secrets.BORINGTUN_CLONE_KEY }}'
+
+      - name: Init and update submodules
+        run: |
+          git submodule init
+          git submodule update --recursive
 
       - name: Setup flutter
         uses: subosito/flutter-action@v2
