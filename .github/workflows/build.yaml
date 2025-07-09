@@ -24,6 +24,7 @@ jobs:
 
       - name: Init and update submodules
         run: |
+          git config submodule.client/ios/boringtun.url git@github.com:DefGuard/boringtun.git
           git submodule init
           git submodule update --recursive
 
