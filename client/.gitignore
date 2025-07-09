@@ -48,5 +48,4 @@ app.*.map.json
 # direnv stuffAdd commentMore actions
 .direnv/
 .envrc
-
 local.properties

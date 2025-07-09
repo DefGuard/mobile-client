@@ -14,22 +14,25 @@ enum TunnelTraffic {
 class PluginConnectPayload {
   // config
   final String publicKey;
+  final String devicePublicKey;
   final String privateKey;
   final String address;
   final String? dns;
   final String endpoint;
   final String allowedIps;
   final int keepalive;
-  final String? presharedKey;
+  String? presharedKey;
 
   // context
   final String locationName;
   final int locationId;
   final int instanceId;
+  final int networkId;
   TunnelTraffic traffic;
 
   PluginConnectPayload({
     required this.publicKey,
+    required this.devicePublicKey,
     required this.privateKey,
     required this.address,
     required this.endpoint,
@@ -39,6 +42,7 @@ class PluginConnectPayload {
     required this.locationId,
     required this.instanceId,
     required this.traffic,
+    required this.networkId,
     this.dns,
     this.presharedKey,
   });
