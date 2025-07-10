@@ -11,7 +11,7 @@ import 'package:mobile/theme/text.dart';
 
 final String _title = "Two-factor authentication";
 final String _mfaMsg =
-    "For this connection, two-factor authentication (2FA) is mandatory. Select your preferred authentication method.";
+    "Waiting for authentication in your browser...";
 
 final String _useAuthenticatorMsg = "Authenticator app";
 final String _useEmailMsg = "Email code";
@@ -34,12 +34,12 @@ Future<StartMfaResponse> _handleSubmit(
   return response;
 }
 
-class MfaStartDialog extends HookConsumerWidget {
+class OpenIdMfaStartDialog extends HookConsumerWidget {
   final String url;
   final String publicKey;
   final int locationId;
 
-  const MfaStartDialog({
+  const OpenIdMfaStartDialog({
     super.key,
     required this.url,
     required this.publicKey,
@@ -64,6 +64,10 @@ class MfaStartDialog extends HookConsumerWidget {
                 DgMessageBox(
                   variant: DgMessageBoxVariant.infoOutlined,
                   text: _mfaMsg,
+                ),
+                DgMessageBox(
+                  variant: DgMessageBoxVariant.infoOutlined,
+                  text: _mfaMsg2,
                 ),
                 Row(
                   mainAxisSize: MainAxisSize.max,
@@ -96,7 +100,7 @@ class MfaStartDialog extends HookConsumerWidget {
                           locationId,
                           MfaMethod.email,
                         );
-                        navigator.pop((MfaMethod.email, response.token));
+                        navigator.pop((MfaMethod.totp, response.token));
                       },
                     ),
                   ],

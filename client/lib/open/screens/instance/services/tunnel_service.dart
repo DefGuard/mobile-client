@@ -1,16 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/data/db/database.dart';
 import 'package:mobile/data/plugin/plugin.dart';
+import 'package:mobile/data/proxy/mfa.dart';
+import 'package:mobile/open/api.dart';
 import 'package:mobile/open/screens/instance/widgets/mfa/mfa_dialog.dart';
 import 'package:mobile/open/screens/instance/widgets/connect_dialog.dart';
 import 'package:mobile/open/screens/instance/widgets/mfa/code_dialog.dart';
+import 'package:mobile/open/screens/instance/widgets/mfa/openid_mfa_dialog.dart';
 import 'dart:convert';
 
 import '../../../../logging.dart';
 
 enum MfaMethod {
   totp(0),
-  email(1);
+  email(1),
+  openid(2);
 
   final int value;
   const MfaMethod(this.value);
@@ -18,7 +22,6 @@ enum MfaMethod {
 
 /// Handles MFA flows and tunnel connection
 class TunnelService {
-
   /// Main service method - displays traffic & MFA dialogs, handles
   /// interface configuration and connection.
   static Future<void> connect({
@@ -27,8 +30,6 @@ class TunnelService {
     required Location location,
     required dynamic wireguardPlugin,
   }) async {
-    talker.error("Instance:", instance);
-    talker.error("Locatin:", location);
     PluginConnectPayload payload = _makePayload(instance, location);
     // handle traffic type selection if necessary
     payload.traffic = instance.disableAllTraffic
@@ -44,11 +45,18 @@ class TunnelService {
     // handle mfa
     if (location.mfaEnabled) {
       if (!context.mounted) return;
-      final presharedKey = await _handleMfaFlow(
-        context: context,
-        proxyUrl: instance.proxyUrl,
-        payload: payload,
-      );
+      final presharedKey = instance.useOpenidForMfa
+          ? await _handleOpenidMfaFlow(
+              context: context,
+              proxyUrl: instance.proxyUrl,
+              payload: payload,
+            )
+          : await _handleMfaFlow(
+              context: context,
+              proxyUrl: instance.proxyUrl,
+              payload: payload,
+              useOpenid: instance.useOpenidForMfa,
+            );
       if (presharedKey == null) {
         // user dismissed the dialog
         return;
@@ -82,11 +90,68 @@ class TunnelService {
     );
   }
 
+  static Future<StartMfaResponse> _startMfa(
+    String url,
+    String pubkey,
+    int networkId,
+    MfaMethod method,
+  ) async {
+    debugPrint('Submitted: URL=$url, Token=$pubkey');
+    final request = StartMfaRequest(
+      pubkey: pubkey,
+      locationId: networkId,
+      method: method.value,
+    );
+
+    final uri = Uri.parse(url);
+    final response = await proxyApi.startMfa(uri, request);
+    return response;
+  }
+
+  /// Handles OpenID browser-based MFA
+  static Future<String?> _handleOpenidMfaFlow({
+    required BuildContext context,
+    required String proxyUrl,
+    required PluginConnectPayload payload,
+  }) async {
+    try {
+      final response = await _startMfa(
+        proxyUrl,
+        payload.devicePublicKey,
+        payload.networkId,
+        MfaMethod.openid,
+      );
+      talker.error("OIDC start response:", response);
+
+      // start MFA flow - show method selection dialog
+      final opened = await showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return OpenIdMfaStartDialog(
+            proxyUrl: proxyUrl,
+            publicKey: payload.devicePublicKey,
+            networkId: payload.networkId,
+            token: response.token,
+          );
+        },
+      );
+
+      if (!opened) {
+        // dialog dismissed
+        return null;
+      }
+    } catch (e) {
+      talker.error("MFA flow error: $e");
+      return null;
+    }
+  }
+
   /// Displays mfa method selection and code input dialogs
   static Future<String?> _handleMfaFlow({
     required BuildContext context,
     required String proxyUrl,
     required PluginConnectPayload payload,
+    required bool useOpenid,
   }) async {
     try {
       // start MFA flow - show method selection dialog

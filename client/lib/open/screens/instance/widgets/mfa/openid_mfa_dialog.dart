@@ -9,12 +9,16 @@ import 'package:mobile/theme/color.dart';
 import 'package:mobile/theme/spacing.dart';
 import 'package:mobile/theme/text.dart';
 
-final String _title = "Two-factor authentication";
-final String _mfaMsg =
-    "For this connection, two-factor authentication (2FA) is mandatory. Select your preferred authentication method.";
+import '../../../../../logging.dart';
 
-final String _useAuthenticatorMsg = "Authenticator app";
-final String _useEmailMsg = "Email code";
+final String _title = "Two-factor authentication";
+final String _mfaMsg1 =
+    "In order to connect to VPN please login with your OpenID provider. To do so, pease click \"Authenticate with OpenId\"";
+
+final String _mfaMsg2 =
+    "This will open a new window in your web browser and automatically redirect you to your OpenID provider login page. After authenticating please get back here";
+
+final String _authenticateMsg = "Authenticate with OpenId";
 
 Future<StartMfaResponse> _handleSubmit(
   String url,
@@ -34,17 +38,23 @@ Future<StartMfaResponse> _handleSubmit(
   return response;
 }
 
-class MfaStartDialog extends HookConsumerWidget {
-  final String url;
+class OpenIdMfaStartDialog extends HookConsumerWidget {
+  final String proxyUrl;
   final String publicKey;
-  final int locationId;
+  final int networkId;
+  final String token;
 
-  const MfaStartDialog({
+  const OpenIdMfaStartDialog({
     super.key,
-    required this.url,
+    required this.proxyUrl,
     required this.publicKey,
-    required this.locationId,
+    required this.networkId,
+    required this.token,
   });
+
+  _openBrowser() {
+    talker.error("Opening browser:", "${proxyUrl}openid/mfa?token=${token}");
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -63,40 +73,24 @@ class MfaStartDialog extends HookConsumerWidget {
               children: [
                 DgMessageBox(
                   variant: DgMessageBoxVariant.infoOutlined,
-                  text: _mfaMsg,
+                  text: _mfaMsg1,
+                ),
+                DgMessageBox(
+                  variant: DgMessageBoxVariant.infoOutlined,
+                  text: _mfaMsg2,
                 ),
                 Row(
                   mainAxisSize: MainAxisSize.max,
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     DgButton(
-                      text: _useAuthenticatorMsg,
+                      text: _authenticateMsg,
                       variant: DgButtonVariant.secondary,
                       size: DgButtonSize.standard,
                       onTap: () async {
                         final navigator = Navigator.of(context);
-                        final response = await _handleSubmit(
-                          url,
-                          publicKey,
-                          locationId,
-                          MfaMethod.totp,
-                        );
-                        navigator.pop((MfaMethod.totp, response.token));
-                      },
-                    ),
-                    DgButton(
-                      text: _useEmailMsg,
-                      variant: DgButtonVariant.secondary,
-                      size: DgButtonSize.standard,
-                      onTap: () async {
-                        final navigator = Navigator.of(context);
-                        final response = await _handleSubmit(
-                          url,
-                          publicKey,
-                          locationId,
-                          MfaMethod.email,
-                        );
-                        navigator.pop((MfaMethod.email, response.token));
+                        _openBrowser();
+                        navigator.pop();
                       },
                     ),
                   ],
