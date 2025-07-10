@@ -124,6 +124,7 @@ class _CodeForm extends HookConsumerWidget {
                 loading: isLoading.value,
                 onTap: () async {
                   final messenger = ScaffoldMessenger.of(context);
+                  final navigator = Navigator.of(context);
                   if (formKey.currentState?.validate() ?? false) {
                     isLoading.value = true;
                     try {
@@ -132,9 +133,7 @@ class _CodeForm extends HookConsumerWidget {
                         token,
                         codeController.text.trim(),
                       );
-                      if(context.mounted) {
-                        Navigator.of(context).pop(response.presharedKey);
-                      }
+                      navigator.pop(response.presharedKey);
                     } catch (e) {
                       print("Submit Error: $e");
                       messenger.showSnackBar(
