@@ -777,17 +777,14 @@ class $LocationsTable extends Locations
     ),
   );
   @override
-  late final GeneratedColumnWithTypeConverter<LocationTrafficMethod?, String>
-  trafficMethod =
-      GeneratedColumn<String>(
-        'traffic_method',
-        aliasedName,
-        true,
-        type: DriftSqlType.string,
-        requiredDuringInsert: false,
-      ).withConverter<LocationTrafficMethod?>(
-        $LocationsTable.$convertertrafficMethodn,
-      );
+  late final GeneratedColumnWithTypeConverter<RoutingMethod?, String>
+  trafficMethod = GeneratedColumn<String>(
+    'traffic_method',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  ).withConverter<RoutingMethod?>($LocationsTable.$convertertrafficMethodn);
   @override
   late final GeneratedColumnWithTypeConverter<MfaMethod?, int> mfaMethod =
       GeneratedColumn<int>(
@@ -993,11 +990,11 @@ class $LocationsTable extends Locations
     return $LocationsTable(attachedDatabase, alias);
   }
 
-  static JsonTypeConverter2<LocationTrafficMethod, String, String>
-  $convertertrafficMethod = const EnumNameConverter<LocationTrafficMethod>(
-    LocationTrafficMethod.values,
+  static JsonTypeConverter2<RoutingMethod, String, String>
+  $convertertrafficMethod = const EnumNameConverter<RoutingMethod>(
+    RoutingMethod.values,
   );
-  static JsonTypeConverter2<LocationTrafficMethod?, String?, String?>
+  static JsonTypeConverter2<RoutingMethod?, String?, String?>
   $convertertrafficMethodn = JsonTypeConverter2.asNullable(
     $convertertrafficMethod,
   );
@@ -1018,7 +1015,7 @@ class Location extends DataClass implements Insertable<Location> {
   final String allowedIps;
   final String? dns;
   final bool mfaEnabled;
-  final LocationTrafficMethod? trafficMethod;
+  final RoutingMethod? trafficMethod;
   final MfaMethod? mfaMethod;
   final int keepAliveInterval;
   const Location({
@@ -1143,7 +1140,7 @@ class Location extends DataClass implements Insertable<Location> {
     String? allowedIps,
     Value<String?> dns = const Value.absent(),
     bool? mfaEnabled,
-    Value<LocationTrafficMethod?> trafficMethod = const Value.absent(),
+    Value<RoutingMethod?> trafficMethod = const Value.absent(),
     Value<MfaMethod?> mfaMethod = const Value.absent(),
     int? keepAliveInterval,
   }) => Location(
@@ -1255,7 +1252,7 @@ class LocationsCompanion extends UpdateCompanion<Location> {
   final Value<String> allowedIps;
   final Value<String?> dns;
   final Value<bool> mfaEnabled;
-  final Value<LocationTrafficMethod?> trafficMethod;
+  final Value<RoutingMethod?> trafficMethod;
   final Value<MfaMethod?> mfaMethod;
   final Value<int> keepAliveInterval;
   const LocationsCompanion({
@@ -1339,7 +1336,7 @@ class LocationsCompanion extends UpdateCompanion<Location> {
     Value<String>? allowedIps,
     Value<String?>? dns,
     Value<bool>? mfaEnabled,
-    Value<LocationTrafficMethod?>? trafficMethod,
+    Value<RoutingMethod?>? trafficMethod,
     Value<MfaMethod?>? mfaMethod,
     Value<int>? keepAliveInterval,
   }) {
@@ -1890,7 +1887,7 @@ typedef $$LocationsTableCreateCompanionBuilder =
       required String allowedIps,
       Value<String?> dns,
       required bool mfaEnabled,
-      Value<LocationTrafficMethod?> trafficMethod,
+      Value<RoutingMethod?> trafficMethod,
       Value<MfaMethod?> mfaMethod,
       required int keepAliveInterval,
     });
@@ -1906,7 +1903,7 @@ typedef $$LocationsTableUpdateCompanionBuilder =
       Value<String> allowedIps,
       Value<String?> dns,
       Value<bool> mfaEnabled,
-      Value<LocationTrafficMethod?> trafficMethod,
+      Value<RoutingMethod?> trafficMethod,
       Value<MfaMethod?> mfaMethod,
       Value<int> keepAliveInterval,
     });
@@ -1989,11 +1986,7 @@ class $$LocationsTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnWithTypeConverterFilters<
-    LocationTrafficMethod?,
-    LocationTrafficMethod,
-    String
-  >
+  ColumnWithTypeConverterFilters<RoutingMethod?, RoutingMethod, String>
   get trafficMethod => $composableBuilder(
     column: $table.trafficMethod,
     builder: (column) => ColumnWithTypeConverterFilters(column),
@@ -2167,11 +2160,11 @@ class $$LocationsTableAnnotationComposer
     builder: (column) => column,
   );
 
-  GeneratedColumnWithTypeConverter<LocationTrafficMethod?, String>
-  get trafficMethod => $composableBuilder(
-    column: $table.trafficMethod,
-    builder: (column) => column,
-  );
+  GeneratedColumnWithTypeConverter<RoutingMethod?, String> get trafficMethod =>
+      $composableBuilder(
+        column: $table.trafficMethod,
+        builder: (column) => column,
+      );
 
   GeneratedColumnWithTypeConverter<MfaMethod?, int> get mfaMethod =>
       $composableBuilder(column: $table.mfaMethod, builder: (column) => column);
@@ -2244,8 +2237,7 @@ class $$LocationsTableTableManager
                 Value<String> allowedIps = const Value.absent(),
                 Value<String?> dns = const Value.absent(),
                 Value<bool> mfaEnabled = const Value.absent(),
-                Value<LocationTrafficMethod?> trafficMethod =
-                    const Value.absent(),
+                Value<RoutingMethod?> trafficMethod = const Value.absent(),
                 Value<MfaMethod?> mfaMethod = const Value.absent(),
                 Value<int> keepAliveInterval = const Value.absent(),
               }) => LocationsCompanion(
@@ -2275,8 +2267,7 @@ class $$LocationsTableTableManager
                 required String allowedIps,
                 Value<String?> dns = const Value.absent(),
                 required bool mfaEnabled,
-                Value<LocationTrafficMethod?> trafficMethod =
-                    const Value.absent(),
+                Value<RoutingMethod?> trafficMethod = const Value.absent(),
                 Value<MfaMethod?> mfaMethod = const Value.absent(),
                 required int keepAliveInterval,
               }) => LocationsCompanion.insert(

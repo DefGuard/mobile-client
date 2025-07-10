@@ -65,7 +65,7 @@ class Locations extends Table with AutoIncrementingPrimaryKey {
   BoolColumn get mfaEnabled => boolean()();
 
   @JsonKey('traffic_method')
-  TextColumn get trafficMethod => textEnum<LocationTrafficMethod>().nullable()();
+  TextColumn get trafficMethod => textEnum<RoutingMethod>().nullable()();
 
   @JsonKey('mfa_method')
   IntColumn get mfaMethod => integer().nullable().map(const MfaMethodConverter())();

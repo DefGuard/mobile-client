@@ -24,7 +24,7 @@ class PluginConnectPayload {
   final int locationId;
   final int instanceId;
   final int networkId;
-  LocationTrafficMethod traffic;
+  RoutingMethod traffic;
 
   PluginConnectPayload({
     required this.publicKey,
@@ -54,7 +54,7 @@ class PluginConnectPayload {
 class PluginTunnelEventData {
   final int instanceId;
   final int locationId;
-  final LocationTrafficMethod traffic;
+  final RoutingMethod traffic;
 
   const PluginTunnelEventData({
     required this.instanceId,

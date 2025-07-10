@@ -198,24 +198,6 @@ class _LocationItem extends HookConsumerWidget {
 
   const _LocationItem({required this.location, required this.instance});
 
-  PluginConnectPayload makePayload() {
-    return PluginConnectPayload(
-      publicKey: location.pubKey,
-      devicePublicKey: instance.pubKey,
-      privateKey: instance.privateKey,
-      address: location.address,
-      dns: location.dns,
-      endpoint: location.endpoint,
-      allowedIps: location.allowedIps,
-      keepalive: location.keepAliveInterval,
-      locationName: location.name,
-      locationId: location.id,
-      networkId: location.networkId,
-      instanceId: instance.id,
-      traffic: LocationTrafficMethod.predefined,
-    );
-  }
-
   bool checkConnected(PluginTunnelEventData? activeTunnel) {
     if (activeTunnel == null) return false;
     return activeTunnel.instanceId == instance.id &&
@@ -245,10 +227,10 @@ class _LocationItem extends HookConsumerWidget {
       isConnected.value = connected;
       if (connected && activeTunnel != null) {
         switch (activeTunnel.traffic) {
-          case LocationTrafficMethod.all:
+          case RoutingMethod.all:
             trafficLabel.value = "All Traffic";
             break;
-          case LocationTrafficMethod.predefined:
+          case RoutingMethod.predefined:
             trafficLabel.value = "Predefined Traffic";
             break;
         }
@@ -349,7 +331,10 @@ class _LocationItem extends HookConsumerWidget {
                               context: context,
                               instance: instance,
                               location: location,
-                              payload: makePayload(),
+                              payload: TunnelService.makePayload(
+                                instance,
+                                location,
+                              ),
                               wireguardPlugin: wireguardPlugin,
                             );
                           }

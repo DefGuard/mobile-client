@@ -2,7 +2,7 @@ import 'package:drift/drift.dart';
 import 'package:json_annotation/json_annotation.dart' as j;
 
 @j.JsonEnum()
-enum LocationTrafficMethod {
+enum RoutingMethod {
   @j.JsonValue("all")
   all,
   @j.JsonValue("predefined")

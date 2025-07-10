@@ -23,7 +23,6 @@ Future<StartMfaResponse> _handleSubmit(
   int locationId,
   MfaMethod method,
 ) async {
-  debugPrint('Submitted: URL=$url, Token=$pubkey');
   final request = StartMfaRequest(
     pubkey: pubkey,
     locationId: locationId,

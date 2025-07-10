@@ -24,7 +24,7 @@ class ConnectDialog extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final connectionType = useState<LocationTrafficMethod>(LocationTrafficMethod.predefined);
+    final connectionType = useState<RoutingMethod>(RoutingMethod.predefined);
 
     return Dialog(
       backgroundColor: DgColor.defaultModal,
@@ -43,9 +43,9 @@ class ConnectDialog extends HookConsumerWidget {
               children: [
                 DgRadioBox(
                   text: "Predefined Traffic",
-                  active: connectionType.value == LocationTrafficMethod.predefined,
+                  active: connectionType.value == RoutingMethod.predefined,
                   onTap: () {
-                    connectionType.value = LocationTrafficMethod.predefined;
+                    connectionType.value = RoutingMethod.predefined;
                   },
                 ),
                 DgMessageBox(
@@ -55,9 +55,9 @@ class ConnectDialog extends HookConsumerWidget {
                 DgSeparator(),
                 DgRadioBox(
                   text: "All Traffic",
-                  active: connectionType.value == LocationTrafficMethod.all,
+                  active: connectionType.value == RoutingMethod.all,
                   onTap: () {
-                    connectionType.value = LocationTrafficMethod.all;
+                    connectionType.value = RoutingMethod.all;
                   },
                 ),
                 DgMessageBox(
