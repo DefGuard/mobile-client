@@ -8,6 +8,7 @@ import 'package:mobile/open/widgets/dg_message_box.dart';
 import 'package:mobile/theme/color.dart';
 import 'package:mobile/theme/spacing.dart';
 import 'package:mobile/theme/text.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../../logging.dart';
 
@@ -52,8 +53,13 @@ class OpenIdMfaStartDialog extends HookConsumerWidget {
     required this.token,
   });
 
-  _openBrowser() {
-    talker.error("Opening browser:", "${proxyUrl}openid/mfa?token=${token}");
+  Future<void> _openBrowser() async {
+    final url = Uri.parse("${proxyUrl}openid/mfa?token=$token");
+    talker.error("Opening browser:", "${proxyUrl}openid/mfa?token=$token");
+
+    if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
+      talker.error("Can't launch url");
+    }
   }
 
   @override
@@ -89,7 +95,7 @@ class OpenIdMfaStartDialog extends HookConsumerWidget {
                       size: DgButtonSize.standard,
                       onTap: () async {
                         final navigator = Navigator.of(context);
-                        _openBrowser();
+                        await _openBrowser();
                         navigator.pop();
                       },
                     ),
