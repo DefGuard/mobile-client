@@ -1,5 +1,5 @@
 // ignore_for_file: unused_field
-import 'dart:ui';
+import 'package:flutter/material.dart';
 
 class _Primitive {
   _Primitive._();
@@ -75,3 +75,10 @@ class DgColor {
   static const Color scrollInactive = _Primitive.greyscale30;
   static const Color scrollActive = _Primitive.greyscale50;
 }
+
+final BoxShadow dgBoxShadow = BoxShadow(
+  color: Colors.black.withValues(alpha: 0.08),
+  offset: Offset(0, 12),
+  blurRadius: 24,
+  spreadRadius: 0,
+);
