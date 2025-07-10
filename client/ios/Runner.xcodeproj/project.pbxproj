@@ -3,14 +3,13 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 73;
+	objectVersion = 54;
 	objects = {
 
 /* Begin PBXBuildFile section */
 		1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */ = {isa = PBXBuildFile; fileRef = 1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */; };
+		284986622E1FAAA700BBCE47 /* NetworkExtension.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 287C99B22E1D2FA400965674 /* NetworkExtension.framework */; };
 		287C99BB2E1D2FA400965674 /* VPNExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 287C99B12E1D2FA400965674 /* VPNExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
-		28C34D0E2E1E7223002D0CE6 /* NetworkExtension.framework in Embed Libraries (1 item) */ = {isa = PBXBuildFile; fileRef = 287C99B22E1D2FA400965674 /* NetworkExtension.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		28C34DF82E1EB037002D0CE6 /* NetworkExtension.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 287C99B22E1D2FA400965674 /* NetworkExtension.framework */; };
 		331C808B294A63AB00263BE5 /* RunnerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 331C807B294A618700263BE5 /* RunnerTests.swift */; };
 		3B3967161E833CAA004F5970 /* AppFrameworkInfo.plist in Resources */ = {isa = PBXBuildFile; fileRef = 3B3967151E833CAA004F5970 /* AppFrameworkInfo.plist */; };
 		452509476FFFC1693DF69954 /* Pods_Runner.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 31C5EF301A6AE15FE3D82641 /* Pods_Runner.framework */; };
@@ -39,6 +38,16 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
+		284986602E1FAAA500BBCE47 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		287C99BC2E1D2FA400965674 /* Embed Foundation Extensions */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -50,17 +59,6 @@
 			name = "Embed Foundation Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		287C99EF2E1D337E00965674 /* Embed Libraries (1 item) */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "";
-			dstSubfolderSpec = 10;
-			files = (
-				28C34D0E2E1E7223002D0CE6 /* NetworkExtension.framework in Embed Libraries (1 item) */,
-			);
-			name = "Embed Libraries (1 item)";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
@@ -69,7 +67,6 @@
 		1F1120C835735FEF27E9F52D /* Pods_RunnerTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_RunnerTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		287C99B12E1D2FA400965674 /* VPNExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = VPNExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		287C99B22E1D2FA400965674 /* NetworkExtension.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = NetworkExtension.framework; path = System/Library/Frameworks/NetworkExtension.framework; sourceTree = SDKROOT; };
-		287C9A152E1D36F100965674 /* libboringtun.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libboringtun.dylib; path = boringtun/target/release/libboringtun.dylib; sourceTree = "<group>"; };
 		287C9A272E1D43DB00965674 /* Runner.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Runner.entitlements; sourceTree = "<group>"; };
 		31C5EF301A6AE15FE3D82641 /* Pods_Runner.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Runner.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		331C807B294A618700263BE5 /* RunnerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunnerTests.swift; sourceTree = "<group>"; };
@@ -94,34 +91,28 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		287C99C02E1D2FA400965674 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+		287C99C02E1D2FA400965674 /* Exceptions for "VPNExtension" folder in "VPNExtension" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
-				BoringTun/boringtun.xcframework,
 				Info.plist,
 			);
 			target = 287C99B02E1D2FA400965674 /* VPNExtension */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
-/* Begin PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
-		28C34D0C2E1E71AB002D0CE6 /* PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet */ = {
-			isa = PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet;
-			attributesByRelativePath = {
-				BoringTun/boringtun.xcframework = (
-					CodeSignOnCopy,
-					RemoveHeadersOnCopy,
-				);
-			};
-			buildPhase = 287C99EF2E1D337E00965674 /* Embed Libraries (1 item) */;
-			membershipExceptions = (
-				BoringTun/boringtun.xcframework,
-			);
-		};
-/* End PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
-
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		287C99B42E1D2FA400965674 /* VPNExtension */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (287C99C02E1D2FA400965674 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, 28C34D0C2E1E71AB002D0CE6 /* PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = VPNExtension; sourceTree = "<group>"; };
+		287C99B42E1D2FA400965674 /* VPNExtension */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				287C99C02E1D2FA400965674 /* Exceptions for "VPNExtension" folder in "VPNExtension" target */,
+			);
+			explicitFileTypes = {
+			};
+			explicitFolders = (
+			);
+			path = VPNExtension;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -129,7 +120,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				28C34DF82E1EB037002D0CE6 /* NetworkExtension.framework in Frameworks */,
+				284986622E1FAAA700BBCE47 /* NetworkExtension.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -213,7 +204,6 @@
 		DCED99F8D798CA792151538F /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				287C9A152E1D36F100965674 /* libboringtun.dylib */,
 				31C5EF301A6AE15FE3D82641 /* Pods_Runner.framework */,
 				1F1120C835735FEF27E9F52D /* Pods_RunnerTests.framework */,
 				287C99B22E1D2FA400965674 /* NetworkExtension.framework */,
@@ -244,7 +234,7 @@
 				287C99AD2E1D2FA400965674 /* Sources */,
 				287C99AE2E1D2FA400965674 /* Frameworks */,
 				287C99AF2E1D2FA400965674 /* Resources */,
-				287C99EF2E1D337E00965674 /* Embed Libraries (1 item) */,
+				284986602E1FAAA500BBCE47 /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
@@ -326,6 +316,7 @@
 				};
 			};
 			buildConfigurationList = 97C146E91CF9000F007C117D /* Build configuration list for PBXProject "Runner" */;
+			compatibilityVersion = "Xcode 9.3";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -333,7 +324,6 @@
 				Base,
 			);
 			mainGroup = 97C146E51CF9000F007C117D;
-			preferredProjectObjectVersion = 50;
 			productRefGroup = 97C146EF1CF9000F007C117D /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -442,13 +432,9 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-Runner/Pods-Runner-resources-${CONFIGURATION}-input-files.xcfilelist",
 			);
-			inputPaths = (
-			);
 			name = "[CP] Copy Pods Resources";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-Runner/Pods-Runner-resources-${CONFIGURATION}-output-files.xcfilelist",
-			);
-			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -468,7 +454,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "/bin/sh \"$FLUTTER_ROOT/packages/flutter_tools/bin/xcode_backend.sh\" build";
+			shellScript = "/bin/sh \"$FLUTTER_ROOT/packages/flutter_tools/bin/xcode_backend.sh\" build\n";
 		};
 		BED8E001EAA0A01F53229921 /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -478,13 +464,9 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-Runner/Pods-Runner-frameworks-${CONFIGURATION}-input-files.xcfilelist",
 			);
-			inputPaths = (
-			);
 			name = "[CP] Embed Pods Frameworks";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-Runner/Pods-Runner-frameworks-${CONFIGURATION}-output-files.xcfilelist",
-			);
-			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -623,7 +605,7 @@
 				);
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
-					"$(PROJECT_DIR)/boringtun/target/release",
+					"$(PROJECT_DIR)/VPNExtension/BoringTun",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = net.defguard.mobile;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -649,7 +631,7 @@
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
 				GENERATE_INFOPLIST_FILE = YES;
-				HEADER_SEARCH_PATHS = "$(PROJECT_DIR)/VPNExtension/BoringTun";
+				HEADER_SEARCH_PATHS = "";
 				INFOPLIST_FILE = VPNExtension/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = VPNExtension;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
@@ -666,10 +648,10 @@
 				);
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MARKETING_VERSION = 1.0;
-				MODULEMAP_FILE = "$(PROJECT_DIR)/VPNExtension/BoringTun/boringtunFFI.modulemap";
+				MODULEMAP_FILE = "";
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
-				OTHER_LDFLAGS = "-lboringtun";
+				OTHER_LDFLAGS = "";
 				PRODUCT_BUNDLE_IDENTIFIER = net.defguard.mobile.VPNExtension;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
@@ -683,9 +665,9 @@
 				SWIFT_OBJC_BRIDGING_HEADER = "$(PROJECT_DIR)/VPNExtension/BoringTun/boringtunFFI.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
-				SYSTEM_HEADER_SEARCH_PATHS = "$(PROJECT_DIR)/VPNExtension/BoringTun";
+				SYSTEM_HEADER_SEARCH_PATHS = "";
 				TARGETED_DEVICE_FAMILY = "1,2";
-				USER_HEADER_SEARCH_PATHS = "$(PROJECT_DIR)/VPNExtension/BoringTun";
+				USER_HEADER_SEARCH_PATHS = "";
 			};
 			name = Debug;
 		};
@@ -705,7 +687,7 @@
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
 				GENERATE_INFOPLIST_FILE = YES;
-				HEADER_SEARCH_PATHS = "$(PROJECT_DIR)/VPNExtension/BoringTun";
+				HEADER_SEARCH_PATHS = "";
 				INFOPLIST_FILE = VPNExtension/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = VPNExtension;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
@@ -722,9 +704,9 @@
 				);
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MARKETING_VERSION = 1.0;
-				MODULEMAP_FILE = "$(PROJECT_DIR)/VPNExtension/BoringTun/boringtunFFI.modulemap";
+				MODULEMAP_FILE = "";
 				MTL_FAST_MATH = YES;
-				OTHER_LDFLAGS = "-lboringtun";
+				OTHER_LDFLAGS = "";
 				PRODUCT_BUNDLE_IDENTIFIER = net.defguard.mobile.VPNExtension;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
@@ -736,9 +718,9 @@
 				SWIFT_INCLUDE_PATHS = "$(PROJECT_DIR)/VPNExtension/BoringTun";
 				SWIFT_OBJC_BRIDGING_HEADER = "$(PROJECT_DIR)/VPNExtension/BoringTun/boringtunFFI.h";
 				SWIFT_VERSION = 5.0;
-				SYSTEM_HEADER_SEARCH_PATHS = "$(PROJECT_DIR)/VPNExtension/BoringTun";
+				SYSTEM_HEADER_SEARCH_PATHS = "";
 				TARGETED_DEVICE_FAMILY = "1,2";
-				USER_HEADER_SEARCH_PATHS = "$(PROJECT_DIR)/VPNExtension/BoringTun";
+				USER_HEADER_SEARCH_PATHS = "";
 			};
 			name = Release;
 		};
@@ -758,7 +740,7 @@
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
 				GENERATE_INFOPLIST_FILE = YES;
-				HEADER_SEARCH_PATHS = "$(PROJECT_DIR)/VPNExtension/BoringTun";
+				HEADER_SEARCH_PATHS = "";
 				INFOPLIST_FILE = VPNExtension/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = VPNExtension;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
@@ -775,9 +757,9 @@
 				);
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MARKETING_VERSION = 1.0;
-				MODULEMAP_FILE = "$(PROJECT_DIR)/VPNExtension/BoringTun/boringtunFFI.modulemap";
+				MODULEMAP_FILE = "";
 				MTL_FAST_MATH = YES;
-				OTHER_LDFLAGS = "-lboringtun";
+				OTHER_LDFLAGS = "";
 				PRODUCT_BUNDLE_IDENTIFIER = net.defguard.mobile.VPNExtension;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
@@ -789,9 +771,9 @@
 				SWIFT_INCLUDE_PATHS = "$(PROJECT_DIR)/VPNExtension/BoringTun";
 				SWIFT_OBJC_BRIDGING_HEADER = "$(PROJECT_DIR)/VPNExtension/BoringTun/boringtunFFI.h";
 				SWIFT_VERSION = 5.0;
-				SYSTEM_HEADER_SEARCH_PATHS = "$(PROJECT_DIR)/VPNExtension/BoringTun";
+				SYSTEM_HEADER_SEARCH_PATHS = "";
 				TARGETED_DEVICE_FAMILY = "1,2";
-				USER_HEADER_SEARCH_PATHS = "$(PROJECT_DIR)/VPNExtension/BoringTun";
+				USER_HEADER_SEARCH_PATHS = "";
 			};
 			name = Profile;
 		};
