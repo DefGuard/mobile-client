@@ -1,9 +1,9 @@
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:mobile/data/db/database.dart';
 import 'package:mobile/data/plugin/plugin.dart';
 import 'package:mobile/data/proxy/mfa.dart';
 import 'package:mobile/open/api.dart';
+import 'package:mobile/open/screens/instance/widgets/mfa/openid_mfa_waiting_dialog.dart';
 import 'package:mobile/open/screens/instance/widgets/mfa/select_mfa_method_dialog.dart';
 import 'package:mobile/open/screens/instance/widgets/connect_dialog.dart';
 import 'package:mobile/open/screens/instance/widgets/mfa/code_dialog.dart';
@@ -109,28 +109,6 @@ class TunnelService {
     return await proxyApi.startMfa(uri, request);
   }
 
-  static Future<String?> _pollOpenidMfa(
-    String proxyUrl,
-    String token,
-  ) async {
-    final request = FinishMfaRequest(token: token);
-    final uri = Uri.parse(proxyUrl);
-    // TODO: timeout
-    while (true) {
-      try {
-        final response = await proxyApi.finishMfa(uri, request);
-        return response.presharedKey;
-      } on DioException catch (e) {
-        if (e.response?.statusCode == 428) {
-          talker.debug("User did not complete openid browser login, waiting");
-          await Future.delayed(Duration(seconds: 2));
-        } else {
-          rethrow;
-        }
-      }
-    }
-  }
-
   /// Handles OpenID, browser-based MFA
   static Future<String?> _handleOpenidMfaFlow({
     required BuildContext context,
@@ -161,8 +139,18 @@ class TunnelService {
         return null;
       }
 
-      // Wait for user to complete authentication in the browser
-      return await _pollOpenidMfa(proxyUrl, startMfaResponse.token);
+      final FinishMfaResponse? finishMfaResponse = await showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return OpenidMfaWaitingDialog(
+            token: startMfaResponse.token,
+            proxyUrl: proxyUrl,
+          );
+        },
+      );
+
+      return finishMfaResponse?.presharedKey;
+
     } catch (e) {
       talker.error("OpenID MFA flow error: $e");
       return null;

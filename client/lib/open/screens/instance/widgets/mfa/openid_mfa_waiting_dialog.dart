@@ -1,43 +1,67 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:mobile/data/proxy/mfa.dart';
+import 'package:mobile/open/api.dart';
 import 'package:mobile/open/widgets/buttons/dg_button.dart';
 import 'package:mobile/open/widgets/dg_message_box.dart';
 import 'package:mobile/theme/color.dart';
 import 'package:mobile/theme/spacing.dart';
 import 'package:mobile/theme/text.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../../logging.dart';
 
 final String _title = "Two-factor authentication";
-final String _mfaMsg1 =
-    "In order to connect to VPN please login with your OpenID provider. To do so, pease click \"Authenticate with OpenId\"";
+final String _mfaMsg =
+    "Waiting for authentication in your browser...";
+final String _cancelMsg = "Cancel";
 
-final String _mfaMsg2 =
-    "This will open a new window in your web browser and automatically redirect you to your OpenID provider login page. After authenticating please get back here";
-
-final String _authenticateMsg = "Authenticate with OpenId";
-
-class OpenIdMfaStartDialog extends HookConsumerWidget {
+class OpenidMfaWaitingDialog extends HookConsumerWidget {
   final String proxyUrl;
   final String token;
 
-  const OpenIdMfaStartDialog({
+  const OpenidMfaWaitingDialog({
     super.key,
     required this.proxyUrl,
     required this.token,
   });
 
-  Future<void> _openBrowser() async {
-    final url = Uri.parse("${proxyUrl}openid/mfa?token=$token");
-
-    if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
-      talker.error("Can't launch url");
+  Future<FinishMfaResponse?> _pollOpenidMfa() async {
+    final request = FinishMfaRequest(token: token);
+    final uri = Uri.parse(proxyUrl);
+    // TODO: timeout
+    while (true) {
+      try {
+        final response = await proxyApi.finishMfa(uri, request);
+        return response;
+      } on DioException catch (e) {
+        if (e.response?.statusCode == 428) {
+          talker.debug("User did not complete openid browser login, waiting");
+          await Future.delayed(Duration(seconds: 2));
+        } else {
+          rethrow;
+        }
+      }
     }
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final navigator = Navigator.of(context);
+    
+    useEffect(() {
+      // Start polling automatically when dialog opens
+      _pollOpenidMfa().then((finishMfaResponse) {
+        // Return the preshared key when polling completes
+        navigator.pop(finishMfaResponse);
+      }).catchError((error) {
+        talker.error("OpenID MFA polling error: $error");
+        navigator.pop(null);
+      });
+      return null;
+    }, []);
+
     return Dialog(
       backgroundColor: DgColor.defaultModal,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -53,24 +77,19 @@ class OpenIdMfaStartDialog extends HookConsumerWidget {
               children: [
                 DgMessageBox(
                   variant: DgMessageBoxVariant.infoOutlined,
-                  text: _mfaMsg1,
-                ),
-                DgMessageBox(
-                  variant: DgMessageBoxVariant.infoOutlined,
-                  text: _mfaMsg2,
+                  text: _mfaMsg,
                 ),
                 Row(
                   mainAxisSize: MainAxisSize.max,
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     DgButton(
-                      text: _authenticateMsg,
+                      text: _cancelMsg,
                       variant: DgButtonVariant.secondary,
                       size: DgButtonSize.standard,
-                      onTap: () async {
-                        final navigator = Navigator.of(context);
-                        await _openBrowser();
-                        navigator.pop(true);
+                      onTap: () {
+                        // Cancel the dialog
+                        navigator.pop(null);
                       },
                     ),
                   ],
