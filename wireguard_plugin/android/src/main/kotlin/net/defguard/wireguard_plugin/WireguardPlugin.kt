@@ -230,7 +230,7 @@ class WireguardPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
                 val tunnelData = ActiveTunnelData(
                     locationId = configData.locationId,
                     instanceId = configData.instanceId,
-                    traffic = configData.traffic
+                    traffic = configData.traffic,
                 )
 
                 futureBackend.await().setState(tunnel, Tunnel.State.UP, config)

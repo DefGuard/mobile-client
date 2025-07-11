@@ -6,18 +6,30 @@ import 'package:mobile/open/screens/instance/widgets/connect_dialog.dart';
 import 'package:mobile/open/screens/instance/widgets/mfa/code_dialog.dart';
 import 'dart:convert';
 
+import '../../../../data/db/enums.dart';
 import '../../../../logging.dart';
 
-enum MfaMethod {
-  totp(0),
-  email(1);
-
-  final int value;
-  const MfaMethod(this.value);
-}
 
 /// Handles MFA flows and tunnel connection
 class TunnelService {
+
+  static PluginConnectPayload makePayload(DefguardInstance instance, Location location) {
+    return PluginConnectPayload(
+      publicKey: location.pubKey,
+      devicePublicKey: instance.pubKey,
+      privateKey: instance.privateKey,
+      address: location.address,
+      dns: location.dns,
+      endpoint: location.endpoint,
+      allowedIps: location.allowedIps,
+      keepalive: location.keepAliveInterval,
+      locationName: location.name,
+      locationId: location.id,
+      networkId: location.networkId,
+      instanceId: instance.id,
+      traffic: RoutingMethod.predefined,
+    );
+  }
 
   /// Main service method - displays traffic & MFA dialogs, handles
   /// interface configuration and connection.
@@ -25,23 +37,25 @@ class TunnelService {
     required BuildContext context,
     required DefguardInstance instance,
     required Location location,
+    required PluginConnectPayload payload,
     required dynamic wireguardPlugin,
   }) async {
-    PluginConnectPayload payload = _makePayload(instance, location);
     // handle traffic type selection if necessary
     payload.traffic = instance.disableAllTraffic
-        ? TunnelTraffic.predefined
-        : (await showDialog<TunnelTraffic?>(
+        ? RoutingMethod.predefined
+        : (await showDialog<RoutingMethod?>(
                 context: context,
                 builder: (_) => ConnectDialog(),
               ))
               // in case the user dismisses the dialog
               ??
-              TunnelTraffic.predefined;
+              RoutingMethod.predefined;
 
     // handle mfa
     if (location.mfaEnabled) {
-      if (!context.mounted) return;
+      if (!context.mounted) {
+        return;
+      }
       final presharedKey = await _handleMfaFlow(
         context: context,
         proxyUrl: instance.proxyUrl,
@@ -56,28 +70,6 @@ class TunnelService {
 
     // start the tunnel
     await wireguardPlugin.startTunnel(jsonEncode(payload.toJson()));
-  }
-
-  /// Prepares wireguard plugin configuration
-  static PluginConnectPayload _makePayload(
-    DefguardInstance instance,
-    Location location,
-  ) {
-    return PluginConnectPayload(
-      publicKey: location.pubKey,
-      devicePublicKey: instance.pubKey,
-      privateKey: instance.privateKey,
-      address: location.address,
-      dns: location.dns,
-      endpoint: location.endpoint,
-      allowedIps: location.allowedIps,
-      keepalive: location.keepAliveInterval,
-      locationName: location.name,
-      locationId: location.id,
-      networkId: location.networkId,
-      instanceId: instance.id,
-      traffic: TunnelTraffic.predefined,
-    );
   }
 
   /// Displays mfa method selection and code input dialogs
