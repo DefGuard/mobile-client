@@ -131,7 +131,7 @@ class _ProxyApi {
       final response = await _dio.postUri(endpoint, data: data.toJson());
       return FinishMfaResponse.fromJson(response.data);
     } on DioException catch (e) {
-      if (e.response != null) {
+      if (e.response != null && e.response?.statusCode != 428) {
         throw HttpException(
           "Failed to finish MFA. Status: ${e.response?.statusCode} Body: ${e.response?.data}",
         );

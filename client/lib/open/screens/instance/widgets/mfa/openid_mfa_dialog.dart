@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mobile/data/proxy/mfa.dart';
@@ -62,6 +65,25 @@ class OpenIdMfaStartDialog extends HookConsumerWidget {
     }
   }
 
+  Future<FinishMfaResponse?> _poll() async {
+    final request = FinishMfaRequest(token: token);
+
+    final uri = Uri.parse(proxyUrl);
+    try {
+      final response = await proxyApi.finishMfa(uri, request);
+      return response;
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 428) {
+        talker.error("428");
+        // waiting for user browser login
+        return null;
+      } else {
+        talker.error("rethrowing");
+        rethrow;
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Dialog(
@@ -96,7 +118,16 @@ class OpenIdMfaStartDialog extends HookConsumerWidget {
                       onTap: () async {
                         final navigator = Navigator.of(context);
                         await _openBrowser();
-                        navigator.pop();
+                        while (true) {
+                          // TODO: timeout
+                          final response = await _poll();
+                          if (response != null) {
+                            navigator.pop(response);
+                          } else {
+                            talker.error("Reponse is null, polling");
+                          }
+                          await Future.delayed(Duration(seconds: 2));
+                        }
                       },
                     ),
                   ],

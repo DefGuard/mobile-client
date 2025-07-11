@@ -44,7 +44,6 @@ class TunnelService {
 
     // handle mfa
     if (location.mfaEnabled) {
-      if (!context.mounted) return;
       final presharedKey = instance.useOpenidForMfa
           ? await _handleOpenidMfaFlow(
               context: context,
@@ -57,6 +56,7 @@ class TunnelService {
               payload: payload,
               useOpenid: instance.useOpenidForMfa,
             );
+
       if (presharedKey == null) {
         // user dismissed the dialog
         return;
@@ -115,38 +115,40 @@ class TunnelService {
     required PluginConnectPayload payload,
   }) async {
     try {
-      final response = await _startMfa(
+      final startMfaResponse = await _startMfa(
         proxyUrl,
         payload.devicePublicKey,
         payload.networkId,
         MfaMethod.openid,
       );
-      talker.error("OIDC start response:", response);
+      talker.error("OIDC start response:", startMfaResponse);
 
       // start MFA flow - show method selection dialog
-      final opened = await showDialog(
+      FinishMfaResponse finishMfaResponse = await showDialog(
         context: context,
         builder: (BuildContext context) {
           return OpenIdMfaStartDialog(
             proxyUrl: proxyUrl,
             publicKey: payload.devicePublicKey,
             networkId: payload.networkId,
-            token: response.token,
+            token: startMfaResponse.token,
           );
         },
       );
 
-      if (!opened) {
+      if (finishMfaResponse == null) {
         // dialog dismissed
         return null;
       }
+
+      return finishMfaResponse.presharedKey;
     } catch (e) {
       talker.error("MFA flow error: $e");
       return null;
     }
   }
 
-  /// Displays mfa method selection and code input dialogs
+  /// Displays non-openid mfa method selection and code input dialogs
   static Future<String?> _handleMfaFlow({
     required BuildContext context,
     required String proxyUrl,
