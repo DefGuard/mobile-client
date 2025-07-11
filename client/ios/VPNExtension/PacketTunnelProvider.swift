@@ -202,9 +202,14 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
         // IPv4 routes
         if !ipv4Addresses.isEmpty {
             var ipv4Routes: [NEIPv4Route] = []
-            for route in routes.ipv4Addrs {
-                ipv4Routes.append(NEIPv4Route(destinationAddress: route.0, subnetMask: route.1))
+            if tunnelConfig.traffic == .Predefined {
+                for route in routes.ipv4Addrs {
+                    ipv4Routes.append(NEIPv4Route(destinationAddress: route.0, subnetMask: route.1))
+                }
+            } else {
+                ipv4Routes.append(NEIPv4Route.default())
             }
+
             ipv4Settings.includedRoutes = ipv4Routes
             networkSettings.ipv4Settings = ipv4Settings
         }
@@ -212,8 +217,12 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
         // IPv6 routes
         if !ipv6Addresses.isEmpty {
             var ipv6Routes: [NEIPv6Route] = []
-            for route in routes.ipv6Addrs {
-                ipv6Routes.append(NEIPv6Route(destinationAddress: route.0, networkPrefixLength: route.1 as NSNumber))
+            if tunnelConfig.traffic == .Predefined {
+                for route in routes.ipv6Addrs {
+                    ipv6Routes.append(NEIPv6Route(destinationAddress: route.0, networkPrefixLength: route.1 as NSNumber))
+                }
+            } else {
+                ipv6Routes.append(NEIPv6Route.default())
             }
             ipv6Settings.includedRoutes = ipv6Routes
             networkSettings.ipv6Settings = ipv6Settings
