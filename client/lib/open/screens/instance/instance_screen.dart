@@ -69,12 +69,8 @@ class InstanceScreen extends HookConsumerWidget {
         child: screenData.when(
           data: (screenData) {
             if (screenData == null) {
-              Future.microtask(() {
-                if (context.mounted) {
-                  HomeScreenRoute().go(context);
-                }
-              });
-              return SizedBox();
+              HomeScreenRoute().go(context);
+              return null;
             }
             return _ScreenContent(
               screenData: screenData,
