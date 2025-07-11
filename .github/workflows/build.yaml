@@ -2,8 +2,7 @@ name: 'Build app'
 on:
   push:
     branches:
-      # - main
-      - ios-client
+      - main
 
 jobs:
   build-ios:
@@ -62,63 +61,62 @@ jobs:
           api-key-id: ${{ secrets.ASC_API_KEY_ID }}
           api-private-key: ${{ secrets.PRIVATE_KEY_CONTENTS }}
 
+  build-android:
+    runs-on: [self-hosted, macOS]
+    env:
+      ANDROID_HOME: /Users/admin/Library/Android/sdk
+      ANDROID_SDK_ROOT: /Users/admin/Library/Android/sdk
+    defaults:
+      run:
+        working-directory: ./client
+    steps:
+    - uses: actions/checkout@v4
 
-  # build-android:
-  #   runs-on: [self-hosted, macOS]
-  #   env:
-  #     ANDROID_HOME: /Users/admin/Library/Android/sdk
-  #     ANDROID_SDK_ROOT: /Users/admin/Library/Android/sdk
-  #   defaults:
-  #     run:
-  #       working-directory: ./client
-  #   steps:
-  #   - uses: actions/checkout@v4
+    - name: Set up Java
+      uses: actions/setup-java@v3
+      with:
+        distribution: 'temurin'
+        java-version: '17'
 
-  #   - name: Set up Java
-  #     uses: actions/setup-java@v3
-  #     with:
-  #       distribution: 'temurin'
-  #       java-version: '17'
+    - name: Setup flutter
+      uses: subosito/flutter-action@v2
+      with:
+        channel: stable
+        flutter-version: 3.32.5
 
-  #   - name: Setup flutter
-  #     uses: subosito/flutter-action@v2
-  #     with:
-  #       channel: stable
-  #       flutter-version: 3.32.5
+    - name: Accept licenses
+      run: yes | flutter doctor --android-licenses
 
-  #   - name: Accept licenses
-  #     run: yes | flutter doctor --android-licenses
+    - name: Clean flutter
+      run: flutter clean
 
-  #   - name: Clean flutter
-  #     run: flutter clean
+    - name: Install deps
+      run: flutter pub get
 
-  #   - name: Install deps
-  #     run: flutter pub get
+    - name: Build android
+      run: flutter build appbundle --release --build-number=${{ github.run_number }}
 
-  #   - name: Build android
-  #     run: flutter build appbundle --release --build-number=${{ github.run_number }}
+    - name: Sign AAB
+      uses: r0adkll/sign-android-release@v1
+      with:
+        releaseDirectory: client/build/app/outputs/bundle/release
+        signingKeyBase64: '${{ secrets.ANDROID_SIGNING_KEY_BASE64 }}'
+        alias: '${{ secrets.ANDROID_SIGNING_KEY_ALIAS }}'
+        keyStorePassword: '${{ secrets.ANDROID_KEYSTORE_PASSWORD }}'
+        keyPassword: '${{ secrets.ANDROID_KEYSTORE_PASSWORD }}'
 
-  #   - name: Sign AAB
-  #     uses: r0adkll/sign-android-release@v1
-  #     with:
-  #       releaseDirectory: client/build/app/outputs/bundle/release
-  #       signingKeyBase64: '${{ secrets.ANDROID_SIGNING_KEY_BASE64 }}'
-  #       alias: '${{ secrets.ANDROID_SIGNING_KEY_ALIAS }}'
-  #       keyStorePassword: '${{ secrets.ANDROID_KEYSTORE_PASSWORD }}'
-  #       keyPassword: '${{ secrets.ANDROID_KEYSTORE_PASSWORD }}'
+    - name: Upload android artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: android
+        retention-days: 14
+        path: client/build/app/outputs/bundle/release/app-release.aab
 
-  #   - name: Upload android artifact
-  #     uses: actions/upload-artifact@v4
-  #     with:
-  #       name: android
-  #       retention-days: 14
-  #       path: client/build/app/outputs/bundle/release/app-release.aab
-
-  #   - name: Publish to Play Store
-  #     uses: r0adkll/upload-google-play@v1
-  #     with:
-  #       serviceAccountJsonPlainText: '${{ secrets.ANDROID_SERVICE_ACCOUNT_JSON }}'
-  #       packageName: net.defguard.mobile
-  #       releaseFiles: client/build/app/outputs/bundle/release/app-release.aab
-  #       status: draft
-  #       track: internal
+    - name: Publish to Play Store
+      uses: r0adkll/upload-google-play@v1
+      with:
+        serviceAccountJsonPlainText: '${{ secrets.ANDROID_SERVICE_ACCOUNT_JSON }}'
+        packageName: net.defguard.mobile
+        releaseFiles: client/build/app/outputs/bundle/release/app-release.aab
+        status: draft
+        track: internal
