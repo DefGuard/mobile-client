@@ -37,6 +37,12 @@ flutter:
       android:
         package: net.defguard.wireguard_plugin
         pluginClass: WireguardPlugin
+      ios:
+        pluginClass: WireguardPlugin
+        sharedDarwinSource: true
+      macos:
+        pluginClass: WireguardPlugin
+        sharedDarwinSource: true
   # To add assets to your plugin package, add an assets section, like this:
   # assets:
   #   - images/a_dot_burr.jpeg
