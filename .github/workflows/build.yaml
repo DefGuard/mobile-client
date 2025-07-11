@@ -41,8 +41,8 @@ jobs:
       - name: Generate boringtun bindings
         run: cd ios/boringtun && ./bindings.sh
 
-      - name: List boringtun directory
-        run: ls -la ios/boringtun
+      - name: Update CocoaPods
+        run: pod repo update
 
       - name: Build iOS
         run: flutter build ipa --release --obfuscate --split-debug-info=build/debug-info --build-number=${{ github.run_number }}
