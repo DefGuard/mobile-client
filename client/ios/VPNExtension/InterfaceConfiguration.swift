@@ -1,25 +1,20 @@
-//
-//  InterfaceConfiguration.swift
-//  Pods
-//
-//  Created by Aleksander on 04/07/2025.
-//
-
 import Foundation
 import Network
 
-public struct InterfaceConfiguration {
-    public var privateKey: KeyBytes
-    public var addresses = [IpAddrMask]()
-    public var listenPort: UInt16?
-    public var mtu: UInt16?
-    public var dns = [IPAddress]()
-    public var dnsSearch = [String]()
-    public var endpoint: Endpoint
+final class InterfaceConfiguration: Codable {
+    var privateKey: String
+    var addresses = [IpAddrMask]()
+    var listenPort: UInt16?
+    var mtu: UInt16?
+    var dns = [IPAddress]()
+    var dnsSearch = [String]()
 
-    public init(privateKey: KeyBytes, endpoint: Endpoint) {
+    init(privateKey: String) {
         self.privateKey = privateKey
-        self.endpoint = endpoint
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case privateKey
     }
 }
 

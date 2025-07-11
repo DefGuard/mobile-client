@@ -7,6 +7,8 @@ import NetworkExtension
     import Flutter
 #endif
 
+
+
 public class WireguardPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
     public func onListen(
         withArguments arguments: Any?, eventSink events: @escaping FlutterEventSink
@@ -23,6 +25,8 @@ public class WireguardPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
     private var eventSink: FlutterEventSink?
 
     public static func register(with registrar: FlutterPluginRegistrar) {
+
+        
         let methodChannel = FlutterMethodChannel(
             name: "net.defguard.wireguard_plugin/channel",
             binaryMessenger: registrar.messenger()
@@ -32,6 +36,7 @@ public class WireguardPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
             binaryMessenger: registrar.messenger()
         )
 
+        
         let instance = WireguardPlugin()
         registrar.addMethodCallDelegate(instance, channel: methodChannel)
         eventChannel.setStreamHandler(instance)
@@ -105,7 +110,17 @@ public class WireguardPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
             let tunnelProtocol = NETunnelProviderProtocol()
             tunnelProtocol.providerBundleIdentifier = "\(appId).VPNExtension"
             tunnelProtocol.serverAddress = config.endpoint
-            tunnelProtocol.providerConfiguration = toDictionary(config)
+            guard let configDict = try? config.toDictionary() else {
+                result(
+                    FlutterError(
+                        code: "CONFIG_ERROR",
+                        message: "Failed to convert config to dictionary",
+                        details: nil
+                    )
+                )
+                return
+            }
+            tunnelProtocol.providerConfiguration = configDict
             providerManager.protocolConfiguration = tunnelProtocol
             providerManager.localizedDescription = config.locationName
             providerManager.isEnabled = true

@@ -1,16 +1,9 @@
-//
-//  Adapter.swift
-//  Pods
-//
-//  Created by Aleksander on 04/07/2025.
-//
-
 import Foundation
 import Network
 import NetworkExtension
 import os
 
-public class Adapter {
+final class Adapter /*: Sendable*/ {
     /// Packet tunnel provider.
     private weak var packetTunnelProvider: NEPacketTunnelProvider?
     /// BortingTun tunnel
@@ -31,27 +24,32 @@ public class Adapter {
     //        }
     //    }
 
-    public func start(tunnelConfiguration: TunnelConfiguration) {
+    public func start(tunnelConfiguration: TunnelConfiguration) throws {
         // TODO: kill exising tunnel
-        print("Initalizing Tunnel...")
-        tunnel = Tunnel.init(
+        os_log("Initalizing Tunnel...")
+        tunnel = try Tunnel.init(
             privateKey: tunnelConfiguration.interface.privateKey,
             serverPublicKey: tunnelConfiguration.peers[0].publicKey,
+            presharedKey: tunnelConfiguration.peers[0].preSharedKey,
             keepAlive: tunnelConfiguration.peers[0].persistentKeepAlive,
             index: 0
         )
+        
+        let peer = tunnelConfiguration.peers[0]
+        guard let peerEndpoint = peer.endpoint else {
+            throw NSError(domain: "AdapterError", code: 1, userInfo: [NSLocalizedDescriptionKey: "Peer endpoint is nil"])
+        }
 
-        print("Connecting to endpoint...")
-        let endpoint = NWEndpoint.hostPort(host: tunnelConfiguration.interface.endpoint.host, port: tunnelConfiguration.interface.endpoint.port)
+        os_log("Connecting to endpoint...")
+        let endpoint = NWEndpoint.hostPort(host: peerEndpoint.host, port: peerEndpoint.port)
         let params = NWParameters.udp
         params.allowLocalEndpointReuse = true
         connection = NWConnection.init(to: endpoint, using: params)
 
-
         connection?.stateUpdateHandler = { state in
             print("State: \(state)")
         }
-        print("Receiving UDP from endpoint...")
+        os_log("Receiving UDP from endpoint...")
         connection?.start(queue: .main)
         // Send initial handshake packet
         if let tunnel = tunnel {
@@ -59,7 +57,7 @@ public class Adapter {
         }
         receive()
 
-        print("Sniffing packets...")
+        os_log("Sniffing packets...")
         readPackets()
     }
     
@@ -69,11 +67,7 @@ public class Adapter {
         connection = nil
         tunnel = nil
     }
-    
-    public func isConnected() -> Bool {
-        return connection?.state == .ready
-    }
-    
+
     private func handleTunnelResult(_ result: TunnelResult) {
         switch result {
             case .done:
@@ -106,18 +100,14 @@ public class Adapter {
 
     /// Handle UDP packets from the endpoint.
     private func receive() {
-        guard let connection = connection else {
-            return
-        }
+        guard let connection = connection else { return }
         connection.receiveMessage { data, context, isComplete, error in
             if let data = data, let tunnel = self.tunnel {
-                os_log("Received from endpoint: \(data.count)")
+                print("Received from endpoint: \(data.count)")
                 self.handleTunnelResult(tunnel.read(src: data))
             }
             if error == nil {
                 self.receive() // continue receiving
-            } else {
-                os_log("ERRROR: \(error)")
             }
         }
     }

@@ -9,7 +9,6 @@ import NetworkExtension
 import os
 import Network
 
-// Add the event types for the extension
 enum VPNEventType: String {
     case tunnelUp = "tunnel_up"
     case tunnelDown = "tunnel_down"
@@ -17,29 +16,6 @@ enum VPNEventType: String {
     case connectionStatusChanged = "connection_status_changed"
     case bytesTransferred = "bytes_transferred"
 }
-
-public func toDictionary<T: Encodable>(_ encodable: T) -> [String: Any]? {
-    do {
-        let data = try JSONEncoder().encode(encodable)
-        let jsonObject = try JSONSerialization.jsonObject(with: data, options: [])
-        return jsonObject as? [String: Any]
-    } catch {
-        print("Error converting to dictionary:", error)
-        return nil
-    }
-}
-
-public func fromDictionary<T: Decodable>(_ dictionary: [String: Any], to type: T.Type) -> T? {
-    do {
-        let data = try JSONSerialization.data(withJSONObject: dictionary, options: [])
-        let decodedObject = try JSONDecoder().decode(type, from: data)
-        return decodedObject
-    } catch {
-        print("Error converting from dictionary:", error)
-        return nil
-    }
-}
-
 
 class PacketTunnelProvider: NEPacketTunnelProvider {
 
@@ -56,6 +32,7 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
         var ipv4Addrs: [(String, String)]
         var ipv6Addrs: [(String, Int)]
         
+        
         static func cidrToMask(_ cidr: Int) -> String {
             let mask: UInt32 = cidr == 0 ? 0 : ~UInt32(0) << (32 - cidr)
             return (0..<4).map { String((mask >> (8 * (3 - $0))) & 0xFF) }.joined(separator: ".")
@@ -68,7 +45,7 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
             for ip in allowedIPs {
                 let parts = ip.split(separator: "/")
                 guard parts.count == 2 else {
-                    logger.log(level: .error, "Invalid IP format: \(ip)")
+                    logger.log(level: .error, "Invalid IP format: \(ip, privacy: .public)")
                     continue
                 }
                 let addr = String(parts[0])
@@ -79,10 +56,10 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
                     if let prefix = Int(mask) {
                         ipv6.append((addr, prefix))
                     } else {
-                        logger.log(level: .error, "Invalid IPv6 prefix length: \(mask) for address \(addr)")
+                        logger.log(level: .error, "Invalid IPv6 prefix length: \(mask, privacy: .public) for address \(addr, privacy: .public)")
                     }
                 } else {
-                    logger.log(level: .error, "Invalid IP address: \(ip)")
+                    logger.log(level: .error, "Invalid IP address: \(ip, privacy: .public)")
                 }
             }
             self.ipv4Addrs = ipv4
@@ -90,137 +67,70 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
         }
     }
     
-
     
     override func startTunnel(options: [String : NSObject]?, completionHandler: @escaping (Error?) -> Void) {
-        var config: TunnelStartData? = nil
-        if let providerConfig = (self.protocolConfiguration as? NETunnelProviderProtocol)?.providerConfiguration as? [String: Any] {
-            config = fromDictionary(providerConfig, to: TunnelStartData.self)
-        }
-        guard let tunnelConfig = config else {
+        guard let tunnelConfig = extractTunnelConfiguration() else {
+            let error = NSError(domain: "VPNExtension", code: -1, userInfo: [NSLocalizedDescriptionKey: "Tunnel configuration is missing or invalid."])
             self.logger.log(level: .error, "Tunnel configuration is missing or invalid.")
-            completionHandler(NSError(domain: "VPNExtension", code: -1, userInfo: [NSLocalizedDescriptionKey: "Tunnel configuration is missing or invalid."]))
+            completionHandler(error)
             return
         }
-        os_log("Starting tunnel with configuration: %{public}@", String(describing: tunnelConfig))
-
         
-        // Extract host for tunnelRemoteAddress, supporting IPv4, IPv6, and DNS
-        let endpoint = tunnelConfig.endpoint.trimmingCharacters(in: .whitespaces)
-        var endpointHost = endpoint
-        if endpoint.hasPrefix("[") { // IPv6 with port, e.g. [fd00::1]:51820
-            if let closing = endpoint.firstIndex(of: "]") {
-                endpointHost = String(endpoint[endpoint.index(after: endpoint.startIndex)..<closing])
-            }
-        } else if endpoint.contains(":") {
-            let parts = endpoint.split(separator: ":", omittingEmptySubsequences: false)
-            if parts.count > 1 {
-                endpointHost = parts.dropLast().joined(separator: ":")
-            }
+        os_log("Starting tunnel with configuration: %{public}@", String(describing: tunnelConfig))
+        
+        guard let endpoint = Endpoint(from: tunnelConfig.endpoint) else {
+            let error = NSError(domain: "VPNExtension", code: -1, userInfo: [NSLocalizedDescriptionKey: "Invalid endpoint format: \(tunnelConfig.endpoint)"])
+            self.logger.log(level: .error, "Invalid endpoint format: \(tunnelConfig.endpoint, privacy: .public)")
+            completionHandler(error)
+            return
         }
         
-
-        let endpointPort = endpoint.split(separator: ":").last.flatMap { Int($0) } ?? 51820 // Default to 51820 if no port is specified
-        os_log("Using endpoint host: %{public}@", String(describing: endpointHost))
-        os_log("Using endpoint port: %{public}d", endpointPort)
-        let networkSettings = NEPacketTunnelNetworkSettings(tunnelRemoteAddress: endpointHost)
+        guard let (ipv4Addresses, ipv6Addresses) = parseAddresses(from: tunnelConfig.address) else {
+            self.logger.log(level: .error, "Invalid address format: \(tunnelConfig.address, privacy: .public)")
+            completionHandler(NSError(domain: "VPNExtension", code: -1, userInfo: [NSLocalizedDescriptionKey: "Invalid address format: \(tunnelConfig.address)"]))
+            return
+        }
         
-        var ipv4Addresses: [String] = []
-        var ipv6Addresses: [String] = []
+        let networkSettings = createNetworkSettings(
+            tunnelConfig: tunnelConfig,
+            endpointHost: endpoint.hostString,
+            ipv4Addresses: ipv4Addresses,
+            ipv6Addresses: ipv6Addresses
+        )
         
-        for addr in tunnelConfig.address.split(separator: ",").map({ String($0.trimmingCharacters(in: .whitespaces)) }) {
-            if let _ = IPv4Address(addr) {
-                ipv4Addresses.append(addr)
-            } else if let _ = IPv6Address(addr) {
-                ipv6Addresses.append(addr)
-            } else {
-                self.logger.log(level: .error, "Invalid address format: \(addr)")
-                completionHandler(NSError(domain: "VPNExtension", code: -1, userInfo: [NSLocalizedDescriptionKey: "Invalid address format: \(addr)"]))
+        applyNetworkSettings(networkSettings) { [weak self] error in
+            guard let self = self else { return }
+            
+            if let error = error {
+                completionHandler(error)
                 return
             }
-        }
-        
-        let ipv4Settings = NEIPv4Settings(addresses: ipv4Addresses, subnetMasks: ipv4Addresses.map { _ in "255.255.255.255" })
-        let ipv6Settings = NEIPv6Settings(addresses:  ipv6Addresses, networkPrefixLengths: ipv6Addresses.map { _ in 128 })
-
-        let routes: DestinationAddrs = DestinationAddrs(fromConfig: tunnelConfig, logger: self.logger)
-        os_log("PARSED ROUTES:  %{public}@  %{public}@", String(describing: routes.ipv4Addrs), String(describing: routes.ipv6Addrs))
-        
-        var ipv4Routes: [NEIPv4Route] = []
-        
-        if !ipv4Addresses.isEmpty {
-            for route in routes.ipv4Addrs {
-                os_log("ADDING v4 ROUTE:  %{public}@", String(describing: route))
-                
-                ipv4Routes.append(
-                    NEIPv4Route(destinationAddress: route.0, subnetMask: route.1)
-                )
-            }
-        }
-        
-        var ipv6Routes: [NEIPv6Route] = []
             
-        if !ipv6Addresses.isEmpty {
-            for route in routes.ipv6Addrs {
-                os_log("ADDING v6 ROUTE:  %{public}@", String(describing: route))
-                
-                ipv6Routes.append(
-                    NEIPv6Route(destinationAddress: route.0, networkPrefixLength: route.1 as NSNumber)
-                )
-            }
-        }
-        
-        ipv4Settings.includedRoutes = ipv4Routes;
-        ipv6Settings.includedRoutes = ipv6Routes;
-        
-        let dns_servers = tunnelConfig.dns?.split(separator: ",").map { String($0.trimmingCharacters(in: .whitespaces)) } ?? []
-        networkSettings.ipv4Settings = ipv4Settings
-        networkSettings.ipv6Settings = ipv6Settings
-        let dnsSettings = NEDNSSettings(servers: dns_servers)
-        networkSettings.dnsSettings = dnsSettings
-        self.setTunnelNetworkSettings(networkSettings) { error in
-            self.logger.log(level: .default, "Set tunnel network settings returned \(error)")
-            os_log("Set tunnel network settings returned \(error)")
+            let (privateKey, publicKey, presharedKey) = self.createKeys(from: tunnelConfig)
+            let tunnelConfiguration = self.createTunnelConfiguration(
+                tunnelConfig: tunnelConfig,
+                endpoint: endpoint,
+                privateKey: privateKey,
+                publicKey: publicKey,
+                presharedKey: presharedKey
+            )
             
-            if error == nil {
-                // Send tunnel up event
-
+            do {
+                try self.adapter.start(tunnelConfiguration: tunnelConfiguration)
+            } catch {
+                self.logger.log(level: .error, "Failed to start adapter with error: \(error.localizedDescription, privacy: .public)")
+                completionHandler(error)
+                return
             }
-            
-            completionHandler(error)
-        }
 
-        // This end's key
-        guard let privateKey = try? KeyBytes.fromString(s: tunnelConfig.privateKey) else {
-            self.logger.log(level: .default, "Failed to create private key")
-            os_log("Private key constructor failed")
-            return
+            self.logger.log(level: .default, "Tunnel started successfully")
+            completionHandler(nil)
         }
-        // The other end's key
-        guard let publicKey = try? KeyBytes.fromString(s: tunnelConfig.publicKey) else {
-            self.logger.log(level: .default, "Failed to create public key")
-            os_log("Public key constructor failed")
-            return
-        }
-        let host = NWEndpoint.Host(endpointHost)
-        let port = NWEndpoint.Port(rawValue: UInt16(endpointPort)) ?? NWEndpoint.Port(rawValue: 51820)! // Default to 51820 if port is invalid
-        let interfaceEndpoint = Endpoint(host: host, port: port)
-        os_log("Using endpoint: %{public}@", String(describing: interfaceEndpoint))
-        let interfaceConfiguration = InterfaceConfiguration(privateKey: privateKey, endpoint: interfaceEndpoint)
-        let peer = PeerConfiguration(publicKey: publicKey)
-        let tunnelConfiguration = TunnelConfiguration(name: tunnelConfig.locationName, interface: interfaceConfiguration, peers: [peer])
-        self.adapter.start(tunnelConfiguration: tunnelConfiguration)
-
-        self.logger.log(level: .default, "Tunnel started successfully")
-        os_log("Tunnel started successfully")
-        completionHandler(nil)
     }
 
     override func stopTunnel(with reason: NEProviderStopReason, completionHandler: @escaping () -> Void) {
         self.logger.log(level: .default, "\(#function)")
         os_log("\(#function)")
-        
-
         self.adapter.stop()
         completionHandler()
     }
@@ -243,5 +153,107 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
     override func wake() {
         self.logger.log(level: .default, "\(#function)")
         os_log("\(#function)")
+    }
+
+    // MARK: - Helpers
+    
+    private func extractTunnelConfiguration() -> TunnelStartData? {
+        guard let providerConfig = (self.protocolConfiguration as? NETunnelProviderProtocol)?.providerConfiguration as? [String: Any] else {
+            return nil
+        }
+        return try? TunnelStartData.from(dictionary: providerConfig)
+    }
+    
+
+    private func parseAddresses(from addressString: String) -> (ipv4: [String], ipv6: [String])? {
+        var ipv4Addresses: [String] = []
+        var ipv6Addresses: [String] = []
+        
+        for addr in addressString.split(separator: ",").map({ String($0.trimmingCharacters(in: .whitespaces)) }) {
+            if let _ = IPv4Address(addr) {
+                ipv4Addresses.append(addr)
+            } else if let _ = IPv6Address(addr) {
+                ipv6Addresses.append(addr)
+            } else {
+                return nil
+            }
+        }
+        
+        self.logger.log(level: .default, "Parsed IPv4 addresses: \(ipv4Addresses, privacy: .public)")
+        self.logger.log(level: .default, "Parsed IPv6 addresses: \(ipv6Addresses, privacy: .public)")
+        
+        return (ipv4Addresses, ipv6Addresses)
+    }
+    
+    private func createNetworkSettings(
+        tunnelConfig: TunnelStartData,
+        endpointHost: String,
+        ipv4Addresses: [String],
+        ipv6Addresses: [String]
+    ) -> NEPacketTunnelNetworkSettings {
+        let networkSettings = NEPacketTunnelNetworkSettings(tunnelRemoteAddress: endpointHost)
+        
+        let ipv4Settings = NEIPv4Settings(addresses: ipv4Addresses, subnetMasks: ipv4Addresses.map { _ in "255.255.255.255" })
+        let ipv6Settings = NEIPv6Settings(addresses: ipv6Addresses, networkPrefixLengths: ipv6Addresses.map { _ in 128 })
+        
+        let routes = DestinationAddrs(fromConfig: tunnelConfig, logger: self.logger)
+        self.logger.log("Parsed the following routes: IPv4: \(routes.ipv4Addrs, privacy: .public), IPv6: \(routes.ipv6Addrs, privacy: .public)")
+        
+        // IPv4 routes
+        if !ipv4Addresses.isEmpty {
+            var ipv4Routes: [NEIPv4Route] = []
+            for route in routes.ipv4Addrs {
+                ipv4Routes.append(NEIPv4Route(destinationAddress: route.0, subnetMask: route.1))
+            }
+            ipv4Settings.includedRoutes = ipv4Routes
+            networkSettings.ipv4Settings = ipv4Settings
+        }
+        
+        // IPv6 routes
+        if !ipv6Addresses.isEmpty {
+            var ipv6Routes: [NEIPv6Route] = []
+            for route in routes.ipv6Addrs {
+                ipv6Routes.append(NEIPv6Route(destinationAddress: route.0, networkPrefixLength: route.1 as NSNumber))
+            }
+            ipv6Settings.includedRoutes = ipv6Routes
+            networkSettings.ipv6Settings = ipv6Settings
+        }
+        
+        // DNS settings
+        let dnsServers = tunnelConfig.dns?.split(separator: ",").map { String($0.trimmingCharacters(in: .whitespaces)) } ?? []
+        self.logger.log("Parsed the following DNS servers: \(dnsServers, privacy: .public)")
+        let dnsSettings = NEDNSSettings(servers: dnsServers)
+        networkSettings.dnsSettings = dnsSettings
+        
+        return networkSettings
+    }
+    
+    private func applyNetworkSettings(_ networkSettings: NEPacketTunnelNetworkSettings, completion: @escaping (Error?) -> Void) {
+        self.setTunnelNetworkSettings(networkSettings) { error in
+            if error != nil {
+                self.logger.log(level: .default, "Set tunnel network settings returned an error \(error, privacy: .public)")
+            }
+            completion(error)
+        }
+    }
+    
+    private func createKeys(from tunnelConfig: TunnelStartData) -> (privateKey: String, publicKey: String, presharedKey: String?) {
+        return (
+            tunnelConfig.privateKey,
+            tunnelConfig.publicKey,
+            tunnelConfig.presharedKey
+        )
+    }
+    
+    private func createTunnelConfiguration(
+        tunnelConfig: TunnelStartData,
+        endpoint: Endpoint,
+        privateKey: String,
+        publicKey: String,
+        presharedKey: String?
+    ) -> TunnelConfiguration {
+        let interfaceConfiguration = InterfaceConfiguration(privateKey: privateKey)
+        let peer = Peer(publicKey: publicKey, preSharedKey: presharedKey, endpoint: endpoint)
+        return TunnelConfiguration(name: tunnelConfig.locationName, interface: interfaceConfiguration, peers: [peer])
     }
 }
