@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:mobile/data/proxy/mfa.dart';
-import 'package:mobile/open/api.dart';
 import 'package:mobile/open/screens/instance/services/tunnel_service.dart';
 import 'package:mobile/open/widgets/buttons/dg_button.dart';
 import 'package:mobile/open/widgets/dg_message_box.dart';
@@ -16,35 +14,9 @@ final String _mfaMsg =
 final String _useAuthenticatorMsg = "Authenticator app";
 final String _useEmailMsg = "Email code";
 
-Future<StartMfaResponse> _handleSubmit(
-  String url,
-  String pubkey,
-  int locationId,
-  MfaMethod method,
-) async {
-  debugPrint('Submitted: URL=$url, Token=$pubkey');
-  final request = StartMfaRequest(
-    pubkey: pubkey,
-    locationId: locationId,
-    method: method.value,
-  );
+class SelectMfaMethodDialog extends HookConsumerWidget {
 
-  final uri = Uri.parse(url);
-  final response = await proxyApi.startMfa(uri, request);
-  return response;
-}
-
-class MfaStartDialog extends HookConsumerWidget {
-  final String url;
-  final String publicKey;
-  final int locationId;
-
-  const MfaStartDialog({
-    super.key,
-    required this.url,
-    required this.publicKey,
-    required this.locationId,
-  });
+  const SelectMfaMethodDialog({ super.key });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -74,14 +46,7 @@ class MfaStartDialog extends HookConsumerWidget {
                       variant: DgButtonVariant.secondary,
                       size: DgButtonSize.standard,
                       onTap: () async {
-                        final navigator = Navigator.of(context);
-                        final response = await _handleSubmit(
-                          url,
-                          publicKey,
-                          locationId,
-                          MfaMethod.totp,
-                        );
-                        navigator.pop((MfaMethod.totp, response.token));
+                        Navigator.of(context).pop(MfaMethod.totp);
                       },
                     ),
                     DgButton(
@@ -89,14 +54,7 @@ class MfaStartDialog extends HookConsumerWidget {
                       variant: DgButtonVariant.secondary,
                       size: DgButtonSize.standard,
                       onTap: () async {
-                        final navigator = Navigator.of(context);
-                        final response = await _handleSubmit(
-                          url,
-                          publicKey,
-                          locationId,
-                          MfaMethod.email,
-                        );
-                        navigator.pop((MfaMethod.email, response.token));
+                        Navigator.of(context).pop(MfaMethod.email);
                       },
                     ),
                   ],

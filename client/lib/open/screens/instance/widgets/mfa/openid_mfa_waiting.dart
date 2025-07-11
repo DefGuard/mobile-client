@@ -65,10 +65,6 @@ class OpenIdMfaStartDialog extends HookConsumerWidget {
                   variant: DgMessageBoxVariant.infoOutlined,
                   text: _mfaMsg,
                 ),
-                DgMessageBox(
-                  variant: DgMessageBoxVariant.infoOutlined,
-                  text: _mfaMsg2,
-                ),
                 Row(
                   mainAxisSize: MainAxisSize.max,
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,

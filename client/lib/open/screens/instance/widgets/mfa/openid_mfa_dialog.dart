@@ -1,11 +1,5 @@
-import 'dart:io';
-
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:mobile/data/proxy/mfa.dart';
-import 'package:mobile/open/api.dart';
-import 'package:mobile/open/screens/instance/services/tunnel_service.dart';
 import 'package:mobile/open/widgets/buttons/dg_button.dart';
 import 'package:mobile/open/widgets/dg_message_box.dart';
 import 'package:mobile/theme/color.dart';
@@ -24,35 +18,13 @@ final String _mfaMsg2 =
 
 final String _authenticateMsg = "Authenticate with OpenId";
 
-Future<StartMfaResponse> _handleSubmit(
-  String url,
-  String pubkey,
-  int locationId,
-  MfaMethod method,
-) async {
-  debugPrint('Submitted: URL=$url, Token=$pubkey');
-  final request = StartMfaRequest(
-    pubkey: pubkey,
-    locationId: locationId,
-    method: method.value,
-  );
-
-  final uri = Uri.parse(url);
-  final response = await proxyApi.startMfa(uri, request);
-  return response;
-}
-
 class OpenIdMfaStartDialog extends HookConsumerWidget {
   final String proxyUrl;
-  final String publicKey;
-  final int networkId;
   final String token;
 
   const OpenIdMfaStartDialog({
     super.key,
     required this.proxyUrl,
-    required this.publicKey,
-    required this.networkId,
     required this.token,
   });
 
@@ -62,25 +34,6 @@ class OpenIdMfaStartDialog extends HookConsumerWidget {
 
     if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
       talker.error("Can't launch url");
-    }
-  }
-
-  Future<FinishMfaResponse?> _poll() async {
-    final request = FinishMfaRequest(token: token);
-
-    final uri = Uri.parse(proxyUrl);
-    try {
-      final response = await proxyApi.finishMfa(uri, request);
-      return response;
-    } on DioException catch (e) {
-      if (e.response?.statusCode == 428) {
-        talker.error("428");
-        // waiting for user browser login
-        return null;
-      } else {
-        talker.error("rethrowing");
-        rethrow;
-      }
     }
   }
 
@@ -116,18 +69,8 @@ class OpenIdMfaStartDialog extends HookConsumerWidget {
                       variant: DgButtonVariant.secondary,
                       size: DgButtonSize.standard,
                       onTap: () async {
-                        final navigator = Navigator.of(context);
                         await _openBrowser();
-                        while (true) {
-                          // TODO: timeout
-                          final response = await _poll();
-                          if (response != null) {
-                            navigator.pop(response);
-                          } else {
-                            talker.error("Reponse is null, polling");
-                          }
-                          await Future.delayed(Duration(seconds: 2));
-                        }
+                        return true;
                       },
                     ),
                   ],
