@@ -131,6 +131,7 @@ class RoutingMethodDialog extends HookConsumerWidget {
                       text: "Cancel",
                       variant: DgButtonVariant.secondary,
                       size: DgButtonSize.standard,
+                      minWidth: 70,
                       onTap: () {
                         Navigator.of(context).pop();
                       },
@@ -139,7 +140,7 @@ class RoutingMethodDialog extends HookConsumerWidget {
                       text: _getSubmitText(),
                       variant: DgButtonVariant.primary,
                       size: DgButtonSize.standard,
-                      icon: DgIconCheckmark(),
+                      minWidth: 70,
                       loading: isLoading.value,
                       onTap: () async {
                         final navigator = Navigator.of(context);
