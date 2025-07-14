@@ -10,6 +10,10 @@ struct IpAddrMask: Codable, Equatable {
         self.cidr = cidr
     }
 
+    var stringRepresentation: String {
+        return "\(address)/\(cidr)"
+    }
+
     enum CodingKeys: String, CodingKey {
         case address
         case cidr
@@ -32,7 +36,8 @@ struct IpAddrMask: Codable, Equatable {
                 guard let ipv4 = IPv4Address(address_data) else {
                     throw DecodingError
                         .dataCorrupted(DecodingError.Context(
-                            codingPath: decoder.codingPath, debugDescription: "Unable to decode IP v4 address"
+                            codingPath: decoder.codingPath,
+                            debugDescription: "Unable to decode IP v4 address"
                         ))
 
                 }
@@ -41,7 +46,8 @@ struct IpAddrMask: Codable, Equatable {
                 guard let ipv6 = IPv6Address(address_data) else {
                     throw DecodingError
                         .dataCorrupted(DecodingError.Context(
-                            codingPath: decoder.codingPath, debugDescription: "Unable to decode IP v6 address"
+                            codingPath: decoder.codingPath,
+                            debugDescription: "Unable to decode IP v6 address"
                         ))
 
                 }
@@ -57,5 +63,25 @@ struct IpAddrMask: Codable, Equatable {
     /// Conform to `Equatable`.
     static func == (lhs: Self, rhs: Self) -> Bool {
         return lhs.address.rawValue == rhs.address.rawValue && lhs.cidr == rhs.cidr
+    }
+
+    func mask() -> IPAddress {
+        if address is IPv4Address {
+            var bytes = Data(count: 4)
+            let mask = cidr == 0 ? UInt32(0) : ~UInt32(0) << (32 - cidr)
+            for i in 0...3 {
+                bytes[i] = UInt8(truncatingIfNeeded: mask >> (24 - i * 8))
+            }
+            return IPv4Address(bytes)!
+        }
+        if address is IPv6Address {
+            var bytes = Data(count: 16)
+            let mask = cidr == 0 ? UInt128(0) : ~UInt128(0) << (128 - cidr)
+            for i in 0...15 {
+                bytes[i] = UInt8(truncatingIfNeeded: mask >> (120 - i * 8))
+            }
+            return IPv6Address(bytes)!
+        }
+        fatalError()
     }
 }

@@ -203,13 +203,14 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
         if !ipv4Addresses.isEmpty {
             var ipv4Routes: [NEIPv4Route] = []
             if tunnelConfig.traffic == .Predefined {
+                self.logger.log("Using predefined routes for IPv4 traffic")
                 for route in routes.ipv4Addrs {
                     ipv4Routes.append(NEIPv4Route(destinationAddress: route.0, subnetMask: route.1))
                 }
             } else {
+                self.logger.log("Using default route for IPv4 traffic")
                 ipv4Routes.append(NEIPv4Route.default())
             }
-
             ipv4Settings.includedRoutes = ipv4Routes
             networkSettings.ipv4Settings = ipv4Settings
         }
@@ -218,10 +219,12 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
         if !ipv6Addresses.isEmpty {
             var ipv6Routes: [NEIPv6Route] = []
             if tunnelConfig.traffic == .Predefined {
+                self.logger.log("Using predefined routes for IPv6 traffic")
                 for route in routes.ipv6Addrs {
                     ipv6Routes.append(NEIPv6Route(destinationAddress: route.0, networkPrefixLength: route.1 as NSNumber))
                 }
             } else {
+                self.logger.log("Using default route for IPv6 traffic")
                 ipv6Routes.append(NEIPv6Route.default())
             }
             ipv6Settings.includedRoutes = ipv6Routes
