@@ -12,16 +12,8 @@ import 'package:mobile/open/screens/instance/widgets/mfa/code_dialog.dart';
 import 'package:mobile/open/screens/instance/widgets/mfa/openid_mfa_dialog.dart';
 import 'dart:convert';
 
+import '../../../../data/db/enums.dart';
 import '../../../../logging.dart';
-
-enum MfaMethod {
-  totp(0),
-  email(1),
-  openid(2);
-
-  final int value;
-  const MfaMethod(this.value);
-}
 
 /// Handles all MFA flows and tunnel connection
 class TunnelService {
@@ -39,14 +31,14 @@ class TunnelService {
     PluginConnectPayload payload = _makePayload(instance, location);
     // Handle traffic type selection if necessary
     payload.traffic = instance.disableAllTraffic
-        ? TunnelTraffic.predefined
-        : (await showDialog<TunnelTraffic?>(
+        ? RoutingMethod.predefined
+        : (await showDialog<RoutingMethod?>(
                 context: context,
                 builder: (_) => ConnectDialog(),
               ))
               // if user dismisses the dialog
               ??
-              TunnelTraffic.predefined;
+              RoutingMethod.predefined;
 
     // Handle mfa
     if (location.mfaEnabled) {
@@ -94,7 +86,7 @@ class TunnelService {
       locationId: location.id,
       networkId: location.networkId,
       instanceId: instance.id,
-      traffic: TunnelTraffic.predefined,
+      traffic: RoutingMethod.predefined,
     );
   }
 

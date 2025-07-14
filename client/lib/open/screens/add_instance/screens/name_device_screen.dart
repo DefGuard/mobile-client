@@ -69,7 +69,6 @@ class NameDeviceScreen extends HookConsumerWidget {
           pubKey: config.pubkey,
           dns: drift.Value(config.dns),
           keepAliveInterval: config.keepaliveInterval,
-          routeAllTraffic: false,
           allowedIps: config.allowedIps,
           instance: instance.id,
           mfaEnabled: config.mfaEnabled,

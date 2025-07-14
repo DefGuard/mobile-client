@@ -9,6 +9,7 @@ import 'package:mobile/open/screens/instance/widgets/connection_conflict_dialog.
 import 'package:mobile/open/screens/instance/widgets/delete_instance_dialog.dart';
 import 'package:mobile/open/screens/instance/services/tunnel_service.dart';
 import 'package:mobile/open/widgets/buttons/dg_button.dart';
+import 'package:mobile/open/widgets/dg_menu.dart';
 import 'package:mobile/open/widgets/icons/arrow_single.dart';
 import 'package:mobile/open/widgets/icons/asset_icons_simple.dart';
 import 'package:mobile/open/widgets/icons/connection.dart';
@@ -20,7 +21,9 @@ import 'package:mobile/router/routes.dart';
 import 'package:mobile/theme/color.dart';
 import 'package:mobile/theme/spacing.dart';
 import 'package:mobile/theme/text.dart';
+import 'package:mobile/utils/position.dart';
 
+import '../../../data/db/enums.dart';
 import '../../../logging.dart';
 
 class _ScreenData {
@@ -203,11 +206,20 @@ class _LocationItem extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final menuAnchorKey = useMemoized(() => GlobalKey());
+    final menuController = useOverlayPortalController();
     final wireguardPlugin = ref.watch(wireguardPluginProvider);
     final activeTunnel = ref.watch(pluginActiveTunnelStateProvider);
     final isConnected = useState<bool>(checkConnected(activeTunnel));
     final isLoading = useState(false);
     final trafficLabel = useState<String?>(null);
+
+    final dgMenuItems = useMemoized<List<DgMenuItem>>(() {
+      return [
+        DgMenuItem(text: "Select MFA Method", onTap: () {}),
+        DgMenuItem(text: "Select Traffic Routing", onTap: () {}),
+      ];
+    }, []);
 
     // set connected flag
     useEffect(() {
@@ -215,10 +227,10 @@ class _LocationItem extends HookConsumerWidget {
       isConnected.value = connected;
       if (connected && activeTunnel != null) {
         switch (activeTunnel.traffic) {
-          case TunnelTraffic.all:
+          case RoutingMethod.all:
             trafficLabel.value = "All Traffic";
             break;
-          case TunnelTraffic.predefined:
+          case RoutingMethod.predefined:
             trafficLabel.value = "Predefined Traffic";
             break;
         }
@@ -230,92 +242,112 @@ class _LocationItem extends HookConsumerWidget {
 
     return Padding(
       padding: EdgeInsets.symmetric(vertical: 0, horizontal: DgSpacing.m),
-      child: Container(
-        constraints: BoxConstraints(minHeight: 64, maxHeight: 100),
-        padding: EdgeInsets.symmetric(vertical: 0, horizontal: DgSpacing.s),
-        decoration: BoxDecoration(
-          color: DgColor.navBg,
-          borderRadius: BorderRadius.all(Radius.circular(10)),
-        ),
-        child: Row(
-          spacing: 18,
-          children: <Widget>[
-            DgIconConnection(
-              variant: isConnected.value
-                  ? DgIconConnectionVariant.connected
-                  : DgIconConnectionVariant.disconnected,
+      child: GestureDetector(
+        onLongPress: () {
+          menuController.toggle();
+        },
+        child: OverlayPortal(
+          controller: menuController,
+          overlayChildBuilder: (BuildContext _) {
+            final anchorGeometry = WidgetGeometry.fromKey(menuAnchorKey);
+            return DgMenu(
+              items: dgMenuItems,
+              anchorGeometry: anchorGeometry,
+              controller: menuController,
+            );
+          },
+          child: Container(
+            key: menuAnchorKey,
+            constraints: BoxConstraints(minHeight: 64, maxHeight: 100),
+            padding: EdgeInsets.symmetric(vertical: 0, horizontal: DgSpacing.s),
+            decoration: BoxDecoration(
+              color: DgColor.navBg,
+              borderRadius: BorderRadius.all(Radius.circular(10)),
             ),
-            Expanded(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  LimitedText(text: location.name, style: DgText.sideBar),
-                  if (trafficLabel.value != null)
-                    LimitedText(
-                      text: trafficLabel.value!,
-                      style: DgText.buttonXS.copyWith(
-                        color: DgColor.textBodySecondary,
-                      ),
-                    ),
-                ],
-              ),
-            ),
-            DgButton(
-              size: DgButtonSize.small,
-              variant: DgButtonVariant.secondary,
-              iconColor: DgColor.textAlert,
-              icon: isConnected.value ? DgIconX().copyWith(size: 12) : null,
-              text: isConnected.value ? "Disconnect" : "Connect",
-              loading: isLoading.value,
-              onTap: () async {
-                if (isConnected.value) {
-                  isLoading.value = true;
-                  try {
-                    await wireguardPlugin.closeTunnel();
-                  } on PlatformException catch (e) {
-                    talker.error(
-                      "Closing tunnel for ${instance.name} - ${location.name} Failed ! Reason: ${e.message}",
-                    );
-                  } finally {
-                    isLoading.value = false;
-                  }
-                } else {
-                  if (activeTunnel != null) {
-                    final bool? changeConnection = await showDialog<bool>(
-                      context: context,
-                      builder: (BuildContext context) {
-                        return ConnectionConflictDialog();
-                      },
-                    );
-                    if (changeConnection == null || changeConnection == false) {
-                      return;
+            child: Row(
+              spacing: 18,
+              children: <Widget>[
+                DgIconConnection(
+                  variant: isConnected.value
+                      ? DgIconConnectionVariant.connected
+                      : DgIconConnectionVariant.disconnected,
+                ),
+                Expanded(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      LimitedText(text: location.name, style: DgText.sideBar),
+                      if (trafficLabel.value != null)
+                        LimitedText(
+                          text: trafficLabel.value!,
+                          style: DgText.buttonXS.copyWith(
+                            color: DgColor.textBodySecondary,
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                DgButton(
+                  size: DgButtonSize.small,
+                  variant: DgButtonVariant.secondary,
+                  iconColor: DgColor.textAlert,
+                  icon: isConnected.value ? DgIconX().copyWith(size: 12) : null,
+                  text: isConnected.value ? "Disconnect" : "Connect",
+                  loading: isLoading.value,
+                  onTap: () async {
+                    if (isConnected.value) {
+                      isLoading.value = true;
+                      try {
+                        await wireguardPlugin.closeTunnel();
+                      } on PlatformException catch (e) {
+                        talker.error(
+                          "Closing tunnel for ${instance.name} - ${location.name} Failed ! Reason: ${e.message}",
+                        );
+                      } finally {
+                        isLoading.value = false;
+                      }
+                    } else {
+                      if (activeTunnel != null) {
+                        final bool? changeConnection = await showDialog<bool>(
+                          context: context,
+                          builder: (BuildContext context) {
+                            return ConnectionConflictDialog();
+                          },
+                        );
+                        if (changeConnection == null ||
+                            changeConnection == false) {
+                          return;
+                        }
+                      }
+                      try {
+                        isLoading.value = true;
+                        final permissionsGranted = await wireguardPlugin
+                            .requestPermissions();
+                        if (permissionsGranted) {
+                          if (context.mounted) {
+                            await TunnelService.connect(
+                              context: context,
+                              instance: instance,
+                              location: location,
+                              wireguardPlugin: wireguardPlugin,
+                            );
+                          }
+                        }
+                      } catch (e) {
+                        talker.error(
+                          "Failed to connect into ${instance.name}-${location.name} ! Reason: $e",
+                        );
+                      } finally {
+                        isLoading.value = false;
+                      }
                     }
-                  }
-                  try {
-                    isLoading.value = true;
-                    final permissionsGranted = await wireguardPlugin
-                        .requestPermissions();
-                    if (permissionsGranted && context.mounted) {
-                      await TunnelService.connect(
-                        context: context,
-                        instance: instance,
-                        location: location,
-                        wireguardPlugin: wireguardPlugin,
-                      );
-                    }
-                  } catch (e) {
-                    talker.error(
-                      "Failed to connect to ${instance.name}-${location.name} ! Reason: $e",
-                    );
-                  } finally {
-                    isLoading.value = false;
-                  }
-                }
-              },
+                  },
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );

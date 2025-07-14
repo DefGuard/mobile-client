@@ -25,7 +25,7 @@ PluginConnectPayload _$PluginConnectPayloadFromJson(
       instanceId: $checkedConvert('instance_id', (v) => (v as num).toInt()),
       traffic: $checkedConvert(
         'traffic',
-        (v) => $enumDecode(_$TunnelTrafficEnumMap, v),
+        (v) => $enumDecode(_$RoutingMethodEnumMap, v),
       ),
       networkId: $checkedConvert('network_id', (v) => (v as num).toInt()),
       dns: $checkedConvert('dns', (v) => v as String?),
@@ -79,12 +79,12 @@ Map<String, dynamic> _$PluginConnectPayloadToJson(
   'location_id': instance.locationId,
   'instance_id': instance.instanceId,
   'network_id': instance.networkId,
-  'traffic': _$TunnelTrafficEnumMap[instance.traffic]!,
+  'traffic': _$RoutingMethodEnumMap[instance.traffic]!,
 };
 
-const _$TunnelTrafficEnumMap = {
-  TunnelTraffic.all: 'all',
-  TunnelTraffic.predefined: 'predefined',
+const _$RoutingMethodEnumMap = {
+  RoutingMethod.all: 'all',
+  RoutingMethod.predefined: 'predefined',
 };
 
 PluginTunnelEventData _$PluginTunnelEventDataFromJson(
@@ -98,7 +98,7 @@ PluginTunnelEventData _$PluginTunnelEventDataFromJson(
       locationId: $checkedConvert('location_id', (v) => (v as num).toInt()),
       traffic: $checkedConvert(
         'traffic',
-        (v) => $enumDecode(_$TunnelTrafficEnumMap, v),
+        (v) => $enumDecode(_$RoutingMethodEnumMap, v),
       ),
     );
     return val;
@@ -117,5 +117,5 @@ Map<String, dynamic> _$PluginTunnelEventDataToJson(
 ) => <String, dynamic>{
   'instance_id': instance.instanceId,
   'location_id': instance.locationId,
-  'traffic': _$TunnelTrafficEnumMap[instance.traffic]!,
+  'traffic': _$RoutingMethodEnumMap[instance.traffic]!,
 };

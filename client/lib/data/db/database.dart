@@ -1,6 +1,7 @@
 import "package:drift/drift.dart";
 import "package:drift_flutter/drift_flutter.dart";
 import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:mobile/data/db/enums.dart";
 import "package:path_provider/path_provider.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
 
@@ -62,11 +63,14 @@ class Locations extends Table with AutoIncrementingPrimaryKey {
 
   TextColumn get dns => text().nullable()();
 
-  @JsonKey('route_all_traffic')
-  BoolColumn get routeAllTraffic => boolean()();
-
   @JsonKey('mfa_enabled')
   BoolColumn get mfaEnabled => boolean()();
+
+  @JsonKey('traffic_method')
+  TextColumn get trafficMethod => textEnum<RoutingMethod>().nullable()();
+
+  @JsonKey('mfa_method')
+  IntColumn get mfaMethod => integer().nullable().map(const MfaMethodConverter())();
 
   @JsonKey('keepalive_interval')
   IntColumn get keepAliveInterval => integer()();

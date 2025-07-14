@@ -11,7 +11,11 @@ jobs:
       run:
         working-directory: ./client
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout main repo
+        uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
+          token: ${{ secrets.PRIVATE_REPO_CLONING_TOKEN }}
 
       - name: Setup flutter
         uses: subosito/flutter-action@v2
@@ -30,24 +34,34 @@ jobs:
       - name: Unlock Keychain
         run: security -v unlock-keychain -p "${{ secrets.KEYCHAIN_PASSWORD }}" /Users/admin/Library/Keychains/login.keychain
 
+      - name: Create BoringTun directory
+        run: mkdir -p ios/VPNExtension/BoringTun
+
+      - name: Generate boringtun bindings
+        run: cd ios/boringtun && ./bindings.sh
+
+      - name: Update CocoaPods
+        run: pod repo update
+
       - name: Build iOS
         run: flutter build ipa --release --obfuscate --split-debug-info=build/debug-info --build-number=${{ github.run_number }}
 
-      - name: Upload iOS artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: ios
-          retention-days: 14
-          path: client/build/ios/ipa/*.ipa
+      # Temporarily disable uploading artifacts until quota gets recalculated.
+      # Error: Failed to CreateArtifact: Artifact storage quota has been hit. Unable to upload any new artifacts. Usage is recalculated every 6-12 hours.
+      # - name: Upload iOS artifact
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: ios
+      #     retention-days: 3
+      #     path: client/build/ios/ipa/*.ipa
 
       - name: Upload app to TestFlight
         uses: apple-actions/upload-testflight-build@v3
         with: 
-          app-path: 'client/build/ios/ipa/mobile_client.ipa' 
+          app-path: 'client/build/ios/ipa/Defguard.ipa' 
           issuer-id: ${{ secrets.API_ISSUER_ID }}
           api-key-id: ${{ secrets.ASC_API_KEY_ID }}
           api-private-key: ${{ secrets.PRIVATE_KEY_CONTENTS }}
-
 
   build-android:
     runs-on: [self-hosted, macOS]
@@ -93,12 +107,14 @@ jobs:
         keyStorePassword: '${{ secrets.ANDROID_KEYSTORE_PASSWORD }}'
         keyPassword: '${{ secrets.ANDROID_KEYSTORE_PASSWORD }}'
 
-    - name: Upload android artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: android
-        retention-days: 14
-        path: client/build/app/outputs/bundle/release/app-release.aab
+    # Temporarily disable uploading artifacts until quota gets recalculated.
+    # Error: Failed to CreateArtifact: Artifact storage quota has been hit. Unable to upload any new artifacts. Usage is recalculated every 6-12 hours.
+    # - name: Upload android artifact
+    #   uses: actions/upload-artifact@v4
+    #   with:
+    #     name: android
+    #     retention-days: 3
+    #     path: client/build/app/outputs/bundle/release/app-release.aab
 
     - name: Publish to Play Store
       uses: r0adkll/upload-google-play@v1
@@ -106,5 +122,4 @@ jobs:
         serviceAccountJsonPlainText: '${{ secrets.ANDROID_SERVICE_ACCOUNT_JSON }}'
         packageName: net.defguard.mobile
         releaseFiles: client/build/app/outputs/bundle/release/app-release.aab
-        status: draft
         track: internal
