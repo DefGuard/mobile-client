@@ -118,5 +118,4 @@ jobs:
         serviceAccountJsonPlainText: '${{ secrets.ANDROID_SERVICE_ACCOUNT_JSON }}'
         packageName: net.defguard.mobile
         releaseFiles: client/build/app/outputs/bundle/release/app-release.aab
-        status: draft
-        track: internal
+        track: qa
