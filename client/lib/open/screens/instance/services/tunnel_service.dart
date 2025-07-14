@@ -33,6 +33,9 @@ class TunnelService {
     required Location location,
     required dynamic wireguardPlugin,
   }) async {
+    final navigator = Navigator.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    
     PluginConnectPayload payload = _makePayload(instance, location);
     // Handle traffic type selection if necessary
     payload.traffic = instance.disableAllTraffic
@@ -49,12 +52,14 @@ class TunnelService {
     if (location.mfaEnabled) {
       final presharedKey = instance.useOpenidForMfa
           ? await _handleOpenidMfaFlow(
-              context: context,
+              navigator: navigator,
+              messenger: messenger,
               proxyUrl: instance.proxyUrl,
               payload: payload,
             )
           : await _handleMfaFlow(
-              context: context,
+              navigator: navigator,
+              messenger: messenger,
               proxyUrl: instance.proxyUrl,
               payload: payload,
               useOpenid: instance.useOpenidForMfa,
@@ -95,7 +100,6 @@ class TunnelService {
 
   /// Calls `/client-mfa/start` endpoint, returns `StartMfaResponse` with session token.
   static Future<StartMfaResponse> _startMfa(
-    BuildContext context,
     String url,
     String pubkey,
     int networkId,
@@ -109,42 +113,43 @@ class TunnelService {
     );
 
     final uri = Uri.parse(url);
+    return await proxyApi.startMfa(uri, request);
+  }
 
-    try {
-      return await proxyApi.startMfa(uri, request);
-    } on HttpException catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("Error: ${e.message}")));
-      rethrow;
-    }
+  /// Helper function to show dialog using captured NavigatorState
+  static Future<T?> _showDialog<T>({
+    required NavigatorState navigator,
+    required Widget Function(BuildContext) builder,
+  }) {
+    return showDialog<T>(
+      context: navigator.context,
+      builder: builder,
+    );
   }
 
   /// Handles OpenID, browser-based MFA
   /// Returns preshared key.
   static Future<String?> _handleOpenidMfaFlow({
-    required BuildContext context,
+    required NavigatorState navigator,
+    required ScaffoldMessengerState messenger,
     required String proxyUrl,
     required PluginConnectPayload payload,
   }) async {
     try {
       // Get session token
       final startMfaResponse = await _startMfa(
-        context,
         proxyUrl,
         payload.devicePublicKey,
         payload.networkId,
         MfaMethod.openid,
       );
 
-      bool? browserOpened = await showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return OpenIdMfaStartDialog(
-            proxyUrl: proxyUrl,
-            token: startMfaResponse.token,
-          );
-        },
+      bool? browserOpened = await _showDialog<bool>(
+        navigator: navigator,
+        builder: (context) => OpenIdMfaStartDialog(
+          proxyUrl: proxyUrl,
+          token: startMfaResponse.token,
+        ),
       );
 
       if (browserOpened == null || !browserOpened) {
@@ -152,17 +157,18 @@ class TunnelService {
         return null;
       }
 
-      final FinishMfaResponse? finishMfaResponse = await showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return OpenidMfaWaitingDialog(
-            token: startMfaResponse.token,
-            proxyUrl: proxyUrl,
-          );
-        },
+      final FinishMfaResponse? finishMfaResponse = await _showDialog<FinishMfaResponse>(
+        navigator: navigator,
+        builder: (context) => OpenidMfaWaitingDialog(
+          token: startMfaResponse.token,
+          proxyUrl: proxyUrl,
+        ),
       );
 
       return finishMfaResponse?.presharedKey;
+    } on HttpException catch (e) {
+      messenger.showSnackBar(SnackBar(content: Text("Error: ${e.message}")));
+      return null;
     } catch (e) {
       talker.error("OpenID MFA flow error: $e");
       return null;
@@ -172,43 +178,47 @@ class TunnelService {
   /// Displays non-openid mfa method selection and code input dialogs
   /// Returns preshared key.
   static Future<String?> _handleMfaFlow({
-    required BuildContext context,
+    required NavigatorState navigator,
+    required ScaffoldMessengerState messenger,
     required String proxyUrl,
     required PluginConnectPayload payload,
     required bool useOpenid,
   }) async {
-    // Show MFA method selection dialog
-    final MfaMethod? method = await showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return SelectMfaMethodDialog();
-      },
-    );
+    try {
+      // Show MFA method selection dialog
+      final MfaMethod? method = await _showDialog<MfaMethod>(
+        navigator: navigator,
+        builder: (context) => SelectMfaMethodDialog(),
+      );
 
-    if (method == null) {
-      // user dismissed method-selection dialog, abort
-      return null;
-    }
+      if (method == null) {
+        // user dismissed method-selection dialog, abort
+        return null;
+      }
 
-    // Get session token
-    final startMfaResponse = await _startMfa(
-      context,
-      proxyUrl,
-      payload.devicePublicKey,
-      payload.networkId,
-      method,
-    );
+      // Get session token
+      final startMfaResponse = await _startMfa(
+        proxyUrl,
+        payload.devicePublicKey,
+        payload.networkId,
+        method,
+      );
 
-    // Show code input & verify the code
-    return await showDialog<String>(
-      context: context,
-      builder: (BuildContext context) {
-        return CodeDialog(
+      // Show code input & verify the code
+      return await _showDialog<String>(
+        navigator: navigator,
+        builder: (context) => CodeDialog(
           token: startMfaResponse.token,
           url: proxyUrl,
           method: method,
-        );
-      },
-    );
+        ),
+      );
+    } on HttpException catch (e) {
+      messenger.showSnackBar(SnackBar(content: Text("Error: ${e.message}")));
+      return null;
+    } catch (e) {
+      talker.error("MFA flow error: $e");
+      return null;
+    }
   }
 }
