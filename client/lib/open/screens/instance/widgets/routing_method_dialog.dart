@@ -14,7 +14,6 @@ import 'package:mobile/theme/color.dart';
 import 'package:mobile/theme/spacing.dart';
 import 'package:mobile/theme/text.dart';
 
-import '../../../widgets/icons/asset_icons_simple.dart';
 
 final String _predefinedMessage =
     "Only send selected traffic (e.g., company services or internal apps) through the VPN. Faster for general browsing. Ideal for hybrid work.";
