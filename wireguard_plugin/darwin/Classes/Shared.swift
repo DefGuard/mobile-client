@@ -24,16 +24,6 @@ public struct TunnelStartData: Codable {
     public var locationName: String
     public var locationId: Int
     public var instanceId: Int
-    
-    public func endpointPort() -> Int? {
-        guard let url = URL(string: endpoint) else { return nil }
-        return url.port
-    }
-    
-    public func endpointHost() -> String? {
-        guard let url = URL(string: endpoint) else { return nil }
-        return url.host
-    }
 }
 
 
