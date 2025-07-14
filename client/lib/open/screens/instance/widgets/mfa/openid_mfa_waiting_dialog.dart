@@ -13,9 +13,9 @@ import 'package:mobile/theme/text.dart';
 import '../../../../../logging.dart';
 
 final String _title = "Two-factor authentication";
-final String _mfaMsg =
-    "Waiting for authentication in your browser...";
+final String _mfaMsg = "Waiting for authentication in your browser...";
 final String _cancelMsg = "Cancel";
+final timeoutDuration = Duration(minutes: 2);
 
 class OpenidMfaWaitingDialog extends HookConsumerWidget {
   final String proxyUrl;
@@ -30,8 +30,16 @@ class OpenidMfaWaitingDialog extends HookConsumerWidget {
   Future<FinishMfaResponse?> _pollOpenidMfa() async {
     final request = FinishMfaRequest(token: token);
     final uri = Uri.parse(proxyUrl);
-    // TODO: timeout
+    
+    final startTime = DateTime.now();
+    
     while (true) {
+      // Check if timeout has been reached
+      if (DateTime.now().difference(startTime) >= timeoutDuration) {
+        talker.debug("OpenID MFA polling timed out after 2 minutes");
+        return null;
+      }
+      
       try {
         final response = await proxyApi.finishMfa(uri, request);
         return response;
@@ -49,16 +57,28 @@ class OpenidMfaWaitingDialog extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final navigator = Navigator.of(context);
-    
+    final messenger = ScaffoldMessenger.of(context);
+
+    // Start polling automatically when dialog opens
     useEffect(() {
-      // Start polling automatically when dialog opens
-      _pollOpenidMfa().then((finishMfaResponse) {
-        // Return the preshared key when polling completes
-        navigator.pop(finishMfaResponse);
-      }).catchError((error) {
-        talker.error("OpenID MFA polling error: $error");
-        navigator.pop(null);
-      });
+      _pollOpenidMfa()
+          .then((finishMfaResponse) {
+            if (finishMfaResponse == null) {
+              // Timeout occurred
+              messenger.showSnackBar(
+                SnackBar(content: Text("Authentication timed out. Please try again.")),
+              );
+            }
+            // Return the preshared key when polling completes
+            navigator.pop(finishMfaResponse);
+          })
+          .catchError((error) {
+            talker.error("OpenID MFA polling error: $error");
+            messenger.showSnackBar(
+              SnackBar(content: Text("Error: $error")),
+            );
+            navigator.pop(null);
+          });
       return null;
     }, []);
 

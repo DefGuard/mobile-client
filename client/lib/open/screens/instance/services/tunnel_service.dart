@@ -146,8 +146,8 @@ class TunnelService {
         },
       );
 
-      if (browserOpened == null) {
-        // dialog dismissed
+      if (browserOpened == null || !browserOpened) {
+        // dialog dismissed or failed to open the browser
         return null;
       }
 
@@ -175,65 +175,49 @@ class TunnelService {
     required PluginConnectPayload payload,
     required bool useOpenid,
   }) async {
-    try {
-      // Show MFA method selection dialog
-      final MfaMethod? method = await showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return SelectMfaMethodDialog();
-        },
-      );
+    // Show MFA method selection dialog
+    final MfaMethod? method = await showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return SelectMfaMethodDialog();
+      },
+    );
 
-      if (method == null) {
-        // user dismissed method-selection dialog, abort
-        return null;
-      }
-
-      // Get session token
-      final startMfaResponse = await _startMfa(
-        context,
-        proxyUrl,
-        payload.devicePublicKey,
-        payload.networkId,
-        method,
-      );
-
-      // Show code input & verify the code
-      return await _handleCodeInput(
-        context: context,
-        token: startMfaResponse.token,
-        proxyUrl: proxyUrl,
-        method: method,
-      );
-    } catch (e) {
-      talker.error("MFA flow error: $e");
+    if (method == null) {
+      // user dismissed method-selection dialog, abort
       return null;
     }
+
+    // Get session token
+    final startMfaResponse = await _startMfa(
+      context,
+      proxyUrl,
+      payload.devicePublicKey,
+      payload.networkId,
+      method,
+    );
+
+    // Show code input & verify the code
+    return await _handleCodeInput(
+      context: context,
+      token: startMfaResponse.token,
+      proxyUrl: proxyUrl,
+      method: method,
+    );
   }
 
-  /// Displays code input dialog
+  /// Displays code input dialog, returns preshared key
   static Future<String?> _handleCodeInput({
     required BuildContext context,
     required String token,
     required String proxyUrl,
     required MfaMethod method,
   }) async {
-    try {
-      final presharedKey = await showDialog<String>(
-        context: context,
-        builder: (BuildContext context) {
-          return CodeDialog(token: token, url: proxyUrl, method: method);
-        },
-      );
-
-      if (presharedKey != null) {
-        talker.info("Code authentication successful");
-      }
-
-      return presharedKey;
-    } catch (e) {
-      talker.error("MFA code input error: $e");
-      return null;
-    }
+    return await showDialog<String>(
+      context: context,
+      builder: (BuildContext context) {
+        return CodeDialog(token: token, url: proxyUrl, method: method);
+      },
+    );
   }
 }

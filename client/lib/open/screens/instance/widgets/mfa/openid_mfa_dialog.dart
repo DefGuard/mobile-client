@@ -7,8 +7,6 @@ import 'package:mobile/theme/spacing.dart';
 import 'package:mobile/theme/text.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../../../../../logging.dart';
-
 final String _title = "Two-factor authentication";
 final String _mfaMsg1 =
     "In order to connect to VPN please login with your OpenID provider. To do so, pease click \"Authenticate with OpenId\"";
@@ -28,12 +26,9 @@ class OpenIdMfaStartDialog extends HookConsumerWidget {
     required this.token,
   });
 
-  Future<void> _openBrowser() async {
+  Future<bool> _launchUrl() async {
     final url = Uri.parse("${proxyUrl}openid/mfa?token=$token");
-
-    if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
-      talker.error("Can't launch url");
-    }
+    return await launchUrl(url, mode: LaunchMode.externalApplication);
   }
 
   @override
@@ -68,9 +63,20 @@ class OpenIdMfaStartDialog extends HookConsumerWidget {
                       variant: DgButtonVariant.secondary,
                       size: DgButtonSize.standard,
                       onTap: () async {
+                        final messenger = ScaffoldMessenger.of(context);
                         final navigator = Navigator.of(context);
-                        await _openBrowser();
-                        navigator.pop(true);
+                        final errorSnack = SnackBar(
+                          content: Text("Error: Failed to open the browser."),
+                        );
+                        try {
+                          final launched = await _launchUrl();
+                          if (!launched) {
+                            messenger.showSnackBar(errorSnack);
+                          }
+                          navigator.pop(launched);
+                        } catch (_) {
+                          messenger.showSnackBar(errorSnack);
+                        }
                       },
                     ),
                   ],

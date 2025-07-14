@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -79,13 +80,14 @@ class _CodeForm extends HookConsumerWidget {
   final String url;
   const _CodeForm({required this.token, required this.url});
 
-  String? _validateCode(String? value) {
+  String? _validateCode(String? value, bool codeInvalid) {
     if (value == null || value.trim().isEmpty) {
       return "This field is required";
     }
-    if (value.length != 6) {
+    if (value.length != 6 || codeInvalid) {
       return "Enter valid code";
     }
+
     return null;
   }
 
@@ -94,6 +96,7 @@ class _CodeForm extends HookConsumerWidget {
     final formKey = useMemoized(() => GlobalKey<FormState>());
     final codeController = useTextEditingController(text: "");
     final isLoading = useState(false);
+    final codeInvalid = useState<bool>(false);
 
     return (Form(
       key: formKey,
@@ -109,7 +112,7 @@ class _CodeForm extends HookConsumerWidget {
                 required: true,
                 hintText: "Code",
                 keyboardType: TextInputType.number,
-                validator: (value) => _validateCode(value),
+                validator: (value) => _validateCode(value, codeInvalid.value),
               ),
             ],
           ),
@@ -123,6 +126,7 @@ class _CodeForm extends HookConsumerWidget {
                 width: double.infinity,
                 loading: isLoading.value,
                 onTap: () async {
+                  codeInvalid.value = false;
                   final messenger = ScaffoldMessenger.of(context);
                   final navigator = Navigator.of(context);
                   if (formKey.currentState?.validate() ?? false) {
@@ -134,12 +138,14 @@ class _CodeForm extends HookConsumerWidget {
                         codeController.text.trim(),
                       );
                       navigator.pop(response.presharedKey);
+                    } on DioException catch (e) {
+                      if (e.response?.statusCode == 401) {
+                        codeInvalid.value = true;
+                        formKey.currentState?.validate();
+                      }
                     } catch (e) {
-                      print("Submit Error: $e");
                       messenger.showSnackBar(
-                        SnackBar(
-                          content: Text('Device registration failed! Error $e'),
-                        ),
+                        SnackBar(content: Text("Error: $e")),
                       );
                     } finally {
                       isLoading.value = false;
