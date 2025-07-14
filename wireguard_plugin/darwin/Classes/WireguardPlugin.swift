@@ -10,6 +10,9 @@ import NetworkExtension
 
 
 public class WireguardPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
+    private var eventSink: FlutterEventSink?
+    private var activeTunnelData: ActiveTunnelData?
+    
     public func onListen(
         withArguments arguments: Any?, eventSink events: @escaping FlutterEventSink
     ) -> FlutterError? {
@@ -22,11 +25,7 @@ public class WireguardPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
         return nil
     }
 
-    private var eventSink: FlutterEventSink?
-
     public static func register(with registrar: FlutterPluginRegistrar) {
-
-        
         let methodChannel = FlutterMethodChannel(
             name: "net.defguard.wireguard_plugin/channel",
             binaryMessenger: registrar.messenger()
@@ -88,6 +87,109 @@ public class WireguardPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
             result(FlutterMethodNotImplemented)
         }
     }
+    
+    private func checkStatus(
+        completion: @escaping (NEVPNStatus?) -> Void
+    ) {
+        getProviderManager { providerManager in
+            guard let providerManager = providerManager else {
+                print("No VPN manager found")
+                completion(nil)
+                return
+            }
+            
+            let connection = providerManager.connection
+            completion(connection.status)
+        }
+    }
+    
+    private func getProviderManager(
+        completion: @escaping (NETunnelProviderManager?) -> Void
+    ) {
+        NETunnelProviderManager.loadAllFromPreferences { managers, error in
+            print("loadAllFromPreferences \(managers?.count ?? 0)")
+            
+            guard error == nil else {
+                print("Error loading managers: \(String(describing: error))")
+                completion(nil)
+                return
+            }
+            
+            guard let providerManager = managers?.first else {
+                print("No VPN manager found")
+                completion(nil)
+                return
+            }
+            
+            completion(providerManager)
+        }
+    }
+    
+    private func updateStatus() {
+        checkStatus { vpnStatus in
+            guard let vpnStatus = vpnStatus else {
+                print("Failed to get VPN status, returning nil")
+                return
+            }
+            
+            // Emit events based on VPN status
+            switch vpnStatus {
+            case .connected:
+                print("VPN CONNECTED")
+                let encoder = JSONEncoder()
+                encoder.keyEncodingStrategy = .convertToSnakeCase
+                
+                if let activeTunnelData = self.activeTunnelData {
+                    guard let data = try? encoder.encode(activeTunnelData),
+                          let dataString = String(data: data, encoding: .utf8) else {
+                        print("Failed to encode active tunnel data")
+                        return
+                    }
+                    self.emitEvent(event: WireguardEvent.tunnelUp, data: dataString)
+                } else {
+                    self.getProviderManager { providerManager in
+                        guard let providerManager = providerManager else {
+                            print("No VPN manager found to get active tunnel data")
+                            return
+                        }
+                        
+                        if let config = providerManager.protocolConfiguration as? NETunnelProviderProtocol,
+                            let configDict = config.providerConfiguration,
+                            let activeTunnelData = try? ActiveTunnelData.from(dictionary: configDict) {
+                            self.activeTunnelData = activeTunnelData
+                            guard let data = try? encoder.encode(activeTunnelData),
+                                  let dataString = String(data: data, encoding: .utf8) else {
+                                print("Failed to encode active tunnel data from config")
+                                return
+                            }
+                            self.emitEvent(event: WireguardEvent.tunnelUp, data: dataString)
+                        } else {
+                            print("No active tunnel data available")
+                            self.emitEvent(event: WireguardEvent.tunnelDown, data: nil)
+                        }
+                    }
+                    
+                }
+            case .disconnected, .invalid:
+                print("VPN DISCONNECTED")
+                self.emitEvent(event: WireguardEvent.tunnelDown, data: nil)
+            case .connecting:
+                // Optionally emit a connecting event if you have one
+                print("VPN is connecting...")
+                self.emitEvent(event: WireguardEvent.tunnelWaiting, data: nil)
+            case .disconnecting:
+                // Optionally emit a disconnecting event if you have one
+                print("VPN is disconnecting...")
+                self.emitEvent(event: WireguardEvent.tunnelWaiting, data: nil)
+            case .reasserting:
+                print("VPN is reasserting...")
+                self.emitEvent(event: WireguardEvent.tunnelWaiting, data: nil)
+            @unknown default:
+                print("Unknown VPN status: \(vpnStatus)")
+            }
+        }
+    }
+
 
     private func startTunnel(
         config: TunnelStartData,
@@ -206,8 +308,9 @@ public class WireguardPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
             let connection = providerManager.connection
             if connection.status == .connected || connection.status == .connecting {
                 connection.stopVPNTunnel()
+                self.activeTunnelData = nil
                 print("VPN tunnel stopped")
-                self.emitEvent(event: WireguardEvent.tunnelDown, data: nil)
+//                self.emitEvent(event: WireguardEvent.tunnelDown, data: nil)
                 result(nil)
             } else {
                 print("VPN tunnel is not running")
@@ -215,7 +318,7 @@ public class WireguardPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
             }
         }
 
-        emitEvent(event: WireguardEvent.tunnelDown, data: nil)
+//        emitEvent(event: WireguardEvent.tunnelDown, data: nil)
 
         result(nil)
     }
@@ -231,30 +334,19 @@ public class WireguardPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
         eventSink(event)
     }
 
+
     private func startVPNTunnel(
         with providerManager: NETunnelProviderManager, config: TunnelStartData,
         result: @escaping FlutterResult
     ) {
         do {
-            try providerManager.connection.startVPNTunnel()
-            print("VPN tunnel started successfully")
+            NotificationCenter.default.addObserver(forName: NSNotification.Name.NEVPNStatusDidChange, object: providerManager.connection, queue: OperationQueue.main, using: { notification in
+                self.updateStatus()
+            })
             let activeTunnelData = ActiveTunnelData(fromConfig: config)
-            let encoder = JSONEncoder()
-            encoder.keyEncodingStrategy = .convertToSnakeCase
-
-            guard let dataString = try? encoder.encode(activeTunnelData),
-                let dataString = String(data: dataString, encoding: .utf8)
-            else {
-                result(
-                    FlutterError(
-                        code: "ENCODING_ERROR", message: "Failed to encode tunnel data",
-                        details: nil))
-                return
-            }
-
-            emitEvent(event: WireguardEvent.tunnelUp, data: dataString)
+            self.activeTunnelData = activeTunnelData
+            try providerManager.connection.startVPNTunnel()
             result(nil)
-
         } catch {
             print("Failed to start VPN: \(error)")
             result(

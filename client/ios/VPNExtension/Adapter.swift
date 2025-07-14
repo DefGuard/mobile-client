@@ -18,14 +18,17 @@ final class Adapter /*: Sendable*/ {
     }
 
     //    deinit {
-    //        // Shutdown the tunnel
+    //        // Shut the tunnel down
     //        if case .started(let handle, _) = self.state {
-    //            wgTurnOff(handle)
     //        }
     //    }
 
     public func start(tunnelConfiguration: TunnelConfiguration) throws {
         // TODO: kill exising tunnel
+        if let tunnel = tunnel {
+            os_log("Cleaning exiting Tunnel...")
+        }
+
         os_log("Initalizing Tunnel...")
         tunnel = try Tunnel.init(
             privateKey: tunnelConfiguration.interface.privateKey,
@@ -34,21 +37,19 @@ final class Adapter /*: Sendable*/ {
             keepAlive: tunnelConfiguration.peers[0].persistentKeepAlive,
             index: 0
         )
-        
-        let peer = tunnelConfiguration.peers[0]
-        guard let peerEndpoint = peer.endpoint else {
-            throw NSError(domain: "AdapterError", code: 1, userInfo: [NSLocalizedDescriptionKey: "Peer endpoint is nil"])
-        }
 
         os_log("Connecting to endpoint...")
-        let endpoint = NWEndpoint.hostPort(host: peerEndpoint.host, port: peerEndpoint.port)
+        guard let endpoint = tunnelConfiguration.peers[0].endpoint else {
+            os_log("Endpoint is nil")
+            return
+        }
         let params = NWParameters.udp
         params.allowLocalEndpointReuse = true
-        connection = NWConnection.init(to: endpoint, using: params)
+        connection = NWConnection.init(to: endpoint.asNWEndpoint(), using: params)
 
-        connection?.stateUpdateHandler = { state in
-            print("State: \(state)")
-        }
+//        connection?.stateUpdateHandler = { state in
+//            print("UDP connection state: \(state)")
+//        }
         os_log("Receiving UDP from endpoint...")
         connection?.start(queue: .main)
         // Send initial handshake packet
@@ -71,20 +72,17 @@ final class Adapter /*: Sendable*/ {
     private func handleTunnelResult(_ result: TunnelResult) {
         switch result {
             case .done:
-                os_log("done")
                 break
-            case .err(let error):
-                os_log("packet map error %{public}@", String(describing: error))
+            case .err(_):
                 break
             case .writeToNetwork(let data):
-                os_log("write to network")
                 sendToEndpoint(data: data)
             case .writeToTunnelV4(let data):
-                os_log("write to tunnel v4")
-                self.packetTunnelProvider?.packetFlow.writePacketObjects([NEPacket(data: data, protocolFamily: sa_family_t(AF_INET))])
+                packetTunnelProvider?.packetFlow.writePacketObjects([
+                    NEPacket(data: data,protocolFamily: sa_family_t(AF_INET))])
             case .writeToTunnelV6(let data):
-                os_log("write to tunnel v6")
-                self.packetTunnelProvider?.packetFlow.writePacketObjects([NEPacket(data: data, protocolFamily: sa_family_t(AF_INET6))])
+                packetTunnelProvider?.packetFlow.writePacketObjects([
+                    NEPacket(data: data, protocolFamily: sa_family_t(AF_INET6))])
         }
     }
 

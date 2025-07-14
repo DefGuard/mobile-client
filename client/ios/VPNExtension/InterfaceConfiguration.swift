@@ -1,5 +1,5 @@
 import Foundation
-import Network
+import NetworkExtension
 
 final class InterfaceConfiguration: Codable {
     var privateKey: String
