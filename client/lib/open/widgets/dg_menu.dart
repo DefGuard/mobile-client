@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -97,11 +98,11 @@ class DgMenu extends HookConsumerWidget {
                                 (item) => _DgMenuItem(
                                   itemData: item,
                                   onTap: () {
+                                    item.onTap();
                                     dismiss(
                                       controller: animationController,
                                       onDismiss: () {
                                         controller.hide();
-                                        item.onTap();
                                       },
                                     );
                                   },
@@ -141,9 +142,7 @@ class _DgMenuItem extends StatelessWidget {
       color: DgColor.defaultModal,
       child: InkWell(
         splashColor: DgColor.frameBg,
-        onTap: () {
-          onTap();
-        },
+        onTap: onTap,
         child: Padding(
           padding: EdgeInsetsGeometry.all(DgSpacing.xs),
           child: Center(child: Text(itemData.text, style: DgText.sideBar)),

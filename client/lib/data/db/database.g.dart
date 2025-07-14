@@ -688,7 +688,7 @@ class $LocationsTable extends Locations
     type: DriftSqlType.int,
     requiredDuringInsert: true,
     defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'REFERENCES defguard_instances (id)',
+      'REFERENCES defguard_instances (id) ON DELETE CASCADE',
     ),
   );
   static const VerificationMeta _networkIdMeta = const VerificationMeta(
@@ -1441,6 +1441,16 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     defguardInstances,
     locations,
   ];
+  @override
+  StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'defguard_instances',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('locations', kind: UpdateKind.delete)],
+    ),
+  ]);
 }
 
 typedef $$DefguardInstancesTableCreateCompanionBuilder =

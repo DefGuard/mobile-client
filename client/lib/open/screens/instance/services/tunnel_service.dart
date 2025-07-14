@@ -2,18 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:mobile/data/db/database.dart';
 import 'package:mobile/data/plugin/plugin.dart';
 import 'package:mobile/open/screens/instance/widgets/mfa/mfa_dialog.dart';
-import 'package:mobile/open/screens/instance/widgets/connect_dialog.dart';
+import 'package:mobile/open/screens/instance/widgets/mfa/mfa_method_dialog.dart';
+import 'package:mobile/open/screens/instance/widgets/routing_method_dialog.dart';
 import 'package:mobile/open/screens/instance/widgets/mfa/code_dialog.dart';
 import 'dart:convert';
 
 import '../../../../data/db/enums.dart';
 import '../../../../logging.dart';
 
-
 /// Handles MFA flows and tunnel connection
 class TunnelService {
-
-  static PluginConnectPayload makePayload(DefguardInstance instance, Location location) {
+  static PluginConnectPayload _makePayload(DefguardInstance instance,
+      Location location,
+      RoutingMethod trafficMethod,) {
     return PluginConnectPayload(
       publicKey: location.pubKey,
       devicePublicKey: instance.pubKey,
@@ -27,7 +28,7 @@ class TunnelService {
       locationId: location.id,
       networkId: location.networkId,
       instanceId: instance.id,
-      traffic: RoutingMethod.predefined,
+      traffic: trafficMethod,
     );
   }
 
@@ -37,29 +38,68 @@ class TunnelService {
     required BuildContext context,
     required DefguardInstance instance,
     required Location location,
-    required PluginConnectPayload payload,
     required dynamic wireguardPlugin,
   }) async {
     // handle traffic type selection if necessary
-    payload.traffic = instance.disableAllTraffic
-        ? RoutingMethod.predefined
-        : (await showDialog<RoutingMethod?>(
-                context: context,
-                builder: (_) => ConnectDialog(),
-              ))
-              // in case the user dismisses the dialog
-              ??
-              RoutingMethod.predefined;
+    late RoutingMethod trafficMethod;
+    // instance enforces predefined
+    if (instance.disableAllTraffic) {
+      trafficMethod = RoutingMethod.predefined;
+    } else {
+      if (location.trafficMethod != null) {
+        trafficMethod = location.trafficMethod!;
+      } else {
+        // no pre selected traffic choice available, ask user
+        RoutingMethodDialogIntention dialogIntention = location.mfaEnabled
+            ? RoutingMethodDialogIntention.next
+            : RoutingMethodDialogIntention.connect;
+        RoutingMethod? userSelection = await showDialog(
+          context: context,
+          builder: (_) =>
+              RoutingMethodDialog(
+                location: location,
+                intention: dialogIntention,
+              ),
+        );
+        // smth went wrong or user canceled the operation
+        if (userSelection == null) {
+          return;
+        }
+        trafficMethod = userSelection;
+      }
+    }
+
+    PluginConnectPayload payload = _makePayload(
+      instance,
+      location,
+      trafficMethod,
+    );
 
     // handle mfa
     if (location.mfaEnabled) {
       if (!context.mounted) {
         return;
       }
+      MfaMethod mfaMethod;
+      if (location.mfaMethod == null) {
+        final userSelection = await showDialog<MfaMethod?>(context: context,
+            builder: (_) =>
+                MfaMethodDialog(location: location,
+                  intention: MfaMethodDialogIntention.connect,));
+        if(userSelection == null) {
+          return;
+        }
+        mfaMethod = userSelection;
+      } else {
+        mfaMethod = location.mfaMethod!;
+      }
+      if(!context.mounted) return;
+
       final presharedKey = await _handleMfaFlow(
         context: context,
         proxyUrl: instance.proxyUrl,
         payload: payload,
+        mfaMethod: mfaMethod,
       );
       if (presharedKey == null) {
         // user dismissed the dialog
@@ -77,6 +117,7 @@ class TunnelService {
     required BuildContext context,
     required String proxyUrl,
     required PluginConnectPayload payload,
+    required MfaMethod mfaMethod,
   }) async {
     try {
       // start MFA flow - show method selection dialog

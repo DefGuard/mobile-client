@@ -46,6 +46,7 @@ class MfaStartDialog extends HookConsumerWidget {
     required this.locationId,
   });
 
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Dialog(
@@ -108,4 +109,5 @@ class MfaStartDialog extends HookConsumerWidget {
       ),
     );
   }
+
 }
