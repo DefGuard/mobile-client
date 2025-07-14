@@ -121,6 +121,7 @@ class TunnelService {
   }
 
   /// Handles OpenID, browser-based MFA
+  /// Returns preshared key.
   static Future<String?> _handleOpenidMfaFlow({
     required BuildContext context,
     required String proxyUrl,
@@ -169,6 +170,7 @@ class TunnelService {
   }
 
   /// Displays non-openid mfa method selection and code input dialogs
+  /// Returns preshared key.
   static Future<String?> _handleMfaFlow({
     required BuildContext context,
     required String proxyUrl,
@@ -198,25 +200,14 @@ class TunnelService {
     );
 
     // Show code input & verify the code
-    return await _handleCodeInput(
-      context: context,
-      token: startMfaResponse.token,
-      proxyUrl: proxyUrl,
-      method: method,
-    );
-  }
-
-  /// Displays code input dialog, returns preshared key
-  static Future<String?> _handleCodeInput({
-    required BuildContext context,
-    required String token,
-    required String proxyUrl,
-    required MfaMethod method,
-  }) async {
     return await showDialog<String>(
       context: context,
       builder: (BuildContext context) {
-        return CodeDialog(token: token, url: proxyUrl, method: method);
+        return CodeDialog(
+          token: startMfaResponse.token,
+          url: proxyUrl,
+          method: method,
+        );
       },
     );
   }
