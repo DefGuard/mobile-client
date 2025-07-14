@@ -307,7 +307,7 @@ class _LocationItem extends HookConsumerWidget {
                     }
                   } catch (e) {
                     talker.error(
-                      "Failed to connect into ${instance.name}-${location.name} ! Reason: $e",
+                      "Failed to connect to ${instance.name}-${location.name} ! Reason: $e",
                     );
                   } finally {
                     isLoading.value = false;

@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:mobile/data/db/database.dart';
 import 'package:mobile/data/plugin/plugin.dart';
@@ -39,7 +41,7 @@ class TunnelService {
                 context: context,
                 builder: (_) => ConnectDialog(),
               ))
-              // in case the user dismisses the dialog
+              // if user dismisses the dialog
               ??
               TunnelTraffic.predefined;
 
@@ -93,6 +95,7 @@ class TunnelService {
 
   /// Calls `/client-mfa/start` endpoint, returns `StartMfaResponse` with session token.
   static Future<StartMfaResponse> _startMfa(
+    BuildContext context,
     String url,
     String pubkey,
     int networkId,
@@ -106,7 +109,15 @@ class TunnelService {
     );
 
     final uri = Uri.parse(url);
-    return await proxyApi.startMfa(uri, request);
+
+    try {
+      return await proxyApi.startMfa(uri, request);
+    } on HttpException catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Error: ${e.message}")));
+      rethrow;
+    }
   }
 
   /// Handles OpenID, browser-based MFA
@@ -118,6 +129,7 @@ class TunnelService {
     try {
       // Get session token
       final startMfaResponse = await _startMfa(
+        context,
         proxyUrl,
         payload.devicePublicKey,
         payload.networkId,
@@ -150,7 +162,6 @@ class TunnelService {
       );
 
       return finishMfaResponse?.presharedKey;
-
     } catch (e) {
       talker.error("OpenID MFA flow error: $e");
       return null;
@@ -180,6 +191,7 @@ class TunnelService {
 
       // Get session token
       final startMfaResponse = await _startMfa(
+        context,
         proxyUrl,
         payload.devicePublicKey,
         payload.networkId,
