@@ -42,7 +42,11 @@ class DefguardInstances extends Table with AutoIncrementingPrimaryKey {
 @DataClassName('Location')
 class Locations extends Table with AutoIncrementingPrimaryKey {
   @JsonKey('instance_id')
-  IntColumn get instance => integer().references(DefguardInstances, #id)();
+  IntColumn get instance => integer().references(
+    DefguardInstances,
+    #id,
+    onDelete: KeyAction.cascade,
+  )();
 
   @JsonKey('network_id')
   IntColumn get networkId => integer()();
@@ -68,7 +72,8 @@ class Locations extends Table with AutoIncrementingPrimaryKey {
   TextColumn get trafficMethod => textEnum<RoutingMethod>().nullable()();
 
   @JsonKey('mfa_method')
-  IntColumn get mfaMethod => integer().nullable().map(const MfaMethodConverter())();
+  IntColumn get mfaMethod =>
+      integer().nullable().map(const MfaMethodConverter())();
 
   @JsonKey('keepalive_interval')
   IntColumn get keepAliveInterval => integer()();
@@ -80,6 +85,15 @@ class AppDatabase extends _$AppDatabase {
 
   @override
   int get schemaVersion => 1;
+
+  @override
+  MigrationStrategy get migration {
+    return MigrationStrategy(
+      beforeOpen: (details) async {
+        await customStatement('PRAGMA foreign_keys = ON');
+      },
+    );
+  }
 
   static QueryExecutor _openConnection() {
     return driftDatabase(

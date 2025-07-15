@@ -1,58 +1,58 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/theme/color.dart';
 
-final String _poppins = "Poppins";
+const String _poppins = "Poppins";
 
-final String _roboto = "Roboto";
+const String _roboto = "Roboto";
 
-final Color _defaultTextColor = DgColor.textBodyPrimary;
+const Color _defaultTextColor = DgColor.textBodyPrimary;
 
 class DgText {
   DgText._();
 
-  static TextStyle body1 = TextStyle(
+  static const TextStyle body1 = TextStyle(
     fontFamily: _poppins,
     fontWeight: FontWeight.w600,
     fontSize: 20,
     color: _defaultTextColor,
   );
-  static TextStyle modal1 = TextStyle(
+  static const TextStyle modal1 = TextStyle(
     fontFamily: _roboto,
     fontSize: 12,
     fontWeight: FontWeight.w500,
     color: _defaultTextColor,
   );
-  static TextStyle buttonL = TextStyle(
+  static const TextStyle buttonL = TextStyle(
     fontFamily: _poppins,
     fontSize: 15,
     fontWeight: FontWeight.w600,
     color: _defaultTextColor,
   );
-  static TextStyle buttonS = TextStyle(
+  static const TextStyle buttonS = TextStyle(
     fontFamily: _roboto,
     fontSize: 12,
     fontWeight: FontWeight.w500,
     color: _defaultTextColor,
   );
-  static TextStyle buttonXS = TextStyle(
+  static const TextStyle buttonXS = TextStyle(
     fontFamily: _roboto,
     fontSize: 10,
     fontWeight: FontWeight.w400,
     color: _defaultTextColor,
   );
-  static TextStyle sideBar = TextStyle(
+  static const TextStyle sideBar = TextStyle(
     fontFamily: _poppins,
     fontSize: 15,
     fontWeight: FontWeight.w500,
     color: _defaultTextColor,
   );
-  static TextStyle copyright = TextStyle(
+  static const TextStyle copyright = TextStyle(
     fontFamily: _poppins,
     fontSize: 10,
     fontWeight: FontWeight.w300,
     color: _defaultTextColor,
   );
-  static TextStyle input = TextStyle(
+  static const TextStyle input = TextStyle(
     fontFamily: _roboto,
     fontSize: 15,
     fontWeight: FontWeight.w400,

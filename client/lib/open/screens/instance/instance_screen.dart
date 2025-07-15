@@ -1,5 +1,5 @@
+import 'package:drift/drift.dart' as drift;
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mobile/data/db/database.dart';
@@ -8,6 +8,8 @@ import 'package:mobile/open/riverpod/plugin/plugin.dart';
 import 'package:mobile/open/screens/instance/widgets/connection_conflict_dialog.dart';
 import 'package:mobile/open/screens/instance/widgets/delete_instance_dialog.dart';
 import 'package:mobile/open/screens/instance/services/tunnel_service.dart';
+import 'package:mobile/open/screens/instance/widgets/mfa/mfa_method_dialog.dart';
+import 'package:mobile/open/screens/instance/widgets/routing_method_dialog.dart';
 import 'package:mobile/open/widgets/buttons/dg_button.dart';
 import 'package:mobile/open/widgets/dg_menu.dart';
 import 'package:mobile/open/widgets/icons/arrow_single.dart';
@@ -22,9 +24,12 @@ import 'package:mobile/theme/color.dart';
 import 'package:mobile/theme/spacing.dart';
 import 'package:mobile/theme/text.dart';
 import 'package:mobile/utils/position.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../data/db/enums.dart';
 import '../../../logging.dart';
+
+part 'instance_screen.g.dart';
 
 class _ScreenData {
   final DefguardInstance instance;
@@ -33,24 +38,30 @@ class _ScreenData {
   const _ScreenData({required this.instance, required this.locations});
 }
 
-final _screenDataProvider = FutureProvider.family<_ScreenData?, String>((
-  ref,
-  id,
-) async {
-  final int parsedId = int.parse(id);
-  final db = ref.watch(databaseProvider);
-  final instanceWithRefs = await db.managers.defguardInstances
-      .withReferences((prefetch) => prefetch(locationsRefs: true))
-      .filter((row) => row.id(parsedId))
-      .getSingleOrNull();
-  if (instanceWithRefs == null) {
-    return null;
-  } else {
-    final (instance, refs) = instanceWithRefs;
-    final locations = await refs.locationsRefs.get();
-    return _ScreenData(locations: locations, instance: instance);
-  }
-});
+@riverpod
+Stream<_ScreenData?> _screenData(Ref ref, String id) {
+  final db = ref.read(databaseProvider);
+  final parsedId = int.parse(id);
+  final query = db.select(db.defguardInstances).join([
+    drift.leftOuterJoin(
+      db.locations,
+      db.locations.instance.equalsExp(db.defguardInstances.id),
+    ),
+  ])..where(db.defguardInstances.id.equals(parsedId));
+  return query.watch().map((rows) {
+    if (rows.isEmpty) {
+      return null;
+    }
+
+    final instance = rows.first.readTable(db.defguardInstances);
+    final locations = rows
+        .map((row) => row.readTableOrNull(db.locations))
+        .whereType<Location>()
+        .toList();
+
+    return _ScreenData(instance: instance, locations: locations);
+  });
+}
 
 class InstanceScreen extends HookConsumerWidget {
   final String id;
@@ -69,12 +80,9 @@ class InstanceScreen extends HookConsumerWidget {
         child: screenData.when(
           data: (screenData) {
             if (screenData == null) {
-              Future.microtask(() {
-                if (context.mounted) {
-                  HomeScreenRoute().go(context);
-                }
-              });
-              return SizedBox();
+              talker.debug("Instance $id not found id DB, redirecting.");
+              HomeScreenRoute().go(context);
+              return null;
             }
             return _ScreenContent(
               screenData: screenData,
@@ -216,9 +224,45 @@ class _LocationItem extends HookConsumerWidget {
 
     final dgMenuItems = useMemoized<List<DgMenuItem>>(() {
       return [
-        DgMenuItem(text: "Select MFA Method", onTap: () {}),
-        DgMenuItem(text: "Select Traffic Routing", onTap: () {}),
+        DgMenuItem(
+          text: "Select MFA Method",
+          onTap: () {
+            print(location.mfaMethod);
+            showDialog(
+              context: context,
+              builder: (_) => MfaMethodDialog(
+                location: location,
+                intention: MfaMethodDialogIntention.save,
+              ),
+            );
+          },
+        ),
+        DgMenuItem(
+          text: "Select Traffic Routing",
+          onTap: () {
+            showDialog(
+              context: context,
+              builder: (_) => RoutingMethodDialog(
+                location: location,
+                intention: RoutingMethodDialogIntention.save,
+              ),
+            );
+          },
+        ),
       ];
+    }, [location]);
+
+    final disconnect = useCallback<Future<bool> Function()>(() async {
+      try {
+        await wireguardPlugin.closeTunnel();
+        talker.debug("Location ${location.name}(${location.id}) disconnected");
+        return true;
+      } catch (e) {
+        talker.error(
+          "Failed to close tunnel for ${instance.name}(${instance.id}) - ${location.name}(${location.id}) ! Reason: $e",
+        );
+        return false;
+      }
     }, []);
 
     // set connected flag
@@ -297,55 +341,62 @@ class _LocationItem extends HookConsumerWidget {
                   text: isConnected.value ? "Disconnect" : "Connect",
                   loading: isLoading.value,
                   onTap: () async {
-                    if (isConnected.value) {
-                      isLoading.value = true;
-                      try {
-                        await wireguardPlugin.closeTunnel();
-                      } on PlatformException catch (e) {
-                        talker.error(
-                          "Closing tunnel for ${instance.name} - ${location.name} Failed ! Reason: ${e.message}",
-                        );
-                      } finally {
-                        isLoading.value = false;
-                      }
-                    } else {
-                      if (activeTunnel != null) {
+                    print("Location traffic pref: ${location.trafficMethod}");
+                    isLoading.value = true;
+                    // check if there is active tunnel if so ask user if he want to change the active connection
+                    if (activeTunnel != null) {
+                      if (!isConnected.value) {
+                        talker.debug("Connection change started");
+                        // connection is on another location so ask if user want to change active to this one
                         final bool? changeConnection = await showDialog<bool>(
                           context: context,
                           builder: (BuildContext context) {
                             return ConnectionConflictDialog();
                           },
                         );
+                        // user cancelled the operation
                         if (changeConnection == null ||
                             changeConnection == false) {
+                          talker.debug("Connection change cancelled");
+                          isLoading.value = false;
                           return;
-                        }
-                      }
-                      try {
-                        isLoading.value = true;
-                        final permissionsGranted = await wireguardPlugin
-                            .requestPermissions();
-                        if (permissionsGranted) {
-                          if (context.mounted) {
-                            await TunnelService.connect(
-                              context: context,
-                              instance: instance,
-                              location: location,
-                              payload: TunnelService.makePayload(
-                                instance,
-                                location,
-                              ),
-                              wireguardPlugin: wireguardPlugin,
-                            );
+                        } else {
+                          if (!(await disconnect())) {
+                            isLoading.value = false;
+                            return;
                           }
+                          talker.debug("Previous connection closed");
                         }
-                      } catch (e) {
-                        talker.error(
-                          "Failed to connect into ${instance.name}-${location.name} ! Reason: $e",
-                        );
-                      } finally {
+                      } else {
+                        // active connection is the current location means disconnect
+                        await disconnect();
                         isLoading.value = false;
+                        return;
                       }
+                    }
+                    // connect
+                    try {
+                      final permissionsGranted = await wireguardPlugin
+                          .requestPermissions();
+                      if (permissionsGranted) {
+                        if (context.mounted) {
+                          await TunnelService.connect(
+                            context: context,
+                            instance: instance,
+                            location: location,
+                            wireguardPlugin: wireguardPlugin,
+                          );
+                          talker.debug(
+                            "Location ${location.name} (${location.id}) connected",
+                          );
+                        }
+                      }
+                    } catch (e) {
+                      talker.error(
+                        "Failed to connect into ${instance.name}-${location.name} ! Reason: $e",
+                      );
+                    } finally {
+                      isLoading.value = false;
                     }
                   },
                 ),

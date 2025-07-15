@@ -25,6 +25,7 @@ class DgButton extends StatelessWidget {
   final TextStyle textStyle;
   final bool disabled;
   final double padding;
+  final double? minWidth;
 
   const DgButton._({
     super.key,
@@ -38,6 +39,7 @@ class DgButton extends StatelessWidget {
     required this.size,
     required this.disabled,
     required this.padding,
+    this.minWidth,
     this.width,
     this.loading = false,
     this.icon,
@@ -47,7 +49,7 @@ class DgButton extends StatelessWidget {
   factory DgButton({
     required text,
     Key? key,
-    DgButtonVariant variant = DgButtonVariant.primary,
+    DgButtonVariant variant = DgButtonVariant.secondary,
     DgIcon? icon,
     Color? color,
     Color? iconColor,
@@ -55,6 +57,7 @@ class DgButton extends StatelessWidget {
     double? width,
     double? height,
     TextStyle? textStyle,
+    double? minWidth,
     onTap,
     bool loading = false,
     bool disabled = false,
@@ -151,6 +154,7 @@ class DgButton extends StatelessWidget {
       disabled: disabled,
       padding: padding,
       width: width,
+      minWidth: minWidth,
     );
   }
 
@@ -203,6 +207,13 @@ class DgButton extends StatelessWidget {
     return [_getText()];
   }
 
+  BoxConstraints? _getConstrains() {
+    if (minWidth != null) {
+      return BoxConstraints(minWidth: minWidth!);
+    }
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
     final bool isInteractive = !loading;
@@ -213,20 +224,23 @@ class DgButton extends StatelessWidget {
       child: Material(
         color: color,
         borderRadius: borderRadius,
-        child: Ink(
-          height: height,
-          width: width,
-          decoration: _getBoxDecoration(),
-          child: InkWell(
-            onTap: isInteractive ? onTap : null,
-            borderRadius: borderRadius,
-            child: Padding(
-              padding: EdgeInsets.symmetric(vertical: 0, horizontal: padding),
-              child: Row(
-                spacing: spacing,
-                mainAxisSize: MainAxisSize.min,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: _getRow(),
+        child: Container(
+          constraints: _getConstrains(),
+          child: Ink(
+            height: height,
+            width: width,
+            decoration: _getBoxDecoration(),
+            child: InkWell(
+              onTap: isInteractive ? onTap : null,
+              borderRadius: borderRadius,
+              child: Padding(
+                padding: EdgeInsets.symmetric(vertical: 0, horizontal: padding),
+                child: Row(
+                  spacing: spacing,
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: _getRow(),
+                ),
               ),
             ),
           ),
