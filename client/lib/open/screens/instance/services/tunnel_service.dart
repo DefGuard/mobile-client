@@ -17,46 +17,6 @@ import '../../../../logging.dart';
 
 /// Handles MFA flows and tunnel connection
 class TunnelService {
-  /// Calls `/client-mfa/start` endpoint, returns `StartMfaResponse` with session token.
-  static Future<StartMfaResponse> _startMfa(
-    String url,
-    String pubkey,
-    int networkId,
-    MfaMethod method,
-  ) async {
-    talker.debug("Starting MFA for networkId: $networkId, method: $method");
-    final request = StartMfaRequest(
-      pubkey: pubkey,
-      locationId: networkId,
-      method: method.value,
-    );
-
-    final uri = Uri.parse(url);
-    return await proxyApi.startMfa(uri, request);
-  }
-
-  static PluginConnectPayload _makePayload(
-    DefguardInstance instance,
-    Location location,
-    RoutingMethod trafficMethod,
-  ) {
-    return PluginConnectPayload(
-      publicKey: location.pubKey,
-      devicePublicKey: instance.pubKey,
-      privateKey: instance.privateKey,
-      address: location.address,
-      dns: location.dns,
-      endpoint: location.endpoint,
-      allowedIps: location.allowedIps,
-      keepalive: location.keepAliveInterval,
-      locationName: location.name,
-      locationId: location.id,
-      networkId: location.networkId,
-      instanceId: instance.id,
-      traffic: trafficMethod,
-    );
-  }
-
   /// Main service method - displays traffic & MFA dialogs, handles
   /// interface configuration and connection.
   static Future<void> connect({
@@ -67,12 +27,14 @@ class TunnelService {
   }) async {
     // prepare navigator to avoid "context use across async gaps"
     final navigator = Navigator.of(context);
+
     // handle traffic type selection if necessary
     late RoutingMethod trafficMethod;
-    // instance enforces predefined
     if (instance.disableAllTraffic) {
+      // instance enforces predefined traffic
       trafficMethod = RoutingMethod.predefined;
     } else {
+      // instance allows traffic type selection - use stored method or display selection dialog
       if (location.trafficMethod != null) {
         trafficMethod = location.trafficMethod!;
       } else {
@@ -80,8 +42,8 @@ class TunnelService {
         RoutingMethodDialogIntention dialogIntention = location.mfaEnabled
             ? RoutingMethodDialogIntention.next
             : RoutingMethodDialogIntention.connect;
-        RoutingMethod? userSelection = await showDialog(
-          context: context,
+        RoutingMethod? userSelection = await _showDialog(
+          navigator: navigator,
           builder: (_) => RoutingMethodDialog(
             location: location,
             intention: dialogIntention,
@@ -95,20 +57,21 @@ class TunnelService {
       }
     }
 
+    // prepare wireguard plugin payload
     PluginConnectPayload payload = _makePayload(
       instance,
       location,
       trafficMethod,
     );
 
-    // handle mfa
+    // handle MFA if configured
     if (location.mfaEnabled) {
       MfaMethod mfaMethod;
       if (instance.useOpenidForMfa) {
         // instance setup for openid mfa login
         mfaMethod = MfaMethod.openid;
       } else {
-        // non-openid mfa setup, show method choice dialog
+        // non-openid mfa setup, use stored method or show method choice dialog
         if (location.mfaMethod == null) {
           final userSelection = await _showDialog<MfaMethod?>(
             navigator: navigator,
@@ -127,7 +90,8 @@ class TunnelService {
         }
       }
 
-      final presharedKey = await _handleMfaFlow(
+      // perform MFA to get the preshared key
+      final presharedKey = await _performMfa(
         navigator: navigator,
         proxyUrl: instance.proxyUrl,
         payload: payload,
@@ -144,20 +108,9 @@ class TunnelService {
     await wireguardPlugin.startTunnel(jsonEncode(payload.toJson()));
   }
 
-  /// Helper function to show dialog using captured NavigatorState
-  static Future<T?> _showDialog<T>({
-    required NavigatorState navigator,
-    required Widget Function(BuildContext) builder,
-  }) {
-    return showDialog<T>(
-      context: navigator.context,
-      builder: builder,
-    );
-  }
-
   /// Performs MFA using specified method.
   /// Returns preshared key.
-  static Future<String?> _handleMfaFlow({
+  static Future<String?> _performMfa({
     required NavigatorState navigator,
     required String proxyUrl,
     required PluginConnectPayload payload,
@@ -175,28 +128,12 @@ class TunnelService {
       );
       if (method == MfaMethod.openid) {
         // perform openid-based MFA
-        bool? browserOpened = await _showDialog<bool?>(
+        return await _handleOpenid(
           navigator: navigator,
-          builder: (BuildContext context) => OpenIdMfaStartDialog(
-            proxyUrl: proxyUrl,
-            token: startMfaResponse.token,
-          ),
+          token: startMfaResponse.token,
+          proxyUrl: proxyUrl,
+          method: method,
         );
-
-        if (browserOpened == null || !browserOpened) {
-          // dialog dismissed or failed to open the browser
-          return null;
-        }
-
-        final FinishMfaResponse? finishMfaResponse =
-            await _showDialog<FinishMfaResponse>(
-              navigator: navigator,
-              builder: (BuildContext context) => OpenidMfaWaitingDialog(
-                token: startMfaResponse.token,
-                proxyUrl: proxyUrl,
-              ),
-            );
-        return finishMfaResponse?.presharedKey;
       } else {
         // perform non-openid-based MFA
         return await _handleCodeInput(
@@ -213,6 +150,33 @@ class TunnelService {
       talker.error("MFA flow error: $e");
       return null;
     }
+  }
+
+  /// Displays code input dialog
+  static Future<String?> _handleOpenid({
+    required NavigatorState navigator,
+    required String token,
+    required String proxyUrl,
+    required MfaMethod method,
+  }) async {
+    bool? browserOpened = await _showDialog<bool?>(
+      navigator: navigator,
+      builder: (BuildContext context) =>
+          OpenIdMfaStartDialog(proxyUrl: proxyUrl, token: token),
+    );
+
+    if (browserOpened == null || !browserOpened) {
+      // dialog dismissed or failed to open the browser
+      return null;
+    }
+
+    final FinishMfaResponse? finishMfaResponse =
+        await _showDialog<FinishMfaResponse>(
+          navigator: navigator,
+          builder: (BuildContext context) =>
+              OpenidMfaWaitingDialog(token: token, proxyUrl: proxyUrl),
+        );
+    return finishMfaResponse?.presharedKey;
   }
 
   /// Displays code input dialog
@@ -239,5 +203,54 @@ class TunnelService {
       talker.error("MFA code input error: $e");
       return null;
     }
+  }
+
+  /// Calls `/client-mfa/start` endpoint, returns `StartMfaResponse` with session token.
+  static Future<StartMfaResponse> _startMfa(
+    String url,
+    String pubkey,
+    int networkId,
+    MfaMethod method,
+  ) async {
+    talker.debug("Starting MFA for networkId: $networkId, method: $method");
+    final request = StartMfaRequest(
+      pubkey: pubkey,
+      locationId: networkId,
+      method: method.value,
+    );
+
+    final uri = Uri.parse(url);
+    return await proxyApi.startMfa(uri, request);
+  }
+
+  /// Prepares wireguard plugin configuration
+  static PluginConnectPayload _makePayload(
+    DefguardInstance instance,
+    Location location,
+    RoutingMethod trafficMethod,
+  ) {
+    return PluginConnectPayload(
+      publicKey: location.pubKey,
+      devicePublicKey: instance.pubKey,
+      privateKey: instance.privateKey,
+      address: location.address,
+      dns: location.dns,
+      endpoint: location.endpoint,
+      allowedIps: location.allowedIps,
+      keepalive: location.keepAliveInterval,
+      locationName: location.name,
+      locationId: location.id,
+      networkId: location.networkId,
+      instanceId: instance.id,
+      traffic: trafficMethod,
+    );
+  }
+
+  /// Helper function to show dialog using captured NavigatorState
+  static Future<T?> _showDialog<T>({
+    required NavigatorState navigator,
+    required Widget Function(BuildContext) builder,
+  }) {
+    return showDialog<T>(context: navigator.context, builder: builder);
   }
 }
