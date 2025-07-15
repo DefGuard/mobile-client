@@ -65,6 +65,8 @@ class TunnelService {
     required Location location,
     required dynamic wireguardPlugin,
   }) async {
+    // prepare navigator to avoid "context use across async gaps"
+    final navigator = Navigator.of(context);
     // handle traffic type selection if necessary
     late RoutingMethod trafficMethod;
     // instance enforces predefined
@@ -101,9 +103,6 @@ class TunnelService {
 
     // handle mfa
     if (location.mfaEnabled) {
-      if (!context.mounted) {
-        return;
-      }
       MfaMethod mfaMethod;
       if (instance.useOpenidForMfa) {
         // instance setup for openid mfa login
@@ -111,8 +110,8 @@ class TunnelService {
       } else {
         // non-openid mfa setup, show method choice dialog
         if (location.mfaMethod == null) {
-          final userSelection = await showDialog<MfaMethod?>(
-            context: context,
+          final userSelection = await _showDialog<MfaMethod?>(
+            navigator: navigator,
             builder: (_) => MfaMethodDialog(
               location: location,
               intention: MfaMethodDialogIntention.connect,
@@ -128,10 +127,8 @@ class TunnelService {
         }
       }
 
-      if (!context.mounted) return;
-
       final presharedKey = await _handleMfaFlow(
-        context: context,
+        navigator: navigator,
         proxyUrl: instance.proxyUrl,
         payload: payload,
         method: mfaMethod,
@@ -147,14 +144,27 @@ class TunnelService {
     await wireguardPlugin.startTunnel(jsonEncode(payload.toJson()));
   }
 
+  /// Helper function to show dialog using captured NavigatorState
+  static Future<T?> _showDialog<T>({
+    required NavigatorState navigator,
+    required Widget Function(BuildContext) builder,
+  }) {
+    return showDialog<T>(
+      context: navigator.context,
+      builder: builder,
+    );
+  }
+
   /// Performs MFA using specified method.
   /// Returns preshared key.
   static Future<String?> _handleMfaFlow({
-    required BuildContext context,
+    required NavigatorState navigator,
     required String proxyUrl,
     required PluginConnectPayload payload,
     required MfaMethod method,
   }) async {
+    // prepare messenger to avoid "context use across async gaps"
+    final messenger = ScaffoldMessenger.of(navigator.context);
     try {
       // get session token
       final startMfaResponse = await _startMfa(
@@ -165,8 +175,8 @@ class TunnelService {
       );
       if (method == MfaMethod.openid) {
         // perform openid-based MFA
-        bool? browserOpened = await showDialog<bool?>(
-          context: context,
+        bool? browserOpened = await _showDialog<bool?>(
+          navigator: navigator,
           builder: (BuildContext context) => OpenIdMfaStartDialog(
             proxyUrl: proxyUrl,
             token: startMfaResponse.token,
@@ -179,8 +189,8 @@ class TunnelService {
         }
 
         final FinishMfaResponse? finishMfaResponse =
-            await showDialog<FinishMfaResponse>(
-              context: context,
+            await _showDialog<FinishMfaResponse>(
+              navigator: navigator,
               builder: (BuildContext context) => OpenidMfaWaitingDialog(
                 token: startMfaResponse.token,
                 proxyUrl: proxyUrl,
@@ -190,16 +200,14 @@ class TunnelService {
       } else {
         // perform non-openid-based MFA
         return await _handleCodeInput(
-          context: context,
+          navigator: navigator,
           token: startMfaResponse.token,
           proxyUrl: proxyUrl,
           method: method,
         );
       }
     } on HttpException catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("Error: ${e.message}")));
+      messenger.showSnackBar(SnackBar(content: Text("Error: ${e.message}")));
       return null;
     } catch (e) {
       talker.error("MFA flow error: $e");
@@ -209,14 +217,14 @@ class TunnelService {
 
   /// Displays code input dialog
   static Future<String?> _handleCodeInput({
-    required BuildContext context,
+    required NavigatorState navigator,
     required String token,
     required String proxyUrl,
     required MfaMethod method,
   }) async {
     try {
-      final presharedKey = await showDialog<String>(
-        context: context,
+      final presharedKey = await _showDialog<String>(
+        navigator: navigator,
         builder: (BuildContext context) {
           return CodeDialog(token: token, url: proxyUrl, method: method);
         },
