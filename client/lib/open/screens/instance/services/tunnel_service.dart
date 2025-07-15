@@ -5,6 +5,8 @@ import 'package:mobile/open/api.dart';
 import 'package:mobile/data/plugin/plugin.dart';
 import 'package:mobile/open/screens/instance/widgets/mfa/mfa_dialog.dart';
 import 'package:mobile/open/screens/instance/widgets/mfa/mfa_method_dialog.dart';
+import 'package:mobile/open/screens/instance/widgets/mfa/openid_mfa_dialog.dart';
+import 'package:mobile/open/screens/instance/widgets/mfa/openid_mfa_waiting_dialog.dart';
 import 'package:mobile/open/screens/instance/widgets/routing_method_dialog.dart';
 import 'package:mobile/open/screens/instance/widgets/mfa/code_dialog.dart';
 import 'dart:convert';
@@ -14,7 +16,6 @@ import '../../../../logging.dart';
 
 /// Handles MFA flows and tunnel connection
 class TunnelService {
-
   /// Calls `/client-mfa/start` endpoint, returns `StartMfaResponse` with session token.
   static Future<StartMfaResponse> _startMfa(
     String url,
@@ -33,9 +34,11 @@ class TunnelService {
     return await proxyApi.startMfa(uri, request);
   }
 
-  static PluginConnectPayload _makePayload(DefguardInstance instance,
-      Location location,
-      RoutingMethod trafficMethod,) {
+  static PluginConnectPayload _makePayload(
+    DefguardInstance instance,
+    Location location,
+    RoutingMethod trafficMethod,
+  ) {
     return PluginConnectPayload(
       publicKey: location.pubKey,
       devicePublicKey: instance.pubKey,
@@ -76,11 +79,10 @@ class TunnelService {
             : RoutingMethodDialogIntention.connect;
         RoutingMethod? userSelection = await showDialog(
           context: context,
-          builder: (_) =>
-              RoutingMethodDialog(
-                location: location,
-                intention: dialogIntention,
-              ),
+          builder: (_) => RoutingMethodDialog(
+            location: location,
+            intention: dialogIntention,
+          ),
         );
         // smth went wrong or user canceled the operation
         if (userSelection == null) {
@@ -102,19 +104,28 @@ class TunnelService {
         return;
       }
       MfaMethod mfaMethod;
-      if (location.mfaMethod == null) {
-        final userSelection = await showDialog<MfaMethod?>(context: context,
-            builder: (_) =>
-                MfaMethodDialog(location: location,
-                  intention: MfaMethodDialogIntention.connect,));
-        if(userSelection == null) {
-          return;
-        }
-        mfaMethod = userSelection;
+      if (instance.useOpenidForMfa) {
+        // instance setup for openid mfa login
+        mfaMethod = MfaMethod.openid;
       } else {
-        mfaMethod = location.mfaMethod!;
+        // non-openid mfa setup, show method choice dialog
+        if (location.mfaMethod == null) {
+          final userSelection = await showDialog<MfaMethod?>(
+            context: context,
+            builder: (_) => MfaMethodDialog(
+              location: location,
+              intention: MfaMethodDialogIntention.connect,
+            ),
+          );
+          if (userSelection == null) {
+            // dialog dismissed
+            return;
+          }
+          mfaMethod = userSelection;
+        } else {
+          mfaMethod = location.mfaMethod!;
+        }
       }
-
       // get session token
       final startMfaResponse = await _startMfa(
         instance.proxyUrl,
@@ -123,13 +134,13 @@ class TunnelService {
         mfaMethod,
       );
 
-      if(!context.mounted) return;
+      if (!context.mounted) return;
 
       final presharedKey = await _handleMfaFlow(
         context: context,
         proxyUrl: instance.proxyUrl,
         payload: payload,
-        mfaMethod: mfaMethod,
+        method: mfaMethod,
         token: startMfaResponse.token,
       );
       if (presharedKey == null) {
@@ -148,18 +159,39 @@ class TunnelService {
     required BuildContext context,
     required String proxyUrl,
     required PluginConnectPayload payload,
-    required MfaMethod mfaMethod,
+    required MfaMethod method,
     required String token,
   }) async {
     try {
+      if (method == MfaMethod.openid) {
+        // perform openid-based MFA
+        bool? browserOpened = await showDialog<bool?>(
+          context: context,
+          builder: (BuildContext context) =>
+              OpenIdMfaStartDialog(proxyUrl: proxyUrl, token: token),
+        );
 
-      // handle specific MFA methods
-      return await _handleCodeInput(
-        context: context,
-        token: token,
-        proxyUrl: proxyUrl,
-        method: mfaMethod,
-      );
+        if (browserOpened == null || !browserOpened) {
+          // dialog dismissed or failed to open the browser
+          return null;
+        }
+
+        final FinishMfaResponse? finishMfaResponse =
+            await showDialog<FinishMfaResponse>(
+              context: context,
+              builder: (BuildContext context) =>
+                  OpenidMfaWaitingDialog(token: token, proxyUrl: proxyUrl),
+            );
+        return finishMfaResponse?.presharedKey;
+      } else {
+        // perform non-openid-based MFA
+        return await _handleCodeInput(
+          context: context,
+          token: token,
+          proxyUrl: proxyUrl,
+          method: method,
+        );
+      }
     } catch (e) {
       talker.error("MFA flow error: $e");
       return null;
