@@ -128,6 +128,20 @@ class $DefguardInstancesTable extends DefguardInstances
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _useOpenidForMfaMeta = const VerificationMeta(
+    'useOpenidForMfa',
+  );
+  @override
+  late final GeneratedColumn<bool> useOpenidForMfa = GeneratedColumn<bool>(
+    'use_openid_for_mfa',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("use_openid_for_mfa" IN (0, 1))',
+    ),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -141,6 +155,7 @@ class $DefguardInstancesTable extends DefguardInstances
     enterpriseEnabled,
     pubKey,
     privateKey,
+    useOpenidForMfa,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -243,6 +258,17 @@ class $DefguardInstancesTable extends DefguardInstances
     } else if (isInserting) {
       context.missing(_privateKeyMeta);
     }
+    if (data.containsKey('use_openid_for_mfa')) {
+      context.handle(
+        _useOpenidForMfaMeta,
+        useOpenidForMfa.isAcceptableOrUnknown(
+          data['use_openid_for_mfa']!,
+          _useOpenidForMfaMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_useOpenidForMfaMeta);
+    }
     return context;
   }
 
@@ -296,6 +322,10 @@ class $DefguardInstancesTable extends DefguardInstances
         DriftSqlType.string,
         data['${effectivePrefix}private_key'],
       )!,
+      useOpenidForMfa: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}use_openid_for_mfa'],
+      )!,
     );
   }
 
@@ -318,6 +348,7 @@ class DefguardInstance extends DataClass
   final bool enterpriseEnabled;
   final String pubKey;
   final String privateKey;
+  final bool useOpenidForMfa;
   const DefguardInstance({
     required this.id,
     required this.name,
@@ -330,6 +361,7 @@ class DefguardInstance extends DataClass
     required this.enterpriseEnabled,
     required this.pubKey,
     required this.privateKey,
+    required this.useOpenidForMfa,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -345,6 +377,7 @@ class DefguardInstance extends DataClass
     map['enterprise_enabled'] = Variable<bool>(enterpriseEnabled);
     map['pub_key'] = Variable<String>(pubKey);
     map['private_key'] = Variable<String>(privateKey);
+    map['use_openid_for_mfa'] = Variable<bool>(useOpenidForMfa);
     return map;
   }
 
@@ -361,6 +394,7 @@ class DefguardInstance extends DataClass
       enterpriseEnabled: Value(enterpriseEnabled),
       pubKey: Value(pubKey),
       privateKey: Value(privateKey),
+      useOpenidForMfa: Value(useOpenidForMfa),
     );
   }
 
@@ -381,6 +415,7 @@ class DefguardInstance extends DataClass
       enterpriseEnabled: serializer.fromJson<bool>(json['enterprise_enabled']),
       pubKey: serializer.fromJson<String>(json['pubKey']),
       privateKey: serializer.fromJson<String>(json['privateKey']),
+      useOpenidForMfa: serializer.fromJson<bool>(json['useOpenidForMfa']),
     );
   }
   @override
@@ -398,6 +433,7 @@ class DefguardInstance extends DataClass
       'enterprise_enabled': serializer.toJson<bool>(enterpriseEnabled),
       'pubKey': serializer.toJson<String>(pubKey),
       'privateKey': serializer.toJson<String>(privateKey),
+      'useOpenidForMfa': serializer.toJson<bool>(useOpenidForMfa),
     };
   }
 
@@ -413,6 +449,7 @@ class DefguardInstance extends DataClass
     bool? enterpriseEnabled,
     String? pubKey,
     String? privateKey,
+    bool? useOpenidForMfa,
   }) => DefguardInstance(
     id: id ?? this.id,
     name: name ?? this.name,
@@ -425,6 +462,7 @@ class DefguardInstance extends DataClass
     enterpriseEnabled: enterpriseEnabled ?? this.enterpriseEnabled,
     pubKey: pubKey ?? this.pubKey,
     privateKey: privateKey ?? this.privateKey,
+    useOpenidForMfa: useOpenidForMfa ?? this.useOpenidForMfa,
   );
   DefguardInstance copyWithCompanion(DefguardInstancesCompanion data) {
     return DefguardInstance(
@@ -445,6 +483,9 @@ class DefguardInstance extends DataClass
       privateKey: data.privateKey.present
           ? data.privateKey.value
           : this.privateKey,
+      useOpenidForMfa: data.useOpenidForMfa.present
+          ? data.useOpenidForMfa.value
+          : this.useOpenidForMfa,
     );
   }
 
@@ -461,7 +502,8 @@ class DefguardInstance extends DataClass
           ..write('disableAllTraffic: $disableAllTraffic, ')
           ..write('enterpriseEnabled: $enterpriseEnabled, ')
           ..write('pubKey: $pubKey, ')
-          ..write('privateKey: $privateKey')
+          ..write('privateKey: $privateKey, ')
+          ..write('useOpenidForMfa: $useOpenidForMfa')
           ..write(')'))
         .toString();
   }
@@ -479,6 +521,7 @@ class DefguardInstance extends DataClass
     enterpriseEnabled,
     pubKey,
     privateKey,
+    useOpenidForMfa,
   );
   @override
   bool operator ==(Object other) =>
@@ -494,7 +537,8 @@ class DefguardInstance extends DataClass
           other.disableAllTraffic == this.disableAllTraffic &&
           other.enterpriseEnabled == this.enterpriseEnabled &&
           other.pubKey == this.pubKey &&
-          other.privateKey == this.privateKey);
+          other.privateKey == this.privateKey &&
+          other.useOpenidForMfa == this.useOpenidForMfa);
 }
 
 class DefguardInstancesCompanion extends UpdateCompanion<DefguardInstance> {
@@ -509,6 +553,7 @@ class DefguardInstancesCompanion extends UpdateCompanion<DefguardInstance> {
   final Value<bool> enterpriseEnabled;
   final Value<String> pubKey;
   final Value<String> privateKey;
+  final Value<bool> useOpenidForMfa;
   const DefguardInstancesCompanion({
     this.id = const Value.absent(),
     this.name = const Value.absent(),
@@ -521,6 +566,7 @@ class DefguardInstancesCompanion extends UpdateCompanion<DefguardInstance> {
     this.enterpriseEnabled = const Value.absent(),
     this.pubKey = const Value.absent(),
     this.privateKey = const Value.absent(),
+    this.useOpenidForMfa = const Value.absent(),
   });
   DefguardInstancesCompanion.insert({
     this.id = const Value.absent(),
@@ -534,6 +580,7 @@ class DefguardInstancesCompanion extends UpdateCompanion<DefguardInstance> {
     required bool enterpriseEnabled,
     required String pubKey,
     required String privateKey,
+    required bool useOpenidForMfa,
   }) : name = Value(name),
        uuid = Value(uuid),
        url = Value(url),
@@ -543,7 +590,8 @@ class DefguardInstancesCompanion extends UpdateCompanion<DefguardInstance> {
        disableAllTraffic = Value(disableAllTraffic),
        enterpriseEnabled = Value(enterpriseEnabled),
        pubKey = Value(pubKey),
-       privateKey = Value(privateKey);
+       privateKey = Value(privateKey),
+       useOpenidForMfa = Value(useOpenidForMfa);
   static Insertable<DefguardInstance> custom({
     Expression<int>? id,
     Expression<String>? name,
@@ -556,6 +604,7 @@ class DefguardInstancesCompanion extends UpdateCompanion<DefguardInstance> {
     Expression<bool>? enterpriseEnabled,
     Expression<String>? pubKey,
     Expression<String>? privateKey,
+    Expression<bool>? useOpenidForMfa,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -569,6 +618,7 @@ class DefguardInstancesCompanion extends UpdateCompanion<DefguardInstance> {
       if (enterpriseEnabled != null) 'enterprise_enabled': enterpriseEnabled,
       if (pubKey != null) 'pub_key': pubKey,
       if (privateKey != null) 'private_key': privateKey,
+      if (useOpenidForMfa != null) 'use_openid_for_mfa': useOpenidForMfa,
     });
   }
 
@@ -584,6 +634,7 @@ class DefguardInstancesCompanion extends UpdateCompanion<DefguardInstance> {
     Value<bool>? enterpriseEnabled,
     Value<String>? pubKey,
     Value<String>? privateKey,
+    Value<bool>? useOpenidForMfa,
   }) {
     return DefguardInstancesCompanion(
       id: id ?? this.id,
@@ -597,6 +648,7 @@ class DefguardInstancesCompanion extends UpdateCompanion<DefguardInstance> {
       enterpriseEnabled: enterpriseEnabled ?? this.enterpriseEnabled,
       pubKey: pubKey ?? this.pubKey,
       privateKey: privateKey ?? this.privateKey,
+      useOpenidForMfa: useOpenidForMfa ?? this.useOpenidForMfa,
     );
   }
 
@@ -636,6 +688,9 @@ class DefguardInstancesCompanion extends UpdateCompanion<DefguardInstance> {
     if (privateKey.present) {
       map['private_key'] = Variable<String>(privateKey.value);
     }
+    if (useOpenidForMfa.present) {
+      map['use_openid_for_mfa'] = Variable<bool>(useOpenidForMfa.value);
+    }
     return map;
   }
 
@@ -652,7 +707,8 @@ class DefguardInstancesCompanion extends UpdateCompanion<DefguardInstance> {
           ..write('disableAllTraffic: $disableAllTraffic, ')
           ..write('enterpriseEnabled: $enterpriseEnabled, ')
           ..write('pubKey: $pubKey, ')
-          ..write('privateKey: $privateKey')
+          ..write('privateKey: $privateKey, ')
+          ..write('useOpenidForMfa: $useOpenidForMfa')
           ..write(')'))
         .toString();
   }
@@ -688,7 +744,7 @@ class $LocationsTable extends Locations
     type: DriftSqlType.int,
     requiredDuringInsert: true,
     defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'REFERENCES defguard_instances (id)',
+      'REFERENCES defguard_instances (id) ON DELETE CASCADE',
     ),
   );
   static const VerificationMeta _networkIdMeta = const VerificationMeta(
@@ -1441,6 +1497,16 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     defguardInstances,
     locations,
   ];
+  @override
+  StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'defguard_instances',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('locations', kind: UpdateKind.delete)],
+    ),
+  ]);
 }
 
 typedef $$DefguardInstancesTableCreateCompanionBuilder =
@@ -1456,6 +1522,7 @@ typedef $$DefguardInstancesTableCreateCompanionBuilder =
       required bool enterpriseEnabled,
       required String pubKey,
       required String privateKey,
+      required bool useOpenidForMfa,
     });
 typedef $$DefguardInstancesTableUpdateCompanionBuilder =
     DefguardInstancesCompanion Function({
@@ -1470,6 +1537,7 @@ typedef $$DefguardInstancesTableUpdateCompanionBuilder =
       Value<bool> enterpriseEnabled,
       Value<String> pubKey,
       Value<String> privateKey,
+      Value<bool> useOpenidForMfa,
     });
 
 final class $$DefguardInstancesTableReferences
@@ -1571,6 +1639,11 @@ class $$DefguardInstancesTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<bool> get useOpenidForMfa => $composableBuilder(
+    column: $table.useOpenidForMfa,
+    builder: (column) => ColumnFilters(column),
+  );
+
   Expression<bool> locationsRefs(
     Expression<bool> Function($$LocationsTableFilterComposer f) f,
   ) {
@@ -1660,6 +1733,11 @@ class $$DefguardInstancesTableOrderingComposer
     column: $table.privateKey,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<bool> get useOpenidForMfa => $composableBuilder(
+    column: $table.useOpenidForMfa,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$DefguardInstancesTableAnnotationComposer
@@ -1707,6 +1785,11 @@ class $$DefguardInstancesTableAnnotationComposer
 
   GeneratedColumn<String> get privateKey => $composableBuilder(
     column: $table.privateKey,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get useOpenidForMfa => $composableBuilder(
+    column: $table.useOpenidForMfa,
     builder: (column) => column,
   );
 
@@ -1780,6 +1863,7 @@ class $$DefguardInstancesTableTableManager
                 Value<bool> enterpriseEnabled = const Value.absent(),
                 Value<String> pubKey = const Value.absent(),
                 Value<String> privateKey = const Value.absent(),
+                Value<bool> useOpenidForMfa = const Value.absent(),
               }) => DefguardInstancesCompanion(
                 id: id,
                 name: name,
@@ -1792,6 +1876,7 @@ class $$DefguardInstancesTableTableManager
                 enterpriseEnabled: enterpriseEnabled,
                 pubKey: pubKey,
                 privateKey: privateKey,
+                useOpenidForMfa: useOpenidForMfa,
               ),
           createCompanionCallback:
               ({
@@ -1806,6 +1891,7 @@ class $$DefguardInstancesTableTableManager
                 required bool enterpriseEnabled,
                 required String pubKey,
                 required String privateKey,
+                required bool useOpenidForMfa,
               }) => DefguardInstancesCompanion.insert(
                 id: id,
                 name: name,
@@ -1818,6 +1904,7 @@ class $$DefguardInstancesTableTableManager
                 enterpriseEnabled: enterpriseEnabled,
                 pubKey: pubKey,
                 privateKey: privateKey,
+                useOpenidForMfa: useOpenidForMfa,
               ),
           withReferenceMapper: (p0) => p0
               .map(

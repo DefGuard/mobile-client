@@ -1,10 +1,10 @@
 import NetworkExtension
 
 #if os(macOS)
-    import FlutterMacOS
-    import Cocoa
+import FlutterMacOS
+import Cocoa
 #elseif os(iOS)
-    import Flutter
+import Flutter
 #endif
 
 
@@ -53,6 +53,7 @@ public class WireguardPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
         getSystemProviderManager { providerManager in
             guard let providerManager = providerManager else {
                 print("No VPN manager found")
+                completion(nil)
                 return
             }
             self.providerManager = providerManager
@@ -149,43 +150,43 @@ public class WireguardPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
         result: @escaping FlutterResult
     ) {
         switch call.method {
-        case "requestPermissions":
-            result(true)
-        case "startTunnel":
-            guard
-                let args = call.arguments as? String,
-                let data = args.data(using: .utf8)
-            else {
-                result(
-                    FlutterError(
-                        code: "INVALID_ARGS",
-                        message: "Invalid or missing tunnel config",
-                        details: nil
+            case "requestPermissions":
+                result(true)
+            case "startTunnel":
+                guard
+                    let args = call.arguments as? String,
+                    let data = args.data(using: .utf8)
+                else {
+                    result(
+                        FlutterError(
+                            code: "INVALID_ARGS",
+                            message: "Invalid or missing tunnel config",
+                            details: nil
+                        )
                     )
-                )
-                return
-            }
+                    return
+                }
 
-            let decoder = JSONDecoder()
-            decoder.keyDecodingStrategy = .convertFromSnakeCase
-            guard let config = try? decoder.decode(TunnelStartData.self, from: data) else {
-                result(
-                    FlutterError(
-                        code: "INVALID_ARGS",
-                        message: "Invalid or missing tunnel config",
-                        details: nil
+                let decoder = JSONDecoder()
+                decoder.keyDecodingStrategy = .convertFromSnakeCase
+                guard let config = try? decoder.decode(TunnelStartData.self, from: data) else {
+                    result(
+                        FlutterError(
+                            code: "INVALID_ARGS",
+                            message: "Invalid or missing tunnel config",
+                            details: nil
+                        )
                     )
-                )
-                return
-            }
-            startTunnel(config: config, result: result)
-        case "closeTunnel":
-            closeTunnel(result: result)
-        default:
-            result(FlutterMethodNotImplemented)
+                    return
+                }
+                startTunnel(config: config, result: result)
+            case "closeTunnel":
+                closeTunnel(result: result)
+            default:
+                result(FlutterMethodNotImplemented)
         }
     }
-    
+
     private func checkStatus(
         completion: @escaping (NEVPNStatus?) -> Void
     ) {
@@ -214,7 +215,7 @@ public class WireguardPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
                 completion(nil)
                 return
             }
-            
+
             completion(providerManager)
         }
     }
@@ -226,7 +227,7 @@ public class WireguardPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
                 print("Failed to get VPN status, returning nil")
                 return
             }
-            
+
             switch vpnStatus {
             case .connected:
                 print("Detected that the VPN has connected, emitting event.")
@@ -250,7 +251,6 @@ public class WireguardPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
                         guard let data = try? encoder.encode(activeTunnelData),
                               let dataString = String(data: data, encoding: .utf8) else {
                             print("Failed to encode active tunnel data")
-                            self.emitEvent(event: WireguardEvent.tunnelDown, data: nil)
                             return
                         }
                         self.activeTunnelData = activeTunnelData
@@ -457,8 +457,8 @@ public class WireguardPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
                                 code: "TIMEOUT_ERROR",
                                 message: "Timeout waiting for tunnel to connect",
                                 details: "Current status: \(status.rawValue)"
-                                )
                             )
+                        )
                         return
                     }
                     self.handleVPNStatusChange()

@@ -60,6 +60,17 @@ final class TunnelConfiguration: Codable {
 
         return networkSettings
     }
+
+    init(fromTunnlStartData startData: TunnelStartData) {
+        self.name = startData.locationName
+
+        let interface = InterfaceConfiguration(privateKey: startData.privateKey)
+        // TODO: implement IpAddrMask from String
+        //interface.addresses = [IpAddrMask(from: startData.address)]
+        self.interface = interface
+        // TODO: peers
+        self.peers = []
+    }
 }
 
 //extension TunnelConfiguration: Equatable {

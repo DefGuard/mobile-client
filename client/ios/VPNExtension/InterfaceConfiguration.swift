@@ -30,4 +30,4 @@ final class InterfaceConfiguration: Codable {
 //            lhs.dns == rhs.dns &&
 //            lhs.dnsSearch == rhs.dnsSearch
 //    }
-//}
+//

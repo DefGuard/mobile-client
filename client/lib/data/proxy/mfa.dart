@@ -35,11 +35,11 @@ class StartMfaResponse {
 @JsonSerializable()
 class FinishMfaRequest {
   final String token;
-  final String code;
+  final String? code;
 
   const FinishMfaRequest({
     required this.token,
-    required this.code,
+    this.code,
   });
 
   factory FinishMfaRequest.fromJson(Map<String, dynamic> json) =>

@@ -13,7 +13,7 @@ struct Endpoint: CustomStringConvertible, Codable {
     init?(from string: String) {
         let trimmedEndpoint = string.trimmingCharacters(in: .whitespaces)
         var endpointHost = trimmedEndpoint
-        
+
         // Extract host, supporting IPv4, IPv6, and domains
         if trimmedEndpoint.hasPrefix("[") { // IPv6 with port, e.g. [fd00::1]:51820
             if let closing = trimmedEndpoint.firstIndex(of: "]") {
@@ -25,18 +25,15 @@ struct Endpoint: CustomStringConvertible, Codable {
                 endpointHost = parts.dropLast().joined(separator: ":")
             }
         }
-        
+
         let endpointPort: Network.NWEndpoint.Port
-        if let portPart = trimmedEndpoint.split(separator: ":").last, let port = Int(portPart) {
-            if let nwPort = NWEndpoint.Port(rawValue: UInt16(port)) {
-                endpointPort = nwPort
-            } else {
-                return nil
-            }
+        if let portPart = trimmedEndpoint.split(separator: ":").last, let port = Int(portPart),
+           let nwPort = NWEndpoint.Port(rawValue: UInt16(port)) {
+            endpointPort = nwPort
         } else {
             return nil
         }
-        
+
         self.host = NWEndpoint.Host(endpointHost)
         self.port = endpointPort
     }
@@ -45,7 +42,7 @@ struct Endpoint: CustomStringConvertible, Codable {
     var description: String {
         "Endpoint(\(host):\(port))"
     }
-    
+
     var hostString: String {
         "\(host)"
     }
