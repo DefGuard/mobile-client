@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/data/db/database.dart';
+import 'package:mobile/data/proxy/mfa.dart';
+import 'package:mobile/open/api.dart';
 import 'package:mobile/data/plugin/plugin.dart';
 import 'package:mobile/open/screens/instance/widgets/mfa/mfa_dialog.dart';
 import 'package:mobile/open/screens/instance/widgets/mfa/mfa_method_dialog.dart';
@@ -12,6 +14,25 @@ import '../../../../logging.dart';
 
 /// Handles MFA flows and tunnel connection
 class TunnelService {
+
+  /// Calls `/client-mfa/start` endpoint, returns `StartMfaResponse` with session token.
+  static Future<StartMfaResponse> _startMfa(
+    String url,
+    String pubkey,
+    int networkId,
+    MfaMethod method,
+  ) async {
+    talker.debug("Starting MFA for networkId: $networkId, method: $method");
+    final request = StartMfaRequest(
+      pubkey: pubkey,
+      locationId: networkId,
+      method: method.value,
+    );
+
+    final uri = Uri.parse(url);
+    return await proxyApi.startMfa(uri, request);
+  }
+
   static PluginConnectPayload _makePayload(DefguardInstance instance,
       Location location,
       RoutingMethod trafficMethod,) {
@@ -93,6 +114,15 @@ class TunnelService {
       } else {
         mfaMethod = location.mfaMethod!;
       }
+
+      // get session token
+      final startMfaResponse = await _startMfa(
+        instance.proxyUrl,
+        payload.devicePublicKey,
+        payload.networkId,
+        mfaMethod,
+      );
+
       if(!context.mounted) return;
 
       final presharedKey = await _handleMfaFlow(
@@ -100,6 +130,7 @@ class TunnelService {
         proxyUrl: instance.proxyUrl,
         payload: payload,
         mfaMethod: mfaMethod,
+        token: startMfaResponse.token,
       );
       if (presharedKey == null) {
         // user dismissed the dialog
@@ -118,31 +149,16 @@ class TunnelService {
     required String proxyUrl,
     required PluginConnectPayload payload,
     required MfaMethod mfaMethod,
+    required String token,
   }) async {
     try {
-      // start MFA flow - show method selection dialog
-      final (method, token) = await showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return MfaStartDialog(
-            url: proxyUrl,
-            publicKey: payload.devicePublicKey,
-            locationId: payload.networkId,
-          );
-        },
-      );
-
-      if (method == null) {
-        talker.warning("User dismissed mfa-start dialog, aborting MFA flow.");
-        return null;
-      }
 
       // handle specific MFA methods
       return await _handleCodeInput(
         context: context,
         token: token,
         proxyUrl: proxyUrl,
-        method: method,
+        method: mfaMethod,
       );
     } catch (e) {
       talker.error("MFA flow error: $e");
