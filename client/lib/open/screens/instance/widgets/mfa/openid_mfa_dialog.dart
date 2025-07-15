@@ -73,38 +73,43 @@ class OpenIdMfaStartDialog extends HookConsumerWidget {
             children: [
               Padding(
                 padding: EdgeInsetsGeometry.all(DgSpacing.s),
-                child: Row(
-                  mainAxisSize: MainAxisSize.max,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    DgButton(
-                      text: _authenticateMsg,
-                      variant: DgButtonVariant.primary,
-                      size: DgButtonSize.standard,
-                      onTap: () async {
-                        final messenger = ScaffoldMessenger.of(context);
-                        final navigator = Navigator.of(context);
-                        final errorSnack = SnackBar(
-                          content: Text("Error: Failed to open the browser."),
-                        );
-                        try {
-                          final launched = await _launchUrl();
-                          if (!launched) {
+                    SizedBox(
+                      width: double.infinity,
+                      child: DgButton(
+                        text: _authenticateMsg,
+                        variant: DgButtonVariant.primary,
+                        size: DgButtonSize.standard,
+                        onTap: () async {
+                          final messenger = ScaffoldMessenger.of(context);
+                          final navigator = Navigator.of(context);
+                          final errorSnack = SnackBar(
+                            content: Text("Error: Failed to open the browser."),
+                          );
+                          try {
+                            final launched = await _launchUrl();
+                            if (!launched) {
+                              messenger.showSnackBar(errorSnack);
+                            }
+                            navigator.pop(launched);
+                          } catch (_) {
                             messenger.showSnackBar(errorSnack);
                           }
-                          navigator.pop(launched);
-                        } catch (_) {
-                          messenger.showSnackBar(errorSnack);
-                        }
-                      },
+                        },
+                      ),
                     ),
-                    DgButton(
-                      text: "Cancel",
-                      size: DgButtonSize.standard,
-                      minWidth: 70,
-                      onTap: () {
-                        Navigator.of(context).pop();
-                      },
+                    SizedBox(height: DgSpacing.s),
+                    SizedBox(
+                      width: double.infinity,
+                      child: DgButton(
+                        text: "Cancel",
+                        size: DgButtonSize.standard,
+                        onTap: () {
+                          Navigator.of(context).pop();
+                        },
+                      ),
                     ),
                   ],
                 ),
