@@ -93,7 +93,6 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
         
         let networkSettings = createNetworkSettings(
             tunnelConfig: tunnelConfig,
-            endpointHost: endpoint.hostString,
             ipv4Addresses: ipv4Addresses,
             ipv6Addresses: ipv6Addresses
         )
@@ -187,12 +186,12 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
     
     private func createNetworkSettings(
         tunnelConfig: TunnelStartData,
-        endpointHost: String,
         ipv4Addresses: [String],
         ipv6Addresses: [String]
     ) -> NEPacketTunnelNetworkSettings {
-        let networkSettings = NEPacketTunnelNetworkSettings(tunnelRemoteAddress: endpointHost)
-        
+//        The endpoint is unused here
+        let networkSettings = NEPacketTunnelNetworkSettings(tunnelRemoteAddress: "127.0.0.1")
+
         let ipv4Settings = NEIPv4Settings(addresses: ipv4Addresses, subnetMasks: ipv4Addresses.map { _ in "255.255.255.255" })
         let ipv6Settings = NEIPv6Settings(addresses: ipv6Addresses, networkPrefixLengths: ipv6Addresses.map { _ in 128 })
         
@@ -232,11 +231,27 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
         }
         
         // DNS settings
-        let dnsServers = tunnelConfig.dns?.split(separator: ",").map { String($0.trimmingCharacters(in: .whitespaces)) } ?? []
-        self.logger.log("Parsed the following DNS servers: \(dnsServers, privacy: .public)")
-        let dnsSettings = NEDNSSettings(servers: dnsServers)
-        networkSettings.dnsSettings = dnsSettings
-        
+        let dnsRecords = tunnelConfig.dns?.split(separator: ",").map { String($0.trimmingCharacters(in: .whitespaces)) } ?? []
+        self.logger.log("Parsed the following DNS servers: \(dnsRecords, privacy: .public)")
+        if !dnsRecords.isEmpty {
+            var searchDomains: [String] = []
+            var dnsServers: [String] = []
+            for server in dnsRecords {
+                if IPv4Address(server) != nil || IPv6Address(server) != nil {
+                    self.logger.log("Valid DNS server: \(server, privacy: .public)")
+                    dnsServers.append(server)
+                } else {
+                    self.logger.log("Invalid DNS server format: \(server, privacy: .public), assuming it's a domain name")
+                    searchDomains.append(server)
+                }
+            }
+
+            self.logger.log("Setting DNS servers: \(dnsServers, privacy: .public)")
+            let dnsSettings = NEDNSSettings(servers: dnsServers)
+            dnsSettings.searchDomains = searchDomains
+            networkSettings.dnsSettings = dnsSettings
+        }
+
         return networkSettings
     }
     
