@@ -1,11 +1,12 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mobile/data/proxy/mfa.dart';
 import 'package:mobile/open/api.dart';
 import 'package:mobile/open/widgets/buttons/dg_button.dart';
-import 'package:mobile/open/widgets/dg_message_box.dart';
+import 'package:mobile/open/widgets/dg_dialog.dart';
 import 'package:mobile/theme/color.dart';
 import 'package:mobile/theme/spacing.dart';
 import 'package:mobile/theme/text.dart';
@@ -82,42 +83,57 @@ class OpenidMfaWaitingDialog extends HookConsumerWidget {
       return null;
     }, []);
 
-    return Dialog(
-      backgroundColor: DgColor.defaultModal,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      child: Padding(
-        padding: EdgeInsets.symmetric(vertical: 25, horizontal: DgSpacing.s),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Center(child: Text(_title, style: DgText.sideBar)),
-            SizedBox(height: 8),
-            Column(
-              spacing: DgSpacing.s,
-              children: [
-                DgMessageBox(
-                  variant: DgMessageBoxVariant.infoOutlined,
-                  text: _mfaMsg,
-                ),
-                Row(
-                  mainAxisSize: MainAxisSize.max,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return DgDialog(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Center(
+            child: Text(
+              _title,
+              style: DgText.body1,
+              textAlign: TextAlign.center,
+            ),
+          ),
+          SizedBox(height: 32),
+          Center(
+            child: SvgPicture.asset(
+              'assets/icons/openid-wait.svg',
+              width: 128,
+              height: 128,
+            ),
+          ),
+          SizedBox(height: 32),
+          Text(
+            _mfaMsg,
+            style: DgText.modal1.copyWith(color: DgColor.textBodySecondary),
+            textAlign: TextAlign.center,
+          ),
+          SizedBox(height: 32),
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            spacing: DgSpacing.s,
+            children: [
+              Padding(
+                padding: EdgeInsetsGeometry.all(DgSpacing.s),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    DgButton(
-                      text: _cancelMsg,
-                      variant: DgButtonVariant.secondary,
-                      size: DgButtonSize.standard,
-                      onTap: () {
-                        // Cancel the dialog
-                        navigator.pop(null);
-                      },
+                    SizedBox(
+                      width: double.infinity,
+                      child: DgButton(
+                        text: _cancelMsg,
+                        size: DgButtonSize.standard,
+                        onTap: () {
+                          Navigator.of(context).pop();
+                        },
+                      ),
                     ),
                   ],
                 ),
-              ],
-            ),
-          ],
-        ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
