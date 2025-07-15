@@ -36,7 +36,7 @@ class OpenidMfaWaitingDialog extends HookConsumerWidget {
     while (true) {
       // Check if timeout has been reached
       if (DateTime.now().difference(startTime) >= timeoutDuration) {
-        talker.debug("OpenID MFA polling timed out after 2 minutes");
+        talker.warning("OpenID MFA polling timed out after 2 minutes");
         return null;
       }
       
