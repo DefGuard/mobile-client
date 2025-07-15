@@ -14,7 +14,9 @@ enum MfaMethod {
   @j.JsonValue(0)
   totp(0),
   @j.JsonValue(1)
-  email(1);
+  email(1),
+  @j.JsonValue(2)
+  openid(2);
 
   final int value;
 

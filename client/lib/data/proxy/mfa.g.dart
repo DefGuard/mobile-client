@@ -46,7 +46,7 @@ FinishMfaRequest _$FinishMfaRequestFromJson(Map<String, dynamic> json) =>
     $checkedCreate('FinishMfaRequest', json, ($checkedConvert) {
       final val = FinishMfaRequest(
         token: $checkedConvert('token', (v) => v as String),
-        code: $checkedConvert('code', (v) => v as String),
+        code: $checkedConvert('code', (v) => v as String?),
       );
       return val;
     });
