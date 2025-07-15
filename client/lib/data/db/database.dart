@@ -111,3 +111,11 @@ AppDatabase database(Ref ref) {
   ref.onDispose(() => db.close());
   return db;
 }
+
+extension DefguardInstanceLogName on DefguardInstance {
+  String get logName => '$name ($id)';
+}
+
+extension LocationLogName on Location {
+  String get logName => '$name ($id)';
+}
