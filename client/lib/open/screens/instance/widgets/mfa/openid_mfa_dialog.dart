@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mobile/open/widgets/buttons/dg_button.dart';
 import 'package:mobile/open/widgets/dg_dialog.dart';
@@ -45,16 +46,25 @@ class OpenIdMfaStartDialog extends HookConsumerWidget {
               textAlign: TextAlign.center,
             ),
           ),
-          SizedBox(height: 8),
+          SizedBox(height: 32),
+          Center(
+            child: SvgPicture.asset(
+              'assets/icons/openid-open.svg',
+              width: 128,
+              height: 128,
+            ),
+          ),
+          SizedBox(height: 32),
           Text(
             _mfaMsg1,
-            style: DgText.modal1.copyWith(color: DgColor.textBodyPrimary),
+            style: DgText.modal1.copyWith(color: DgColor.textBodySecondary),
           ),
+          SizedBox(height: 16),
           Text(
             _mfaMsg2,
-            style: DgText.modal1.copyWith(color: DgColor.textBodyPrimary),
+            style: DgText.modal1.copyWith(color: DgColor.textBodySecondary),
           ),
-          SizedBox(height: 8),
+          SizedBox(height: 32),
           Column(
             mainAxisSize: MainAxisSize.min,
             spacing: DgSpacing.s,
