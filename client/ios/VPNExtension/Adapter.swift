@@ -47,9 +47,9 @@ final class Adapter /*: Sendable*/ {
         params.allowLocalEndpointReuse = true
         connection = NWConnection.init(to: endpoint.asNWEndpoint(), using: params)
 
-//        connection?.stateUpdateHandler = { state in
-//            print("UDP connection state: \(state)")
-//        }
+        //        connection?.stateUpdateHandler = { state in
+        //            print("UDP connection state: \(state)")
+        //        }
         os_log("Receiving UDP from endpoint...")
         connection?.start(queue: .main)
         // Send initial handshake packet
@@ -61,7 +61,7 @@ final class Adapter /*: Sendable*/ {
         os_log("Sniffing packets...")
         readPackets()
     }
-    
+
     public func stop() {
         print("Stopping Adapter...")
         connection?.cancel()
