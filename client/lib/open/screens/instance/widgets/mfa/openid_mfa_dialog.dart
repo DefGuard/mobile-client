@@ -42,7 +42,7 @@ class OpenIdMfaStartDialog extends HookConsumerWidget {
           Center(
             child: Text(
               _title,
-              style: DgText.sideBar,
+              style: DgText.body1,
               textAlign: TextAlign.center,
             ),
           ),
@@ -58,11 +58,13 @@ class OpenIdMfaStartDialog extends HookConsumerWidget {
           Text(
             _mfaMsg1,
             style: DgText.modal1.copyWith(color: DgColor.textBodySecondary),
+            textAlign: TextAlign.center,
           ),
           SizedBox(height: 16),
           Text(
             _mfaMsg2,
             style: DgText.modal1.copyWith(color: DgColor.textBodySecondary),
+            textAlign: TextAlign.center,
           ),
           SizedBox(height: 32),
           Column(
