@@ -247,6 +247,7 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
             }
 
             self.logger.log("Setting DNS servers: \(dnsServers, privacy: .public)")
+            self.logger.log("Setting search domains: \(searchDomains, privacy: .public)")
             let dnsSettings = NEDNSSettings(servers: dnsServers)
             dnsSettings.searchDomains = searchDomains
             networkSettings.dnsSettings = dnsSettings
