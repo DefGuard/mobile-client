@@ -236,13 +236,13 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
         if !dnsRecords.isEmpty {
             var searchDomains: [String] = []
             var dnsServers: [String] = []
-            for server in dnsRecords {
-                if IPv4Address(server) != nil || IPv6Address(server) != nil {
-                    self.logger.log("Valid DNS server: \(server, privacy: .public)")
-                    dnsServers.append(server)
+            for record in dnsRecords {
+                if IPv4Address(record) != nil || IPv6Address(record) != nil {
+                    self.logger.log("Valid DNS server: \(record, privacy: .public)")
+                    dnsServers.append(record)
                 } else {
-                    self.logger.log("Invalid DNS server format: \(server, privacy: .public), assuming it's a domain name")
-                    searchDomains.append(server)
+                    self.logger.log("Invalid DNS server format: \(record, privacy: .public), assuming it's a domain name")
+                    searchDomains.append(record)
                 }
             }
 
