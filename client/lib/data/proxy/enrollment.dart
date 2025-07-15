@@ -1,5 +1,4 @@
 import 'package:drift/drift.dart' as d;
-import 'package:flutter/cupertino.dart';
 import 'package:json_annotation/json_annotation.dart';
 
 import '../db/database.dart';
