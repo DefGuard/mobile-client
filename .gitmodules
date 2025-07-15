@@ -1,0 +1,3 @@
+[submodule "client/ios/boringtun"]
+	path = client/ios/boringtun
+	url = ../boringtun.git

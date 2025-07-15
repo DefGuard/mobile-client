@@ -249,6 +249,7 @@ class InstanceInfo {
   final String username;
   final bool enterpriseEnabled;
   final bool disableAllTraffic;
+  final bool useOpenidForMfa;
 
   const InstanceInfo({
     required this.id,
@@ -258,6 +259,7 @@ class InstanceInfo {
     required this.username,
     required this.enterpriseEnabled,
     required this.disableAllTraffic,
+    required this.useOpenidForMfa,
   });
 
   factory InstanceInfo.fromJson(Map<String, dynamic> json) =>

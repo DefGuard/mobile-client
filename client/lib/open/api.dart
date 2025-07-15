@@ -139,22 +139,8 @@ class _ProxyApi {
     final endpoint = url.replace(
       pathSegments: [...url.pathSegments, ...mfaPathSegments, 'finish'],
     );
-
-    try {
-      final response = await _dio.postUri(endpoint, data: data.toJson());
-      return FinishMfaResponse.fromJson(response.data);
-    } on DioException catch (e) {
-      if (e.response != null) {
-        throw HttpException(
-          "Failed to finish MFA. Status: ${e.response?.statusCode} Body: ${e.response?.data}",
-        );
-      }
-      rethrow;
-    } catch (e) {
-      throw FormatException(
-        "Invalid JSON sent by finish MFA endpoint! Error: $e",
-      );
-    }
+    final response = await _dio.postUri(endpoint, data: data.toJson());
+    return FinishMfaResponse.fromJson(response.data);
   }
 }
 
