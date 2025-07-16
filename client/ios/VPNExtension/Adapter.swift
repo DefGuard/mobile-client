@@ -10,6 +10,8 @@ final class Adapter /*: Sendable*/ {
     private var tunnel: Tunnel?
     /// Server connection
     private var connection: NWConnection?
+    /// Keep alive timer
+    private var keepAliveTimer: Timer?
 
     /// Designated initializer.
     /// - Parameter packetTunnelProvider: an instance of `NEPacketTunnelProvider`. Internally stored
@@ -24,9 +26,10 @@ final class Adapter /*: Sendable*/ {
     //    }
 
     public func start(tunnelConfiguration: TunnelConfiguration) throws {
-        // TODO: kill exising tunnel
-        if let tunnel = tunnel {
+        if let _ = tunnel {
             os_log("Cleaning exiting Tunnel...")
+            self.tunnel = nil
+            self.connection = nil
         }
 
         os_log("Initalizing Tunnel...")
@@ -47,9 +50,9 @@ final class Adapter /*: Sendable*/ {
         params.allowLocalEndpointReuse = true
         connection = NWConnection.init(to: endpoint.asNWEndpoint(), using: params)
 
-        //        connection?.stateUpdateHandler = { state in
-        //            print("UDP connection state: \(state)")
-        //        }
+        //connection?.stateUpdateHandler = { state in
+        //    print("UDP connection state: \(state)")
+        //}
         os_log("Receiving UDP from endpoint...")
         connection?.start(queue: .main)
         // Send initial handshake packet
@@ -57,6 +60,16 @@ final class Adapter /*: Sendable*/ {
             handleTunnelResult(tunnel.forceHandshake())
         }
         receive()
+
+        // Use Timer to send keep-alive packets.
+        keepAliveTimer?.invalidate()
+        os_log("Creating keep-alive timer...")
+        let timer = Timer(timeInterval: 0.25, repeats: true) { timer in
+            guard let tunnel = self.tunnel else { return }
+            self.handleTunnelResult(tunnel.tick())
+        }
+        keepAliveTimer = timer
+        RunLoop.main.add(timer, forMode: .common)
 
         os_log("Sniffing packets...")
         readPackets()
