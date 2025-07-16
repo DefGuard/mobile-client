@@ -5,6 +5,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mobile/data/proxy/mfa.dart';
 import 'package:mobile/open/api.dart';
 import 'package:mobile/open/widgets/buttons/dg_button.dart';
+import 'package:mobile/open/widgets/dg_single_child_scroll_view.dart';
 import 'package:mobile/open/widgets/dg_text_form_field.dart';
 import 'package:mobile/open/widgets/nav.dart';
 import 'package:mobile/theme/color.dart';
@@ -43,38 +44,27 @@ class MfaCodeScreen extends HookConsumerWidget {
     return Scaffold(
       backgroundColor: DgColor.frameBg,
       appBar: DgAppBar(title: _title),
-      body: SafeArea(
-        child: Padding(
-          padding: EdgeInsets.all(DgSpacing.l),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Expanded(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Center(
-                      child: Text(
-                        _title,
-                        style: DgText.body1,
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                    SizedBox(height: 32),
-                    Text(
-                      _msg[screenData.method] ?? "",
-                      style: DgText.modal1.copyWith(
-                        color: DgColor.textBodySecondary,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    SizedBox(height: DgSpacing.l),
-                    _CodeForm(screenData: screenData),
-                  ],
-                ),
+      drawer: DgDrawer(),
+      body: DgSingleChildScrollView(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Center(
+              child: Text(
+                _title,
+                style: DgText.body1,
+                textAlign: TextAlign.center,
               ),
-            ],
-          ),
+            ),
+            SizedBox(height: 32),
+            Text(
+              _msg[screenData.method] ?? "",
+              style: DgText.modal1.copyWith(color: DgColor.textBodySecondary),
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: DgSpacing.l),
+            _CodeForm(screenData: screenData),
+          ],
         ),
       ),
     );

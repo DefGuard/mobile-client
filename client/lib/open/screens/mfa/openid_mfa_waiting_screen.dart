@@ -93,6 +93,7 @@ class OpenIdMfaWaitingScreen extends HookConsumerWidget {
     return Scaffold(
       backgroundColor: DgColor.frameBg,
       appBar: DgAppBar(title: _title),
+      drawer: DgDrawer(),
       body: SafeArea(
         child: Padding(
           padding: EdgeInsets.all(DgSpacing.l),
