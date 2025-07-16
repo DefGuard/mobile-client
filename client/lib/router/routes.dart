@@ -8,9 +8,9 @@ import 'package:mobile/open/screens/add_instance/screens/register_from_qr_screen
 import 'package:mobile/open/screens/add_instance/screens/scan_qr_screen.dart';
 import 'package:mobile/open/screens/home/home_screen.dart';
 import 'package:mobile/open/screens/instance/instance_screen.dart';
-import 'package:mobile/open/screens/instance/screens/mfa/mfa_code_screen.dart';
-import 'package:mobile/open/screens/instance/screens/mfa/openid_mfa_screen.dart';
-import 'package:mobile/open/screens/instance/screens/mfa/openid_mfa_waiting_screen.dart';
+import 'package:mobile/open/screens/mfa/mfa_code_screen.dart';
+import 'package:mobile/open/screens/mfa/openid_mfa_screen.dart';
+import 'package:mobile/open/screens/mfa/openid_mfa_waiting_screen.dart';
 import 'package:talker_flutter/talker_flutter.dart';
 
 import '../logging.dart';
@@ -122,7 +122,8 @@ class OpenIdMfaScreenRoute extends GoRouteData with _$OpenIdMfaScreenRoute {
 
 @TypedGoRoute<OpenIdMfaWaitingScreenRoute>(path: "/mfa/openid/waiting")
 @immutable
-class OpenIdMfaWaitingScreenRoute extends GoRouteData with _$OpenIdMfaWaitingScreenRoute {
+class OpenIdMfaWaitingScreenRoute extends GoRouteData
+    with _$OpenIdMfaWaitingScreenRoute {
   OpenIdMfaWaitingScreenRoute(this.$extra);
 
   final OpenIdMfaWaitingScreenData $extra;
@@ -145,4 +146,3 @@ class MfaCodeScreenRoute extends GoRouteData with _$MfaCodeScreenRoute {
     return MfaCodeScreen(screenData: $extra);
   }
 }
-

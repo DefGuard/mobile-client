@@ -5,9 +5,9 @@ import 'package:mobile/data/db/database.dart';
 import 'package:mobile/data/proxy/mfa.dart';
 import 'package:mobile/open/api.dart';
 import 'package:mobile/data/plugin/plugin.dart';
-import 'package:mobile/open/screens/instance/screens/mfa/mfa_code_screen.dart';
-import 'package:mobile/open/screens/instance/screens/mfa/openid_mfa_screen.dart';
-import 'package:mobile/open/screens/instance/widgets/mfa/mfa_method_dialog.dart';
+import 'package:mobile/open/screens/mfa/mfa_code_screen.dart';
+import 'package:mobile/open/screens/mfa/openid_mfa_screen.dart';
+import 'package:mobile/open/screens/instance/widgets/mfa_method_dialog.dart';
 import 'package:mobile/open/screens/instance/widgets/routing_method_dialog.dart';
 import 'dart:convert';
 
