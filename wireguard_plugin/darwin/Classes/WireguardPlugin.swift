@@ -7,6 +7,9 @@ import NetworkExtension
     import Flutter
 #endif
 
+// The timeout for waiting for the tunnel status to change (e.g. when connecting or disconnecting).
+let tunnelStatusTimeout: TimeInterval = 10.0
+
 public class WireguardPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
     private var eventSink: FlutterEventSink?
     private var activeTunnelData: ActiveTunnelData?
@@ -168,29 +171,27 @@ public class WireguardPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
                 let data = args.data(using: .utf8)
             else {
                 result(
-                    FlutterError(
-                        code: "INVALID_ARGS",
-                        message: "Invalid or missing tunnel config",
-                        details: nil
-                    )
+                    VPNError.invalidArguments(
+                        "Invalid or missing tunnel config: \(call.arguments ?? "nil")"
+                    ).flutterError
                 )
                 return
             }
 
             let decoder = JSONDecoder()
             decoder.keyDecodingStrategy = .convertFromSnakeCase
-            guard
-                let config = try? decoder.decode(
+            let config: TunnelStartData
+            do {
+                config = try decoder.decode(
                     TunnelStartData.self,
                     from: data
                 )
-            else {
+            } catch {
+                print("Failed to decode tunnel config: \(error.localizedDescription)")
                 result(
-                    FlutterError(
-                        code: "INVALID_ARGS",
-                        message: "Invalid or missing tunnel config",
-                        details: nil
-                    )
+                    VPNError.configurationError(
+                        error
+                    ).flutterError
                 )
                 return
             }
@@ -320,13 +321,13 @@ public class WireguardPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
             let tunnelProtocol = NETunnelProviderProtocol()
             tunnelProtocol.providerBundleIdentifier = "\(appId).VPNExtension"
             tunnelProtocol.serverAddress = config.endpoint
-            guard let configDict = try? config.toDictionary() else {
+            let configDict: [String: Any]
+            do {
+                configDict = try config.toDictionary()
+            } catch {
+                print("Failed to convert config to dictionary: \(error.localizedDescription)")
                 result(
-                    FlutterError(
-                        code: "CONFIG_ERROR",
-                        message: "Failed to convert config to dictionary",
-                        details: nil
-                    )
+                    VPNError.configurationError(error).flutterError
                 )
                 return
             }
@@ -348,12 +349,9 @@ public class WireguardPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
                     if let status = status {
                         print("Timeout waiting for tunnel to disconnect")
                         result(
-                            FlutterError(
-                                code: "TIMEOUT_ERROR",
-                                message:
-                                    "Timeout waiting for tunnel to disconnect",
-                                details: "Current status: \(status.rawValue)"
-                            )
+                            VPNError.timeoutError(
+                                "The tunnel disconnection has failed to complete in a specified amount of time (\(tunnelStatusTimeout) seconds). Please check your configuration and try again."
+                            ).flutterError
                         )
                         return
                     }
@@ -382,7 +380,6 @@ public class WireguardPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
         completion: @escaping (NEVPNStatus?) -> Void
     ) {
         let checkInterval = 0.2
-        let timeoutInterval = 10.0
         var elapsedTime = 0.0
         func check() {
             print("Checking VPN status: \(connection.status.rawValue)")
@@ -393,7 +390,7 @@ public class WireguardPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
                 completion(nil)
             } else {
                 elapsedTime += checkInterval
-                if elapsedTime >= timeoutInterval {
+                if elapsedTime >= tunnelStatusTimeout {
                     completion(connection.status)
                 } else {
                     DispatchQueue.main.asyncAfter(
@@ -416,11 +413,9 @@ public class WireguardPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
             if let saveError = saveError {
                 print("Failed to save preferences: \(saveError)")
                 result(
-                    FlutterError(
-                        code: "SAVE_ERROR",
-                        message: "Failed to save VPN preferences",
-                        details: saveError.localizedDescription
-                    )
+                    VPNError.saveError(
+                        saveError
+                    ).flutterError
                 )
                 return
             }
@@ -435,11 +430,9 @@ public class WireguardPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
                 } else {
                     print("Failed to load provider manager")
                     result(
-                        FlutterError(
-                            code: "SAVE_ERROR",
-                            message: "Failed to load VPN provider manager",
-                            details: "No provider manager found"
-                        )
+                        VPNError.noManager(
+                            "Failed to load VPN provider manager after saving preferences."
+                        ).flutterError
                     )
                     return
                 }
@@ -452,12 +445,11 @@ public class WireguardPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
         guard let providerManager = self.providerManager else {
             print("No VPN manager found to stop")
             result(
-                FlutterError(
-                    code: "NO_MANAGER",
-                    message: "No VPN manager found",
-                    details: nil
-                )
+                VPNError.noManager(
+                    "No VPN manager found to stop the tunnel. The tunnel may be already stopped."
+                ).flutterError
             )
+            self.emitEvent(event: WireguardEvent.tunnelDown, data: nil)
             return
         }
         let connection = providerManager.connection
@@ -473,11 +465,9 @@ public class WireguardPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
                         "Timeout waiting for tunnel to disconnect: \(status.rawValue)"
                     )
                     result(
-                        FlutterError(
-                            code: "TIMEOUT_ERROR",
-                            message: "Timeout waiting for tunnel to disconnect",
-                            details: "Current status: \(status.rawValue)"
-                        )
+                        VPNError.timeoutError(
+                            "The tunnel disconnection has failed to complete in a specified amount of time (\(tunnelStatusTimeout) seconds). Please check your configuration and try again."
+                        ).flutterError
                     )
                     return
                 }
@@ -519,11 +509,9 @@ public class WireguardPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
                 if let status = status {
                     print("Timeout waiting for tunnel to connect.")
                     result(
-                        FlutterError(
-                            code: "TIMEOUT_ERROR",
-                            message: "Timeout waiting for tunnel to connect",
-                            details: "Current status: \(status.rawValue)"
-                        )
+                        VPNError.timeoutError(
+                            "The tunnel connection has failed to be established in a specified amount of time. Please check your configuration and try again."
+                        ).flutterError
                     )
                     return
                 }
@@ -534,11 +522,9 @@ public class WireguardPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
         } catch {
             print("Failed to start VPN: \(error)")
             result(
-                FlutterError(
-                    code: "START_ERROR",
-                    message: "Failed to start VPN tunnel",
-                    details: error.localizedDescription
-                )
+                VPNError.startError(
+                    error,
+                ).flutterError
             )
         }
     }
