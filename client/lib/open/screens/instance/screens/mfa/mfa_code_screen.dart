@@ -125,7 +125,7 @@ class _CodeForm extends HookConsumerWidget {
           DgTextFormField(
             controller: codeController,
             required: true,
-            hintText: "Code",
+            hintText: "Authentication Code",
             keyboardType: TextInputType.number,
             validator: (value) => _validateCode(value, codeInvalid.value),
           ),

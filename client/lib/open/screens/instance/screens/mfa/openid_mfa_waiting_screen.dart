@@ -30,16 +30,16 @@ class OpenIdMfaWaitingScreen extends HookConsumerWidget {
   Future<FinishMfaResponse?> _pollOpenidMfa() async {
     final request = FinishMfaRequest(token: token);
     final uri = Uri.parse(proxyUrl);
-    
+
     final startTime = DateTime.now();
-    
+
     while (true) {
       // Check if timeout has been reached
       if (DateTime.now().difference(startTime) >= timeoutDuration) {
         talker.warning("OpenID MFA polling timed out after 2 minutes");
         return null;
       }
-      
+
       try {
         final response = await proxyApi.finishMfa(uri, request);
         return response;
@@ -66,7 +66,9 @@ class OpenIdMfaWaitingScreen extends HookConsumerWidget {
             if (finishMfaResponse == null) {
               // Timeout occurred
               messenger.showSnackBar(
-                SnackBar(content: Text("Authentication timed out. Please try again.")),
+                SnackBar(
+                  content: Text("Authentication timed out. Please try again."),
+                ),
               );
               navigator.pop();
             } else {
@@ -76,9 +78,7 @@ class OpenIdMfaWaitingScreen extends HookConsumerWidget {
           })
           .catchError((error) {
             talker.error("OpenID MFA polling error: $error");
-            messenger.showSnackBar(
-              SnackBar(content: Text("Error: $error")),
-            );
+            messenger.showSnackBar(SnackBar(content: Text("Error: $error")));
             navigator.pop();
           });
       return null;
@@ -112,13 +112,13 @@ class OpenIdMfaWaitingScreen extends HookConsumerWidget {
                       ),
                     ),
                     SizedBox(height: 32),
-                    Center(
-                      child: DgIconOpenidWait(size: 128),
-                    ),
+                    Center(child: DgIconOpenidWait(size: 128)),
                     SizedBox(height: 32),
                     Text(
                       _mfaMsg,
-                      style: DgText.modal1.copyWith(color: DgColor.textBodySecondary),
+                      style: DgText.modal1.copyWith(
+                        color: DgColor.textBodySecondary,
+                      ),
                       textAlign: TextAlign.center,
                     ),
                   ],
@@ -146,3 +146,4 @@ class OpenIdMfaWaitingScreen extends HookConsumerWidget {
     );
   }
 }
+

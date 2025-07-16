@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:mobile/open/screens/instance/screens/mfa/openid_mfa_waiting_screen.dart';
 import 'package:mobile/open/widgets/buttons/dg_button.dart';
 import 'package:mobile/open/widgets/icons/openid_open.dart';
-import 'package:mobile/router/routes.dart';
 import 'package:mobile/theme/color.dart';
 import 'package:mobile/theme/spacing.dart';
 import 'package:mobile/theme/text.dart';
@@ -62,19 +62,21 @@ class OpenIdMfaScreen extends HookConsumerWidget {
                       ),
                     ),
                     SizedBox(height: 32),
-                    Center(
-                      child: DgIconOpenidOpen(size: 128),
-                    ),
+                    Center(child: DgIconOpenidOpen(size: 128)),
                     SizedBox(height: 32),
                     Text(
                       _mfaMsg1,
-                      style: DgText.modal1.copyWith(color: DgColor.textBodySecondary),
+                      style: DgText.modal1.copyWith(
+                        color: DgColor.textBodySecondary,
+                      ),
                       textAlign: TextAlign.center,
                     ),
                     SizedBox(height: 16),
                     Text(
                       _mfaMsg2,
-                      style: DgText.modal1.copyWith(color: DgColor.textBodySecondary),
+                      style: DgText.modal1.copyWith(
+                        color: DgColor.textBodySecondary,
+                      ),
                       textAlign: TextAlign.center,
                     ),
                   ],
@@ -90,6 +92,7 @@ class OpenIdMfaScreen extends HookConsumerWidget {
                       variant: DgButtonVariant.primary,
                       size: DgButtonSize.standard,
                       onTap: () async {
+                        final navigator = Navigator.of(context);
                         final messenger = ScaffoldMessenger.of(context);
                         final errorSnack = SnackBar(
                           content: Text("Error: Failed to open the browser."),
@@ -99,15 +102,18 @@ class OpenIdMfaScreen extends HookConsumerWidget {
                           if (!launched) {
                             messenger.showSnackBar(errorSnack);
                           } else {
-                            // Navigate to waiting screen
-                            if (context.mounted) {
-                              OpenIdMfaWaitingScreenRoute(
-                                OpenIdMfaWaitingScreenData(
+                            // Navigate to waiting screen and await result
+                            final result = await navigator.push<String?>(
+                              MaterialPageRoute(
+                                builder: (context) => OpenIdMfaWaitingScreen(
                                   proxyUrl: proxyUrl,
                                   token: token,
                                 ),
-                              ).pushReplacement(context);
-                            }
+                              ),
+                            );
+
+                            // Return the result to the tunnel service
+                            navigator.pop(result);
                           }
                         } catch (_) {
                           messenger.showSnackBar(errorSnack);

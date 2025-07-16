@@ -5,9 +5,10 @@ import 'package:mobile/data/db/database.dart';
 import 'package:mobile/data/proxy/mfa.dart';
 import 'package:mobile/open/api.dart';
 import 'package:mobile/data/plugin/plugin.dart';
+import 'package:mobile/open/screens/instance/screens/mfa/mfa_code_screen.dart';
+import 'package:mobile/open/screens/instance/screens/mfa/openid_mfa_screen.dart';
 import 'package:mobile/open/screens/instance/widgets/mfa/mfa_method_dialog.dart';
 import 'package:mobile/open/screens/instance/widgets/routing_method_dialog.dart';
-import 'package:mobile/router/routes.dart';
 import 'dart:convert';
 
 import '../../../../data/db/enums.dart';
@@ -157,14 +158,15 @@ class TunnelService {
     required String proxyUrl,
     required MfaMethod method,
   }) async {
-    final result = await OpenIdMfaScreenRoute(
-      OpenIdMfaScreenData(
-        proxyUrl: proxyUrl,
-        token: token,
+    final presharedKey = await Navigator.of(navigator.context).push<String?>(
+      MaterialPageRoute(
+        builder: (context) => OpenIdMfaScreen(proxyUrl: proxyUrl, token: token),
       ),
-    ).push<String?>(navigator.context);
-    
-    return result;
+    );
+    if (presharedKey != null) {
+      talker.info("Code authentication successful");
+    }
+    return presharedKey;
   }
 
   /// Handles non-openid MFA flows (totp, email)
@@ -175,18 +177,15 @@ class TunnelService {
     required MfaMethod method,
   }) async {
     try {
-      final presharedKey = await MfaCodeScreenRoute(
-        MfaCodeScreenData(
-          token: token,
-          url: proxyUrl,
-          method: method,
+      final presharedKey = await Navigator.of(navigator.context).push<String?>(
+        MaterialPageRoute(
+          builder: (context) =>
+              MfaCodeScreen(token: token, url: proxyUrl, method: method),
         ),
-      ).push<String?>(navigator.context);
-
+      );
       if (presharedKey != null) {
         talker.info("Code authentication successful");
       }
-
       return presharedKey;
     } catch (e) {
       talker.error("MFA code input error: $e");
