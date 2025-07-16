@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mobile/open/widgets/buttons/dg_button.dart';
 import 'package:mobile/open/widgets/dg_dialog.dart';
+import 'package:mobile/open/widgets/icons/openid_open.dart';
 import 'package:mobile/theme/color.dart';
 import 'package:mobile/theme/spacing.dart';
 import 'package:mobile/theme/text.dart';
@@ -47,11 +47,7 @@ class OpenIdMfaStartDialog extends HookConsumerWidget {
           ),
           SizedBox(height: 32),
           Center(
-            child: SvgPicture.asset(
-              'assets/icons/openid-open.svg',
-              width: 128,
-              height: 128,
-            ),
+            child: DgIconOpenidOpen(size: 128),
           ),
           SizedBox(height: 32),
           Text(

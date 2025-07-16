@@ -44,7 +44,7 @@ class CodeDialog extends HookConsumerWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Center(child: Text(_title, style: DgText.sideBar)),
+            Center(child: Text(_title, style: DgText.body1)),
             SizedBox(height: 8),
             Column(
               spacing: DgSpacing.s,
