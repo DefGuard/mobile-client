@@ -1,6 +1,7 @@
 // ignore_for_file: unused_element
 import 'package:drift/drift.dart' as drift;
 import 'package:flutter/material.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mobile/data/db/database.dart';
@@ -86,6 +87,15 @@ class _InstancesList extends HookConsumerWidget {
       );
     }
 
+    useEffect(() {
+      if (asyncInstances.value != null) {
+        if (asyncInstances.value!.isEmpty) {
+          AddInstanceScreenRoute().go(context);
+        }
+      }
+      return null;
+    }, [asyncInstances]);
+
     return asyncInstances.when(
       data: (instances) {
         if (instances.isEmpty) {
@@ -101,12 +111,15 @@ class _InstancesList extends HookConsumerWidget {
               itemBuilder: (BuildContext context, int index) {
                 final instance = instances[index];
                 final bool isConnected;
-                if(activeTunnel != null) {
+                if (activeTunnel != null) {
                   isConnected = instance.id == activeTunnel.instanceId;
                 } else {
                   isConnected = false;
                 }
-                return _InstanceItem(instance: instance, isConnected: isConnected,);
+                return _InstanceItem(
+                  instance: instance,
+                  isConnected: isConnected,
+                );
               },
             ),
           ],
@@ -142,7 +155,11 @@ class _InstanceItem extends HookConsumerWidget {
         ),
         child: Row(
           children: [
-            DgIconConnection(variant: isConnected ? DgIconConnectionVariant.connected : DgIconConnectionVariant.disconnected),
+            DgIconConnection(
+              variant: isConnected
+                  ? DgIconConnectionVariant.connected
+                  : DgIconConnectionVariant.disconnected,
+            ),
             SizedBox(width: 18),
             LimitedText(text: instance.name, style: DgText.sideBar),
             SizedBox(width: 10),

@@ -1,4 +1,8 @@
+import 'package:drift/drift.dart' as d;
 import 'package:json_annotation/json_annotation.dart';
+
+import '../db/database.dart';
+import '../db/enums.dart';
 
 part 'enrollment.g.dart';
 
@@ -165,6 +169,41 @@ class DeviceConfig {
     required this.mfaEnabled,
     required this.keepaliveInterval,
   });
+
+  bool matchesLocation(Location other) {
+    return networkId == other.networkId &&
+        pubkey == other.pubKey &&
+        networkName == other.name &&
+        endpoint == other.endpoint &&
+        assignedIp == other.address &&
+        allowedIps == other.allowedIps &&
+        dns == other.dns &&
+        mfaEnabled == other.mfaEnabled &&
+        keepaliveInterval == other.keepAliveInterval;
+  }
+
+  LocationsCompanion toCompanion({
+    int? id,
+    MfaMethod? mfaMethod,
+    RoutingMethod? trafficMethod,
+    required int instanceId,
+  }) {
+    return LocationsCompanion(
+      id: d.Value.absentIfNull(id),
+      mfaMethod: d.Value.absentIfNull(mfaMethod),
+      trafficMethod: d.Value.absentIfNull(trafficMethod),
+      instance: d.Value(instanceId),
+      dns: d.Value.absentIfNull(dns),
+      pubKey: d.Value(pubkey),
+      networkId: d.Value(networkId),
+      name: d.Value(networkName),
+      mfaEnabled: d.Value(mfaEnabled),
+      keepAliveInterval: d.Value(keepaliveInterval),
+      endpoint: d.Value(endpoint),
+      allowedIps: d.Value(allowedIps),
+      address: d.Value(assignedIp),
+    );
+  }
 }
 
 @JsonSerializable()
@@ -226,6 +265,32 @@ class InstanceInfo {
       _$InstanceInfoFromJson(json);
 
   Map<String, dynamic> toJson() => _$InstanceInfoToJson(this);
+
+  bool matchesDefguardInstance(DefguardInstance other) {
+    return id == other.uuid &&
+        name == other.name &&
+        url == other.url &&
+        proxyUrl == other.proxyUrl &&
+        username == other.username &&
+        enterpriseEnabled == other.enterpriseEnabled &&
+        disableAllTraffic == other.disableAllTraffic;
+  }
+
+  DefguardInstancesCompanion toCompanion({DefguardInstance? instance}) {
+    return DefguardInstancesCompanion(
+      id: d.Value.absentIfNull(instance?.id),
+      pubKey: d.Value.absentIfNull(instance?.pubKey),
+      privateKey: d.Value.absentIfNull(instance?.privateKey),
+      token: d.Value.absentIfNull(instance?.token),
+      name: d.Value(name),
+      url: d.Value(url),
+      proxyUrl: d.Value(proxyUrl),
+      username: d.Value(username),
+      enterpriseEnabled: d.Value(enterpriseEnabled),
+      disableAllTraffic: d.Value(disableAllTraffic),
+      uuid: d.Value(id),
+    );
+  }
 }
 
 @JsonSerializable()
