@@ -142,6 +142,20 @@ class _ProxyApi {
     final response = await _dio.postUri(endpoint, data: data.toJson());
     return FinishMfaResponse.fromJson(response.data);
   }
+
+  Future<NetworkInfoResponse> networkInfo(Uri url, String pubKey) async {
+    final endpoint = url.replace(
+      pathSegments: [
+        ...url.pathSegments,
+        ..._apiV1Segments,
+        'enrollment',
+        'network_info',
+      ],
+    );
+    final body = {'pubkey': pubKey};
+    final response = await _dio.postUri(endpoint, data: body);
+    return NetworkInfoResponse.fromJson(response.data);
+  }
 }
 
 final proxyApi = _ProxyApi();

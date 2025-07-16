@@ -67,3 +67,38 @@ Map<String, dynamic> _$ConfigurationPollResponseToJson(
   'instance': instance.instance,
   'token': instance.token,
 };
+
+NetworkInfoResponse _$NetworkInfoResponseFromJson(Map<String, dynamic> json) =>
+    $checkedCreate('NetworkInfoResponse', json, ($checkedConvert) {
+      final val = NetworkInfoResponse(
+        device: $checkedConvert(
+          'device',
+          (v) => Device.fromJson(v as Map<String, dynamic>),
+        ),
+        configs: $checkedConvert(
+          'configs',
+          (v) => (v as List<dynamic>)
+              .map((e) => DeviceConfig.fromJson(e as Map<String, dynamic>))
+              .toList(),
+        ),
+        instance: $checkedConvert(
+          'instance',
+          (v) => InstanceInfo.fromJson(v as Map<String, dynamic>),
+        ),
+      );
+      return val;
+    });
+
+const _$NetworkInfoResponseFieldMap = <String, String>{
+  'device': 'device',
+  'configs': 'configs',
+  'instance': 'instance',
+};
+
+Map<String, dynamic> _$NetworkInfoResponseToJson(
+  NetworkInfoResponse instance,
+) => <String, dynamic>{
+  'device': instance.device,
+  'configs': instance.configs,
+  'instance': instance.instance,
+};
