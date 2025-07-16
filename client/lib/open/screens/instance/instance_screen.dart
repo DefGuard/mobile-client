@@ -92,6 +92,7 @@ class InstanceScreen extends HookConsumerWidget {
           },
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (err, _) {
+            talker.error("Instance route screen data returned error", err);
             HomeScreenRoute().go(context);
             return const SizedBox();
           },
@@ -153,9 +154,12 @@ class _ScreenContent extends HookConsumerWidget {
               return _LocationItem(location: location, instance: instance);
             },
           ),
+          SliverToBoxAdapter(child: SizedBox(height: DgSpacing.m)),
           SliverToBoxAdapter(
             child: Padding(
-              padding: EdgeInsetsGeometry.symmetric(horizontal: DgSpacing.xs),
+              padding: EdgeInsetsGeometry.symmetric(
+                horizontal: DgSpacing.xs + DgSpacing.m,
+              ),
               child: Row(
                 mainAxisSize: MainAxisSize.max,
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,

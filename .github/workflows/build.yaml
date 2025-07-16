@@ -1,4 +1,4 @@
-name: 'Build app'
+name: "Build app"
 on:
   push:
     branches:
@@ -14,14 +14,14 @@ jobs:
       - name: Checkout main repo
         uses: actions/checkout@v4
         with:
-          submodules: 'recursive'
+          submodules: "recursive"
           token: ${{ secrets.PRIVATE_REPO_CLONING_TOKEN }}
 
       - name: Setup flutter
         uses: subosito/flutter-action@v2
         with:
           channel: stable
-          flutter-version: 3.32.4
+          flutter-version: 3.32.6
 
       - name: Use homebrew ruby
         run: |
@@ -57,8 +57,8 @@ jobs:
 
       - name: Upload app to TestFlight
         uses: apple-actions/upload-testflight-build@v3
-        with: 
-          app-path: 'client/build/ios/ipa/Defguard.ipa' 
+        with:
+          app-path: "client/build/ios/ipa/Defguard.ipa"
           issuer-id: ${{ secrets.API_ISSUER_ID }}
           api-key-id: ${{ secrets.ASC_API_KEY_ID }}
           api-private-key: ${{ secrets.PRIVATE_KEY_CONTENTS }}
@@ -72,54 +72,54 @@ jobs:
       run:
         working-directory: ./client
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - name: Set up Java
-      uses: actions/setup-java@v3
-      with:
-        distribution: 'temurin'
-        java-version: '17'
+      - name: Set up Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: "temurin"
+          java-version: "17"
 
-    - name: Setup flutter
-      uses: subosito/flutter-action@v2
-      with:
-        channel: stable
-        flutter-version: 3.32.5
+      - name: Setup flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.32.6
 
-    - name: Accept licenses
-      run: yes | flutter doctor --android-licenses
+      - name: Accept licenses
+        run: yes | flutter doctor --android-licenses
 
-    - name: Clean flutter
-      run: flutter clean
+      - name: Clean flutter
+        run: flutter clean
 
-    - name: Install deps
-      run: flutter pub get
+      - name: Install deps
+        run: flutter pub get
 
-    - name: Build android
-      run: flutter build appbundle --release --build-number=${{ github.run_number }}
+      - name: Build android
+        run: flutter build appbundle --release --build-number=${{ github.run_number }}
 
-    - name: Sign AAB
-      uses: r0adkll/sign-android-release@v1
-      with:
-        releaseDirectory: client/build/app/outputs/bundle/release
-        signingKeyBase64: '${{ secrets.ANDROID_SIGNING_KEY_BASE64 }}'
-        alias: '${{ secrets.ANDROID_SIGNING_KEY_ALIAS }}'
-        keyStorePassword: '${{ secrets.ANDROID_KEYSTORE_PASSWORD }}'
-        keyPassword: '${{ secrets.ANDROID_KEYSTORE_PASSWORD }}'
+      - name: Sign AAB
+        uses: r0adkll/sign-android-release@v1
+        with:
+          releaseDirectory: client/build/app/outputs/bundle/release
+          signingKeyBase64: "${{ secrets.ANDROID_SIGNING_KEY_BASE64 }}"
+          alias: "${{ secrets.ANDROID_SIGNING_KEY_ALIAS }}"
+          keyStorePassword: "${{ secrets.ANDROID_KEYSTORE_PASSWORD }}"
+          keyPassword: "${{ secrets.ANDROID_KEYSTORE_PASSWORD }}"
 
-    # Temporarily disable uploading artifacts until quota gets recalculated.
-    # Error: Failed to CreateArtifact: Artifact storage quota has been hit. Unable to upload any new artifacts. Usage is recalculated every 6-12 hours.
-    # - name: Upload android artifact
-    #   uses: actions/upload-artifact@v4
-    #   with:
-    #     name: android
-    #     retention-days: 3
-    #     path: client/build/app/outputs/bundle/release/app-release.aab
+      # Temporarily disable uploading artifacts until quota gets recalculated.
+      # Error: Failed to CreateArtifact: Artifact storage quota has been hit. Unable to upload any new artifacts. Usage is recalculated every 6-12 hours.
+      # - name: Upload android artifact
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: android
+      #     retention-days: 3
+      #     path: client/build/app/outputs/bundle/release/app-release.aab
 
-    - name: Publish to Play Store
-      uses: r0adkll/upload-google-play@v1
-      with:
-        serviceAccountJsonPlainText: '${{ secrets.ANDROID_SERVICE_ACCOUNT_JSON }}'
-        packageName: net.defguard.mobile
-        releaseFiles: client/build/app/outputs/bundle/release/app-release.aab
-        track: internal
+      - name: Publish to Play Store
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: "${{ secrets.ANDROID_SERVICE_ACCOUNT_JSON }}"
+          packageName: net.defguard.mobile
+          releaseFiles: client/build/app/outputs/bundle/release/app-release.aab
+          track: internal

@@ -107,7 +107,7 @@ class AppDatabase extends _$AppDatabase {
   }
 }
 
-@riverpod
+@Riverpod(keepAlive: true)
 AppDatabase database(Ref ref) {
   final db = AppDatabase();
   ref.onDispose(() => db.close());
