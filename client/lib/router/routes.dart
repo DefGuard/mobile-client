@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:mobile/data/db/enums.dart';
 import 'package:mobile/data/proxy/qr_register.dart';
 import 'package:mobile/open/screens/add_instance/add_instance_screen.dart';
 import 'package:mobile/open/screens/add_instance/screens/add_instance_form.dart';
@@ -117,10 +116,7 @@ class OpenIdMfaScreenRoute extends GoRouteData with _$OpenIdMfaScreenRoute {
 
   @override
   Widget build(BuildContext context, GoRouterState state) {
-    return OpenIdMfaScreen(
-      proxyUrl: $extra.proxyUrl,
-      token: $extra.token,
-    );
+    return OpenIdMfaScreen(screenData: $extra);
   }
 }
 
@@ -133,10 +129,7 @@ class OpenIdMfaWaitingScreenRoute extends GoRouteData with _$OpenIdMfaWaitingScr
 
   @override
   Widget build(BuildContext context, GoRouterState state) {
-    return OpenIdMfaWaitingScreen(
-      proxyUrl: $extra.proxyUrl,
-      token: $extra.token,
-    );
+    return OpenIdMfaWaitingScreen(screenData: $extra);
   }
 }
 
@@ -149,46 +142,7 @@ class MfaCodeScreenRoute extends GoRouteData with _$MfaCodeScreenRoute {
 
   @override
   Widget build(BuildContext context, GoRouterState state) {
-    return MfaCodeScreen(
-      token: $extra.token,
-      url: $extra.url,
-      method: $extra.method,
-    );
+    return MfaCodeScreen(screenData: $extra);
   }
 }
 
-// Data classes for MFA screens
-@immutable
-class OpenIdMfaScreenData {
-  final String proxyUrl;
-  final String token;
-
-  const OpenIdMfaScreenData({
-    required this.proxyUrl,
-    required this.token,
-  });
-}
-
-@immutable
-class OpenIdMfaWaitingScreenData {
-  final String proxyUrl;
-  final String token;
-
-  const OpenIdMfaWaitingScreenData({
-    required this.proxyUrl,
-    required this.token,
-  });
-}
-
-@immutable
-class MfaCodeScreenData {
-  final String token;
-  final String url;
-  final MfaMethod method;
-
-  const MfaCodeScreenData({
-    required this.token,
-    required this.url,
-    required this.method,
-  });
-}

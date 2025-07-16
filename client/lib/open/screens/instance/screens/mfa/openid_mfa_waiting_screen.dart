@@ -12,24 +12,32 @@ import 'package:mobile/theme/text.dart';
 
 import '../../../../../logging.dart';
 
+class OpenIdMfaWaitingScreenData {
+  final String proxyUrl;
+  final String token;
+
+  const OpenIdMfaWaitingScreenData({
+    required this.proxyUrl,
+    required this.token,
+  });
+}
+
 final String _title = "Two-factor authentication";
 final String _mfaMsg = "Waiting for authentication in your browser...";
 final String _cancelMsg = "Cancel";
 final timeoutDuration = Duration(minutes: 2);
 
 class OpenIdMfaWaitingScreen extends HookConsumerWidget {
-  final String proxyUrl;
-  final String token;
+  final OpenIdMfaWaitingScreenData screenData;
 
   const OpenIdMfaWaitingScreen({
     super.key,
-    required this.proxyUrl,
-    required this.token,
+    required this.screenData,
   });
 
   Future<FinishMfaResponse?> _pollOpenidMfa() async {
-    final request = FinishMfaRequest(token: token);
-    final uri = Uri.parse(proxyUrl);
+    final request = FinishMfaRequest(token: screenData.token);
+    final uri = Uri.parse(screenData.proxyUrl);
 
     final startTime = DateTime.now();
 

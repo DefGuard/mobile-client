@@ -8,6 +8,16 @@ import 'package:mobile/theme/spacing.dart';
 import 'package:mobile/theme/text.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+class OpenIdMfaScreenData {
+  final String proxyUrl;
+  final String token;
+
+  const OpenIdMfaScreenData({
+    required this.proxyUrl,
+    required this.token,
+  });
+}
+
 final String _title = "Two-factor authentication";
 final String _mfaMsg1 =
     "In order to connect to VPN please login with your OpenID provider. To do so, pease click \"Authenticate with OpenId\"";
@@ -18,17 +28,15 @@ final String _mfaMsg2 =
 final String _authenticateMsg = "Authenticate with OpenId";
 
 class OpenIdMfaScreen extends HookConsumerWidget {
-  final String proxyUrl;
-  final String token;
+  final OpenIdMfaScreenData screenData;
 
   const OpenIdMfaScreen({
     super.key,
-    required this.proxyUrl,
-    required this.token,
+    required this.screenData,
   });
 
   Future<bool> _launchUrl() async {
-    final url = Uri.parse("${proxyUrl}openid/mfa?token=$token");
+    final url = Uri.parse("${screenData.proxyUrl}openid/mfa?token=${screenData.token}");
     return await launchUrl(url, mode: LaunchMode.externalApplication);
   }
 
@@ -106,8 +114,10 @@ class OpenIdMfaScreen extends HookConsumerWidget {
                             final result = await navigator.push<String?>(
                               MaterialPageRoute(
                                 builder: (context) => OpenIdMfaWaitingScreen(
-                                  proxyUrl: proxyUrl,
-                                  token: token,
+                                  screenData: OpenIdMfaWaitingScreenData(
+                                    proxyUrl: screenData.proxyUrl,
+                                    token: screenData.token,
+                                  ),
                                 ),
                               ),
                             );

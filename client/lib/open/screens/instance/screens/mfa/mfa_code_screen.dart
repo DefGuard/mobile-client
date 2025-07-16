@@ -15,6 +15,18 @@ import 'package:mobile/theme/text.dart';
 
 import '../../../../../data/db/enums.dart';
 
+class MfaCodeScreenData {
+  final String token;
+  final String url;
+  final MfaMethod method;
+
+  const MfaCodeScreenData({
+    required this.token,
+    required this.url,
+    required this.method,
+  });
+}
+
 final String _title = "Two-factor authentication";
 
 final Map<MfaMethod, String> _msg = {
@@ -23,15 +35,11 @@ final Map<MfaMethod, String> _msg = {
 };
 
 class MfaCodeScreen extends HookConsumerWidget {
-  final String token;
-  final String url;
-  final MfaMethod method;
+  final MfaCodeScreenData screenData;
 
   const MfaCodeScreen({
     super.key,
-    required this.token,
-    required this.url,
-    required this.method,
+    required this.screenData,
   });
 
   @override
@@ -66,10 +74,10 @@ class MfaCodeScreen extends HookConsumerWidget {
                     SizedBox(height: 32),
                     DgMessageBox(
                       variant: DgMessageBoxVariant.infoOutlined,
-                      text: _msg[method],
+                      text: _msg[screenData.method],
                     ),
                     SizedBox(height: DgSpacing.l),
-                    _CodeForm(token: token, url: url),
+                    _CodeForm(screenData: screenData),
                   ],
                 ),
               ),
@@ -94,9 +102,8 @@ Future<FinishMfaResponse> _handleSubmit(
 }
 
 class _CodeForm extends HookConsumerWidget {
-  final String token;
-  final String url;
-  const _CodeForm({required this.token, required this.url});
+  final MfaCodeScreenData screenData;
+  const _CodeForm({required this.screenData});
 
   String? _validateCode(String? value, bool codeInvalid) {
     if (value == null || value.trim().isEmpty) {
@@ -147,8 +154,8 @@ class _CodeForm extends HookConsumerWidget {
                     isLoading.value = true;
                     try {
                       final response = await _handleSubmit(
-                        url,
-                        token,
+                        screenData.url,
+                        screenData.token,
                         codeController.text.trim(),
                       );
                       navigator.pop(response.presharedKey);

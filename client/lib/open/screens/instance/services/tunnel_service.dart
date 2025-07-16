@@ -160,7 +160,12 @@ class TunnelService {
   }) async {
     final presharedKey = await Navigator.of(navigator.context).push<String?>(
       MaterialPageRoute(
-        builder: (context) => OpenIdMfaScreen(proxyUrl: proxyUrl, token: token),
+        builder: (context) => OpenIdMfaScreen(
+          screenData: OpenIdMfaScreenData(
+            proxyUrl: proxyUrl,
+            token: token,
+          ),
+        ),
       ),
     );
     if (presharedKey != null) {
@@ -179,8 +184,13 @@ class TunnelService {
     try {
       final presharedKey = await Navigator.of(navigator.context).push<String?>(
         MaterialPageRoute(
-          builder: (context) =>
-              MfaCodeScreen(token: token, url: proxyUrl, method: method),
+          builder: (context) => MfaCodeScreen(
+            screenData: MfaCodeScreenData(
+              token: token,
+              url: proxyUrl,
+              method: method,
+            ),
+          ),
         ),
       );
       if (presharedKey != null) {
