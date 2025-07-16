@@ -5,10 +5,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mobile/data/proxy/mfa.dart';
 import 'package:mobile/open/api.dart';
 import 'package:mobile/open/widgets/buttons/dg_button.dart';
-import 'package:mobile/open/widgets/dg_message_box.dart';
 import 'package:mobile/open/widgets/dg_text_form_field.dart';
-import 'package:mobile/open/widgets/icons/arrow_single.dart';
-import 'package:mobile/open/widgets/icons/icon_rotation.dart';
 import 'package:mobile/open/widgets/nav.dart';
 import 'package:mobile/theme/color.dart';
 import 'package:mobile/theme/spacing.dart';
@@ -31,17 +28,15 @@ class MfaCodeScreenData {
 final String _title = "Two-factor authentication";
 
 final Map<MfaMethod, String> _msg = {
-  MfaMethod.totp: "Paste the authentication code from your Authenticator Application.",
+  MfaMethod.totp:
+      "Paste the authentication code from your Authenticator Application.",
   MfaMethod.email: "Paste the authentication code you received in the email.",
 };
 
 class MfaCodeScreen extends HookConsumerWidget {
   final MfaCodeScreenData screenData;
 
-  const MfaCodeScreen({
-    super.key,
-    required this.screenData,
-  });
+  const MfaCodeScreen({super.key, required this.screenData});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -66,9 +61,12 @@ class MfaCodeScreen extends HookConsumerWidget {
                       ),
                     ),
                     SizedBox(height: 32),
-                    DgMessageBox(
-                      variant: DgMessageBoxVariant.infoOutlined,
-                      text: _msg[screenData.method],
+                    Text(
+                      _msg[screenData.method] ?? "",
+                      style: DgText.modal1.copyWith(
+                        color: DgColor.textBodySecondary,
+                      ),
+                      textAlign: TextAlign.center,
                     ),
                     SizedBox(height: DgSpacing.l),
                     _CodeForm(screenData: screenData),
@@ -135,7 +133,7 @@ class _CodeForm extends HookConsumerWidget {
             spacing: DgSpacing.m,
             children: [
               DgButton(
-                text: "Submit",
+                text: "Verify",
                 variant: DgButtonVariant.primary,
                 size: DgButtonSize.big,
                 width: double.infinity,
@@ -173,10 +171,6 @@ class _CodeForm extends HookConsumerWidget {
                 width: double.infinity,
                 variant: DgButtonVariant.secondary,
                 size: DgButtonSize.big,
-                icon: DgIconArrowSingle(
-                  direction: DgIconDirection.left,
-                  size: 36,
-                ),
                 onTap: () {
                   Navigator.of(context).pop();
                 },

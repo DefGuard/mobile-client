@@ -31,10 +31,7 @@ final timeoutDuration = Duration(minutes: 2);
 class OpenIdMfaWaitingScreen extends HookConsumerWidget {
   final OpenIdMfaWaitingScreenData screenData;
 
-  const OpenIdMfaWaitingScreen({
-    super.key,
-    required this.screenData,
-  });
+  const OpenIdMfaWaitingScreen({super.key, required this.screenData});
 
   Future<FinishMfaResponse?> _pollOpenidMfa() async {
     final request = FinishMfaRequest(token: screenData.token);
@@ -129,15 +126,13 @@ class OpenIdMfaWaitingScreen extends HookConsumerWidget {
               Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  SizedBox(
+                  DgButton(
+                    text: _cancelMsg,
+                    size: DgButtonSize.big,
                     width: double.infinity,
-                    child: DgButton(
-                      text: _cancelMsg,
-                      size: DgButtonSize.standard,
-                      onTap: () {
-                        Navigator.of(context).pop();
-                      },
-                    ),
+                    onTap: () {
+                      Navigator.of(context).pop();
+                    },
                   ),
                 ],
               ),
@@ -148,4 +143,3 @@ class OpenIdMfaWaitingScreen extends HookConsumerWidget {
     );
   }
 }
-
