@@ -52,7 +52,7 @@ class ConfigurationUpdater extends HookConsumerWidget {
           }
           if (responseData == null) {
             talker.error(
-              "Auto configuration update failed for ${instance.logName} ! Proxy response empty !",
+              "Auto configuration update failed for ${instance.logName} ! Update data retrieval failed, status: ${responseStatus ?? "unknown"}!",
             );
             continue;
           }
