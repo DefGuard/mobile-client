@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:mobile/data/db/enums.dart';
 import 'package:mobile/data/proxy/qr_register.dart';
 import 'package:mobile/open/screens/add_instance/add_instance_screen.dart';
 import 'package:mobile/open/screens/add_instance/screens/add_instance_form.dart';
@@ -8,6 +9,9 @@ import 'package:mobile/open/screens/add_instance/screens/register_from_qr_screen
 import 'package:mobile/open/screens/add_instance/screens/scan_qr_screen.dart';
 import 'package:mobile/open/screens/home/home_screen.dart';
 import 'package:mobile/open/screens/instance/instance_screen.dart';
+import 'package:mobile/open/screens/instance/screens/mfa/mfa_code_screen.dart';
+import 'package:mobile/open/screens/instance/screens/mfa/openid_mfa_screen.dart';
+import 'package:mobile/open/screens/instance/screens/mfa/openid_mfa_waiting_screen.dart';
 import 'package:talker_flutter/talker_flutter.dart';
 
 import '../logging.dart';
@@ -102,4 +106,89 @@ class TalkerScreenRoute extends GoRouteData with _$TalkerScreenRoute {
   Widget build(BuildContext context, GoRouterState state) {
     return TalkerScreen(talker: talker);
   }
+}
+
+@TypedGoRoute<OpenIdMfaScreenRoute>(path: "/mfa/openid")
+@immutable
+class OpenIdMfaScreenRoute extends GoRouteData with _$OpenIdMfaScreenRoute {
+  OpenIdMfaScreenRoute(this.$extra);
+
+  final OpenIdMfaScreenData $extra;
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) {
+    return OpenIdMfaScreen(
+      proxyUrl: $extra.proxyUrl,
+      token: $extra.token,
+    );
+  }
+}
+
+@TypedGoRoute<OpenIdMfaWaitingScreenRoute>(path: "/mfa/openid/waiting")
+@immutable
+class OpenIdMfaWaitingScreenRoute extends GoRouteData with _$OpenIdMfaWaitingScreenRoute {
+  OpenIdMfaWaitingScreenRoute(this.$extra);
+
+  final OpenIdMfaWaitingScreenData $extra;
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) {
+    return OpenIdMfaWaitingScreen(
+      proxyUrl: $extra.proxyUrl,
+      token: $extra.token,
+    );
+  }
+}
+
+@TypedGoRoute<MfaCodeScreenRoute>(path: "/mfa/code")
+@immutable
+class MfaCodeScreenRoute extends GoRouteData with _$MfaCodeScreenRoute {
+  MfaCodeScreenRoute(this.$extra);
+
+  final MfaCodeScreenData $extra;
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) {
+    return MfaCodeScreen(
+      token: $extra.token,
+      url: $extra.url,
+      method: $extra.method,
+    );
+  }
+}
+
+// Data classes for MFA screens
+@immutable
+class OpenIdMfaScreenData {
+  final String proxyUrl;
+  final String token;
+
+  const OpenIdMfaScreenData({
+    required this.proxyUrl,
+    required this.token,
+  });
+}
+
+@immutable
+class OpenIdMfaWaitingScreenData {
+  final String proxyUrl;
+  final String token;
+
+  const OpenIdMfaWaitingScreenData({
+    required this.proxyUrl,
+    required this.token,
+  });
+}
+
+@immutable
+class MfaCodeScreenData {
+  final String token;
+  final String url;
+  final MfaMethod method;
+
+  const MfaCodeScreenData({
+    required this.token,
+    required this.url,
+    required this.method,
+  });
 }

@@ -6,10 +6,8 @@ import 'package:mobile/data/proxy/mfa.dart';
 import 'package:mobile/open/api.dart';
 import 'package:mobile/data/plugin/plugin.dart';
 import 'package:mobile/open/screens/instance/widgets/mfa/mfa_method_dialog.dart';
-import 'package:mobile/open/screens/instance/widgets/mfa/openid_mfa_dialog.dart';
-import 'package:mobile/open/screens/instance/widgets/mfa/openid_mfa_waiting_dialog.dart';
 import 'package:mobile/open/screens/instance/widgets/routing_method_dialog.dart';
-import 'package:mobile/open/screens/instance/widgets/mfa/code_dialog.dart';
+import 'package:mobile/router/routes.dart';
 import 'dart:convert';
 
 import '../../../../data/db/enums.dart';
@@ -152,34 +150,24 @@ class TunnelService {
     }
   }
 
-  /// Displays code input dialog
+  /// Handles OpenID MFA flow
   static Future<String?> _handleOpenid({
     required NavigatorState navigator,
     required String token,
     required String proxyUrl,
     required MfaMethod method,
   }) async {
-    bool? browserOpened = await _showDialog<bool?>(
-      navigator: navigator,
-      builder: (BuildContext context) =>
-          OpenIdMfaStartDialog(proxyUrl: proxyUrl, token: token),
-    );
-
-    if (browserOpened == null || !browserOpened) {
-      // dialog dismissed or failed to open the browser
-      return null;
-    }
-
-    final FinishMfaResponse? finishMfaResponse =
-        await _showDialog<FinishMfaResponse>(
-          navigator: navigator,
-          builder: (BuildContext context) =>
-              OpenidMfaWaitingDialog(token: token, proxyUrl: proxyUrl),
-        );
-    return finishMfaResponse?.presharedKey;
+    final result = await OpenIdMfaScreenRoute(
+      OpenIdMfaScreenData(
+        proxyUrl: proxyUrl,
+        token: token,
+      ),
+    ).push<String?>(navigator.context);
+    
+    return result;
   }
 
-  /// Displays code input dialog
+  /// Handles non-openid MFA flows (totp, email)
   static Future<String?> _handleCodeInput({
     required NavigatorState navigator,
     required String token,
@@ -187,12 +175,13 @@ class TunnelService {
     required MfaMethod method,
   }) async {
     try {
-      final presharedKey = await _showDialog<String>(
-        navigator: navigator,
-        builder: (BuildContext context) {
-          return CodeDialog(token: token, url: proxyUrl, method: method);
-        },
-      );
+      final presharedKey = await MfaCodeScreenRoute(
+        MfaCodeScreenData(
+          token: token,
+          url: proxyUrl,
+          method: method,
+        ),
+      ).push<String?>(navigator.context);
 
       if (presharedKey != null) {
         talker.info("Code authentication successful");
