@@ -9,6 +9,7 @@ import 'package:mobile/open/widgets/dg_message_box.dart';
 import 'package:mobile/open/widgets/dg_text_form_field.dart';
 import 'package:mobile/open/widgets/icons/arrow_single.dart';
 import 'package:mobile/open/widgets/icons/icon_rotation.dart';
+import 'package:mobile/open/widgets/nav.dart';
 import 'package:mobile/theme/color.dart';
 import 'package:mobile/theme/spacing.dart';
 import 'package:mobile/theme/text.dart';
@@ -45,15 +46,8 @@ class MfaCodeScreen extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
-      backgroundColor: DgColor.defaultModal,
-      appBar: AppBar(
-        backgroundColor: DgColor.defaultModal,
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: DgColor.textBodyPrimary),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-      ),
+      backgroundColor: DgColor.frameBg,
+      appBar: DgAppBar(title: _title),
       body: SafeArea(
         child: Padding(
           padding: EdgeInsets.all(DgSpacing.l),
