@@ -5,57 +5,65 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mobile/data/proxy/mfa.dart';
 import 'package:mobile/open/api.dart';
 import 'package:mobile/open/widgets/buttons/dg_button.dart';
-import 'package:mobile/open/widgets/dg_message_box.dart';
+import 'package:mobile/open/widgets/dg_single_child_scroll_view.dart';
 import 'package:mobile/open/widgets/dg_text_form_field.dart';
-import 'package:mobile/open/widgets/icons/arrow_single.dart';
-import 'package:mobile/open/widgets/icons/icon_rotation.dart';
+import 'package:mobile/open/widgets/nav.dart';
 import 'package:mobile/theme/color.dart';
 import 'package:mobile/theme/spacing.dart';
 import 'package:mobile/theme/text.dart';
 
 import '../../../../../data/db/enums.dart';
 
-final String _title = "Two-factor authentication";
-
-final Map<MfaMethod, String> _msg = {
-  MfaMethod.totp: "Paste the authentication code from your Authenticator Application.",
-  MfaMethod.email: "Paste the authentication code you received in the email.",
-};
-
-class CodeDialog extends HookConsumerWidget {
+class MfaCodeScreenData {
   final String token;
   final String url;
   final MfaMethod method;
 
-  const CodeDialog({
-    super.key,
+  const MfaCodeScreenData({
     required this.token,
     required this.url,
     required this.method,
   });
+}
+
+final String _title = "Two-factor authentication";
+
+final Map<MfaMethod, String> _msg = {
+  MfaMethod.totp:
+      "Paste the authentication code from your Authenticator Application.",
+  MfaMethod.email: "Paste the authentication code you received in the email.",
+};
+
+class MfaCodeScreen extends HookConsumerWidget {
+  final MfaCodeScreenData screenData;
+
+  const MfaCodeScreen({super.key, required this.screenData});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return Dialog(
-      backgroundColor: DgColor.defaultModal,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      child: Padding(
-        padding: EdgeInsets.symmetric(vertical: 25, horizontal: DgSpacing.s),
+    return Scaffold(
+      backgroundColor: DgColor.frameBg,
+      appBar: DgAppBar(title: _title),
+      drawer: DgDrawer(),
+      body: DgSingleChildScrollView(
         child: Column(
-          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Center(child: Text(_title, style: DgText.sideBar)),
-            SizedBox(height: 8),
-            Column(
-              spacing: DgSpacing.s,
-              children: [
-                DgMessageBox(
-                  variant: DgMessageBoxVariant.infoOutlined,
-                  text: _msg[method],
-                ),
-                _CodeForm(token: token, url: url),
-              ],
+            Center(
+              child: Text(
+                _title,
+                style: DgText.body1,
+                textAlign: TextAlign.center,
+              ),
             ),
+            SizedBox(height: 32),
+            Text(
+              _msg[screenData.method] ?? "",
+              style: DgText.modal1.copyWith(color: DgColor.textBodySecondary),
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: DgSpacing.l),
+            _CodeForm(screenData: screenData),
           ],
         ),
       ),
@@ -76,9 +84,8 @@ Future<FinishMfaResponse> _handleSubmit(
 }
 
 class _CodeForm extends HookConsumerWidget {
-  final String token;
-  final String url;
-  const _CodeForm({required this.token, required this.url});
+  final MfaCodeScreenData screenData;
+  const _CodeForm({required this.screenData});
 
   String? _validateCode(String? value, bool codeInvalid) {
     if (value == null || value.trim().isEmpty) {
@@ -98,29 +105,25 @@ class _CodeForm extends HookConsumerWidget {
     final isLoading = useState(false);
     final codeInvalid = useState<bool>(false);
 
-    return (Form(
+    return Form(
       key: formKey,
       child: Column(
         spacing: DgSpacing.m,
         mainAxisSize: MainAxisSize.min,
         children: [
-          Column(
-            spacing: DgSpacing.l,
-            children: [
-              DgTextFormField(
-                controller: codeController,
-                required: true,
-                hintText: "Code",
-                keyboardType: TextInputType.number,
-                validator: (value) => _validateCode(value, codeInvalid.value),
-              ),
-            ],
+          DgTextFormField(
+            controller: codeController,
+            required: true,
+            hintText: "Authentication Code",
+            keyboardType: TextInputType.number,
+            validator: (value) => _validateCode(value, codeInvalid.value),
           ),
+          SizedBox(height: DgSpacing.l),
           Column(
             spacing: DgSpacing.m,
             children: [
               DgButton(
-                text: "Submit",
+                text: "Verify",
                 variant: DgButtonVariant.primary,
                 size: DgButtonSize.big,
                 width: double.infinity,
@@ -133,8 +136,8 @@ class _CodeForm extends HookConsumerWidget {
                     isLoading.value = true;
                     try {
                       final response = await _handleSubmit(
-                        url,
-                        token,
+                        screenData.url,
+                        screenData.token,
                         codeController.text.trim(),
                       );
                       navigator.pop(response.presharedKey);
@@ -158,10 +161,6 @@ class _CodeForm extends HookConsumerWidget {
                 width: double.infinity,
                 variant: DgButtonVariant.secondary,
                 size: DgButtonSize.big,
-                icon: DgIconArrowSingle(
-                  direction: DgIconDirection.left,
-                  size: 36,
-                ),
                 onTap: () {
                   Navigator.of(context).pop();
                 },
@@ -170,6 +169,6 @@ class _CodeForm extends HookConsumerWidget {
           ),
         ],
       ),
-    ));
+    );
   }
 }
