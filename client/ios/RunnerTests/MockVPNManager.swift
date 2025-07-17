@@ -5,8 +5,8 @@
 //  Created by Aleksander on 17/07/2025.
 //
 
-import wireguard_plugin
 import NetworkExtension
+import wireguard_plugin
 
 public enum MockEvents {
     case connected
@@ -19,11 +19,16 @@ class MockVPNManager: VPNManagement {
     var connectionStatus: NEVPNStatus = .disconnected
     var events: [MockEvents] = []
 
-    func loadProviderManager(completion: @escaping (NETunnelProviderManager?) -> Void) {
+    func loadProviderManager(
+        completion: @escaping (NETunnelProviderManager?) -> Void
+    ) {
         completion(providerManager)
     }
 
-    func saveProviderManager(_ manager: NETunnelProviderManager, completion: @escaping (Error?) -> Void) {
+    func saveProviderManager(
+        _ manager: NETunnelProviderManager,
+        completion: @escaping (Error?) -> Void
+    ) {
         providerManager = manager
         completion(nil)
     }
@@ -34,15 +39,27 @@ class MockVPNManager: VPNManagement {
 
     func startTunnel() throws {
         guard providerManager != nil else {
-            throw NSError(domain: "MockVPNManagerError", code: 1, userInfo: [NSLocalizedDescriptionKey: "Provider manager is not set"])
+            throw NSError(
+                domain: "MockVPNManagerError",
+                code: 1,
+                userInfo: [
+                    NSLocalizedDescriptionKey: "Provider manager is not set"
+                ]
+            )
         }
         self.connectionStatus = .connected
         events.append(.connected)
     }
 
     func stopTunnel() throws {
-        guard providerManager != nil  else {
-            throw NSError(domain: "MockVPNManagerError", code: 2, userInfo: [NSLocalizedDescriptionKey: "Provider manager is not set"])
+        guard providerManager != nil else {
+            throw NSError(
+                domain: "MockVPNManagerError",
+                code: 2,
+                userInfo: [
+                    NSLocalizedDescriptionKey: "Provider manager is not set"
+                ]
+            )
         }
         self.connectionStatus = .disconnected
         events.append(.disconnected)
@@ -60,7 +77,9 @@ class MockVPNManager: VPNManagement {
         events.removeAll()
     }
 
-    func vpnEventsEqual(_ otherEvents: [MockEvents], orderMatters: Bool = true) -> Bool {
+    func vpnEventsEqual(_ otherEvents: [MockEvents], orderMatters: Bool = true)
+        -> Bool
+    {
         if orderMatters {
             return events == otherEvents
         } else {
@@ -68,11 +87,3 @@ class MockVPNManager: VPNManagement {
         }
     }
 }
-
-
-
-
-
-
-
-

@@ -27,12 +27,23 @@ class RunnerTests: XCTestCase {
         let actual = capturedFlutterEvents.compactMap { $0 as? [String: Any] }
             .compactMap { $0["event"] as? String }
 
-        XCTAssertEqual(actual.count, expected.count, "Flutter event counts do not match.")
+        XCTAssertEqual(
+            actual.count,
+            expected.count,
+            "Flutter event counts do not match."
+        )
 
         if orderMatters {
-            XCTAssertEqual(actual, expected, "Flutter events do not match expected sequence.")
+            XCTAssertEqual(
+                actual,
+                expected,
+                "Flutter events do not match expected sequence."
+            )
         } else {
-            XCTAssertTrue(Set(actual).isSuperset(of: Set(expected)), "Flutter events do not match expected set.")
+            XCTAssertTrue(
+                Set(actual).isSuperset(of: Set(expected)),
+                "Flutter events do not match expected set."
+            )
         }
     }
 
@@ -173,7 +184,6 @@ class RunnerTests: XCTestCase {
             timeout: 5.0
         )
 
-
         // Simulate system disconnect
         vpnManager?.connectionStatus = .disconnected
 
@@ -236,7 +246,6 @@ class RunnerTests: XCTestCase {
             ],
             timeout: 5.0
         )
-
 
     }
 
