@@ -58,4 +58,4 @@ jobs:
         run: flutter build ios --no-codesign --config-only
 
       - name: run plugin tests
-        run: xcodebuild test -workspace Runner.xcworkspace -scheme Runner -configuration Debug
+        run: xcodebuild test -workspace Runner.xcworkspace -scheme Runner -configuration Debug DEVELOPMENT_TEAM=82GZ7KN29J
