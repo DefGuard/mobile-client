@@ -131,13 +131,19 @@ class DgDrawer extends HookConsumerWidget {
                         _MenuButton(
                           text: "Instances",
                           onPressed: () {
-                            HomeScreenRoute().go(context);
+                            HomeScreenRoute().push(context);
                           },
                         ),
                         _MenuButton(
                           text: "Add Instance",
                           onPressed: () {
                             AddInstanceScreenRoute().push(context);
+                          },
+                        ),
+                        _MenuButton(
+                          text: "Toaster test",
+                          onPressed: () {
+                            ToastTestScreenRoute().push(context);
                           },
                         ),
                         _MenuButton(

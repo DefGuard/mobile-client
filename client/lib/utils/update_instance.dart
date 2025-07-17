@@ -27,9 +27,11 @@ Future<void> updateInstance({
         .get();
     await db.transaction(() async {
       // check if instance should update
-      if (info != null && info.matchesDefguardInstance(instance)) {
+      if (info != null && !info.matchesDefguardInstance(instance)) {
         final companion = info.toCompanion(instance: instance);
-        await db.managers.defguardInstances.update((_) => companion);
+        await db.managers.defguardInstances
+            .filter((row) => row.uuid.equals(info.id))
+            .update((_) => companion);
       }
 
       // update locations

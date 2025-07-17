@@ -11,6 +11,7 @@ import 'package:mobile/open/screens/instance/instance_screen.dart';
 import 'package:mobile/open/screens/mfa/mfa_code_screen.dart';
 import 'package:mobile/open/screens/mfa/openid_mfa_screen.dart';
 import 'package:mobile/open/screens/mfa/openid_mfa_waiting_screen.dart';
+import 'package:mobile/open/screens/toast_test_screen.dart';
 import 'package:talker_flutter/talker_flutter.dart';
 
 import '../logging.dart';
@@ -44,7 +45,7 @@ class InstanceScreenRoute extends GoRouteData with _$InstanceScreenRoute {
 @TypedGoRoute<NameDeviceScreenRoute>(path: "/add_instance/name_device")
 @immutable
 class NameDeviceScreenRoute extends GoRouteData with _$NameDeviceScreenRoute {
-  NameDeviceScreenRoute(this.$extra);
+  const NameDeviceScreenRoute(this.$extra);
 
   final NameDeviceScreenData $extra;
 
@@ -88,7 +89,7 @@ class AddInstanceScreenRoute extends GoRouteData with _$AddInstanceScreenRoute {
 @immutable
 class RegisterFromQrScreenRoute extends GoRouteData
     with _$RegisterFromQrScreenRoute {
-  RegisterFromQrScreenRoute(this.$extra);
+  const RegisterFromQrScreenRoute(this.$extra);
 
   final QrInstanceRegistration $extra;
 
@@ -110,7 +111,7 @@ class TalkerScreenRoute extends GoRouteData with _$TalkerScreenRoute {
 @TypedGoRoute<OpenIdMfaScreenRoute>(path: "/mfa/openid")
 @immutable
 class OpenIdMfaScreenRoute extends GoRouteData with _$OpenIdMfaScreenRoute {
-  OpenIdMfaScreenRoute(this.$extra);
+  const OpenIdMfaScreenRoute(this.$extra);
 
   final OpenIdMfaScreenData $extra;
 
@@ -124,7 +125,7 @@ class OpenIdMfaScreenRoute extends GoRouteData with _$OpenIdMfaScreenRoute {
 @immutable
 class OpenIdMfaWaitingScreenRoute extends GoRouteData
     with _$OpenIdMfaWaitingScreenRoute {
-  OpenIdMfaWaitingScreenRoute(this.$extra);
+  const OpenIdMfaWaitingScreenRoute(this.$extra);
 
   final OpenIdMfaWaitingScreenData $extra;
 
@@ -137,12 +138,23 @@ class OpenIdMfaWaitingScreenRoute extends GoRouteData
 @TypedGoRoute<MfaCodeScreenRoute>(path: "/mfa/code")
 @immutable
 class MfaCodeScreenRoute extends GoRouteData with _$MfaCodeScreenRoute {
-  MfaCodeScreenRoute(this.$extra);
+  const MfaCodeScreenRoute(this.$extra);
 
   final MfaCodeScreenData $extra;
 
   @override
   Widget build(BuildContext context, GoRouterState state) {
     return MfaCodeScreen(screenData: $extra);
+  }
+}
+
+@TypedGoRoute<ToastTestScreenRoute>(path: "/toast_test")
+@immutable
+class ToastTestScreenRoute extends GoRouteData with _$ToastTestScreenRoute {
+  const ToastTestScreenRoute();
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) {
+    return const ToastTestScreen();
   }
 }
