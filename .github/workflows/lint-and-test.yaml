@@ -66,8 +66,8 @@ jobs:
       - name: Update CocoaPods
         run: pod repo update
 
-      - name: build project
-        run: flutter build ios
+      # - name: build project
+      #   run: flutter build ios
 
       - name: run plugin tests
-        run: xcodebuild test -workspace Runner.xcworkspace -scheme Runner -configuration Debug
+        run: xcodebuild test -workspace Runner.xcworkspace -scheme Runner -configuration Debug -destination 'platform=iOS Simulator,name=iPhone 15,OS=17.0' DEVELOPMENT_TEAM=82GZ7KN29J
