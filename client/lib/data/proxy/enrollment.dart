@@ -181,7 +181,8 @@ class DeviceConfig {
         allowedIps == other.allowedIps &&
         dns == other.dns &&
         mfaEnabled == other.mfaEnabled &&
-        keepaliveInterval == other.keepAliveInterval;
+        keepaliveInterval == other.keepAliveInterval &&
+        locationMfa == other.locationMfa;
   }
 
   LocationsCompanion toCompanion({
@@ -204,6 +205,7 @@ class DeviceConfig {
       endpoint: d.Value(endpoint),
       allowedIps: d.Value(allowedIps),
       address: d.Value(assignedIp),
+      locationMfa: d.Value(locationMfa),
     );
   }
 }

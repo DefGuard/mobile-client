@@ -64,10 +64,12 @@ class TunnelService {
     );
 
     // handle MFA if configured
-    if (location.mfaEnabled) {
+    if (location.mfaEnabled ||
+        location.locationMfa == LocationMfa.internal ||
+        location.locationMfa == LocationMfa.external) {
       MfaMethod mfaMethod;
-      if (instance.useOpenidForMfa) {
-        // instance setup for openid mfa login
+      if (location.locationMfa == LocationMfa.external) {
+        // location setup for openid mfa login
         mfaMethod = MfaMethod.openid;
       } else {
         // non-openid mfa setup, use stored method or show method choice dialog
@@ -161,10 +163,7 @@ class TunnelService {
     final presharedKey = await Navigator.of(navigator.context).push<String?>(
       MaterialPageRoute(
         builder: (context) => OpenIdMfaScreen(
-          screenData: OpenIdMfaScreenData(
-            proxyUrl: proxyUrl,
-            token: token,
-          ),
+          screenData: OpenIdMfaScreenData(proxyUrl: proxyUrl, token: token),
         ),
       ),
     );
