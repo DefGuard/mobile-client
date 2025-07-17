@@ -52,7 +52,7 @@ public struct ActiveTunnelData: Codable {
     }
 }
 
-enum WireguardEvent: String {
+public enum WireguardEvent: String {
     case tunnelUp = "tunnel_up"
     case tunnelDown = "tunnel_down"
     case tunnelWaiting = "tunnel_waiting"
