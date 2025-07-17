@@ -19,12 +19,6 @@ final class Adapter /*: Sendable*/ {
         self.packetTunnelProvider = packetTunnelProvider
     }
 
-    //    deinit {
-    //        // Shut the tunnel down
-    //        if case .started(let handle, _) = self.state {
-    //        }
-    //    }
-
     public func start(tunnelConfiguration: TunnelConfiguration) throws {
         if let _ = tunnel {
             os_log("Cleaning exiting Tunnel...")
@@ -32,7 +26,7 @@ final class Adapter /*: Sendable*/ {
             self.connection = nil
         }
 
-        os_log("Initalizing Tunnel...")
+        os_log("Initializing Tunnel...")
         tunnel = try Tunnel.init(
             privateKey: tunnelConfiguration.interface.privateKey,
             serverPublicKey: tunnelConfiguration.peers[0].publicKey,
@@ -76,7 +70,7 @@ final class Adapter /*: Sendable*/ {
     }
 
     public func stop() {
-        print("Stopping Adapter...")
+        os_log("Stopping Adapter...")
         connection?.cancel()
         connection = nil
         tunnel = nil

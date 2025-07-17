@@ -61,15 +61,54 @@ final class TunnelConfiguration: Codable {
         return networkSettings
     }
 
-    init(fromTunnlStartData startData: TunnelStartData) {
-        self.name = startData.locationName
+    /// Helper function allowing to parse comma-separated string of addresses.
+    private func parseAddresses(fromString string: String) -> [IpAddrMask] {
+        var addresses: [IpAddrMask] = []
 
-        let interface = InterfaceConfiguration(privateKey: startData.privateKey)
-        // TODO: implement IpAddrMask from String
-        //interface.addresses = [IpAddrMask(from: startData.address)]
-        self.interface = interface
-        // TODO: peers
-        self.peers = []
+        for addr in string.split(separator: ",").map({ String($0.trimmingCharacters(in: .whitespaces)) }) {
+            if let addr_mask = IpAddrMask(fromString: addr) {
+                addresses.append(addr_mask)
+            }
+        }
+
+        return addresses
+    }
+
+    init(fromStartData startData: TunnelStartData) {
+        name = startData.locationName
+        interface = InterfaceConfiguration(privateKey: startData.privateKey)
+        let peer = Peer(publicKey: startData.publicKey)
+        peers = [peer]
+
+        interface.addresses = self.parseAddresses(fromString: startData.address)
+
+        // DNS settings
+        let dnsRecords = startData.dns?.split(separator: ",").map {
+            String($0.trimmingCharacters(in: .whitespaces))
+        } ?? []
+        if !dnsRecords.isEmpty {
+            for record in dnsRecords {
+                if IPv4Address(record) != nil || IPv6Address(record) != nil {
+                    interface.dns.append(record)
+                } else {
+                    interface.dnsSearch.append(record)
+                }
+            }
+        }
+
+        // Peer settings
+        peer.preSharedKey = startData.presharedKey
+        peer.endpoint = Endpoint(from: startData.endpoint)
+        peer.persistentKeepAlive = UInt16(startData.keepalive)
+        peer.allowedIPs = switch startData.traffic {
+            case .All:
+                [
+                    IpAddrMask(address: IPv4Address.any, cidr: 0),
+                    IpAddrMask(address: IPv6Address.any, cidr: 0)
+                ]
+            case .Predefined:
+                self.parseAddresses(fromString: startData.allowedIps)
+        }
     }
 }
 
