@@ -259,6 +259,10 @@ DeviceConfig _$DeviceConfigFromJson(Map<String, dynamic> json) =>
             'keepalive_interval',
             (v) => (v as num).toInt(),
           ),
+          locationMfa: $checkedConvert(
+            'location_mfa',
+            (v) => $enumDecodeNullable(_$LocationMfaEnumMap, v),
+          ),
         );
         return val;
       },
@@ -269,6 +273,7 @@ DeviceConfig _$DeviceConfigFromJson(Map<String, dynamic> json) =>
         'allowedIps': 'allowed_ips',
         'mfaEnabled': 'mfa_enabled',
         'keepaliveInterval': 'keepalive_interval',
+        'locationMfa': 'location_mfa',
       },
     );
 
@@ -283,6 +288,7 @@ const _$DeviceConfigFieldMap = <String, String>{
   'dns': 'dns',
   'mfaEnabled': 'mfa_enabled',
   'keepaliveInterval': 'keepalive_interval',
+  'locationMfa': 'location_mfa',
 };
 
 Map<String, dynamic> _$DeviceConfigToJson(DeviceConfig instance) =>
@@ -297,7 +303,15 @@ Map<String, dynamic> _$DeviceConfigToJson(DeviceConfig instance) =>
       'dns': instance.dns,
       'mfa_enabled': instance.mfaEnabled,
       'keepalive_interval': instance.keepaliveInterval,
+      'location_mfa': _$LocationMfaEnumMap[instance.locationMfa],
     };
+
+const _$LocationMfaEnumMap = {
+  LocationMfa.unspecified: 0,
+  LocationMfa.disabled: 1,
+  LocationMfa.internal: 2,
+  LocationMfa.external: 3,
+};
 
 CreateDeviceRequest _$CreateDeviceRequestFromJson(Map<String, dynamic> json) =>
     $checkedCreate('CreateDeviceRequest', json, ($checkedConvert) {
@@ -375,10 +389,6 @@ InstanceInfo _$InstanceInfoFromJson(Map<String, dynamic> json) =>
             'disable_all_traffic',
             (v) => v as bool,
           ),
-          useOpenidForMfa: $checkedConvert(
-            'use_openid_for_mfa',
-            (v) => v as bool,
-          ),
         );
         return val;
       },
@@ -386,7 +396,6 @@ InstanceInfo _$InstanceInfoFromJson(Map<String, dynamic> json) =>
         'proxyUrl': 'proxy_url',
         'enterpriseEnabled': 'enterprise_enabled',
         'disableAllTraffic': 'disable_all_traffic',
-        'useOpenidForMfa': 'use_openid_for_mfa',
       },
     );
 
@@ -398,7 +407,6 @@ const _$InstanceInfoFieldMap = <String, String>{
   'username': 'username',
   'enterpriseEnabled': 'enterprise_enabled',
   'disableAllTraffic': 'disable_all_traffic',
-  'useOpenidForMfa': 'use_openid_for_mfa',
 };
 
 Map<String, dynamic> _$InstanceInfoToJson(InstanceInfo instance) =>
@@ -410,7 +418,6 @@ Map<String, dynamic> _$InstanceInfoToJson(InstanceInfo instance) =>
       'username': instance.username,
       'enterprise_enabled': instance.enterpriseEnabled,
       'disable_all_traffic': instance.disableAllTraffic,
-      'use_openid_for_mfa': instance.useOpenidForMfa,
     };
 
 AppInfoResponse _$AppInfoResponseFromJson(Map<String, dynamic> json) =>

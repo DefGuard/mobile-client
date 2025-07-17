@@ -151,6 +151,7 @@ class DeviceConfig {
   final String? dns;
   final bool mfaEnabled;
   final int keepaliveInterval;
+  final LocationMfa? locationMfa;
 
   factory DeviceConfig.fromJson(Map<String, dynamic> json) =>
       _$DeviceConfigFromJson(json);
@@ -168,6 +169,7 @@ class DeviceConfig {
     this.dns,
     required this.mfaEnabled,
     required this.keepaliveInterval,
+    this.locationMfa,
   });
 
   bool matchesLocation(Location other) {
@@ -248,7 +250,6 @@ class InstanceInfo {
   final String username;
   final bool enterpriseEnabled;
   final bool disableAllTraffic;
-  final bool useOpenidForMfa;
 
   const InstanceInfo({
     required this.id,
@@ -258,7 +259,6 @@ class InstanceInfo {
     required this.username,
     required this.enterpriseEnabled,
     required this.disableAllTraffic,
-    required this.useOpenidForMfa,
   });
 
   factory InstanceInfo.fromJson(Map<String, dynamic> json) =>
