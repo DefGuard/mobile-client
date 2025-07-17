@@ -23,9 +23,24 @@ public struct TunnelStartData: Codable {
     public var locationName: String
     public var locationId: Int
     public var instanceId: Int
+
+    public init(publicKey: String, privateKey: String, address: String, dns: String? = nil, endpoint: String, allowedIps: String, keepalive: Int, presharedKey: String? = nil, traffic: TunnelTraffic, locationName: String, locationId: Int, instanceId: Int) {
+        self.publicKey = publicKey
+        self.privateKey = privateKey
+        self.address = address
+        self.dns = dns
+        self.endpoint = endpoint
+        self.allowedIps = allowedIps
+        self.keepalive = keepalive
+        self.presharedKey = presharedKey
+        self.traffic = traffic
+        self.locationName = locationName
+        self.locationId = locationId
+        self.instanceId = instanceId
+    }
 }
 
-struct ActiveTunnelData: Codable {
+public struct ActiveTunnelData: Codable {
     var locationId: Int
     var instanceId: Int
     var traffic: TunnelTraffic
@@ -37,7 +52,7 @@ struct ActiveTunnelData: Codable {
     }
 }
 
-enum WireguardEvent: String {
+public enum WireguardEvent: String {
     case tunnelUp = "tunnel_up"
     case tunnelDown = "tunnel_down"
     case tunnelWaiting = "tunnel_waiting"
