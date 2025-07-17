@@ -38,11 +38,13 @@ public class VPNManager: VPNManagement {
             print("loadAllFromPreferences \(managers?.count ?? 0)")
             guard error == nil else {
                 print("Error loading managers: \(String(describing: error))")
+                self.providerManager = nil
                 completion(nil)
                 return
             }
             guard let providerManager = managers?.first else {
                 print("No VPN manager found")
+                self.providerManager = nil
                 completion(nil)
                 return
             }
@@ -60,11 +62,16 @@ public class VPNManager: VPNManagement {
         manager.saveToPreferences { error in
             if let error = error {
                 print("Failed to save provider manager: \(error)")
+                completion(error)
             } else {
-                print("Provider manager saved successfully")
-                self.providerManager = manager
+                print("Provider manager saved successfully, reloading it")
+                self.loadProviderManager { providerManager in
+                    self.providerManager = providerManager
+                    print("The provider manager has been reloaded.")
+                    completion(nil)
+                }
             }
-            completion(error)
+
         }
     }
 
