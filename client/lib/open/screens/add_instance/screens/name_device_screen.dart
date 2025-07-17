@@ -61,19 +61,7 @@ class NameDeviceScreen extends HookConsumerWidget {
     );
     await db.managers.locations.bulkCreate(
       (o) => createResponse.configs.map(
-        (config) => o(
-          id: drift.Value.absent(),
-          name: config.networkName,
-          networkId: config.networkId,
-          pubKey: config.pubkey,
-          dns: drift.Value(config.dns),
-          keepAliveInterval: config.keepaliveInterval,
-          allowedIps: config.allowedIps,
-          instance: instance.id,
-          mfaEnabled: config.mfaEnabled,
-          address: config.assignedIp,
-          endpoint: config.endpoint,
-        ),
+        (config) => config.toCompanion(instanceId: instance.id),
       ),
     );
     return instance.name;
