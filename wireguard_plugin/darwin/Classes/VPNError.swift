@@ -7,7 +7,8 @@ enum VPNError: Error, LocalizedError {
     case timeoutError(String)
     case saveError(Error)
     case startError(Error)
-    
+    case stopError(Error)
+
     var errorDescription: String? {
         switch self {
         case .invalidArguments(let msg): return "Invalid arguments: \(msg)"
@@ -16,6 +17,7 @@ enum VPNError: Error, LocalizedError {
         case .timeoutError(let msg): return "Timeout: \(msg)"
         case .saveError(let error): return "Save error: \(error.localizedDescription)"
         case .startError(let error): return "Start error: \(error.localizedDescription)"
+        case .stopError(let error): return "Stop error: \(error.localizedDescription)"
         }
     }
     
@@ -31,6 +33,7 @@ enum VPNError: Error, LocalizedError {
         case .timeoutError: return "TIMEOUT_ERROR"
         case .saveError: return "SAVE_ERROR"
         case .startError: return "START_ERROR"
+        case .stopError: return "STOP_ERROR"
         }
     }
 }

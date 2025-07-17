@@ -1,0 +1,61 @@
+name: Run Flutter Lint and Tests
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+  pull_request:
+    branches:
+      - main
+      - dev
+
+jobs:
+  lint:
+    name: Lint project
+    runs-on: [self-hosted, macOS]
+    defaults:
+      run:
+        working-directory: ./client
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: setup flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.32.4
+
+      - name: get deps
+        run: flutter pub get
+
+      - name: run lint
+        run: flutter analyze
+  test-ios:
+    name: Run iOS tests
+    runs-on: [self-hosted, macOS]
+    needs: lint
+    defaults:
+      run:
+        working-directory: ./client/ios
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: setup flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.32.4
+
+      - name: get deps
+        run: flutter pub get
+
+      - name: build project
+        run: flutter build ios --no-codesign --config-only
+
+      - name: run plugin tests
+        run: xcodebuild test -workspace Runner.xcworkspace -scheme Runner -configuration Debug
