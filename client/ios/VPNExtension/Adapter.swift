@@ -103,8 +103,6 @@ final class Adapter /*: Sendable*/ {
         connection?.send(content: data, completion: .contentProcessed { error in
             if let error = error {
                 os_log("Send error: \(error)")
-            } else {
-                os_log("Message sent")
             }
         })
     }
@@ -114,7 +112,6 @@ final class Adapter /*: Sendable*/ {
         guard let connection = connection else { return }
         connection.receiveMessage { data, context, isComplete, error in
             if let data = data, let tunnel = self.tunnel {
-                print("Received from endpoint: \(data.count)")
                 self.handleTunnelResult(tunnel.read(src: data))
             }
             if error == nil {
@@ -129,7 +126,6 @@ final class Adapter /*: Sendable*/ {
         // Packets received to the tunnel's virtual interface.
         packetTunnelProvider?.packetFlow.readPacketObjects { packets in
             for packet in packets  {
-                os_log("Received packet \(packet.data.count)")
                 self.handleTunnelResult(tunnel.write(src: packet.data))
             }
             self.readPackets()

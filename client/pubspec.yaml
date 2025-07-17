@@ -64,6 +64,7 @@ dependencies:
   talker_dio_logger: ^4.9.1
   package_info_plus: ^8.3.0
   flutter_animate: ^4.5.2
+  collection: ^1.19.1
   url_launcher: ^6.3.2
 
 dev_dependencies:

@@ -107,9 +107,17 @@ class AppDatabase extends _$AppDatabase {
   }
 }
 
-@riverpod
+@Riverpod(keepAlive: true)
 AppDatabase database(Ref ref) {
   final db = AppDatabase();
   ref.onDispose(() => db.close());
   return db;
+}
+
+extension DefguardInstanceLogName on DefguardInstance {
+  String get logName => '$name ($id)';
+}
+
+extension LocationLogName on Location {
+  String get logName => '$name ($id)';
 }

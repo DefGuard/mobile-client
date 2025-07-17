@@ -9,6 +9,7 @@ import 'package:mobile/open/screens/instance/widgets/connection_conflict_dialog.
 import 'package:mobile/open/screens/instance/widgets/delete_instance_dialog.dart';
 import 'package:mobile/open/screens/instance/services/tunnel_service.dart';
 import 'package:mobile/open/screens/instance/widgets/mfa_method_dialog.dart';
+import 'package:mobile/open/screens/instance/widgets/refresh_instance_dialog.dart';
 import 'package:mobile/open/screens/instance/widgets/routing_method_dialog.dart';
 import 'package:mobile/open/widgets/buttons/dg_button.dart';
 import 'package:mobile/open/widgets/dg_menu.dart';
@@ -91,6 +92,7 @@ class InstanceScreen extends HookConsumerWidget {
           },
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (err, _) {
+            talker.error("Instance route screen data returned error", err);
             HomeScreenRoute().go(context);
             return const SizedBox();
           },
@@ -152,45 +154,92 @@ class _ScreenContent extends HookConsumerWidget {
               return _LocationItem(location: location, instance: instance);
             },
           ),
+          SliverToBoxAdapter(child: SizedBox(height: DgSpacing.m)),
           SliverToBoxAdapter(
             child: Padding(
-              padding: EdgeInsets.only(
-                top: DgSpacing.s,
-                left: DgSpacing.l,
-                right: DgSpacing.l,
+              padding: EdgeInsetsGeometry.symmetric(
+                horizontal: DgSpacing.xs + DgSpacing.m,
               ),
-              child: Container(
-                constraints: BoxConstraints(minHeight: 48),
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: GestureDetector(
-                    onTap: () {
-                      showDialog(
-                        context: context,
-                        builder: (BuildContext context) {
-                          return DeleteInstanceDialog(instance: instance);
-                        },
-                      );
-                    },
-                    child: Container(
-                      decoration: BoxDecoration(
-                        border: Border(
-                          bottom: BorderSide(
-                            width: 0.5,
-                            color: DgColor.textAlert,
+              child: Row(
+                mainAxisSize: MainAxisSize.max,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                spacing: DgSpacing.s,
+                children: [
+                  Container(
+                    constraints: BoxConstraints(minHeight: 24),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          border: Border(
+                            bottom: BorderSide(
+                              width: 0.5,
+                              color: DgColor.textAlert,
+                            ),
                           ),
                         ),
-                      ),
-                      child: Text(
-                        "Delete This Instance",
-                        style: DgText.buttonXS.copyWith(
-                          color: DgColor.textAlert,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.max,
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          spacing: DgSpacing.s,
+                          children: [
+                            GestureDetector(
+                              onTap: () {
+                                showDialog(
+                                  context: context,
+                                  builder: (BuildContext context) {
+                                    return DeleteInstanceDialog(
+                                      instance: instance,
+                                    );
+                                  },
+                                );
+                              },
+                              child: Text(
+                                "Delete This Instance",
+                                style: DgText.buttonXS.copyWith(
+                                  color: DgColor.textAlert,
+                                ),
+                                textAlign: TextAlign.left,
+                              ),
+                            ),
+                          ],
                         ),
-                        textAlign: TextAlign.left,
                       ),
                     ),
                   ),
-                ),
+                  Container(
+                    constraints: BoxConstraints(minHeight: 24),
+                    child: Align(
+                      alignment: Alignment.centerRight,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          border: Border(
+                            bottom: BorderSide(
+                              width: 0.5,
+                              color: DgColor.textBodySecondary,
+                            ),
+                          ),
+                        ),
+                        child: GestureDetector(
+                          onTap: () {
+                            showDialog(
+                              context: context,
+                              builder: (_) =>
+                                  RefreshInstanceDialog(instance: instance),
+                            );
+                          },
+                          child: Text(
+                            "Refresh Configuration",
+                            style: DgText.buttonXS.copyWith(
+                              color: DgColor.textBodySecondary,
+                            ),
+                            textAlign: TextAlign.right,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),

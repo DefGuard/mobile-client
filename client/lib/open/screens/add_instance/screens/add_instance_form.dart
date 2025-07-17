@@ -3,6 +3,7 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mobile/data/proxy/enrollment.dart';
 import 'package:mobile/open/api.dart';
+import 'package:mobile/open/constants.dart';
 import 'package:mobile/open/screens/add_instance/screens/name_device_screen.dart';
 import 'package:mobile/open/widgets/buttons/dg_button.dart';
 import 'package:mobile/open/widgets/dg_message_box.dart';
@@ -14,6 +15,7 @@ import 'package:mobile/open/widgets/icons/icon_rotation.dart';
 import 'package:mobile/router/routes.dart';
 import 'package:mobile/theme/spacing.dart';
 import 'package:mobile/theme/text.dart';
+import 'package:flutter/foundation.dart';
 
 import '../../../widgets/nav.dart';
 
@@ -89,7 +91,7 @@ class _AddInstanceForm extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final formKey = useMemoized(() => GlobalKey<FormState>());
     final urlController = useTextEditingController(
-      text: "http://10.0.2.2:8080",
+      text: kDebugMode ? localDebugProxyUrl : null,
     );
     final tokenController = useTextEditingController();
     final isLoading = useState(false);

@@ -23,7 +23,6 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
         var ipv4Addrs: [(String, String)]
         var ipv6Addrs: [(String, Int)]
 
-
         static func cidrToMask(_ cidr: Int) -> String {
             let mask: UInt32 = cidr == 0 ? 0 : ~UInt32(0) << (32 - cidr)
             return (0..<4).map { String((mask >> (8 * (3 - $0))) & 0xFF) }.joined(separator: ".")
@@ -58,7 +57,6 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
         }
     }
 
-
     override func startTunnel(options: [String : NSObject]?, completionHandler: @escaping (Error?) -> Void) {
         guard let tunnelConfig = extractTunnelConfiguration() else {
             let error = NSError(domain: "VPNExtension", code: -1, userInfo: [NSLocalizedDescriptionKey: "Tunnel configuration is missing or invalid."])
@@ -76,17 +74,7 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
             return
         }
 
-        guard let (ipv4Addresses, ipv6Addresses) = parseAddresses(from: tunnelConfig.address) else {
-            self.logger.log(level: .error, "Invalid address format: \(tunnelConfig.address, privacy: .public)")
-            completionHandler(NSError(domain: "VPNExtension", code: -1, userInfo: [NSLocalizedDescriptionKey: "Invalid address format: \(tunnelConfig.address)"]))
-            return
-        }
-
-        let networkSettings = createNetworkSettings(
-            tunnelConfig: tunnelConfig,
-            ipv4Addresses: ipv4Addresses,
-            ipv6Addresses: ipv6Addresses
-        )
+        let networkSettings = createNetworkSettings(tunnelConfig: tunnelConfig)
 
         applyNetworkSettings(networkSettings) { [weak self] error in
             guard let self = self else { return }
@@ -133,7 +121,6 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
         }
     }
 
-
     override func sleep(completionHandler: @escaping () -> Void) {
         self.logger.log(level: .default, "\(#function)")
         os_log("\(#function)")
@@ -155,71 +142,57 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
     }
 
 
-    private func parseAddresses(from addressString: String) -> (ipv4: [String], ipv6: [String])? {
-        var ipv4Addresses: [String] = []
-        var ipv6Addresses: [String] = []
+    private func parseAddresses(from addressString: String) -> [IpAddrMask] {
+        var addresses: [IpAddrMask] = []
 
         for addr in addressString.split(separator: ",").map({ String($0.trimmingCharacters(in: .whitespaces)) }) {
-            if let _ = IPv4Address(addr) {
-                ipv4Addresses.append(addr)
-            } else if let _ = IPv6Address(addr) {
-                ipv6Addresses.append(addr)
-            } else {
-                return nil
+            if let addr_mask = IpAddrMask(fromString: addr) {
+                addresses.append(addr_mask)
             }
         }
 
-        self.logger.log(level: .default, "Parsed IPv4 addresses: \(ipv4Addresses, privacy: .public)")
-        self.logger.log(level: .default, "Parsed IPv6 addresses: \(ipv6Addresses, privacy: .public)")
-
-        return (ipv4Addresses, ipv6Addresses)
+        self.logger.log(level: .debug, "Parsed addresses: \(addresses, privacy: .public)")
+        return addresses
     }
 
     private func createNetworkSettings(
         tunnelConfig: TunnelStartData,
-        ipv4Addresses: [String],
-        ipv6Addresses: [String]
     ) -> NEPacketTunnelNetworkSettings {
         // The endpoint is unused here
         let networkSettings = NEPacketTunnelNetworkSettings(tunnelRemoteAddress: "127.0.0.1")
-
-        let ipv4Settings = NEIPv4Settings(addresses: ipv4Addresses, subnetMasks: ipv4Addresses.map { _ in "255.255.255.255" })
-        let ipv6Settings = NEIPv6Settings(addresses: ipv6Addresses, networkPrefixLengths: ipv6Addresses.map { _ in 128 })
-
-        let routes = DestinationAddrs(fromConfig: tunnelConfig, logger: self.logger)
-        self.logger.log("Parsed the following routes: IPv4: \(routes.ipv4Addrs, privacy: .public), IPv6: \(routes.ipv6Addrs, privacy: .public)")
-
-        // IPv4 routes
-        if !ipv4Addresses.isEmpty {
-            var ipv4Routes: [NEIPv4Route] = []
-            if tunnelConfig.traffic == .Predefined {
-                self.logger.log("Using predefined routes for IPv4 traffic")
-                for route in routes.ipv4Addrs {
-                    ipv4Routes.append(NEIPv4Route(destinationAddress: route.0, subnetMask: route.1))
-                }
-            } else {
-                self.logger.log("Using default route for IPv4 traffic")
-                ipv4Routes.append(NEIPv4Route.default())
-            }
-            ipv4Settings.includedRoutes = ipv4Routes
-            networkSettings.ipv4Settings = ipv4Settings
+        let addresses = parseAddresses(from: tunnelConfig.address)
+        let allowedIPs = switch tunnelConfig.traffic {
+            case .All:
+                [
+                    IpAddrMask(address: IPv4Address.any, cidr: 0),
+                    IpAddrMask(address: IPv6Address.any, cidr: 0)
+                ]
+            case .Predefined:
+                parseAddresses(from: tunnelConfig.allowedIps)
         }
 
-        // IPv6 routes
-        if !ipv6Addresses.isEmpty {
-            var ipv6Routes: [NEIPv6Route] = []
-            if tunnelConfig.traffic == .Predefined {
-                self.logger.log("Using predefined routes for IPv6 traffic")
-                for route in routes.ipv6Addrs {
-                    ipv6Routes.append(NEIPv6Route(destinationAddress: route.0, networkPrefixLength: route.1 as NSNumber))
-                }
-            } else {
-                self.logger.log("Using default route for IPv6 traffic")
-                ipv6Routes.append(NEIPv6Route.default())
-            }
-            ipv6Settings.includedRoutes = ipv6Routes
-            networkSettings.ipv6Settings = ipv6Settings
-        }
+        let (ipv4IncludedRoutes, ipv6IncludedRoutes) = createRoutes(
+            addresses: addresses,
+            allowedIPs: allowedIPs
+        )
+
+        // IPv4 addresses
+        let addrs_v4 = addresses.filter { $0.address is IPv4Address }
+            .map { String(describing: $0.address) }
+        let masks_v4 = addresses.filter { $0.address is IPv4Address }
+            .map { String(describing: $0.mask()) }
+        let ipv4Settings = NEIPv4Settings(addresses: addrs_v4, subnetMasks: masks_v4)
+        ipv4Settings.includedRoutes = ipv4IncludedRoutes
+        networkSettings.ipv4Settings = ipv4Settings
+
+        // IPv6 addresses
+        let addrs_v6 = addresses.filter { $0.address is IPv6Address }
+            .map { String(describing: $0.address) }
+        let masks_v6 = addresses.filter { $0.address is IPv6Address }
+            .map { NSNumber(value: $0.cidr) }
+        let ipv6Settings = NEIPv6Settings(addresses: addrs_v6, networkPrefixLengths: masks_v6)
+        ipv6Settings.includedRoutes = ipv6IncludedRoutes
+        networkSettings.ipv6Settings = ipv6Settings
 
         // DNS settings
         let dnsRecords = tunnelConfig.dns?.split(separator: ",").map { String($0.trimmingCharacters(in: .whitespaces)) } ?? []
@@ -245,6 +218,47 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
         }
 
         return networkSettings
+    }
+
+    /// Return array of routes for IPv4 and IPv6.
+    private func createRoutes(addresses: [IpAddrMask], allowedIPs: [IpAddrMask]) -> (
+        [NEIPv4Route],
+        [NEIPv6Route]
+    ) {
+        var ipv4IncludedRoutes = [NEIPv4Route]()
+        var ipv6IncludedRoutes = [NEIPv6Route]()
+
+        // Routes to interface addresses.
+        for addr_mask in addresses {
+            if addr_mask.address is IPv4Address {
+                let route = NEIPv4Route(destinationAddress: "\(addr_mask.address)",
+                                        subnetMask: "\(addr_mask.mask())")
+                route.gatewayAddress = "\(addr_mask.address)"
+                ipv4IncludedRoutes.append(route)
+            } else if addr_mask.address is IPv6Address {
+                let route = NEIPv6Route(
+                    destinationAddress: "\(addr_mask.address)",
+                    networkPrefixLength: NSNumber(value: addr_mask.cidr)
+                )
+                route.gatewayAddress = "\(addr_mask.address)"
+                ipv6IncludedRoutes.append(route)
+            }
+        }
+
+        // Routes to peer's allowed IPs.
+        for addr_mask in allowedIPs {
+            if addr_mask.address is IPv4Address {
+                ipv4IncludedRoutes.append(
+                    NEIPv4Route(destinationAddress: "\(addr_mask.address)",
+                                subnetMask: "\(addr_mask.mask())"))
+            } else if addr_mask.address is IPv6Address {
+                ipv6IncludedRoutes.append(
+                    NEIPv6Route(destinationAddress: "\(addr_mask.address)",
+                                networkPrefixLength: NSNumber(value: addr_mask.cidr)))
+            }
+        }
+
+        return (ipv4IncludedRoutes, ipv6IncludedRoutes)
     }
 
     private func applyNetworkSettings(_ networkSettings: NEPacketTunnelNetworkSettings, completion: @escaping (Error?) -> Void) {
