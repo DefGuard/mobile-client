@@ -19,6 +19,7 @@ Future<void> updateInstance({
   required DefguardInstance instance,
   required List<DeviceConfig> configs,
   InstanceInfo? info,
+  String? token,
 }) async {
   talker.debug("${instance.logName} updated started");
   try {
@@ -27,9 +28,21 @@ Future<void> updateInstance({
         .get();
     await db.transaction(() async {
       // check if instance should update
-      if (info != null && info.matchesDefguardInstance(instance)) {
+      if (info != null && !info.matchesDefguardInstance(instance)) {
         final companion = info.toCompanion(instance: instance);
-        await db.managers.defguardInstances.update((_) => companion);
+        await db.managers.defguardInstances
+            .filter((row) => row.uuid.equals(instance.uuid))
+            .update((_) => companion);
+      }
+
+      // update token if provided
+      if (token != null) {
+        await db.managers.defguardInstances
+            .filter((row) => row.id.equals(instance.id))
+            .update((_) => DefguardInstancesCompanion(
+                  token: drift.Value(token),
+                ));
+        talker.debug("${instance.logName} token updated");
       }
 
       // update locations

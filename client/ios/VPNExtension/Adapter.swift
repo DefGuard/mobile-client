@@ -21,6 +21,10 @@ final class Adapter /*: Sendable*/ {
         self.packetTunnelProvider = packetTunnelProvider
     }
 
+    deinit {
+        self.stop()
+    }
+
     public func start(tunnelConfiguration: TunnelConfiguration) throws {
         if let _ = tunnel {
             logger.info("Cleaning exiting Tunnel...")
@@ -76,6 +80,9 @@ final class Adapter /*: Sendable*/ {
         connection?.cancel()
         connection = nil
         tunnel = nil
+        keepAliveTimer?.invalidate()
+        keepAliveTimer = nil
+        logger.info("Tunnel stopped")
     }
 
     private func handleTunnelResult(_ result: TunnelResult) {

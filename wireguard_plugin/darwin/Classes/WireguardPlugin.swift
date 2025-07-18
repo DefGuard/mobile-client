@@ -1,4 +1,5 @@
 import NetworkExtension
+import OSLog
 
 #if os(macOS)
     import FlutterMacOS
@@ -17,13 +18,18 @@ public class WireguardPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
     private var appStateObservers: [NSObjectProtocol] = []
     private var configurationObserver: NSObjectProtocol?
     private var vpnManager: VPNManagement
+    private var logger = Logger(
+        subsystem: "net.defguard.mobile.Client",
+        category: "WireguardPlugin"
+    )
+
 
     public init(vpnManager: VPNManagement? = nil) {
         if let vpnManager = vpnManager {
-            print("Using provided VPN manager")
+            self.logger.log("Using provided VPN manager")
             self.vpnManager = vpnManager
         } else {
-            print("Creating new VPN manager instance")
+            self.logger.log("Creating new VPN manager instance")
             self.vpnManager = VPNManager.shared
         }
         super.init()
@@ -33,12 +39,21 @@ public class WireguardPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
         withArguments arguments: Any?,
         eventSink events: @escaping FlutterEventSink
     ) -> FlutterError? {
+        self.logger.log("Setting up event sink for VPN events")
         self.eventSink = events
+        self.handleVPNStatusChange()
+        self.setupVPNObservers()
+        self.setupAppObservers()
+        self.logger.log("Event sink set up successfully")
         return nil
     }
 
     public func onCancel(withArguments arguments: Any?) -> FlutterError? {
+        self.logger.log("Cancelling event sink for VPN events")
         self.eventSink = nil
+        self.removeVPNObservers()
+        self.removeAppObservers()
+        self.logger.log("Event sink cancelled successfully")
         return nil
     }
 
@@ -56,8 +71,7 @@ public class WireguardPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
         registrar.addMethodCallDelegate(instance, channel: methodChannel)
         eventChannel.setStreamHandler(instance)
 
-        instance.setupAppObservers()
-        instance.setupVPNObservers()
+        instance.setupVPNManager()
     }
 
     /// Loads the active tunnel data from the system configuration.
@@ -65,7 +79,7 @@ public class WireguardPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
         completion: @escaping (ActiveTunnelData?) -> Void
     ) {
         guard let providerManager = self.vpnManager.getProviderManager() else {
-            print("No VPN manager found")
+            self.logger.log("No VPN manager found")
             return
         }
 
@@ -78,18 +92,31 @@ public class WireguardPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
         {
             completion(activeTunnelData)
         } else {
-            print("No active tunnel data available")
+            self.logger.log("No active tunnel data available")
             completion(nil)
         }
     }
 
+    /// Loads the possibly already existing VPN manager and sets up observers for VPN connection status changes if its present.
+    /// This is to ensure that the VPN status is observed and updated correctly when the app starts.
+    private func setupVPNManager() {
+        self.vpnManager.loadProviderManager { manager in
+            guard let _ = manager else {
+                self.logger.log("No provider manager found, the VPN status won't be observed until the VPN is started.")
+                return
+            }
+            self.logger.log("VPN manager loaded successfully, the VPN status will be observed and updated.")
+        }
+    }
+
     private func setupAppObservers() {
+        self.removeAppObservers()
         let appActiveObserver = NotificationCenter.default.addObserver(
             forName: UIApplication.didBecomeActiveNotification,
             object: nil,
             queue: OperationQueue.main
         ) { _ in
-            print("App became active, updating VPN status")
+            self.logger.log("App became active, updating VPN status")
             self.handleVPNStatusChange()
         }
         self.appStateObservers.append(appActiveObserver)
@@ -98,11 +125,11 @@ public class WireguardPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
     /// Sets up observers for VPN connection status changes.
     private func setupVPNObservers() {
         if self.connectionObserver != nil {
-            print("VPN observers already set up, removing it first")
+            self.logger.log("VPN observers already set up, removing it first")
             removeVPNObservers()
         }
         guard let providerManager = self.vpnManager.getProviderManager() else {
-            print("No provider manager found, cannot set up VPN observers")
+            self.logger.log("No provider manager found, cannot set up VPN observers")
             return
         }
         self.connectionObserver = NotificationCenter.default.addObserver(
@@ -176,7 +203,7 @@ public class WireguardPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
                     from: data
                 )
             } catch {
-                print(
+                self.logger.log(
                     "Failed to decode tunnel config: \(error.localizedDescription)"
                 )
                 result(
@@ -197,20 +224,20 @@ public class WireguardPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
     /// Updates the UI status of the VPN connection. Used when the status changes asynchronously.
     private func handleVPNStatusChange() {
         guard let vpnStatus = self.vpnManager.getConnectionStatus() else {
-            print("Failed to get VPN status, returning nil")
+            self.logger.log("Failed to get VPN status, returning nil")
             return
         }
 
         switch vpnStatus {
         case .connected:
-            print("Detected that the VPN has connected, emitting event.")
+            self.logger.log("Detected that the VPN has connected, emitting event.")
             let encoder = JSONEncoder()
             encoder.keyEncodingStrategy = .convertToSnakeCase
             if let activeTunnelData = self.activeTunnelData {
                 guard let data = try? encoder.encode(activeTunnelData),
                     let dataString = String(data: data, encoding: .utf8)
                 else {
-                    print("Failed to encode active tunnel data")
+                    self.logger.log("Failed to encode active tunnel data")
                     return
                 }
                 self.activeTunnelData = activeTunnelData
@@ -221,7 +248,7 @@ public class WireguardPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
             } else {
                 self.getActiveTunnelData { activeTunnelData in
                     guard let activeTunnelData = activeTunnelData else {
-                        print("No active tunnel data available")
+                        self.logger.log("No active tunnel data available")
                         self.emitEvent(
                             event: WireguardEvent.tunnelDown,
                             data: nil
@@ -231,7 +258,7 @@ public class WireguardPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
                     guard let data = try? encoder.encode(activeTunnelData),
                         let dataString = String(data: data, encoding: .utf8)
                     else {
-                        print("Failed to encode active tunnel data")
+                        self.logger.log("Failed to encode active tunnel data")
                         return
                     }
                     self.activeTunnelData = activeTunnelData
@@ -243,25 +270,22 @@ public class WireguardPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
             }
             self.setupVPNObservers()
         case .disconnected, .invalid:
-            print(
+            self.logger.log(
                 "Detected that the VPN has disconnected or became invalid, emitting event."
             )
             self.activeTunnelData = nil
             self.emitEvent(event: WireguardEvent.tunnelDown, data: nil)
         case .connecting:
-            print("Detected that the VPN is connecting, emitting event.")
-            self.emitEvent(event: WireguardEvent.tunnelWaiting, data: nil)
+            self.logger.log("Detected that the VPN is connecting, ignoring it since it is a temporary state we don't handle.")
         case .disconnecting:
-            print(
-                "Detected that the VPN is VPN is disconnecting, emitting event."
+            self.logger.log(
+                "Detected that the VPN is VPN is disconnecting, ignoring it since it is a temporary state we don't handle."
             )
-            self.emitEvent(event: WireguardEvent.tunnelWaiting, data: nil)
         case .reasserting:
-            print("Detected that the VPN is reasserting, emitting event.")
-            self.emitEvent(event: WireguardEvent.tunnelWaiting, data: nil)
+            self.logger.log("Detected that the VPN is reasserting, ignoring it since it is a temporary state we don't handle.")
         @unknown default:
-            print(
-                "Detected unknown VPN status: \(vpnStatus), not emitting any event"
+            self.logger.log(
+                "Detected unknown VPN status: \(vpnStatus.rawValue), ignoring it since it is a state we don't handle."
             )
         }
     }
@@ -270,7 +294,7 @@ public class WireguardPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
         config: TunnelStartData,
         result: @escaping FlutterResult
     ) {
-        print("Starting tunnel with config: \(config)")
+        self.logger.log("Starting tunnel with config: \(String(describing: config))")
 
         vpnManager.loadProviderManager { manager in
             let appId = Bundle.main.bundleIdentifier ?? "net.defguard.mobile"
@@ -282,7 +306,7 @@ public class WireguardPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
             do {
                 configDict = try config.toDictionary()
             } catch {
-                print(
+                self.logger.log(
                     "Failed to convert config to dictionary: \(error.localizedDescription)"
                 )
                 result(
@@ -303,7 +327,7 @@ public class WireguardPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
                     do {
                         try self.vpnManager.stopTunnel()
                     } catch {
-                        print("Failed to stop VPN tunnel: \(error)")
+                        self.logger.log("Failed to stop VPN tunnel: \(error)")
                         result(
                             VPNError.stopError(
                                 error
@@ -311,12 +335,12 @@ public class WireguardPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
                         )
                         return
                     }
-                    print("Stopped running VPN tunnel to update config")
+                    self.logger.log("Stopped running VPN tunnel to update config")
                     self.waitForTunnelStatus(
                         desiredStatuses: [.disconnected, .invalid]
                     ) { status in
                         if let status = status {
-                            print("Timeout waiting for tunnel to disconnect")
+                            self.logger.log("Timeout waiting for tunnel to disconnect")
                             result(
                                 VPNError.timeoutError(
                                     "The tunnel disconnection has failed to complete in a specified amount of time (\(tunnelStatusTimeout) seconds). Please check your configuration and try again. Current status: \(status.rawValue)"
@@ -353,13 +377,13 @@ public class WireguardPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
         func check() {
             let status = self.vpnManager.getConnectionStatus()
             guard let status = status else {
-                print("No VPN connection status available")
+                self.logger.log("No VPN connection status available")
                 completion(nil)
                 return
             }
-            print("Checking VPN status: \(status.rawValue)")
+            self.logger.log("Checking VPN status: \(status.rawValue)")
             if desiredStatuses.contains(status) {
-                print(
+                self.logger.log(
                     "Desired VPN status reached: \(status.rawValue)"
                 )
                 completion(nil)
@@ -386,7 +410,7 @@ public class WireguardPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
     ) {
         self.vpnManager.saveProviderManager(providerManager) { saveError in
             if let saveError = saveError {
-                print("Failed to save preferences: \(saveError)")
+                self.logger.log("Failed to save preferences: \(saveError)")
                 result(
                     VPNError.saveError(
                         saveError
@@ -402,10 +426,10 @@ public class WireguardPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
     }
 
     private func closeTunnel(result: @escaping FlutterResult) {
-        print("Stopping tunnel")
+        self.logger.log("Stopping tunnel")
 
         guard let status = self.vpnManager.getConnectionStatus() else {
-            print("No VPN connection status available")
+            self.logger.log("No VPN connection status available")
             result(
                 VPNError.noManager(
                     "No VPN connection status available. The tunnel may not be running."
@@ -420,7 +444,7 @@ public class WireguardPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
             do {
                 try self.vpnManager.stopTunnel()
             } catch {
-                print("Failed to stop VPN tunnel: \(error)")
+                self.logger.log("Failed to stop VPN tunnel: \(error)")
                 result(
                     VPNError.stopError(
                         error
@@ -433,7 +457,7 @@ public class WireguardPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
                 desiredStatuses: [.disconnected, .invalid]
             ) { status in
                 if let status = status {
-                    print(
+                    self.logger.log(
                         "Timeout waiting for tunnel to disconnect: \(status.rawValue)"
                     )
                     result(
@@ -444,11 +468,11 @@ public class WireguardPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
                     return
                 }
                 self.handleVPNStatusChange()
-                print("VPN tunnel stopped")
+                self.logger.log("VPN tunnel stopped")
                 result(nil)
             }
         } else {
-            print("VPN tunnel is not running")
+            self.logger.log("VPN tunnel is not running")
             // Emit event just to update the UI if its broken
             self.emitEvent(event: WireguardEvent.tunnelDown, data: nil)
             result(nil)
@@ -456,10 +480,13 @@ public class WireguardPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
     }
 
     private func emitEvent(event: WireguardEvent, data: String?) {
-        print(
+        self.logger.log(
             "Emitting event: \(event.rawValue), data: \(String(describing: data))"
         )
-        guard let eventSink = eventSink else { return }
+        guard let eventSink = eventSink else {
+            self.logger.log("No event sink available, cannot emit event")
+            return
+        }
         let event: [String: Any?] = [
             "event": event.rawValue,
             "data": data,
@@ -478,7 +505,7 @@ public class WireguardPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
                 desiredStatuses: [.connected]
             ) { status in
                 if status != nil {
-                    print("Timeout waiting for tunnel to connect.")
+                    self.logger.log("Timeout waiting for tunnel to connect.")
                     result(
                         VPNError.timeoutError(
                             "The tunnel connection has failed to be established in a specified amount of time. Please check your configuration and try again."
@@ -487,11 +514,11 @@ public class WireguardPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
                     return
                 }
                 self.handleVPNStatusChange()
-                print("VPN tunnel started successfully")
+                self.logger.log("VPN tunnel started successfully")
                 result(nil)
             }
         } catch {
-            print("Failed to start VPN: \(error)")
+            self.logger.log("Failed to start VPN: \(error)")
             result(
                 VPNError.startError(
                     error,

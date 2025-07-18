@@ -44,6 +44,7 @@ class RefreshInstanceDialog extends HookConsumerWidget {
         instance: instance,
         configs: networkInfo.configs,
         info: networkInfo.instance,
+        token: networkInfo.token,
       );
       talker.info("Instance information refreshed successfully");
     }, [db, proxyUrlController, tokenController, isLoading]);

@@ -32,7 +32,7 @@ public class VPNManager: VPNManagement {
 
     /// Loads the provider manager from the system preferences.
     public func loadProviderManager(
-        completion: @escaping (NETunnelProviderManager?)-> Void
+        completion: @escaping (NETunnelProviderManager?) -> Void
     ) {
         NETunnelProviderManager.loadAllFromPreferences { managers, error in
             print("loadAllFromPreferences \(managers?.count ?? 0)")
@@ -50,7 +50,9 @@ public class VPNManager: VPNManagement {
             }
 
             self.providerManager = providerManager
-            print("Loaded provider manager: \(providerManager.localizedDescription)")
+            print(
+                "Loaded provider manager: \(String(describing: providerManager.localizedDescription))"
+            )
             completion(providerManager)
         }
     }
@@ -72,16 +74,6 @@ public class VPNManager: VPNManagement {
                 }
             }
 
-        }
-    }
-
-    private func setupProviderManager() {
-        loadProviderManager { providerManager in
-            guard let providerManager = providerManager else {
-                print("No VPN manager found")
-                return
-            }
-            self.providerManager = providerManager
         }
     }
 
