@@ -10,6 +10,25 @@ struct IpAddrMask: Codable, Equatable {
         self.cidr = cidr
     }
 
+    init?(fromString string: String) {
+        let parts = string.split(
+            separator: "/",
+            maxSplits: 1,
+        )
+        if let ipv4 = IPv4Address(String(parts[0])) {
+            address = ipv4
+        } else if let ipv6 = IPv6Address(String(parts[0])) {
+            address = ipv6
+        } else {
+            return nil
+        }
+        if parts.count > 1 {
+            cidr = UInt8(parts[1]) ?? 0
+        } else {
+            cidr = 0
+        }
+    }
+
     var stringRepresentation: String {
         return "\(address)/\(cidr)"
     }

@@ -12,6 +12,8 @@ final class Adapter /*: Sendable*/ {
     private var connection: NWConnection?
     /// Keep alive timer
     private var keepAliveTimer: Timer?
+    /// Logging
+    private var logger = Logger(subsystem: Bundle.main.bundleIdentifier!, category: "Adapter")
 
     /// Designated initializer.
     /// - Parameter packetTunnelProvider: an instance of `NEPacketTunnelProvider`. Internally stored
@@ -19,20 +21,18 @@ final class Adapter /*: Sendable*/ {
         self.packetTunnelProvider = packetTunnelProvider
     }
 
-    //    deinit {
-    //        // Shut the tunnel down
-    //        if case .started(let handle, _) = self.state {
-    //        }
-    //    }
+    deinit {
+        self.stop()
+    }
 
     public func start(tunnelConfiguration: TunnelConfiguration) throws {
         if let _ = tunnel {
-            os_log("Cleaning exiting Tunnel...")
+            logger.info("Cleaning exiting Tunnel...")
             self.tunnel = nil
             self.connection = nil
         }
 
-        os_log("Initalizing Tunnel...")
+        logger.info("Initializing Tunnel...")
         tunnel = try Tunnel.init(
             privateKey: tunnelConfiguration.interface.privateKey,
             serverPublicKey: tunnelConfiguration.peers[0].publicKey,
@@ -41,9 +41,9 @@ final class Adapter /*: Sendable*/ {
             index: 0
         )
 
-        os_log("Connecting to endpoint...")
+        logger.info("Connecting to endpoint...")
         guard let endpoint = tunnelConfiguration.peers[0].endpoint else {
-            os_log("Endpoint is nil")
+            logger.error("Endpoint is nil")
             return
         }
         let params = NWParameters.udp
@@ -53,7 +53,7 @@ final class Adapter /*: Sendable*/ {
         //connection?.stateUpdateHandler = { state in
         //    print("UDP connection state: \(state)")
         //}
-        os_log("Receiving UDP from endpoint...")
+        logger.info("Receiving UDP from endpoint...")
         connection?.start(queue: .main)
         // Send initial handshake packet
         if let tunnel = tunnel {
@@ -63,7 +63,7 @@ final class Adapter /*: Sendable*/ {
 
         // Use Timer to send keep-alive packets.
         keepAliveTimer?.invalidate()
-        os_log("Creating keep-alive timer...")
+        logger.info("Creating keep-alive timer...")
         let timer = Timer(timeInterval: 0.25, repeats: true) { timer in
             guard let tunnel = self.tunnel else { return }
             self.handleTunnelResult(tunnel.tick())
@@ -71,22 +71,30 @@ final class Adapter /*: Sendable*/ {
         keepAliveTimer = timer
         RunLoop.main.add(timer, forMode: .common)
 
-        os_log("Sniffing packets...")
+        logger.info("Sniffing packets...")
         readPackets()
     }
 
     public func stop() {
-        print("Stopping Adapter...")
+        logger.info("Stopping Adapter...")
         connection?.cancel()
         connection = nil
         tunnel = nil
+        keepAliveTimer?.invalidate()
+        keepAliveTimer = nil
+        logger.info("Tunnel stopped")
     }
 
     private func handleTunnelResult(_ result: TunnelResult) {
         switch result {
             case .done:
                 break
-            case .err(_):
+            case .err(let error):
+                logger.error("Tunnel error \(String(describing: error))")
+                if error == WireGuardError.connectionExpired {
+                    logger.error("Connecion has expiered - stopping the tunnel")
+                    stop()
+                }
                 break
             case .writeToNetwork(let data):
                 sendToEndpoint(data: data)
@@ -102,9 +110,7 @@ final class Adapter /*: Sendable*/ {
     func sendToEndpoint(data: Data) {
         connection?.send(content: data, completion: .contentProcessed { error in
             if let error = error {
-                os_log("Send error: \(error)")
-            } else {
-                os_log("Message sent")
+                self.logger.error("Send error: \(error)")
             }
         })
     }
@@ -114,7 +120,6 @@ final class Adapter /*: Sendable*/ {
         guard let connection = connection else { return }
         connection.receiveMessage { data, context, isComplete, error in
             if let data = data, let tunnel = self.tunnel {
-                print("Received from endpoint: \(data.count)")
                 self.handleTunnelResult(tunnel.read(src: data))
             }
             if error == nil {
@@ -129,7 +134,6 @@ final class Adapter /*: Sendable*/ {
         // Packets received to the tunnel's virtual interface.
         packetTunnelProvider?.packetFlow.readPacketObjects { packets in
             for packet in packets  {
-                os_log("Received packet \(packet.data.count)")
                 self.handleTunnelResult(tunnel.write(src: packet.data))
             }
             self.readPackets()
