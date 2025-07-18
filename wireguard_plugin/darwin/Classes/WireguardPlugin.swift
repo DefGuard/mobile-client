@@ -104,11 +104,11 @@ public class WireguardPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
         completion: @escaping () -> Void
     ) {
         self.vpnManager.loadProviderManager { manager in
-            guard let _ = manager else {
+            if manager == nil {
                 self.logger.log("No provider manager found, the VPN status won't be observed until the VPN is started.")
-                return
+            } else {
+                self.logger.log("VPN manager loaded successfully, the VPN status will be observed and updated.")
             }
-            self.logger.log("VPN manager loaded successfully, the VPN status will be observed and updated.")
             completion()
         }
     }
@@ -378,6 +378,9 @@ public class WireguardPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
     ) {
         let checkInterval = 0.2
         var elapsedTime = 0.0
+        self.logger.log(
+            "Waiting for VPN status to change to one of: \(desiredStatuses.map { $0.rawValue })"
+        )
         func check() {
             let status = self.vpnManager.getConnectionStatus()
             guard let status = status else {

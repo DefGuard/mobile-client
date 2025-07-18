@@ -40,7 +40,7 @@ public class VPNManager: VPNManagement {
         completion: @escaping (NETunnelProviderManager?) -> Void
     ) {
         NETunnelProviderManager.loadAllFromPreferences { managers, error in
-            self.logger.log("loadAllFromPreferences \(managers?.count ?? 0, privacy: .public)")
+            self.logger.log("Loaded \(managers?.count ?? 0, privacy: .public) tunnel provider managers.")
             guard error == nil else {
                 self.logger.log("Error loading managers: \(String(describing: error), privacy: .public)")
                 self.providerManager = nil
