@@ -68,10 +68,11 @@ public class WireguardPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
         )
 
         let instance = WireguardPlugin()
-        registrar.addMethodCallDelegate(instance, channel: methodChannel)
-        eventChannel.setStreamHandler(instance)
-
-        instance.setupVPNManager()
+        instance.setupVPNManager {
+            // Register communication only after we finished with VPN manager setup.
+            registrar.addMethodCallDelegate(instance, channel: methodChannel)
+            eventChannel.setStreamHandler(instance)
+        }
     }
 
     /// Loads the active tunnel data from the system configuration.
@@ -99,13 +100,16 @@ public class WireguardPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
 
     /// Loads the possibly already existing VPN manager and sets up observers for VPN connection status changes if its present.
     /// This is to ensure that the VPN status is observed and updated correctly when the app starts.
-    private func setupVPNManager() {
+    private func setupVPNManager(
+        completion: @escaping () -> Void
+    ) {
         self.vpnManager.loadProviderManager { manager in
             guard let _ = manager else {
                 self.logger.log("No provider manager found, the VPN status won't be observed until the VPN is started.")
                 return
             }
             self.logger.log("VPN manager loaded successfully, the VPN status will be observed and updated.")
+            completion()
         }
     }
 
