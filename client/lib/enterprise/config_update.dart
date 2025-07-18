@@ -62,6 +62,7 @@ class ConfigurationUpdater extends HookConsumerWidget {
               instance: instance,
               configs: responseData.configs,
               info: responseData.instance,
+              token: responseData.token,
             );
           } catch (e) {
             talker.error(

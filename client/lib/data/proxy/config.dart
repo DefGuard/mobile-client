@@ -40,11 +40,13 @@ class NetworkInfoResponse {
   final Device device;
   final List<DeviceConfig> configs;
   final InstanceInfo instance;
+  final String? token;
 
   const NetworkInfoResponse({
     required this.device,
     required this.configs,
     required this.instance,
+    this.token,
   });
 
     factory NetworkInfoResponse.fromJson(Map<String, dynamic> json) =>

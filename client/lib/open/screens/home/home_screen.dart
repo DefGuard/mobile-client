@@ -1,7 +1,6 @@
 // ignore_for_file: unused_element
 import 'package:drift/drift.dart' as drift;
 import 'package:flutter/material.dart';
-import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mobile/data/db/database.dart';
@@ -86,15 +85,6 @@ class _InstancesList extends HookConsumerWidget {
         SnackBar(content: const Text("All instances removed")),
       );
     }
-
-    useEffect(() {
-      if (asyncInstances.value != null) {
-        if (asyncInstances.value!.isEmpty) {
-          AddInstanceScreenRoute().go(context);
-        }
-      }
-      return null;
-    }, [asyncInstances]);
 
     return asyncInstances.when(
       data: (instances) {

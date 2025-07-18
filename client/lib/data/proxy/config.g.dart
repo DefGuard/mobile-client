@@ -85,6 +85,7 @@ NetworkInfoResponse _$NetworkInfoResponseFromJson(Map<String, dynamic> json) =>
           'instance',
           (v) => InstanceInfo.fromJson(v as Map<String, dynamic>),
         ),
+        token: $checkedConvert('token', (v) => v as String?),
       );
       return val;
     });
@@ -93,6 +94,7 @@ const _$NetworkInfoResponseFieldMap = <String, String>{
   'device': 'device',
   'configs': 'configs',
   'instance': 'instance',
+  'token': 'token',
 };
 
 Map<String, dynamic> _$NetworkInfoResponseToJson(
@@ -101,4 +103,5 @@ Map<String, dynamic> _$NetworkInfoResponseToJson(
   'device': instance.device,
   'configs': instance.configs,
   'instance': instance.instance,
+  'token': instance.token,
 };
