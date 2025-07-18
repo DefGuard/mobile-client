@@ -34,42 +34,41 @@ jobs:
       - name: run lint
         run: flutter analyze
 
-  # TODO: Something's not right here with selecting the development team
-  # test-ios:
-  #   name: Run iOS tests
-  #   runs-on: [self-hosted, macOS]
-  #   needs: lint
-  #   defaults:
-  #     run:
-  #       working-directory: ./client/ios
+  test-ios:
+    name: Run iOS tests
+    runs-on: [self-hosted, macOS]
+    needs: lint
+    defaults:
+      run:
+        working-directory: ./client/ios
 
-  #   steps:
-  #     - name: Checkout
-  #       uses: actions/checkout@v4
-  #       with:
-  #         submodules: "recursive"
-  #         token: ${{ secrets.PRIVATE_REPO_CLONING_TOKEN }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: "recursive"
+          token: ${{ secrets.PRIVATE_REPO_CLONING_TOKEN }}
 
-  #     - name: setup flutter
-  #       uses: subosito/flutter-action@v2
-  #       with:
-  #         channel: stable
-  #         flutter-version: 3.32.6
+      - name: setup flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.32.6
 
-  #     - name: get deps
-  #       run: flutter pub get
+      - name: get deps
+        run: flutter pub get
 
-  #     - name: Create BoringTun directory
-  #       run: mkdir -p VPNExtension/BoringTun
+      - name: Create BoringTun directory
+        run: mkdir -p VPNExtension/BoringTun
 
-  #     - name: Generate boringtun bindings
-  #       run: cd boringtun && ./bindings.sh
+      - name: Generate boringtun bindings
+        run: cd boringtun && ./bindings.sh
 
-  #     - name: Update CocoaPods
-  #       run: pod repo update
+      - name: Update CocoaPods
+        run: pod repo update
 
-  #     # - name: build project
-  #     #   run: flutter build ios
+      # - name: build project
+      #   run: flutter build ios
 
-  #     - name: run plugin tests
-  #       run: xcodebuild test -workspace Runner.xcworkspace -scheme Runner
+      - name: run plugin tests
+        run: xcodebuild test -workspace Runner.xcworkspace -scheme Runner
