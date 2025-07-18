@@ -39,12 +39,21 @@ public class WireguardPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
         withArguments arguments: Any?,
         eventSink events: @escaping FlutterEventSink
     ) -> FlutterError? {
+        self.logger.log("Setting up event sink for VPN events")
         self.eventSink = events
+        self.handleVPNStatusChange()
+        self.setupVPNObservers()
+        self.setupAppObservers()
+        self.logger.log("Event sink set up successfully")
         return nil
     }
 
     public func onCancel(withArguments arguments: Any?) -> FlutterError? {
+        self.logger.log("Cancelling event sink for VPN events")
         self.eventSink = nil
+        self.removeVPNObservers()
+        self.removeAppObservers()
+        self.logger.log("Event sink cancelled successfully")
         return nil
     }
 
@@ -62,9 +71,7 @@ public class WireguardPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
         registrar.addMethodCallDelegate(instance, channel: methodChannel)
         eventChannel.setStreamHandler(instance)
 
-        instance.setupVPNManager {
-            instance.setupAppObservers()
-        }
+        instance.setupVPNManager()
     }
 
     /// Loads the active tunnel data from the system configuration.
@@ -92,22 +99,18 @@ public class WireguardPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
 
     /// Loads the possibly already existing VPN manager and sets up observers for VPN connection status changes if its present.
     /// This is to ensure that the VPN status is observed and updated correctly when the app starts.
-    private func setupVPNManager(
-        completion: @escaping () -> Void
-    ) {
+    private func setupVPNManager() {
         self.vpnManager.loadProviderManager { manager in
             guard let _ = manager else {
                 self.logger.log("No provider manager found, the VPN status won't be observed until the VPN is started.")
                 return
             }
             self.logger.log("VPN manager loaded successfully, the VPN status will be observed and updated.")
-            self.handleVPNStatusChange()
-            self.setupVPNObservers()
-            completion()
         }
     }
 
     private func setupAppObservers() {
+        self.removeAppObservers()
         let appActiveObserver = NotificationCenter.default.addObserver(
             forName: UIApplication.didBecomeActiveNotification,
             object: nil,
@@ -480,7 +483,10 @@ public class WireguardPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
         self.logger.log(
             "Emitting event: \(event.rawValue), data: \(String(describing: data))"
         )
-        guard let eventSink = eventSink else { return }
+        guard let eventSink = eventSink else {
+            self.logger.log("No event sink available, cannot emit event")
+            return
+        }
         let event: [String: Any?] = [
             "event": event.rawValue,
             "data": data,
