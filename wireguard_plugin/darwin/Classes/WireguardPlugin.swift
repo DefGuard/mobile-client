@@ -462,7 +462,7 @@ public class WireguardPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
                     )
                     result(
                         VPNError.timeoutError(
-                            "The tunnel disconnection has failed to complete in a specified amount of time (\(tunnelStatusTimeout, privacy: .public) seconds). Please check your configuration and try again."
+                            "The tunnel disconnection has failed to complete in a specified amount of time (\(tunnelStatusTimeout) seconds). Please check your configuration and try again."
                         ).flutterError
                     )
                     return
