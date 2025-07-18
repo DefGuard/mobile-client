@@ -78,8 +78,8 @@ class Locations extends Table with AutoIncrementingPrimaryKey {
   @JsonKey('keepalive_interval')
   IntColumn get keepAliveInterval => integer()();
 
-  @JsonKey('location_mfa')
-  IntColumn get locationMfa =>
+  @JsonKey('location_mfa_mode')
+  IntColumn get locationMfaMode =>
       integer().nullable().map(const LocationMfaConverter())();
 }
 

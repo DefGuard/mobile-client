@@ -259,9 +259,9 @@ DeviceConfig _$DeviceConfigFromJson(Map<String, dynamic> json) =>
             'keepalive_interval',
             (v) => (v as num).toInt(),
           ),
-          locationMfa: $checkedConvert(
-            'location_mfa',
-            (v) => $enumDecodeNullable(_$LocationMfaEnumMap, v),
+          locationMfaMode: $checkedConvert(
+            'location_mfa_mode',
+            (v) => $enumDecodeNullable(_$LocationMfaModeEnumMap, v),
           ),
         );
         return val;
@@ -273,7 +273,7 @@ DeviceConfig _$DeviceConfigFromJson(Map<String, dynamic> json) =>
         'allowedIps': 'allowed_ips',
         'mfaEnabled': 'mfa_enabled',
         'keepaliveInterval': 'keepalive_interval',
-        'locationMfa': 'location_mfa',
+        'locationMfaMode': 'location_mfa_mode',
       },
     );
 
@@ -288,7 +288,7 @@ const _$DeviceConfigFieldMap = <String, String>{
   'dns': 'dns',
   'mfaEnabled': 'mfa_enabled',
   'keepaliveInterval': 'keepalive_interval',
-  'locationMfa': 'location_mfa',
+  'locationMfaMode': 'location_mfa_mode',
 };
 
 Map<String, dynamic> _$DeviceConfigToJson(DeviceConfig instance) =>
@@ -303,14 +303,14 @@ Map<String, dynamic> _$DeviceConfigToJson(DeviceConfig instance) =>
       'dns': instance.dns,
       'mfa_enabled': instance.mfaEnabled,
       'keepalive_interval': instance.keepaliveInterval,
-      'location_mfa': _$LocationMfaEnumMap[instance.locationMfa],
+      'location_mfa_mode': _$LocationMfaModeEnumMap[instance.locationMfaMode],
     };
 
-const _$LocationMfaEnumMap = {
-  LocationMfa.unspecified: 0,
-  LocationMfa.disabled: 1,
-  LocationMfa.internal: 2,
-  LocationMfa.external: 3,
+const _$LocationMfaModeEnumMap = {
+  LocationMfaMode.unspecified: 0,
+  LocationMfaMode.disabled: 1,
+  LocationMfaMode.internal: 2,
+  LocationMfaMode.external: 3,
 };
 
 CreateDeviceRequest _$CreateDeviceRequestFromJson(Map<String, dynamic> json) =>

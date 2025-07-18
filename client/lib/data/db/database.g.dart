@@ -806,14 +806,14 @@ class $LocationsTable extends Locations
     requiredDuringInsert: true,
   );
   @override
-  late final GeneratedColumnWithTypeConverter<LocationMfa?, int> locationMfa =
-      GeneratedColumn<int>(
-        'location_mfa',
-        aliasedName,
-        true,
-        type: DriftSqlType.int,
-        requiredDuringInsert: false,
-      ).withConverter<LocationMfa?>($LocationsTable.$converterlocationMfan);
+  late final GeneratedColumnWithTypeConverter<LocationMfaMode?, int>
+  locationMfaMode = GeneratedColumn<int>(
+    'location_mfa_mode',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  ).withConverter<LocationMfaMode?>($LocationsTable.$converterlocationMfaModen);
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -829,7 +829,7 @@ class $LocationsTable extends Locations
     trafficMethod,
     mfaMethod,
     keepAliveInterval,
-    locationMfa,
+    locationMfaMode,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -992,10 +992,10 @@ class $LocationsTable extends Locations
         DriftSqlType.int,
         data['${effectivePrefix}keep_alive_interval'],
       )!,
-      locationMfa: $LocationsTable.$converterlocationMfan.fromSql(
+      locationMfaMode: $LocationsTable.$converterlocationMfaModen.fromSql(
         attachedDatabase.typeMapping.read(
           DriftSqlType.int,
-          data['${effectivePrefix}location_mfa'],
+          data['${effectivePrefix}location_mfa_mode'],
         ),
       ),
     );
@@ -1018,10 +1018,10 @@ class $LocationsTable extends Locations
       const MfaMethodConverter();
   static TypeConverter<MfaMethod?, int?> $convertermfaMethodn =
       NullAwareTypeConverter.wrap($convertermfaMethod);
-  static TypeConverter<LocationMfa, int> $converterlocationMfa =
+  static TypeConverter<LocationMfaMode, int> $converterlocationMfaMode =
       const LocationMfaConverter();
-  static TypeConverter<LocationMfa?, int?> $converterlocationMfan =
-      NullAwareTypeConverter.wrap($converterlocationMfa);
+  static TypeConverter<LocationMfaMode?, int?> $converterlocationMfaModen =
+      NullAwareTypeConverter.wrap($converterlocationMfaMode);
 }
 
 class Location extends DataClass implements Insertable<Location> {
@@ -1038,7 +1038,7 @@ class Location extends DataClass implements Insertable<Location> {
   final RoutingMethod? trafficMethod;
   final MfaMethod? mfaMethod;
   final int keepAliveInterval;
-  final LocationMfa? locationMfa;
+  final LocationMfaMode? locationMfaMode;
   const Location({
     required this.id,
     required this.instance,
@@ -1053,7 +1053,7 @@ class Location extends DataClass implements Insertable<Location> {
     this.trafficMethod,
     this.mfaMethod,
     required this.keepAliveInterval,
-    this.locationMfa,
+    this.locationMfaMode,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1081,9 +1081,9 @@ class Location extends DataClass implements Insertable<Location> {
       );
     }
     map['keep_alive_interval'] = Variable<int>(keepAliveInterval);
-    if (!nullToAbsent || locationMfa != null) {
-      map['location_mfa'] = Variable<int>(
-        $LocationsTable.$converterlocationMfan.toSql(locationMfa),
+    if (!nullToAbsent || locationMfaMode != null) {
+      map['location_mfa_mode'] = Variable<int>(
+        $LocationsTable.$converterlocationMfaModen.toSql(locationMfaMode),
       );
     }
     return map;
@@ -1108,9 +1108,9 @@ class Location extends DataClass implements Insertable<Location> {
           ? const Value.absent()
           : Value(mfaMethod),
       keepAliveInterval: Value(keepAliveInterval),
-      locationMfa: locationMfa == null && nullToAbsent
+      locationMfaMode: locationMfaMode == null && nullToAbsent
           ? const Value.absent()
-          : Value(locationMfa),
+          : Value(locationMfaMode),
     );
   }
 
@@ -1135,7 +1135,9 @@ class Location extends DataClass implements Insertable<Location> {
       ),
       mfaMethod: serializer.fromJson<MfaMethod?>(json['mfa_method']),
       keepAliveInterval: serializer.fromJson<int>(json['keepalive_interval']),
-      locationMfa: serializer.fromJson<LocationMfa?>(json['location_mfa']),
+      locationMfaMode: serializer.fromJson<LocationMfaMode?>(
+        json['location_mfa_mode'],
+      ),
     );
   }
   @override
@@ -1157,7 +1159,7 @@ class Location extends DataClass implements Insertable<Location> {
       ),
       'mfa_method': serializer.toJson<MfaMethod?>(mfaMethod),
       'keepalive_interval': serializer.toJson<int>(keepAliveInterval),
-      'location_mfa': serializer.toJson<LocationMfa?>(locationMfa),
+      'location_mfa_mode': serializer.toJson<LocationMfaMode?>(locationMfaMode),
     };
   }
 
@@ -1175,7 +1177,7 @@ class Location extends DataClass implements Insertable<Location> {
     Value<RoutingMethod?> trafficMethod = const Value.absent(),
     Value<MfaMethod?> mfaMethod = const Value.absent(),
     int? keepAliveInterval,
-    Value<LocationMfa?> locationMfa = const Value.absent(),
+    Value<LocationMfaMode?> locationMfaMode = const Value.absent(),
   }) => Location(
     id: id ?? this.id,
     instance: instance ?? this.instance,
@@ -1192,7 +1194,9 @@ class Location extends DataClass implements Insertable<Location> {
         : this.trafficMethod,
     mfaMethod: mfaMethod.present ? mfaMethod.value : this.mfaMethod,
     keepAliveInterval: keepAliveInterval ?? this.keepAliveInterval,
-    locationMfa: locationMfa.present ? locationMfa.value : this.locationMfa,
+    locationMfaMode: locationMfaMode.present
+        ? locationMfaMode.value
+        : this.locationMfaMode,
   );
   Location copyWithCompanion(LocationsCompanion data) {
     return Location(
@@ -1217,9 +1221,9 @@ class Location extends DataClass implements Insertable<Location> {
       keepAliveInterval: data.keepAliveInterval.present
           ? data.keepAliveInterval.value
           : this.keepAliveInterval,
-      locationMfa: data.locationMfa.present
-          ? data.locationMfa.value
-          : this.locationMfa,
+      locationMfaMode: data.locationMfaMode.present
+          ? data.locationMfaMode.value
+          : this.locationMfaMode,
     );
   }
 
@@ -1239,7 +1243,7 @@ class Location extends DataClass implements Insertable<Location> {
           ..write('trafficMethod: $trafficMethod, ')
           ..write('mfaMethod: $mfaMethod, ')
           ..write('keepAliveInterval: $keepAliveInterval, ')
-          ..write('locationMfa: $locationMfa')
+          ..write('locationMfaMode: $locationMfaMode')
           ..write(')'))
         .toString();
   }
@@ -1259,7 +1263,7 @@ class Location extends DataClass implements Insertable<Location> {
     trafficMethod,
     mfaMethod,
     keepAliveInterval,
-    locationMfa,
+    locationMfaMode,
   );
   @override
   bool operator ==(Object other) =>
@@ -1278,7 +1282,7 @@ class Location extends DataClass implements Insertable<Location> {
           other.trafficMethod == this.trafficMethod &&
           other.mfaMethod == this.mfaMethod &&
           other.keepAliveInterval == this.keepAliveInterval &&
-          other.locationMfa == this.locationMfa);
+          other.locationMfaMode == this.locationMfaMode);
 }
 
 class LocationsCompanion extends UpdateCompanion<Location> {
@@ -1295,7 +1299,7 @@ class LocationsCompanion extends UpdateCompanion<Location> {
   final Value<RoutingMethod?> trafficMethod;
   final Value<MfaMethod?> mfaMethod;
   final Value<int> keepAliveInterval;
-  final Value<LocationMfa?> locationMfa;
+  final Value<LocationMfaMode?> locationMfaMode;
   const LocationsCompanion({
     this.id = const Value.absent(),
     this.instance = const Value.absent(),
@@ -1310,7 +1314,7 @@ class LocationsCompanion extends UpdateCompanion<Location> {
     this.trafficMethod = const Value.absent(),
     this.mfaMethod = const Value.absent(),
     this.keepAliveInterval = const Value.absent(),
-    this.locationMfa = const Value.absent(),
+    this.locationMfaMode = const Value.absent(),
   });
   LocationsCompanion.insert({
     this.id = const Value.absent(),
@@ -1326,7 +1330,7 @@ class LocationsCompanion extends UpdateCompanion<Location> {
     this.trafficMethod = const Value.absent(),
     this.mfaMethod = const Value.absent(),
     required int keepAliveInterval,
-    this.locationMfa = const Value.absent(),
+    this.locationMfaMode = const Value.absent(),
   }) : instance = Value(instance),
        networkId = Value(networkId),
        name = Value(name),
@@ -1350,7 +1354,7 @@ class LocationsCompanion extends UpdateCompanion<Location> {
     Expression<String>? trafficMethod,
     Expression<int>? mfaMethod,
     Expression<int>? keepAliveInterval,
-    Expression<int>? locationMfa,
+    Expression<int>? locationMfaMode,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -1366,7 +1370,7 @@ class LocationsCompanion extends UpdateCompanion<Location> {
       if (trafficMethod != null) 'traffic_method': trafficMethod,
       if (mfaMethod != null) 'mfa_method': mfaMethod,
       if (keepAliveInterval != null) 'keep_alive_interval': keepAliveInterval,
-      if (locationMfa != null) 'location_mfa': locationMfa,
+      if (locationMfaMode != null) 'location_mfa_mode': locationMfaMode,
     });
   }
 
@@ -1384,7 +1388,7 @@ class LocationsCompanion extends UpdateCompanion<Location> {
     Value<RoutingMethod?>? trafficMethod,
     Value<MfaMethod?>? mfaMethod,
     Value<int>? keepAliveInterval,
-    Value<LocationMfa?>? locationMfa,
+    Value<LocationMfaMode?>? locationMfaMode,
   }) {
     return LocationsCompanion(
       id: id ?? this.id,
@@ -1400,7 +1404,7 @@ class LocationsCompanion extends UpdateCompanion<Location> {
       trafficMethod: trafficMethod ?? this.trafficMethod,
       mfaMethod: mfaMethod ?? this.mfaMethod,
       keepAliveInterval: keepAliveInterval ?? this.keepAliveInterval,
-      locationMfa: locationMfa ?? this.locationMfa,
+      locationMfaMode: locationMfaMode ?? this.locationMfaMode,
     );
   }
 
@@ -1450,9 +1454,9 @@ class LocationsCompanion extends UpdateCompanion<Location> {
     if (keepAliveInterval.present) {
       map['keep_alive_interval'] = Variable<int>(keepAliveInterval.value);
     }
-    if (locationMfa.present) {
-      map['location_mfa'] = Variable<int>(
-        $LocationsTable.$converterlocationMfan.toSql(locationMfa.value),
+    if (locationMfaMode.present) {
+      map['location_mfa_mode'] = Variable<int>(
+        $LocationsTable.$converterlocationMfaModen.toSql(locationMfaMode.value),
       );
     }
     return map;
@@ -1474,7 +1478,7 @@ class LocationsCompanion extends UpdateCompanion<Location> {
           ..write('trafficMethod: $trafficMethod, ')
           ..write('mfaMethod: $mfaMethod, ')
           ..write('keepAliveInterval: $keepAliveInterval, ')
-          ..write('locationMfa: $locationMfa')
+          ..write('locationMfaMode: $locationMfaMode')
           ..write(')'))
         .toString();
   }
@@ -1953,7 +1957,7 @@ typedef $$LocationsTableCreateCompanionBuilder =
       Value<RoutingMethod?> trafficMethod,
       Value<MfaMethod?> mfaMethod,
       required int keepAliveInterval,
-      Value<LocationMfa?> locationMfa,
+      Value<LocationMfaMode?> locationMfaMode,
     });
 typedef $$LocationsTableUpdateCompanionBuilder =
     LocationsCompanion Function({
@@ -1970,7 +1974,7 @@ typedef $$LocationsTableUpdateCompanionBuilder =
       Value<RoutingMethod?> trafficMethod,
       Value<MfaMethod?> mfaMethod,
       Value<int> keepAliveInterval,
-      Value<LocationMfa?> locationMfa,
+      Value<LocationMfaMode?> locationMfaMode,
     });
 
 final class $$LocationsTableReferences
@@ -2068,9 +2072,9 @@ class $$LocationsTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnWithTypeConverterFilters<LocationMfa?, LocationMfa, int>
-  get locationMfa => $composableBuilder(
-    column: $table.locationMfa,
+  ColumnWithTypeConverterFilters<LocationMfaMode?, LocationMfaMode, int>
+  get locationMfaMode => $composableBuilder(
+    column: $table.locationMfaMode,
     builder: (column) => ColumnWithTypeConverterFilters(column),
   );
 
@@ -2167,8 +2171,8 @@ class $$LocationsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<int> get locationMfa => $composableBuilder(
-    column: $table.locationMfa,
+  ColumnOrderings<int> get locationMfaMode => $composableBuilder(
+    column: $table.locationMfaMode,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -2250,9 +2254,9 @@ class $$LocationsTableAnnotationComposer
     builder: (column) => column,
   );
 
-  GeneratedColumnWithTypeConverter<LocationMfa?, int> get locationMfa =>
+  GeneratedColumnWithTypeConverter<LocationMfaMode?, int> get locationMfaMode =>
       $composableBuilder(
-        column: $table.locationMfa,
+        column: $table.locationMfaMode,
         builder: (column) => column,
       );
 
@@ -2322,7 +2326,7 @@ class $$LocationsTableTableManager
                 Value<RoutingMethod?> trafficMethod = const Value.absent(),
                 Value<MfaMethod?> mfaMethod = const Value.absent(),
                 Value<int> keepAliveInterval = const Value.absent(),
-                Value<LocationMfa?> locationMfa = const Value.absent(),
+                Value<LocationMfaMode?> locationMfaMode = const Value.absent(),
               }) => LocationsCompanion(
                 id: id,
                 instance: instance,
@@ -2337,7 +2341,7 @@ class $$LocationsTableTableManager
                 trafficMethod: trafficMethod,
                 mfaMethod: mfaMethod,
                 keepAliveInterval: keepAliveInterval,
-                locationMfa: locationMfa,
+                locationMfaMode: locationMfaMode,
               ),
           createCompanionCallback:
               ({
@@ -2354,7 +2358,7 @@ class $$LocationsTableTableManager
                 Value<RoutingMethod?> trafficMethod = const Value.absent(),
                 Value<MfaMethod?> mfaMethod = const Value.absent(),
                 required int keepAliveInterval,
-                Value<LocationMfa?> locationMfa = const Value.absent(),
+                Value<LocationMfaMode?> locationMfaMode = const Value.absent(),
               }) => LocationsCompanion.insert(
                 id: id,
                 instance: instance,
@@ -2369,7 +2373,7 @@ class $$LocationsTableTableManager
                 trafficMethod: trafficMethod,
                 mfaMethod: mfaMethod,
                 keepAliveInterval: keepAliveInterval,
-                locationMfa: locationMfa,
+                locationMfaMode: locationMfaMode,
               ),
           withReferenceMapper: (p0) => p0
               .map(

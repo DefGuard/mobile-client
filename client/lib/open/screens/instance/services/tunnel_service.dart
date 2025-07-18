@@ -65,10 +65,10 @@ class TunnelService {
 
     // handle MFA if configured
     if (location.mfaEnabled ||
-        location.locationMfa == LocationMfa.internal ||
-        location.locationMfa == LocationMfa.external) {
+        location.locationMfaMode == LocationMfaMode.internal ||
+        location.locationMfaMode == LocationMfaMode.external) {
       MfaMethod mfaMethod;
-      if (location.locationMfa == LocationMfa.external) {
+      if (location.locationMfaMode == LocationMfaMode.external) {
         // location setup for openid mfa login
         mfaMethod = MfaMethod.openid;
       } else {
