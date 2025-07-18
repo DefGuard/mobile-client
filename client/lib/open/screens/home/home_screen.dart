@@ -87,15 +87,6 @@ class _InstancesList extends HookConsumerWidget {
       );
     }
 
-    useEffect(() {
-      if (asyncInstances.value != null) {
-        if (asyncInstances.value!.isEmpty) {
-          AddInstanceScreenRoute().go(context);
-        }
-      }
-      return null;
-    }, [asyncInstances]);
-
     return asyncInstances.when(
       data: (instances) {
         if (instances.isEmpty) {
