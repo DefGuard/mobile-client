@@ -11,8 +11,11 @@ enum VPNEventType: String {
 }
 
 class PacketTunnelProvider: NEPacketTunnelProvider {
-
-    private var logger = Logger(subsystem: "net.defguard.mobile.Client", category: "VPNExtension")
+    /// Logging
+    private var logger = Logger(
+        subsystem: Bundle.main.bundleIdentifier!,
+        category: "PacketTunnelProvider"
+    )
 
     private lazy var adapter: Adapter = {
         return Adapter(with: self)
@@ -22,16 +25,16 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
         guard let tunnelConfig = extractTunnelConfiguration() else {
             let error = NSError(domain: "VPNExtension", code: -1,
                                 userInfo: [NSLocalizedDescriptionKey: "Tunnel configuration is missing or invalid."])
-            self.logger.log(level: .error, "Tunnel configuration is missing or invalid.")
+            logger.error("Tunnel configuration is missing or invalid.")
             completionHandler(error)
             return
         }
 
-        self.logger.log("Starting tunnel with configuration: \(String(describing: tunnelConfig), privacy: .public)")
+        logger.log("Starting tunnel with configuration: \(String(describing: tunnelConfig), privacy: .public)")
 
         guard let endpoint = Endpoint(from: tunnelConfig.endpoint) else {
             let error = NSError(domain: "VPNExtension", code: -1, userInfo: [NSLocalizedDescriptionKey: "Invalid endpoint format: \(tunnelConfig.endpoint)"])
-            self.logger.log(level: .error, "Invalid endpoint format: \(tunnelConfig.endpoint, privacy: .public)")
+            logger.error("Invalid endpoint format: \(tunnelConfig.endpoint, privacy: .public)")
             completionHandler(error)
             return
         }
@@ -43,7 +46,7 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
             guard let self = self else { return }
 
             if let error = error {
-                self.logger.log("Set tunnel network settings returned an error \(error, privacy: .public)")
+                logger.warning("Set tunnel network settings returned an error \(error, privacy: .public)")
                 completionHandler(error)
                 return
             }
@@ -51,36 +54,35 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
             do {
                 try self.adapter.start(tunnelConfiguration: tunnelConfiguration)
             } catch {
-                self.logger.log(level: .error, "Failed to start adapter with error: \(error.localizedDescription, privacy: .public)")
+                logger.error("Failed to start adapter with error: \(error.localizedDescription, privacy: .public)")
                 completionHandler(error)
                 return
             }
 
-            self.logger.log("Tunnel started successfully")
+            logger.log("Tunnel started successfully")
             completionHandler(nil)
         }
     }
 
     override func stopTunnel(with reason: NEProviderStopReason, completionHandler: @escaping () -> Void) {
-        self.logger.log("\(#function)")
         self.adapter.stop()
         completionHandler()
     }
 
     override func handleAppMessage(_ messageData: Data, completionHandler: ((Data?) -> Void)?) {
-        self.logger.log("\(#function)")
+        logger.debug("\(#function)")
         if let handler = completionHandler {
             handler(messageData)
         }
     }
 
     override func sleep(completionHandler: @escaping () -> Void) {
-        self.logger.log("\(#function)")
+        logger.debug("\(#function)")
         completionHandler()
     }
 
     override func wake() {
-        self.logger.log("\(#function)")
+        logger.debug("\(#function)")
     }
 
     // MARK: - Helpers
