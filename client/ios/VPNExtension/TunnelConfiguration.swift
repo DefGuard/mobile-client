@@ -53,6 +53,7 @@ final class TunnelConfiguration: Codable {
         networkSettings.ipv6Settings = ipv6Settings
 
         networkSettings.mtu = interface.mtu as NSNumber?
+        networkSettings.tunnelOverheadBytes = 80
         let dnsServers = interface.dns.map { ip in String(describing: ip) }
         let dnsSettings = NEDNSSettings(servers: dnsServers)
         dnsSettings.searchDomains = interface.dnsSearch
