@@ -6,6 +6,7 @@
 //
 
 import NetworkExtension
+import OSLog
 
 public protocol VPNManagement {
     func loadProviderManager(
@@ -24,6 +25,10 @@ public protocol VPNManagement {
 
 public class VPNManager: VPNManagement {
     static let shared = VPNManager()
+    private var logger = Logger(
+        subsystem: Bundle.main.bundleIdentifier!,
+        category: "WireguardPlugin.VPNManager"
+    )
 
     init() {
     }
@@ -35,23 +40,23 @@ public class VPNManager: VPNManagement {
         completion: @escaping (NETunnelProviderManager?) -> Void
     ) {
         NETunnelProviderManager.loadAllFromPreferences { managers, error in
-            print("loadAllFromPreferences \(managers?.count ?? 0)")
+            self.logger.log("loadAllFromPreferences \(managers?.count ?? 0, privacy: .public)")
             guard error == nil else {
-                print("Error loading managers: \(String(describing: error))")
+                self.logger.log("Error loading managers: \(String(describing: error), privacy: .public)")
                 self.providerManager = nil
                 completion(nil)
                 return
             }
             guard let providerManager = managers?.first else {
-                print("No VPN manager found")
+                self.logger.log("No VPN manager found")
                 self.providerManager = nil
                 completion(nil)
                 return
             }
 
             self.providerManager = providerManager
-            print(
-                "Loaded provider manager: \(String(describing: providerManager.localizedDescription))"
+            self.logger.log(
+                "Loaded provider manager: \(String(describing: providerManager.localizedDescription), privacy: .public)"
             )
             completion(providerManager)
         }
@@ -63,13 +68,13 @@ public class VPNManager: VPNManagement {
     ) {
         manager.saveToPreferences { error in
             if let error = error {
-                print("Failed to save provider manager: \(error)")
+                self.logger.log("Failed to save provider manager: \(error, privacy: .public)")
                 completion(error)
             } else {
-                print("Provider manager saved successfully, reloading it")
+                self.logger.log("Provider manager saved successfully, reloading it")
                 self.loadProviderManager { providerManager in
                     self.providerManager = providerManager
-                    print("The provider manager has been reloaded.")
+                    self.logger.log("The provider manager has been reloaded.")
                     completion(nil)
                 }
             }
@@ -79,7 +84,7 @@ public class VPNManager: VPNManagement {
 
     public func getConnectionStatus() -> NEVPNStatus? {
         guard let providerManager = providerManager else {
-            print("Provider manager is not set")
+            self.logger.log("Provider manager is not set")
             return nil
         }
 
@@ -91,10 +96,10 @@ public class VPNManager: VPNManagement {
     }
 
     public func handleVPNConfigurationChange() {
-        print("VPN configuration changed, updating provider manager")
+        self.logger.log("VPN configuration changed, updating provider manager")
         self.loadProviderManager { providerManager in
             guard let providerManager = providerManager else {
-                print("No VPN manager found after configuration change")
+                self.logger.log("No VPN manager found after configuration change")
                 return
             }
             self.providerManager = providerManager
@@ -113,7 +118,7 @@ public class VPNManager: VPNManagement {
         }
 
         try providerManager.connection.startVPNTunnel()
-        print("VPN tunnel started successfully")
+        self.logger.log("VPN tunnel started successfully")
     }
 
     public func stopTunnel() throws {
@@ -128,6 +133,6 @@ public class VPNManager: VPNManagement {
         }
 
         providerManager.connection.stopVPNTunnel()
-        print("VPN tunnel stopped successfully")
+        self.logger.log("VPN tunnel stopped successfully")
     }
 }
