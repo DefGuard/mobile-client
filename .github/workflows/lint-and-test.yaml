@@ -70,5 +70,8 @@ jobs:
       # - name: build project
       #   run: flutter build ios
 
+      - name: Unlock Keychain
+        run: security -v unlock-keychain -p "${{ secrets.KEYCHAIN_PASSWORD }}" /Users/admin/Library/Keychains/login.keychain
+
       - name: run plugin tests
         run: xcodebuild test -workspace Runner.xcworkspace -scheme Runner
