@@ -1,36 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mobile/open/widgets/buttons/dg_button.dart';
-import 'package:mobile/open/widgets/nav.dart';
 import 'package:mobile/open/widgets/toaster/toast_manager.dart';
-import 'package:mobile/theme/color.dart';
 import 'package:mobile/theme/spacing.dart';
+
+import '../widgets/navigation/dg_scaffold.dart';
 
 class ToastTestScreen extends StatelessWidget {
   const ToastTestScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: DgAppBar(title: "Toaster test"),
-      drawer: DgDrawer(),
-      body: Container(
-        decoration: BoxDecoration(color: DgColor.frameBg),
-        child: Stack(
-          children: [
-            LayoutBuilder(
-              builder: (context, constrains) {
-                return ConstrainedBox(
-                  constraints: BoxConstraints(minHeight: constrains.maxHeight),
-                  child: _Content(),
-                );
-              },
-            ),
-            ToastPositioner(),
-          ],
-        ),
-      ),
-    );
+    return DgScaffold(title: "Toaster tests", child: _Content());
   }
 }
 
@@ -51,7 +32,9 @@ class _Content extends HookConsumerWidget {
               text: "Show toast",
               onTap: () {
                 toasterNotifier.showInfo(
-                    title: "Test", message: "Test message");
+                  title: "Test",
+                  message: "Test message",
+                );
               },
             ),
           ),

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:mobile/open/widgets/buttons/dg_button.dart';
 import 'package:mobile/open/widgets/dg_message_box.dart';
 import 'package:mobile/open/widgets/dg_single_child_scroll_view.dart';
-import 'package:mobile/open/widgets/nav.dart';
+import 'package:mobile/open/widgets/navigation/dg_scaffold.dart';
 import 'package:mobile/router/routes.dart';
 import 'package:mobile/theme/spacing.dart';
 import 'package:mobile/theme/text.dart';
@@ -14,10 +14,9 @@ class AddInstanceScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: DgAppBar(title: "Add Instance"),
-      drawer: DgDrawer(),
-      body: DgSingleChildScrollView(
+    return DgScaffold(
+      title: "Add Instance",
+      child: DgSingleChildScrollView(
         child: Column(
           children: [
             SizedBox(height: 120),

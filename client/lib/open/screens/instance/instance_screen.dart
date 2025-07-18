@@ -18,7 +18,7 @@ import 'package:mobile/open/widgets/icons/asset_icons_simple.dart';
 import 'package:mobile/open/widgets/icons/connection.dart';
 import 'package:mobile/open/widgets/icons/icon_rotation.dart';
 import 'package:mobile/open/widgets/limited_text.dart';
-import 'package:mobile/open/widgets/nav.dart';
+import 'package:mobile/open/widgets/navigation/dg_scaffold.dart';
 import 'package:mobile/plugin.dart';
 import 'package:mobile/router/routes.dart';
 import 'package:mobile/theme/color.dart';
@@ -73,10 +73,9 @@ class InstanceScreen extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final screenData = ref.watch(_screenDataProvider(id));
 
-    return Scaffold(
-      appBar: DgAppBar(title: "Locations"),
-      drawer: DgDrawer(),
-      body: Container(
+    return DgScaffold(
+      title: "Locations",
+      child: Container(
         color: DgColor.frameBg,
         child: screenData.when(
           data: (screenData) {

@@ -3,7 +3,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mobile/open/screens/mfa/openid_mfa_waiting_screen.dart';
 import 'package:mobile/open/widgets/buttons/dg_button.dart';
 import 'package:mobile/open/widgets/icons/openid_open.dart';
-import 'package:mobile/open/widgets/nav.dart';
+import 'package:mobile/open/widgets/navigation/dg_scaffold.dart';
 import 'package:mobile/theme/color.dart';
 import 'package:mobile/theme/spacing.dart';
 import 'package:mobile/theme/text.dart';
@@ -39,11 +39,9 @@ class OpenIdMfaScreen extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return Scaffold(
-      backgroundColor: DgColor.frameBg,
-      appBar: DgAppBar(title: _title),
-      drawer: DgDrawer(),
-      body: SafeArea(
+    return DgScaffold(
+      title: _title,
+      child: SafeArea(
         child: Padding(
           padding: EdgeInsets.all(DgSpacing.l),
           child: Column(

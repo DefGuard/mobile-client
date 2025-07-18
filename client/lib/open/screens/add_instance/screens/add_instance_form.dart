@@ -12,22 +12,20 @@ import 'package:mobile/open/widgets/dg_text_form_field.dart';
 import 'package:mobile/open/widgets/icons/arrow_single.dart';
 import 'package:mobile/open/widgets/icons/asset_icons_simple.dart';
 import 'package:mobile/open/widgets/icons/icon_rotation.dart';
+import 'package:mobile/open/widgets/navigation/dg_scaffold.dart';
 import 'package:mobile/router/routes.dart';
 import 'package:mobile/theme/spacing.dart';
 import 'package:mobile/theme/text.dart';
 import 'package:flutter/foundation.dart';
-
-import '../../../widgets/nav.dart';
 
 class AddInstanceFormScreen extends HookConsumerWidget {
   const AddInstanceFormScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return Scaffold(
-      appBar: DgAppBar(title: "Add instance"),
-      drawer: DgDrawer(),
-      body: DgSingleChildScrollView(
+    return DgScaffold(
+      title: "Add Instance",
+      child: DgSingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.max,
           children: [
