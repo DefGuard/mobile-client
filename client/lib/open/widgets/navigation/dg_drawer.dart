@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mobile/open/riverpod/package_info/package_info.dart';
 import 'package:mobile/router/routes.dart';
@@ -19,15 +21,35 @@ class _DrawerLogo extends StatelessWidget {
   }
 }
 
+class _DrawerItemData {
+  final String label;
+  final GoRouteData route;
+
+  const _DrawerItemData({required this.label, required this.route});
+}
+
 class DgDrawer extends HookConsumerWidget {
   const DgDrawer({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final matchedLocation = GoRouterState.of(context).matchedLocation;
     final year = DateTime.now().year;
     final version = ref
         .watch(packageInfoProvider)
         .maybeWhen(orElse: () => '', data: (info) => "v${info.version}");
+
+    final items = useMemoized<List<_DrawerItemData>>(() {
+      return [
+        _DrawerItemData(label: "Instances", route: HomeScreenRoute()),
+        _DrawerItemData(label: "Add Instance", route: AddInstanceScreenRoute()),
+        _DrawerItemData(label: "Toaster test", route: ToastTestScreenRoute()),
+        _DrawerItemData(
+          label: "View Application Logs",
+          route: TalkerScreenRoute(),
+        ),
+      ].where((item) => item.route.location != matchedLocation).toList();
+    }, [matchedLocation]);
 
     return Container(
       color: DgColor.navBg,
@@ -74,32 +96,14 @@ class DgDrawer extends HookConsumerWidget {
                   children: [
                     Column(
                       spacing: DgSpacing.s,
-                      children: [
-                        _MenuButton(
-                          text: "Instances",
-                          onPressed: () {
-                            HomeScreenRoute().push(context);
-                          },
-                        ),
-                        _MenuButton(
-                          text: "Add Instance",
-                          onPressed: () {
-                            AddInstanceScreenRoute().push(context);
-                          },
-                        ),
-                        _MenuButton(
-                          text: "Toaster test",
-                          onPressed: () {
-                            ToastTestScreenRoute().push(context);
-                          },
-                        ),
-                        _MenuButton(
-                          text: "View Application Logs",
-                          onPressed: () {
-                            TalkerScreenRoute().push(context);
-                          },
-                        ),
-                      ],
+                      children: items
+                          .map(
+                            (data) => _MenuButton(
+                              text: data.label,
+                              route: data.route,
+                            ),
+                          )
+                          .toList(),
                     ),
                     Container(
                       decoration: BoxDecoration(
@@ -117,10 +121,34 @@ class DgDrawer extends HookConsumerWidget {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             _DrawerLogo(),
-                            Text(
-                              "Copyright \u00a9 $year defguard\nApplication version: $version",
-                              style: DgText.copyright.copyWith(
-                                color: DgColor.textBodyPrimary,
+                            Expanded(
+                              child: Column(
+                                children: [
+                                  FittedBox(
+                                    fit: BoxFit.scaleDown,
+                                    alignment: Alignment.center,
+                                    child: Text(
+                                      "Copyright \u00a9 $year defguard",
+                                      textAlign: TextAlign.center,
+                                      maxLines: 1,
+                                      style: DgText.copyright.copyWith(
+                                        color: DgColor.textBodyPrimary,
+                                      ),
+                                    ),
+                                  ),
+                                  FittedBox(
+                                    fit: BoxFit.scaleDown,
+                                    alignment: Alignment.center,
+                                    child: Text(
+                                      "Application version: $version",
+                                      textAlign: TextAlign.center,
+                                      maxLines: 1,
+                                      style: DgText.copyright.copyWith(
+                                        color: DgColor.textBodyPrimary,
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ],
@@ -140,9 +168,10 @@ class DgDrawer extends HookConsumerWidget {
 
 class _MenuButton extends StatelessWidget {
   final String text;
-  final VoidCallback onPressed;
+  final GoRouteData route;
+  final Function()? onTap;
 
-  const _MenuButton({required this.text, required this.onPressed});
+  const _MenuButton({required this.text, required this.route});
 
   @override
   Widget build(BuildContext context) {
@@ -156,7 +185,13 @@ class _MenuButton extends StatelessWidget {
         ),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.zero),
       ),
-      onPressed: onPressed,
+      onPressed: () {
+        if (onTap != null) {
+          onTap!();
+        }
+        Navigator.of(context).pop();
+        route.go(context);
+      },
       child: Align(
         alignment: Alignment.centerLeft,
         child: Text(

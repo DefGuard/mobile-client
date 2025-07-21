@@ -1,3 +1,4 @@
+import 'package:collection/collection.dart';
 import 'package:drift/drift.dart' as drift;
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
@@ -105,6 +106,27 @@ class NameDeviceScreen extends HookConsumerWidget {
                       DgTextFormField(
                         controller: nameController,
                         hintText: "Name this device",
+                        validator: (value) {
+                          if (value == null) {
+                            return "Field is required";
+                          }
+                          if (value != null) {
+                            final valueText = value as String;
+                            final matchedName = screenData
+                                .startResponse
+                                .user
+                                .deviceNames
+                                .firstWhereOrNull(
+                                  (name) =>
+                                      name.toLowerCase() ==
+                                      valueText.toLowerCase().trim(),
+                                );
+                            if (matchedName != null) {
+                              return "Name is already used";
+                            }
+                          }
+                          return null;
+                        },
                       ),
                       DgButton(
                         variant: DgButtonVariant.primary,
@@ -113,6 +135,12 @@ class NameDeviceScreen extends HookConsumerWidget {
                         text: "Submit",
                         onTap: () async {
                           final messenger = ScaffoldMessenger.of(context);
+                          if (!formKey.currentState!.validate()) {
+                            messenger.showSnackBar(
+                              SnackBar(content: Text("Correct form errors")),
+                            );
+                            return;
+                          }
                           try {
                             final instanceName = await _handleRegistration(
                               context,

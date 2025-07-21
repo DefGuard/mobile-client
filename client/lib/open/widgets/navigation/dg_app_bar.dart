@@ -33,10 +33,18 @@ class DgAppBar extends StatelessWidget implements PreferredSizeWidget {
                 width: 40,
                 height: 44,
               ),
-              Center(
-                child: Text(
-                  title,
-                  style: DgText.body1.copyWith(color: DgColor.textBodyPrimary),
+              Expanded(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.center,
+                  child: Text(
+                    title,
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    style: DgText.body1.copyWith(
+                      color: DgColor.textBodyPrimary,
+                    ),
+                  ),
                 ),
               ),
               IconButton(

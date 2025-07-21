@@ -135,10 +135,16 @@ class _ScreenContent extends HookConsumerWidget {
                       HomeScreenRoute().go(context);
                     },
                   ),
-                  Center(
-                    child: Text(
-                      "${screenData.instance.name} instance locations:",
-                      style: DgText.sideBar,
+                  SizedBox(
+                    width: double.infinity,
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.center,
+                      child: Text(
+                        "${screenData.instance.name} instance locations:",
+                        textAlign: TextAlign.center,
+                        style: DgText.sideBar,
+                      ),
                     ),
                   ),
                 ],
@@ -272,19 +278,20 @@ class _LocationItem extends HookConsumerWidget {
 
     final dgMenuItems = useMemoized<List<DgMenuItem>>(() {
       return [
-        DgMenuItem(
-          text: "Select MFA Method",
-          onTap: () {
-            print(location.mfaMethod);
-            showDialog(
-              context: context,
-              builder: (_) => MfaMethodDialog(
-                location: location,
-                intention: MfaMethodDialogIntention.save,
-              ),
-            );
-          },
-        ),
+        if (location.mfaEnabled)
+          DgMenuItem(
+            text: "Select MFA Method",
+            onTap: () {
+              print(location.mfaMethod);
+              showDialog(
+                context: context,
+                builder: (_) => MfaMethodDialog(
+                  location: location,
+                  intention: MfaMethodDialogIntention.save,
+                ),
+              );
+            },
+          ),
         DgMenuItem(
           text: "Select Traffic Routing",
           onTap: () {
@@ -350,7 +357,7 @@ class _LocationItem extends HookConsumerWidget {
           },
           child: Container(
             key: menuAnchorKey,
-            constraints: BoxConstraints(minHeight: 64, maxHeight: 100),
+            constraints: BoxConstraints(minHeight: 64),
             padding: EdgeInsets.symmetric(vertical: 0, horizontal: DgSpacing.s),
             decoration: BoxDecoration(
               color: DgColor.navBg,
