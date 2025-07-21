@@ -6,12 +6,12 @@ import 'package:mobile/data/proxy/mfa.dart';
 import 'package:mobile/open/api.dart';
 import 'package:mobile/open/widgets/buttons/dg_button.dart';
 import 'package:mobile/open/widgets/icons/openid_wait.dart';
-import 'package:mobile/open/widgets/nav.dart';
 import 'package:mobile/theme/color.dart';
 import 'package:mobile/theme/spacing.dart';
 import 'package:mobile/theme/text.dart';
 
 import '../../../../../logging.dart';
+import '../../widgets/navigation/dg_scaffold.dart';
 
 class OpenIdMfaWaitingScreenData {
   final String proxyUrl;
@@ -90,11 +90,9 @@ class OpenIdMfaWaitingScreen extends HookConsumerWidget {
       return null;
     }, []);
 
-    return Scaffold(
-      backgroundColor: DgColor.frameBg,
-      appBar: DgAppBar(title: _title),
-      drawer: DgDrawer(),
-      body: SafeArea(
+    return DgScaffold(
+      title: _title,
+      child: SafeArea(
         child: Padding(
           padding: EdgeInsets.all(DgSpacing.l),
           child: Column(

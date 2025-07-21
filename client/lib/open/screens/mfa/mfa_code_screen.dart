@@ -7,7 +7,7 @@ import 'package:mobile/open/api.dart';
 import 'package:mobile/open/widgets/buttons/dg_button.dart';
 import 'package:mobile/open/widgets/dg_single_child_scroll_view.dart';
 import 'package:mobile/open/widgets/dg_text_form_field.dart';
-import 'package:mobile/open/widgets/nav.dart';
+import 'package:mobile/open/widgets/navigation/dg_scaffold.dart';
 import 'package:mobile/theme/color.dart';
 import 'package:mobile/theme/spacing.dart';
 import 'package:mobile/theme/text.dart';
@@ -41,11 +41,9 @@ class MfaCodeScreen extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return Scaffold(
-      backgroundColor: DgColor.frameBg,
-      appBar: DgAppBar(title: _title),
-      drawer: DgDrawer(),
-      body: DgSingleChildScrollView(
+    return DgScaffold(
+      title: _title,
+      child: DgSingleChildScrollView(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -85,6 +83,7 @@ Future<FinishMfaResponse> _handleSubmit(
 
 class _CodeForm extends HookConsumerWidget {
   final MfaCodeScreenData screenData;
+
   const _CodeForm({required this.screenData});
 
   String? _validateCode(String? value, bool codeInvalid) {

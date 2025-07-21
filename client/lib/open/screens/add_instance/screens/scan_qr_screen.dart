@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mobile/data/proxy/qr_register.dart';
-import 'package:mobile/open/widgets/nav.dart';
+import 'package:mobile/open/widgets/navigation/dg_scaffold.dart';
 import 'package:mobile/router/routes.dart';
 import 'package:mobile/theme/color.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
@@ -33,10 +33,9 @@ class ScanInstanceQrScreen extends HookConsumerWidget {
       };
     }, []);
 
-    return Scaffold(
-      appBar: DgAppBar(title: "Scan QR"),
-      drawer: DgDrawer(),
-      body: Container(
+    return DgScaffold(
+      title: "Scan QR",
+      child: Container(
         color: DgColor.frameBg,
         child: SafeArea(
           top: false,

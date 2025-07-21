@@ -9,7 +9,7 @@ import 'package:mobile/open/widgets/circular_progress.dart';
 import 'package:mobile/open/widgets/icons/arrow_single.dart';
 import 'package:mobile/open/widgets/icons/connection.dart';
 import 'package:mobile/open/widgets/limited_text.dart';
-import 'package:mobile/open/widgets/nav.dart';
+import 'package:mobile/open/widgets/navigation/dg_scaffold.dart';
 import 'package:mobile/router/routes.dart';
 import 'package:mobile/theme/color.dart';
 import 'package:mobile/theme/spacing.dart';
@@ -20,9 +20,8 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: DgAppBar(title: "Instances"),
-      drawer: DgDrawer(),
+    return DgScaffold(
+      title: "Instances",
       floatingActionButton: SizedBox(
         height: 60,
         width: 60,
@@ -42,7 +41,7 @@ class HomeScreen extends StatelessWidget {
         ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-      body: Container(
+      child: Container(
         color: DgColor.frameBg,
         child: SafeArea(
           top: false,

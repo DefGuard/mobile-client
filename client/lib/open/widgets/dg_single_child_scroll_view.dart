@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:mobile/theme/color.dart';
 
 import '../../theme/spacing.dart';
 
@@ -25,22 +24,19 @@ class DgSingleChildScrollView extends StatelessWidget {
         MediaQuery.of(context).viewPadding.bottom;
     return LayoutBuilder(
       builder: (context, constrains) {
-        return Container(
-          color: DgColor.frameBg,
-          child: SingleChildScrollView(
-            padding: EdgeInsets.fromLTRB(
-              horizontalPadding,
-              verticalPadding,
-              horizontalPadding,
-              verticalPadding,
+        return SingleChildScrollView(
+          padding: EdgeInsets.fromLTRB(
+            horizontalPadding,
+            verticalPadding,
+            horizontalPadding,
+            verticalPadding,
+          ),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              minHeight:
+                  constrains.maxHeight - verticalPadding * 2 - bottomSpace,
             ),
-            child: ConstrainedBox(
-              constraints: BoxConstraints(
-                minHeight:
-                    constrains.maxHeight - verticalPadding * 2 - bottomSpace,
-              ),
-              child: child,
-            ),
+            child: child,
           ),
         );
       },

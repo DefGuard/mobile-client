@@ -14,7 +14,6 @@ import 'package:mobile/theme/color.dart';
 import 'package:mobile/theme/spacing.dart';
 import 'package:mobile/theme/text.dart';
 
-
 final String _predefinedMessage =
     "Only send selected traffic (e.g., company services or internal apps) through the VPN. Faster for general browsing. Ideal for hybrid work.";
 
@@ -47,7 +46,9 @@ class RoutingMethodDialog extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final db = ref.watch(databaseProvider);
-    final connectionType = useState<RoutingMethod>(location.trafficMethod ?? RoutingMethod.predefined);
+    final connectionType = useState<RoutingMethod>(
+      location.trafficMethod ?? RoutingMethod.predefined,
+    );
     final shouldRemember = useState(true);
     final isLoading = useState(false);
 
@@ -75,6 +76,7 @@ class RoutingMethodDialog extends HookConsumerWidget {
 
     return Dialog(
       backgroundColor: DgColor.defaultModal,
+      insetPadding: EdgeInsets.symmetric(horizontal: DgSpacing.s),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       child: Padding(
         padding: EdgeInsets.symmetric(vertical: 25, horizontal: DgSpacing.s),

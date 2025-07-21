@@ -58,4 +58,10 @@ class DgText {
     fontWeight: FontWeight.w400,
     color: _defaultTextColor,
   );
+  static const TextStyle modal2 = TextStyle(
+    fontFamily: _roboto,
+    fontSize: 12,
+    fontWeight: FontWeight.w400,
+    color: _defaultTextColor,
+  );
 }
