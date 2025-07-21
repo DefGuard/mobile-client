@@ -24,7 +24,7 @@ class RefreshInstanceDialog extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final db = ref.read(databaseProvider);
     final proxyUrlController = useTextEditingController(
-      text: kDebugMode ? localDebugProxyUrl : instance.proxyUrl,
+      text: instance.proxyUrl,
     );
     final tokenController = useTextEditingController();
     final isLoading = useState(false);

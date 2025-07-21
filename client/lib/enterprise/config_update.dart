@@ -38,9 +38,8 @@ class ConfigurationUpdater extends HookConsumerWidget {
           talker.debug(
             "Auto configuration update started for ${instance.name} (${instance.id})",
           );
-          final proxyUrl = kDebugMode ? localDebugProxyUrl : instance.proxyUrl;
           final (responseData, responseStatus) = await proxyApi
-              .pollConfiguration(proxyUrl, instance.token);
+              .pollConfiguration(instance.proxyUrl, instance.token);
           // instance lost it's enterprise status
           if (responseStatus == 402) {
             instance.copyWith(

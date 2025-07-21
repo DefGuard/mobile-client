@@ -769,9 +769,9 @@ class $LocationsTable extends Locations
   late final GeneratedColumn<bool> mfaEnabled = GeneratedColumn<bool>(
     'mfa_enabled',
     aliasedName,
-    false,
+    true,
     type: DriftSqlType.bool,
-    requiredDuringInsert: true,
+    requiredDuringInsert: false,
     defaultConstraints: GeneratedColumn.constraintIsAlways(
       'CHECK ("mfa_enabled" IN (0, 1))',
     ),
@@ -913,8 +913,6 @@ class $LocationsTable extends Locations
         _mfaEnabledMeta,
         mfaEnabled.isAcceptableOrUnknown(data['mfa_enabled']!, _mfaEnabledMeta),
       );
-    } else if (isInserting) {
-      context.missing(_mfaEnabledMeta);
     }
     if (data.containsKey('keep_alive_interval')) {
       context.handle(
@@ -975,7 +973,7 @@ class $LocationsTable extends Locations
       mfaEnabled: attachedDatabase.typeMapping.read(
         DriftSqlType.bool,
         data['${effectivePrefix}mfa_enabled'],
-      )!,
+      ),
       trafficMethod: $LocationsTable.$convertertrafficMethodn.fromSql(
         attachedDatabase.typeMapping.read(
           DriftSqlType.string,
@@ -1019,7 +1017,7 @@ class $LocationsTable extends Locations
   static TypeConverter<MfaMethod?, int?> $convertermfaMethodn =
       NullAwareTypeConverter.wrap($convertermfaMethod);
   static TypeConverter<LocationMfaMode, int> $converterlocationMfaMode =
-      const LocationMfaConverter();
+      const LocationMfaModeConverter();
   static TypeConverter<LocationMfaMode?, int?> $converterlocationMfaModen =
       NullAwareTypeConverter.wrap($converterlocationMfaMode);
 }
@@ -1034,7 +1032,7 @@ class Location extends DataClass implements Insertable<Location> {
   final String endpoint;
   final String allowedIps;
   final String? dns;
-  final bool mfaEnabled;
+  final bool? mfaEnabled;
   final RoutingMethod? trafficMethod;
   final MfaMethod? mfaMethod;
   final int keepAliveInterval;
@@ -1049,7 +1047,7 @@ class Location extends DataClass implements Insertable<Location> {
     required this.endpoint,
     required this.allowedIps,
     this.dns,
-    required this.mfaEnabled,
+    this.mfaEnabled,
     this.trafficMethod,
     this.mfaMethod,
     required this.keepAliveInterval,
@@ -1069,7 +1067,9 @@ class Location extends DataClass implements Insertable<Location> {
     if (!nullToAbsent || dns != null) {
       map['dns'] = Variable<String>(dns);
     }
-    map['mfa_enabled'] = Variable<bool>(mfaEnabled);
+    if (!nullToAbsent || mfaEnabled != null) {
+      map['mfa_enabled'] = Variable<bool>(mfaEnabled);
+    }
     if (!nullToAbsent || trafficMethod != null) {
       map['traffic_method'] = Variable<String>(
         $LocationsTable.$convertertrafficMethodn.toSql(trafficMethod),
@@ -1100,7 +1100,9 @@ class Location extends DataClass implements Insertable<Location> {
       endpoint: Value(endpoint),
       allowedIps: Value(allowedIps),
       dns: dns == null && nullToAbsent ? const Value.absent() : Value(dns),
-      mfaEnabled: Value(mfaEnabled),
+      mfaEnabled: mfaEnabled == null && nullToAbsent
+          ? const Value.absent()
+          : Value(mfaEnabled),
       trafficMethod: trafficMethod == null && nullToAbsent
           ? const Value.absent()
           : Value(trafficMethod),
@@ -1129,7 +1131,7 @@ class Location extends DataClass implements Insertable<Location> {
       endpoint: serializer.fromJson<String>(json['endpoint']),
       allowedIps: serializer.fromJson<String>(json['allowed_ips']),
       dns: serializer.fromJson<String?>(json['dns']),
-      mfaEnabled: serializer.fromJson<bool>(json['mfa_enabled']),
+      mfaEnabled: serializer.fromJson<bool?>(json['mfa_enabled']),
       trafficMethod: $LocationsTable.$convertertrafficMethodn.fromJson(
         serializer.fromJson<String?>(json['traffic_method']),
       ),
@@ -1153,7 +1155,7 @@ class Location extends DataClass implements Insertable<Location> {
       'endpoint': serializer.toJson<String>(endpoint),
       'allowed_ips': serializer.toJson<String>(allowedIps),
       'dns': serializer.toJson<String?>(dns),
-      'mfa_enabled': serializer.toJson<bool>(mfaEnabled),
+      'mfa_enabled': serializer.toJson<bool?>(mfaEnabled),
       'traffic_method': serializer.toJson<String?>(
         $LocationsTable.$convertertrafficMethodn.toJson(trafficMethod),
       ),
@@ -1173,7 +1175,7 @@ class Location extends DataClass implements Insertable<Location> {
     String? endpoint,
     String? allowedIps,
     Value<String?> dns = const Value.absent(),
-    bool? mfaEnabled,
+    Value<bool?> mfaEnabled = const Value.absent(),
     Value<RoutingMethod?> trafficMethod = const Value.absent(),
     Value<MfaMethod?> mfaMethod = const Value.absent(),
     int? keepAliveInterval,
@@ -1188,7 +1190,7 @@ class Location extends DataClass implements Insertable<Location> {
     endpoint: endpoint ?? this.endpoint,
     allowedIps: allowedIps ?? this.allowedIps,
     dns: dns.present ? dns.value : this.dns,
-    mfaEnabled: mfaEnabled ?? this.mfaEnabled,
+    mfaEnabled: mfaEnabled.present ? mfaEnabled.value : this.mfaEnabled,
     trafficMethod: trafficMethod.present
         ? trafficMethod.value
         : this.trafficMethod,
@@ -1295,7 +1297,7 @@ class LocationsCompanion extends UpdateCompanion<Location> {
   final Value<String> endpoint;
   final Value<String> allowedIps;
   final Value<String?> dns;
-  final Value<bool> mfaEnabled;
+  final Value<bool?> mfaEnabled;
   final Value<RoutingMethod?> trafficMethod;
   final Value<MfaMethod?> mfaMethod;
   final Value<int> keepAliveInterval;
@@ -1326,7 +1328,7 @@ class LocationsCompanion extends UpdateCompanion<Location> {
     required String endpoint,
     required String allowedIps,
     this.dns = const Value.absent(),
-    required bool mfaEnabled,
+    this.mfaEnabled = const Value.absent(),
     this.trafficMethod = const Value.absent(),
     this.mfaMethod = const Value.absent(),
     required int keepAliveInterval,
@@ -1338,7 +1340,6 @@ class LocationsCompanion extends UpdateCompanion<Location> {
        pubKey = Value(pubKey),
        endpoint = Value(endpoint),
        allowedIps = Value(allowedIps),
-       mfaEnabled = Value(mfaEnabled),
        keepAliveInterval = Value(keepAliveInterval);
   static Insertable<Location> custom({
     Expression<int>? id,
@@ -1384,7 +1385,7 @@ class LocationsCompanion extends UpdateCompanion<Location> {
     Value<String>? endpoint,
     Value<String>? allowedIps,
     Value<String?>? dns,
-    Value<bool>? mfaEnabled,
+    Value<bool?>? mfaEnabled,
     Value<RoutingMethod?>? trafficMethod,
     Value<MfaMethod?>? mfaMethod,
     Value<int>? keepAliveInterval,
@@ -1953,7 +1954,7 @@ typedef $$LocationsTableCreateCompanionBuilder =
       required String endpoint,
       required String allowedIps,
       Value<String?> dns,
-      required bool mfaEnabled,
+      Value<bool?> mfaEnabled,
       Value<RoutingMethod?> trafficMethod,
       Value<MfaMethod?> mfaMethod,
       required int keepAliveInterval,
@@ -1970,7 +1971,7 @@ typedef $$LocationsTableUpdateCompanionBuilder =
       Value<String> endpoint,
       Value<String> allowedIps,
       Value<String?> dns,
-      Value<bool> mfaEnabled,
+      Value<bool?> mfaEnabled,
       Value<RoutingMethod?> trafficMethod,
       Value<MfaMethod?> mfaMethod,
       Value<int> keepAliveInterval,
@@ -2322,7 +2323,7 @@ class $$LocationsTableTableManager
                 Value<String> endpoint = const Value.absent(),
                 Value<String> allowedIps = const Value.absent(),
                 Value<String?> dns = const Value.absent(),
-                Value<bool> mfaEnabled = const Value.absent(),
+                Value<bool?> mfaEnabled = const Value.absent(),
                 Value<RoutingMethod?> trafficMethod = const Value.absent(),
                 Value<MfaMethod?> mfaMethod = const Value.absent(),
                 Value<int> keepAliveInterval = const Value.absent(),
@@ -2354,7 +2355,7 @@ class $$LocationsTableTableManager
                 required String endpoint,
                 required String allowedIps,
                 Value<String?> dns = const Value.absent(),
-                required bool mfaEnabled,
+                Value<bool?> mfaEnabled = const Value.absent(),
                 Value<RoutingMethod?> trafficMethod = const Value.absent(),
                 Value<MfaMethod?> mfaMethod = const Value.absent(),
                 required int keepAliveInterval,

@@ -59,8 +59,8 @@ enum LocationMfaMode {
       LocationMfaMode.values.firstWhere((e) => e.value == value);
 }
 
-class LocationMfaConverter extends TypeConverter<LocationMfaMode, int> {
-  const LocationMfaConverter();
+class LocationMfaModeConverter extends TypeConverter<LocationMfaMode, int> {
+  const LocationMfaModeConverter();
 
   @override
   LocationMfaMode fromSql(int fromDb) {

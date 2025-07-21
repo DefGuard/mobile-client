@@ -38,7 +38,7 @@ class TunnelService {
         trafficMethod = location.trafficMethod!;
       } else {
         // no pre selected traffic choice available, ask user
-        RoutingMethodDialogIntention dialogIntention = location.mfaEnabled
+        RoutingMethodDialogIntention dialogIntention = _mfaEnabled(location)
             ? RoutingMethodDialogIntention.next
             : RoutingMethodDialogIntention.connect;
         RoutingMethod? userSelection = await _showDialog(
@@ -64,9 +64,7 @@ class TunnelService {
     );
 
     // handle MFA if configured
-    if (location.mfaEnabled ||
-        location.locationMfaMode == LocationMfaMode.internal ||
-        location.locationMfaMode == LocationMfaMode.external) {
+    if (_mfaEnabled(location)) {
       MfaMethod mfaMethod;
       if (location.locationMfaMode == LocationMfaMode.external) {
         // location setup for openid mfa login
@@ -107,6 +105,14 @@ class TunnelService {
 
     // start the tunnel
     await wireguardPlugin.startTunnel(jsonEncode(payload.toJson()));
+  }
+
+  /// Checks if MFA is enabled for specified location taking into account
+  /// the deprecated `mfaEnabled` option.
+  static bool _mfaEnabled(Location location) {
+    return location.mfaEnabled == true ||
+        location.locationMfaMode == LocationMfaMode.internal ||
+        location.locationMfaMode == LocationMfaMode.external;
   }
 
   /// Performs MFA using specified method.
