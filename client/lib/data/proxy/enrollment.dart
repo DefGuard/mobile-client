@@ -151,6 +151,7 @@ class DeviceConfig {
   final String? dns;
   final bool mfaEnabled;
   final int keepaliveInterval;
+  final LocationMfaMode? locationMfaMode;
 
   factory DeviceConfig.fromJson(Map<String, dynamic> json) =>
       _$DeviceConfigFromJson(json);
@@ -168,6 +169,7 @@ class DeviceConfig {
     this.dns,
     required this.mfaEnabled,
     required this.keepaliveInterval,
+    this.locationMfaMode,
   });
 
   bool matchesLocation(Location other) {
@@ -179,7 +181,8 @@ class DeviceConfig {
         allowedIps == other.allowedIps &&
         dns == other.dns &&
         mfaEnabled == other.mfaEnabled &&
-        keepaliveInterval == other.keepAliveInterval;
+        keepaliveInterval == other.keepAliveInterval &&
+        locationMfaMode == other.locationMfaMode;
   }
 
   LocationsCompanion toCompanion({
@@ -202,6 +205,7 @@ class DeviceConfig {
       endpoint: d.Value(endpoint),
       allowedIps: d.Value(allowedIps),
       address: d.Value(assignedIp),
+      locationMfaMode: d.Value(locationMfaMode),
     );
   }
 }
@@ -248,7 +252,6 @@ class InstanceInfo {
   final String username;
   final bool enterpriseEnabled;
   final bool disableAllTraffic;
-  final bool useOpenidForMfa;
 
   const InstanceInfo({
     required this.id,
@@ -258,7 +261,6 @@ class InstanceInfo {
     required this.username,
     required this.enterpriseEnabled,
     required this.disableAllTraffic,
-    required this.useOpenidForMfa,
   });
 
   factory InstanceInfo.fromJson(Map<String, dynamic> json) =>

@@ -4,14 +4,12 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mobile/data/db/database.dart';
 import 'package:mobile/data/proxy/enrollment.dart';
 import 'package:mobile/open/api.dart';
-import 'package:mobile/open/constants.dart';
 import 'package:mobile/open/widgets/buttons/dg_button.dart';
 import 'package:mobile/open/widgets/dg_dialog.dart';
 import 'package:mobile/open/widgets/dg_dialog_title.dart';
 import 'package:mobile/open/widgets/dg_text_form_field.dart';
 import 'package:mobile/theme/spacing.dart';
 import 'package:mobile/utils/update_instance.dart';
-import 'package:flutter/foundation.dart';
 
 import '../../../../logging.dart';
 
@@ -24,7 +22,7 @@ class RefreshInstanceDialog extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final db = ref.read(databaseProvider);
     final proxyUrlController = useTextEditingController(
-      text: kDebugMode ? localDebugProxyUrl : instance.proxyUrl,
+      text: instance.proxyUrl,
     );
     final tokenController = useTextEditingController();
     final isLoading = useState(false);

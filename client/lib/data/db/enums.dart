@@ -39,3 +39,36 @@ class MfaMethodConverter extends TypeConverter<MfaMethod, int> {
     return value.value;
   }
 }
+
+@j.JsonEnum()
+enum LocationMfaMode {
+  @j.JsonValue(0)
+  unspecified(0),
+  @j.JsonValue(1)
+  disabled(1),
+  @j.JsonValue(2)
+  internal(2),
+  @j.JsonValue(3)
+  external(3);
+
+  final int value;
+
+  const LocationMfaMode(this.value);
+
+  static LocationMfaMode fromValue(int value) =>
+      LocationMfaMode.values.firstWhere((e) => e.value == value);
+}
+
+class LocationMfaModeConverter extends TypeConverter<LocationMfaMode, int> {
+  const LocationMfaModeConverter();
+
+  @override
+  LocationMfaMode fromSql(int fromDb) {
+    return LocationMfaMode.fromValue(fromDb);
+  }
+
+  @override
+  int toSql(LocationMfaMode value) {
+    return value.value;
+  }
+}

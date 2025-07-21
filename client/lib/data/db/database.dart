@@ -37,8 +37,6 @@ class DefguardInstances extends Table with AutoIncrementingPrimaryKey {
 
   // user private key
   TextColumn get privateKey => text()();
-
-  BoolColumn get useOpenidForMfa => boolean()();
 }
 
 @DataClassName('Location')
@@ -67,8 +65,10 @@ class Locations extends Table with AutoIncrementingPrimaryKey {
 
   TextColumn get dns => text().nullable()();
 
+  // deprecated, use locationMfaMode instead
+  @Deprecated('1.5')
   @JsonKey('mfa_enabled')
-  BoolColumn get mfaEnabled => boolean()();
+  BoolColumn get mfaEnabled => boolean().nullable()();
 
   @JsonKey('traffic_method')
   TextColumn get trafficMethod => textEnum<RoutingMethod>().nullable()();
@@ -79,6 +79,10 @@ class Locations extends Table with AutoIncrementingPrimaryKey {
 
   @JsonKey('keepalive_interval')
   IntColumn get keepAliveInterval => integer()();
+
+  @JsonKey('location_mfa_mode')
+  IntColumn get locationMfaMode =>
+      integer().nullable().map(const LocationMfaModeConverter())();
 }
 
 @DriftDatabase(tables: [DefguardInstances, Locations])

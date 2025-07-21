@@ -3,9 +3,7 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mobile/data/db/database.dart';
 import 'package:mobile/open/api.dart';
-import 'package:mobile/open/constants.dart';
 import 'package:mobile/utils/update_instance.dart';
-import "package:flutter/foundation.dart";
 
 import '../logging.dart';
 
@@ -38,9 +36,8 @@ class ConfigurationUpdater extends HookConsumerWidget {
           talker.debug(
             "Auto configuration update started for ${instance.name} (${instance.id})",
           );
-          final proxyUrl = kDebugMode ? localDebugProxyUrl : instance.proxyUrl;
           final (responseData, responseStatus) = await proxyApi
-              .pollConfiguration(proxyUrl, instance.token);
+              .pollConfiguration(instance.proxyUrl, instance.token);
           // instance lost it's enterprise status
           if (responseStatus == 402) {
             instance.copyWith(
