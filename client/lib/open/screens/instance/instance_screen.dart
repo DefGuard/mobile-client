@@ -278,7 +278,9 @@ class _LocationItem extends HookConsumerWidget {
 
     final dgMenuItems = useMemoized<List<DgMenuItem>>(() {
       return [
-        if (location.mfaEnabled)
+        if (location.mfaEnabled == true ||
+            location.locationMfaMode == LocationMfaMode.internal ||
+            location.locationMfaMode == LocationMfaMode.external)
           DgMenuItem(
             text: "Select MFA Method",
             onTap: () {
