@@ -169,7 +169,6 @@ class DgDrawer extends HookConsumerWidget {
 class _MenuButton extends StatelessWidget {
   final String text;
   final GoRouteData route;
-  final Function()? onTap;
 
   const _MenuButton({required this.text, required this.route});
 
@@ -186,9 +185,6 @@ class _MenuButton extends StatelessWidget {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.zero),
       ),
       onPressed: () {
-        if (onTap != null) {
-          onTap!();
-        }
         Navigator.of(context).pop();
         route.go(context);
       },
