@@ -3,9 +3,7 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mobile/data/db/database.dart';
 import 'package:mobile/open/api.dart';
-import 'package:mobile/open/constants.dart';
 import 'package:mobile/utils/update_instance.dart';
-import "package:flutter/foundation.dart";
 
 import '../logging.dart';
 
