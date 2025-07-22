@@ -38,7 +38,7 @@ class TunnelService {
         trafficMethod = location.trafficMethod!;
       } else {
         // no pre selected traffic choice available, ask user
-        RoutingMethodDialogIntention dialogIntention = _mfaEnabled(location)
+        RoutingMethodDialogIntention dialogIntention = checkMfaEnabled(location)
             ? RoutingMethodDialogIntention.next
             : RoutingMethodDialogIntention.connect;
         RoutingMethod? userSelection = await _showDialog(
@@ -64,7 +64,7 @@ class TunnelService {
     );
 
     // handle MFA if configured
-    if (_mfaEnabled(location)) {
+    if (checkMfaEnabled(location)) {
       MfaMethod mfaMethod;
       if (location.locationMfaMode == LocationMfaMode.external) {
         // location setup for openid mfa login
@@ -109,7 +109,7 @@ class TunnelService {
 
   /// Checks if MFA is enabled for specified location taking into account
   /// the deprecated `mfaEnabled` option.
-  static bool _mfaEnabled(Location location) {
+  static bool checkMfaEnabled(Location location) {
     return location.mfaEnabled == true ||
         location.locationMfaMode == LocationMfaMode.internal ||
         location.locationMfaMode == LocationMfaMode.external;

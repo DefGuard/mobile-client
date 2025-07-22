@@ -13,11 +13,11 @@ import 'package:mobile/open/screens/instance/widgets/refresh_instance_dialog.dar
 import 'package:mobile/open/screens/instance/widgets/routing_method_dialog.dart';
 import 'package:mobile/open/widgets/buttons/dg_button.dart';
 import 'package:mobile/open/widgets/dg_menu.dart';
+import 'package:mobile/open/widgets/dg_pill.dart';
 import 'package:mobile/open/widgets/icons/arrow_single.dart';
 import 'package:mobile/open/widgets/icons/asset_icons_simple.dart';
 import 'package:mobile/open/widgets/icons/connection.dart';
 import 'package:mobile/open/widgets/icons/icon_rotation.dart';
-import 'package:mobile/open/widgets/limited_text.dart';
 import 'package:mobile/open/widgets/navigation/dg_scaffold.dart';
 import 'package:mobile/plugin.dart';
 import 'package:mobile/router/routes.dart';
@@ -137,14 +137,10 @@ class _ScreenContent extends HookConsumerWidget {
                   ),
                   SizedBox(
                     width: double.infinity,
-                    child: FittedBox(
-                      fit: BoxFit.scaleDown,
-                      alignment: Alignment.center,
-                      child: Text(
-                        "${screenData.instance.name} instance locations:",
-                        textAlign: TextAlign.center,
-                        style: DgText.sideBar,
-                      ),
+                    child: Text(
+                      "${screenData.instance.name} instance locations:",
+                      textAlign: TextAlign.center,
+                      style: DgText.sideBar,
                     ),
                   ),
                 ],
@@ -248,6 +244,9 @@ class _ScreenContent extends HookConsumerWidget {
               ),
             ),
           ),
+          SliverToBoxAdapter(
+            child: SizedBox(height: DgSpacing.m,),
+          )
         ],
       ),
     );
@@ -275,6 +274,8 @@ class _LocationItem extends HookConsumerWidget {
     final isConnected = useState<bool>(checkConnected(activeTunnel));
     final isLoading = useState(false);
     final trafficLabel = useState<String?>(null);
+
+    final mfaEnabled = TunnelService.checkMfaEnabled(location);
 
     final dgMenuItems = useMemoized<List<DgMenuItem>>(() {
       return [
@@ -360,36 +361,56 @@ class _LocationItem extends HookConsumerWidget {
           child: Container(
             key: menuAnchorKey,
             constraints: BoxConstraints(minHeight: 64),
-            padding: EdgeInsets.symmetric(vertical: 0, horizontal: DgSpacing.s),
+            padding: EdgeInsets.symmetric(
+              vertical: 13.5,
+              horizontal: DgSpacing.s,
+            ),
             decoration: BoxDecoration(
               color: DgColor.navBg,
               borderRadius: BorderRadius.all(Radius.circular(10)),
             ),
             child: Row(
-              spacing: 18,
               children: <Widget>[
                 DgIconConnection(
                   variant: isConnected.value
                       ? DgIconConnectionVariant.connected
                       : DgIconConnectionVariant.disconnected,
                 ),
+                SizedBox(width: 18),
                 Expanded(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      LimitedText(text: location.name, style: DgText.sideBar),
-                      if (trafficLabel.value != null)
-                        LimitedText(
-                          text: trafficLabel.value!,
-                          style: DgText.buttonXS.copyWith(
-                            color: DgColor.textBodySecondary,
-                          ),
-                        ),
+                      Text(location.name, style: DgText.sideBar),
+                      Row(
+                        mainAxisSize: MainAxisSize.max,
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        spacing: DgSpacing.xs,
+                        children: [
+                          if (mfaEnabled) DgPill(text: "MFA"),
+                          if (trafficLabel.value != null)
+                            Expanded(
+                              child: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                alignment: Alignment.centerLeft,
+                                child: Text(
+                                  trafficLabel.value!,
+                                  textAlign: TextAlign.left,
+                                  style: DgText.buttonXS.copyWith(
+                                    color: DgColor.textBodySecondary,
+                                  ),
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
                     ],
                   ),
                 ),
+                SizedBox(width: DgSpacing.xxs + 1),
                 DgButton(
                   size: DgButtonSize.small,
                   variant: DgButtonVariant.secondary,

@@ -6,6 +6,7 @@ import 'package:mobile/open/widgets/navigation/dg_scaffold.dart';
 import 'package:mobile/router/routes.dart';
 import 'package:mobile/theme/spacing.dart';
 import 'package:mobile/theme/text.dart';
+import 'package:mobile/utils/screen_padding.dart';
 
 import '../../widgets/icons/asset_icons_simple.dart';
 
@@ -17,6 +18,12 @@ class AddInstanceScreen extends StatelessWidget {
     return DgScaffold(
       title: "Add Instance",
       child: DgSingleChildScrollView(
+        padding: screenPadding(
+          top: 0,
+          bottom: DgSpacing.m,
+          horizontal: DgSpacing.s,
+          context: context,
+        ),
         child: Column(
           children: [
             SizedBox(height: 120),

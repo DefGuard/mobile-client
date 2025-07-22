@@ -17,6 +17,7 @@ import 'package:mobile/router/routes.dart';
 import 'package:mobile/theme/spacing.dart';
 import 'package:mobile/theme/text.dart';
 import 'package:flutter/foundation.dart';
+import 'package:mobile/utils/screen_padding.dart';
 
 class AddInstanceFormScreen extends HookConsumerWidget {
   const AddInstanceFormScreen({super.key});
@@ -26,6 +27,12 @@ class AddInstanceFormScreen extends HookConsumerWidget {
     return DgScaffold(
       title: "Add Instance",
       child: DgSingleChildScrollView(
+        padding: screenPadding(
+          top: DgSpacing.m,
+          bottom: DgSpacing.m,
+          horizontal: DgSpacing.s,
+          context: context,
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.max,
           children: [

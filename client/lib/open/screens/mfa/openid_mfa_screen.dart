@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mobile/open/screens/mfa/openid_mfa_waiting_screen.dart';
 import 'package:mobile/open/widgets/buttons/dg_button.dart';
+import 'package:mobile/open/widgets/dg_single_child_scroll_view.dart';
 import 'package:mobile/open/widgets/icons/openid_open.dart';
 import 'package:mobile/open/widgets/navigation/dg_scaffold.dart';
 import 'package:mobile/theme/color.dart';
 import 'package:mobile/theme/spacing.dart';
 import 'package:mobile/theme/text.dart';
+import 'package:mobile/utils/screen_padding.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class OpenIdMfaScreenData {
@@ -18,7 +20,7 @@ class OpenIdMfaScreenData {
 
 final String _title = "Two-factor authentication";
 final String _mfaMsg1 =
-    "In order to connect to VPN please login with your OpenID provider. To do so, pease click \"Authenticate with OpenId\"";
+    "In order to connect to VPN please login with your OpenID provider. To do so, please click \"Authenticate with OpenId\"";
 
 final String _mfaMsg2 =
     "This will open a new window in your web browser and automatically redirect you to your OpenID provider login page. After authenticating please get back here";
@@ -41,96 +43,81 @@ class OpenIdMfaScreen extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return DgScaffold(
       title: _title,
-      child: SafeArea(
-        child: Padding(
-          padding: EdgeInsets.all(DgSpacing.l),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Expanded(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Center(
-                      child: Text(
-                        _title,
-                        style: DgText.body1,
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                    SizedBox(height: 32),
-                    Center(child: DgIconOpenidOpen(size: 128)),
-                    SizedBox(height: 32),
-                    Text(
-                      _mfaMsg1,
-                      style: DgText.modal1.copyWith(
-                        color: DgColor.textBodySecondary,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    SizedBox(height: 16),
-                    Text(
-                      _mfaMsg2,
-                      style: DgText.modal1.copyWith(
-                        color: DgColor.textBodySecondary,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
-                ),
+      child: DgSingleChildScrollView(
+        padding: screenPadding(
+          top: DgSpacing.l,
+          bottom: DgSpacing.m,
+          horizontal: DgSpacing.s,
+          context: context,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.max,
+          mainAxisAlignment: MainAxisAlignment.start,
+          spacing: DgSpacing.m,
+          children: [
+            Center(
+              child: Text(
+                _title,
+                style: DgText.body1,
+                textAlign: TextAlign.center,
               ),
-              Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  DgButton(
-                    text: _authenticateMsg,
-                    variant: DgButtonVariant.primary,
-                    size: DgButtonSize.big,
-                    width: double.infinity,
-                    onTap: () async {
-                      final navigator = Navigator.of(context);
-                      final messenger = ScaffoldMessenger.of(context);
-                      final errorSnack = SnackBar(
-                        content: Text("Error: Failed to open the browser."),
-                      );
-                      try {
-                        final launched = await _launchUrl();
-                        if (!launched) {
-                          messenger.showSnackBar(errorSnack);
-                        } else {
-                          // Navigate to waiting screen and await result
-                          final result = await navigator.push<String?>(
-                            MaterialPageRoute(
-                              builder: (context) => OpenIdMfaWaitingScreen(
-                                screenData: OpenIdMfaWaitingScreenData(
-                                  proxyUrl: screenData.proxyUrl,
-                                  token: screenData.token,
-                                ),
-                              ),
-                            ),
-                          );
+            ),
+            Center(child: DgIconOpenidOpen(size: 128)),
+            Text(
+              _mfaMsg1,
+              style: DgText.modal1.copyWith(color: DgColor.textBodySecondary),
+              textAlign: TextAlign.center,
+            ),
+            Text(
+              _mfaMsg2,
+              style: DgText.modal1.copyWith(color: DgColor.textBodySecondary),
+              textAlign: TextAlign.center,
+            ),
+            DgButton(
+              text: _authenticateMsg,
+              variant: DgButtonVariant.primary,
+              size: DgButtonSize.big,
+              width: double.infinity,
+              onTap: () async {
+                final navigator = Navigator.of(context);
+                final messenger = ScaffoldMessenger.of(context);
+                final errorSnack = SnackBar(
+                  content: Text("Error: Failed to open the browser."),
+                );
+                try {
+                  final launched = await _launchUrl();
+                  if (!launched) {
+                    messenger.showSnackBar(errorSnack);
+                  } else {
+                    // Navigate to waiting screen and await result
+                    final result = await navigator.push<String?>(
+                      MaterialPageRoute(
+                        builder: (context) => OpenIdMfaWaitingScreen(
+                          screenData: OpenIdMfaWaitingScreenData(
+                            proxyUrl: screenData.proxyUrl,
+                            token: screenData.token,
+                          ),
+                        ),
+                      ),
+                    );
 
-                          // Return the result to the tunnel service
-                          navigator.pop(result);
-                        }
-                      } catch (_) {
-                        messenger.showSnackBar(errorSnack);
-                      }
-                    },
-                  ),
-                  SizedBox(height: DgSpacing.s),
-                  DgButton(
-                    text: "Cancel",
-                    size: DgButtonSize.big,
-                    width: double.infinity,
-                    onTap: () {
-                      Navigator.of(context).pop();
-                    },
-                  ),
-                ],
-              ),
-            ],
-          ),
+                    // Return the result to the tunnel service
+                    navigator.pop(result);
+                  }
+                } catch (_) {
+                  messenger.showSnackBar(errorSnack);
+                }
+              },
+            ),
+            DgButton(
+              text: "Cancel",
+              size: DgButtonSize.big,
+              width: double.infinity,
+              onTap: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
         ),
       ),
     );

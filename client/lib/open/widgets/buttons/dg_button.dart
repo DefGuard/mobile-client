@@ -168,8 +168,11 @@ class DgButton extends StatelessWidget {
     return null;
   }
 
-  Text _getText() {
-    return Text(text, style: textStyle);
+  Widget _getText() {
+    return Flexible(
+      fit: FlexFit.loose,
+      child: Text(text, style: textStyle, textAlign: TextAlign.center),
+    );
   }
 
   List<Widget> _getRow() {
@@ -209,7 +212,7 @@ class DgButton extends StatelessWidget {
 
   BoxConstraints? _getConstrains() {
     if (minWidth != null) {
-      return BoxConstraints(minWidth: minWidth!);
+      return BoxConstraints(minWidth: minWidth!, minHeight: height);
     }
     return null;
   }
@@ -226,20 +229,25 @@ class DgButton extends StatelessWidget {
         borderRadius: borderRadius,
         child: Container(
           constraints: _getConstrains(),
+          width: width,
           child: Ink(
-            height: height,
-            width: width,
             decoration: _getBoxDecoration(),
             child: InkWell(
               onTap: isInteractive ? onTap : null,
               borderRadius: borderRadius,
               child: Padding(
-                padding: EdgeInsets.symmetric(vertical: 0, horizontal: padding),
-                child: Row(
-                  spacing: spacing,
-                  mainAxisSize: MainAxisSize.min,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: _getRow(),
+                padding: EdgeInsets.symmetric(
+                  vertical: 12,
+                  horizontal: padding,
+                ),
+                child: IntrinsicHeight(
+                  child: Row(
+                    spacing: spacing,
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: _getRow(),
+                  ),
                 ),
               ),
             ),

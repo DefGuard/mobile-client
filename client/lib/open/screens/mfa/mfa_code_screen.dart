@@ -11,6 +11,7 @@ import 'package:mobile/open/widgets/navigation/dg_scaffold.dart';
 import 'package:mobile/theme/color.dart';
 import 'package:mobile/theme/spacing.dart';
 import 'package:mobile/theme/text.dart';
+import 'package:mobile/utils/screen_padding.dart';
 
 import '../../../../../data/db/enums.dart';
 
@@ -44,6 +45,12 @@ class MfaCodeScreen extends HookConsumerWidget {
     return DgScaffold(
       title: _title,
       child: DgSingleChildScrollView(
+        padding: screenPadding(
+          top: DgSpacing.m,
+          bottom: DgSpacing.m,
+          horizontal: DgSpacing.s,
+          context: context,
+        ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [

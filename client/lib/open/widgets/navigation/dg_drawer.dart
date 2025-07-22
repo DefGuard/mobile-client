@@ -33,7 +33,10 @@ class DgDrawer extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final matchedLocation = GoRouterState.of(context).matchedLocation;
+    final router = GoRouter.of(context);
+    final RouteMatch lastMatch = router.routerDelegate.currentConfiguration.last;
+    final RouteMatchList matchList = lastMatch is ImperativeRouteMatch ? lastMatch.matches : router.routerDelegate.currentConfiguration;
+    final String location = matchList.uri.toString();
     final year = DateTime.now().year;
     final version = ref
         .watch(packageInfoProvider)
@@ -48,8 +51,8 @@ class DgDrawer extends HookConsumerWidget {
           label: "View Application Logs",
           route: TalkerScreenRoute(),
         ),
-      ].where((item) => item.route.location != matchedLocation).toList();
-    }, [matchedLocation]);
+      ].where((item) => item.route.location != location).toList();
+    }, [location]);
 
     return Container(
       color: DgColor.navBg,
@@ -186,7 +189,7 @@ class _MenuButton extends StatelessWidget {
       ),
       onPressed: () {
         Navigator.of(context).pop();
-        route.go(context);
+        route.push(context);
       },
       child: Align(
         alignment: Alignment.centerLeft,
