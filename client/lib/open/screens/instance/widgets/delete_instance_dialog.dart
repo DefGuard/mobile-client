@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mobile/data/db/database.dart';
 import 'package:mobile/open/widgets/buttons/dg_button.dart';
+import 'package:mobile/open/widgets/dg_dialog.dart';
 import 'package:mobile/open/widgets/icons/asset_icons_simple.dart';
 import 'package:mobile/router/routes.dart';
 import 'package:mobile/theme/color.dart';
@@ -32,55 +33,48 @@ class DeleteInstanceDialog extends HookConsumerWidget {
       }
     }
 
-    return Dialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadiusGeometry.circular(10),
-      ),
-      backgroundColor: DgColor.defaultModal,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          vertical: 25,
-          horizontal: DgSpacing.s,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Center(
-              child: Text(
-                "Delete Instance",
-                style: DgText.sideBar,
-                textAlign: TextAlign.center,
-              ),
+    return DgDialog(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Center(
+            child: Text(
+              "Delete Instance",
+              style: DgText.sideBar,
+              textAlign: TextAlign.center,
             ),
-            SizedBox(height: 8),
-            Padding(
-              padding: EdgeInsetsGeometry.only(
-                top: 0,
-                left: 20,
-                right: 20,
-                bottom: 20,
-              ),
-              child: Column(
-                children: [
-                  Text(
-                    warningText,
-                    style: DgText.copyright,
-                    textAlign: TextAlign.center,
-                  ),
-                  SizedBox(height: 20),
-                  Row(
-                    mainAxisSize: MainAxisSize.max,
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      DgButton(
-                        size: DgButtonSize.standard,
-                        variant: DgButtonVariant.secondary,
-                        text: "Cancel",
-                        onTap: () {
-                          Navigator.of(context).pop();
-                        },
-                      ),
-                      DgButton(
+          ),
+          SizedBox(height: 8),
+          Padding(
+            padding: EdgeInsetsGeometry.only(
+              top: 0,
+              left: 20,
+              right: 20,
+              bottom: 20,
+            ),
+            child: Column(
+              children: [
+                Text(
+                  warningText,
+                  style: DgText.copyright,
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(height: 20),
+                Row(
+                  mainAxisSize: MainAxisSize.max,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    DgButton(
+                      size: DgButtonSize.standard,
+                      variant: DgButtonVariant.secondary,
+                      text: "Cancel",
+                      onTap: () {
+                        Navigator.of(context).pop();
+                      },
+                    ),
+                    Flexible(
+                      fit: FlexFit.loose,
+                      child: DgButton(
                         text: "Delete Instance",
                         size: DgButtonSize.standard,
                         variant: DgButtonVariant.alert,
@@ -89,13 +83,13 @@ class DeleteInstanceDialog extends HookConsumerWidget {
                           deleteInstance(context);
                         },
                       ),
-                    ],
-                  ),
-                ],
-              ),
+                    ),
+                  ],
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
