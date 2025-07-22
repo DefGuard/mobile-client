@@ -11,6 +11,7 @@ import 'package:mobile/open/widgets/dg_single_child_scroll_view.dart';
 import 'package:mobile/open/widgets/dg_text_form_field.dart';
 import 'package:mobile/router/routes.dart';
 import 'package:mobile/theme/spacing.dart';
+import 'package:mobile/utils/screen_padding.dart';
 
 import '../../../api.dart';
 import '../../../widgets/navigation/dg_scaffold.dart';
@@ -76,86 +77,88 @@ class NameDeviceScreen extends HookConsumerWidget {
 
     return DgScaffold(
       title: "Add Instance",
-      child: LayoutBuilder(
-        builder: (context, constrains) {
-          return DgSingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.max,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Form(
-                  key: formKey,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.max,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    spacing: DgSpacing.m,
-                    children: [
-                      DgTextFormField(
-                        controller: nameController,
-                        hintText: "Name this device",
-                        validator: (value) {
-                          if (value == null) {
-                            return "Field is required";
-                          }
-                          if (value != null) {
-                            final valueText = value as String;
-                            final matchedName = screenData
-                                .startResponse
-                                .user
-                                .deviceNames
-                                .firstWhereOrNull(
-                                  (name) =>
-                                      name.toLowerCase() ==
-                                      valueText.toLowerCase().trim(),
-                                );
-                            if (matchedName != null) {
-                              return "Name is already used";
-                            }
-                          }
-                          return null;
-                        },
-                      ),
-                      DgButton(
-                        variant: DgButtonVariant.primary,
-                        size: DgButtonSize.big,
-                        width: double.infinity,
-                        text: "Submit",
-                        onTap: () async {
-                          final messenger = ScaffoldMessenger.of(context);
-                          if (!formKey.currentState!.validate()) {
-                            messenger.showSnackBar(
-                              SnackBar(content: Text("Correct form errors")),
+      child: DgSingleChildScrollView(
+        padding: screenPadding(
+          top: DgSpacing.m,
+          bottom: DgSpacing.m,
+          horizontal: DgSpacing.s,
+          context: context,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.max,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Form(
+              key: formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.max,
+                mainAxisAlignment: MainAxisAlignment.center,
+                spacing: DgSpacing.m,
+                children: [
+                  DgTextFormField(
+                    controller: nameController,
+                    hintText: "Name this device",
+                    validator: (value) {
+                      if (value == null) {
+                        return "Field is required";
+                      }
+                      if (value != null) {
+                        final valueText = value as String;
+                        final matchedName = screenData
+                            .startResponse
+                            .user
+                            .deviceNames
+                            .firstWhereOrNull(
+                              (name) =>
+                                  name.toLowerCase() ==
+                                  valueText.toLowerCase().trim(),
                             );
-                            return;
-                          }
-                          try {
-                            final instanceName = await _handleRegistration(
-                              context,
-                              db,
-                              nameController.text.trim(),
-                            );
-                            messenger.showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  "Instance $instanceName registered successfully.",
-                                ),
-                              ),
-                            );
-                            if (context.mounted) {
-                              HomeScreenRoute().go(context);
-                            }
-                          } catch (e) {
-                            debugPrint("Registration failed, Reason:\n$e");
-                          }
-                        },
-                      ),
-                    ],
+                        if (matchedName != null) {
+                          return "Name is already used";
+                        }
+                      }
+                      return null;
+                    },
                   ),
-                ),
-              ],
+                  DgButton(
+                    variant: DgButtonVariant.primary,
+                    size: DgButtonSize.big,
+                    width: double.infinity,
+                    text: "Submit",
+                    onTap: () async {
+                      final messenger = ScaffoldMessenger.of(context);
+                      if (!formKey.currentState!.validate()) {
+                        messenger.showSnackBar(
+                          SnackBar(content: Text("Correct form errors")),
+                        );
+                        return;
+                      }
+                      try {
+                        final instanceName = await _handleRegistration(
+                          context,
+                          db,
+                          nameController.text.trim(),
+                        );
+                        messenger.showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              "Instance $instanceName registered successfully.",
+                            ),
+                          ),
+                        );
+                        if (context.mounted) {
+                          HomeScreenRoute().go(context);
+                        }
+                      } catch (e) {
+                        debugPrint("Registration failed, Reason:\n$e");
+                      }
+                    },
+                  ),
+                ],
+              ),
             ),
-          );
-        },
+          ],
+        ),
       ),
     );
   }

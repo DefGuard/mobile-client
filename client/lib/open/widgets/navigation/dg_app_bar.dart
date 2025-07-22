@@ -25,6 +25,7 @@ class DgAppBar extends StatelessWidget implements PreferredSizeWidget {
           color: DgColor.navBg,
           padding: EdgeInsetsGeometry.all(DgSpacing.s),
           child: Row(
+            spacing: DgSpacing.s,
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
