@@ -3,6 +3,16 @@ import Network
 import NetworkExtension
 import os
 
+/// State of Adapter.
+enum State {
+    /// Tunnel is running.
+    case running
+    /// Tunnel is stopped.
+    case stopped
+    /// Tunnel is temporary unavaiable due to device being offline.
+    case dormant
+}
+
 final class Adapter /*: Sendable*/ {
     /// Packet tunnel provider.
     private weak var packetTunnelProvider: NEPacketTunnelProvider?
@@ -18,6 +28,8 @@ final class Adapter /*: Sendable*/ {
     private var keepAliveTimer: Timer?
     /// Logging
     private lazy var logger = Logger(subsystem: Bundle.main.bundleIdentifier!, category: "Adapter")
+    /// Adapter state.
+    private var state: State = .stopped
 
     /// Designated initializer.
     /// - Parameter packetTunnelProvider: an instance of `NEPacketTunnelProvider`. Internally stored
@@ -62,6 +74,8 @@ final class Adapter /*: Sendable*/ {
 
         logger.info("Sniffing packets...")
         readPackets()
+
+        state = .running
     }
 
     public func stop() {
@@ -74,20 +88,27 @@ final class Adapter /*: Sendable*/ {
         // Cancel network monitor
         networkMonitor?.cancel()
         networkMonitor = nil
+
+        state = .stopped
         logger.info("Tunnel stopped")
     }
 
     private func handleTunnelResult(_ result: TunnelResult) {
         switch result {
             case .done:
+                // Nothing to do.
                 break
             case .err(let error):
-                logger.error("Tunnel error \(String(describing: error))")
-                if error == WireGuardError.connectionExpired {
+                logger.error("Tunnel error \(String(describing: error), privacy: .public)")
+                if error == WireGuardError.ConnectionExpired {
                     logger.error("Connecion has expired - stopping the tunnel")
-                    stop()
+                    // The correct way is to call the packet tunnel provider, if there is one.
+                    if let provider = packetTunnelProvider {
+                        provider.cancelTunnelWithError(error)
+                    } else {
+                        stop()
+                    }
                 }
-                break
             case .writeToNetwork(let data):
                 sendToEndpoint(data: data)
             case .writeToTunnelV4(let data):
@@ -119,7 +140,7 @@ final class Adapter /*: Sendable*/ {
         self.connection = connection
     }
 
-    /// Setup UDP connection to endpoint. This method should called when UDP connection is ready to send and receive.
+    /// Setup UDP connection to endpoint. This method should be called when UDP connection is ready to send and receive.
     private func setupEndpoint() {
         logger.info("Setup Endpoint")
 
@@ -189,6 +210,14 @@ final class Adapter /*: Sendable*/ {
         switch state {
             case .ready:
                 setupEndpoint()
+            case .failed(let error):
+                logger.error("Failed to establish endpoint connection: \(error)")
+                // The correct way is to call the packet tunnel provider, if there is one.
+                if let provider = packetTunnelProvider {
+                    provider.cancelTunnelWithError(error)
+                } else {
+                    stop()
+                }
             default:
                 break
         }
@@ -197,12 +226,18 @@ final class Adapter /*: Sendable*/ {
     /// Handle network path updates.
     private func networkPathUpdate(path: Network.NWPath) {
         if path.status == .unsatisfied {
-            logger.warning("Unsatisfied network path: going dormant")
-            connection?.cancel()
-            connection = nil
+            if state == .running {
+                logger.warning("Unsatisfied network path: going dormant")
+                connection?.cancel()
+                connection = nil
+                state = .dormant
+            }
         } else {
-            logger.warning("Satisfied network path: going running")
-            initEndpoint()
+            if state == .dormant {
+                logger.warning("Satisfied network path: going running")
+                initEndpoint()
+                state = .running
+            }
         }
     }
 }
