@@ -41,9 +41,6 @@ public class WireguardPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
     ) -> FlutterError? {
         self.logger.log("Setting up event sink for VPN events")
         self.eventSink = events
-        self.handleVPNStatusChange()
-        self.setupVPNObservers()
-        self.setupAppObservers()
         self.logger.log("Event sink set up successfully")
         return nil
     }
@@ -51,8 +48,6 @@ public class WireguardPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
     public func onCancel(withArguments arguments: Any?) -> FlutterError? {
         self.logger.log("Cancelling event sink for VPN events")
         self.eventSink = nil
-        self.removeVPNObservers()
-        self.removeAppObservers()
         self.logger.log("Event sink cancelled successfully")
         return nil
     }
@@ -68,10 +63,12 @@ public class WireguardPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
         )
 
         let instance = WireguardPlugin()
+        registrar.addMethodCallDelegate(instance, channel: methodChannel)
+        eventChannel.setStreamHandler(instance)
         instance.setupVPNManager {
-            // Register communication only after we finished with VPN manager setup.
-            registrar.addMethodCallDelegate(instance, channel: methodChannel)
-            eventChannel.setStreamHandler(instance)
+            instance.handleVPNStatusChange()
+            instance.setupVPNObservers()
+            instance.setupAppObservers()
         }
     }
 
@@ -228,7 +225,7 @@ public class WireguardPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
     /// Updates the UI status of the VPN connection. Used when the status changes asynchronously.
     private func handleVPNStatusChange() {
         guard let vpnStatus = self.vpnManager.getConnectionStatus() else {
-            self.logger.log("Failed to get VPN status, returning nil")
+            self.logger.log("Failed to get VPN status, the provider manager has not been loaded yet.")
             return
         }
 
