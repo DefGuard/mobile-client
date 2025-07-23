@@ -93,11 +93,25 @@ struct IpAddrMask: Codable, Equatable {
             }
             return IPv4Address(bytes)!
         }
+        // Note: UInt128 is available since iOS 18. Use UInt64 implementation.
         if address is IPv6Address {
             var bytes = Data(count: 16)
-            let mask = cidr == 0 ? UInt128(0) : ~UInt128(0) << (128 - cidr)
-            for i in 0...15 {
-                bytes[i] = UInt8(truncatingIfNeeded: mask >> (120 - i * 8))
+            let (mask_upper, mask_lower) = if cidr < 64 {
+                (
+                    cidr == 0 ? UInt64.min : UInt64.max << (64 - cidr),
+                    UInt64.min
+                )
+            } else {
+                (
+                    UInt64.max,
+                    (cidr - 64) == 0 ? UInt64.min : UInt64.max << (128 - cidr)
+                )
+            }
+            for i in 0...7 {
+                bytes[i] = UInt8(truncatingIfNeeded: mask_upper >> (56 - i * 8))
+            }
+            for i in 8...15 {
+                bytes[i] = UInt8(truncatingIfNeeded: mask_lower >> (56 - (i - 8) * 8))
             }
             return IPv6Address(bytes)!
         }

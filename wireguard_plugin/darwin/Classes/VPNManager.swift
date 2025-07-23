@@ -1,39 +1,16 @@
-//
-//  VPNManager.swift
-//  Pods
-//
-//  Created by Aleksander on 16/07/2025.
-//
-
 import NetworkExtension
-import OSLog
+import os
 
-public protocol VPNManagement {
-    func loadProviderManager(
-        completion: @escaping (NETunnelProviderManager?) -> Void
-    )
-    func saveProviderManager(
-        _ manager: NETunnelProviderManager,
-        completion: @escaping (Error?) -> Void
-    )
-    func getConnectionStatus() -> NEVPNStatus?
-    func startTunnel() throws
-    func stopTunnel() throws
-    func getProviderManager() -> NETunnelProviderManager?
-    func handleVPNConfigurationChange()
+enum VPNManagerError: Error {
+    case providerManagerNotSet
 }
 
-public class VPNManager: VPNManagement {
+public class VPNManager {
     static let shared = VPNManager()
-    private var logger = Logger(
-        subsystem: Bundle.main.bundleIdentifier!,
-        category: "WireguardPlugin.VPNManager"
-    )
+    private var logger = Logger(subsystem: Bundle.main.bundleIdentifier!,
+                                category: "WireguardPlugin.VPNManager")
 
-    init() {
-    }
-
-    var providerManager: NETunnelProviderManager?
+    public private(set) var providerManager: NETunnelProviderManager?
 
     /// Loads the provider manager from the system preferences.
     public func loadProviderManager(
@@ -82,22 +59,9 @@ public class VPNManager: VPNManagement {
         }
     }
 
-    public func getConnectionStatus() -> NEVPNStatus? {
-        guard let providerManager = providerManager else {
-            self.logger.log("Provider manager is not set")
-            return nil
-        }
-
-        return providerManager.connection.status
-    }
-
-    public func getProviderManager() -> NETunnelProviderManager? {
-        return providerManager
-    }
-
     public func handleVPNConfigurationChange() {
-        self.logger.log("VPN configuration changed, updating provider manager")
-        self.loadProviderManager { providerManager in
+        logger.log("VPN configuration changed, updating provider manager")
+        loadProviderManager { providerManager in
             guard let providerManager = providerManager else {
                 self.logger.log("No VPN manager found after configuration change")
                 return
@@ -108,31 +72,19 @@ public class VPNManager: VPNManagement {
 
     public func startTunnel() throws {
         guard let providerManager = providerManager else {
-            throw NSError(
-                domain: "VPNManagerError",
-                code: 1,
-                userInfo: [
-                    NSLocalizedDescriptionKey: "Provider manager is not set"
-                ]
-            )
+            throw VPNManagerError.providerManagerNotSet
         }
 
         try providerManager.connection.startVPNTunnel()
-        self.logger.log("VPN tunnel started successfully")
+        logger.log("VPN tunnel started successfully")
     }
 
     public func stopTunnel() throws {
         guard let providerManager = providerManager else {
-            throw NSError(
-                domain: "VPNManagerError",
-                code: 2,
-                userInfo: [
-                    NSLocalizedDescriptionKey: "Provider manager is not set"
-                ]
-            )
+            throw VPNManagerError.providerManagerNotSet
         }
 
         providerManager.connection.stopVPNTunnel()
-        self.logger.log("VPN tunnel stopped successfully")
+        logger.log("VPN tunnel stopped successfully")
     }
 }
