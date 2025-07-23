@@ -273,10 +273,16 @@ public class WireguardPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
             self.setupVPNObservers()
         case .disconnected, .invalid:
             self.logger.log(
-                "Detected that the VPN has disconnected or became invalid, emitting event."
+                "Detected that the system VPN status is disconnected. Emitting event if our state differs"
             )
-            self.activeTunnelData = nil
-            self.emitEvent(event: WireguardEvent.tunnelDown, data: nil)
+            // no point in emitting this event if we already agree that the tunnel is down
+            if self.activeTunnelData != nil {
+                self.activeTunnelData = nil
+                self.emitEvent(event: WireguardEvent.tunnelDown, data: nil)
+                self.logger.log("Our state differed, emitted tunnelDown event.")
+            } else {
+                self.logger.log("Our state did not differ, no event emitted.")
+            }
         case .connecting:
             self.logger.log("Detected that the VPN is connecting, ignoring it since it is a temporary state we don't handle.")
         case .disconnecting:
