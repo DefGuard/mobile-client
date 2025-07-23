@@ -41,6 +41,7 @@ public class WireguardPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
     ) -> FlutterError? {
         self.logger.log("Setting up event sink for VPN events")
         self.eventSink = events
+        self.handleVPNStatusChange()
         self.logger.log("Event sink set up successfully")
         return nil
     }
