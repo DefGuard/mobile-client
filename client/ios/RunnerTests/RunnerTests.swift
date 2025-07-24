@@ -5,14 +5,12 @@ import wireguard_plugin
 
 class RunnerTests: XCTestCase {
     var plugin: WireguardPlugin?
-    var vpnManager: MockVPNManager?
+    var vpnManager: MockVPNManager = MockVPNManager()
     var capturedFlutterEvents: [Any?] = []
     var testSink: FlutterEventSink?
 
     override func setUp() {
-        let mockVPNManager = MockVPNManager()
-        self.vpnManager = mockVPNManager
-        plugin = WireguardPlugin(vpnManager: mockVPNManager)
+        plugin = WireguardPlugin(vpnManager: vpnManager)
         let testSink: FlutterEventSink = { event in
             self.capturedFlutterEvents.append(event)
         }
@@ -38,7 +36,6 @@ class RunnerTests: XCTestCase {
 
     override func tearDown() {
         plugin = nil
-        vpnManager = nil
         capturedFlutterEvents.removeAll()
     }
 
@@ -82,13 +79,13 @@ class RunnerTests: XCTestCase {
         plugin?.handle(
             call,
             result: { result in
-                let status = self.vpnManager?.providerManager?.connection.status
+                let status = self.vpnManager.connectionStatus
                 if status == .connected {
                     XCTAssertTrue(true, "Tunnel started successfully")
                 } else {
                     XCTFail("Tunnel did not start successfully")
                 }
-                XCTAssertTrue(self.vpnManager!.vpnEventsEqual([.connected]))
+                XCTAssertTrue(self.vpnManager.vpnEventsEqual([.connected]))
                 self.flutterEventsMatch([.tunnelUp])
                 connectExpecation.fulfill()
             }
@@ -101,14 +98,14 @@ class RunnerTests: XCTestCase {
         plugin?.handle(
             disconnectCall,
             result: { result in
-                let status = self.vpnManager?.providerManager?.connection.status
+                let status = self.vpnManager.connectionStatus
                 if status == .disconnected {
                     XCTAssertTrue(true, "Tunnel stopped successfully")
                 } else {
                     XCTFail("Tunnel did not stop successfully")
                 }
                 XCTAssertTrue(
-                    self.vpnManager!.vpnEventsEqual([.connected, .disconnected])
+                    self.vpnManager.vpnEventsEqual([.connected, .disconnected])
                 )
                 self.flutterEventsMatch([.tunnelUp, .tunnelDown])
                 disconnectExpectation.fulfill()
@@ -130,26 +127,21 @@ class RunnerTests: XCTestCase {
         )
         XCTAssertNotNil(dataString, "Encoded data should not be nil")
 
-        let call = FlutterMethodCall(
-            methodName: "startTunnel",
-            arguments: dataString
-        )
+        let call = FlutterMethodCall(methodName: "startTunnel", arguments: dataString)
 
-        let connectExpecation = self.expectation(
-            description: "startTunnel completion"
-        )
+        let connectExpecation = self.expectation(description: "startTunnel completion")
 
         // Try connecting
         plugin?.handle(
             call,
             result: { result in
-                let status = self.vpnManager?.providerManager?.connection.status
+                let status = self.vpnManager.connectionStatus
                 if status == .connected {
                     XCTAssertTrue(true, "Tunnel started successfully")
                 } else {
                     XCTFail("Tunnel did not start successfully")
                 }
-                XCTAssertTrue(self.vpnManager!.vpnEventsEqual([.connected]))
+                XCTAssertTrue(self.vpnManager.vpnEventsEqual([.connected]))
                 self.flutterEventsMatch([.tunnelUp])
                 connectExpecation.fulfill()
             }
@@ -158,19 +150,16 @@ class RunnerTests: XCTestCase {
         wait(for: [connectExpecation], timeout: 5.0)
 
         // Simulate system disconnect
-        vpnManager?.connectionStatus = .disconnected
+        vpnManager.connectionStatus = .disconnected
 
         NotificationCenter.default.post(
             name: NSNotification.Name.NEVPNStatusDidChange,
-            object: vpnManager?.providerManager?.connection
+            object: vpnManager.providerManager?.connection
         )
 
-        let disconnectExpectation = self.expectation(
-            description: "System disconnect completion"
-        )
-
+        let disconnectExpectation = self.expectation(description: "System disconnect completion")
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-            let status = self.vpnManager?.providerManager?.connection.status
+            let status = self.vpnManager.connectionStatus
             if status == .disconnected {
                 XCTAssertTrue(true, "Tunnel stopped successfully")
             } else {
@@ -185,10 +174,10 @@ class RunnerTests: XCTestCase {
         wait(for: [disconnectExpectation], timeout: 5.0)
 
         // Simulate system reconnect
-        vpnManager?.connectionStatus = .connected
+        vpnManager.connectionStatus = .connected
         NotificationCenter.default.post(
             name: NSNotification.Name.NEVPNStatusDidChange,
-            object: vpnManager?.providerManager?.connection
+            object: vpnManager.providerManager?.connection
         )
 
         let reconnectExpectation = self.expectation(
@@ -196,7 +185,7 @@ class RunnerTests: XCTestCase {
         )
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-            let status = self.vpnManager?.providerManager?.connection.status
+            let status = self.vpnManager.connectionStatus
             if status == .connected {
                 XCTAssertTrue(true, "Tunnel reconnected successfully")
             } else {

@@ -9,7 +9,7 @@ public enum MockEvents {
 
 class MockVPNManager: VPNManagement {
     public private(set) var providerManager: NETunnelProviderManager?
-    var connectionStatus: NEVPNStatus = .disconnected
+    public var connectionStatus: NEVPNStatus = .disconnected
     var events: [MockEvents] = []
 
     func loadProviderManager(completion: @escaping (NETunnelProviderManager?) -> Void) {
@@ -28,7 +28,7 @@ class MockVPNManager: VPNManagement {
         guard providerManager != nil else {
             throw VPNManagerError.providerManagerNotSet
         }
-        self.connectionStatus = .connected
+        connectionStatus = .connected
         events.append(.connected)
     }
 
@@ -36,7 +36,7 @@ class MockVPNManager: VPNManagement {
         guard providerManager != nil else {
             throw VPNManagerError.providerManagerNotSet
         }
-        self.connectionStatus = .disconnected
+        connectionStatus = .disconnected
         events.append(.disconnected)
     }
 
@@ -49,10 +49,10 @@ class MockVPNManager: VPNManagement {
     }
 
     func vpnEventsEqual(_ otherEvents: [MockEvents], orderMatters: Bool = true) -> Bool {
-        if orderMatters {
-            return events == otherEvents
+        return if orderMatters {
+            events == otherEvents
         } else {
-            return Set(events) == Set(otherEvents)
+            Set(events) == Set(otherEvents)
         }
     }
 }

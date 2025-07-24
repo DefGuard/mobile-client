@@ -7,6 +7,7 @@ public enum VPNManagerError: Error {
 
 public protocol VPNManagement {
     var providerManager: NETunnelProviderManager? { get }
+    var connectionStatus: NEVPNStatus { get }
 
     func loadProviderManager(
         completion: @escaping (NETunnelProviderManager?) -> Void
@@ -26,6 +27,10 @@ public class VPNManager: VPNManagement {
                                 category: "WireguardPlugin.VPNManager")
 
     public private(set) var providerManager: NETunnelProviderManager?
+
+    public var connectionStatus: NEVPNStatus {
+        providerManager?.connection.status ?? NEVPNStatus.invalid
+    }
 
     /// Loads the provider manager from the system preferences.
     public func loadProviderManager(
