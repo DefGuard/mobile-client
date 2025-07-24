@@ -27,6 +27,8 @@ import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonNamingStrategy
+import java.util.Timer
+import java.util.TimerTask
 
 @OptIn(ExperimentalSerializationApi::class)
 val json = Json {
@@ -40,6 +42,9 @@ const val DEFAULT_ROUTE_IPV4 = "0.0.0.0/0"
 const val DEFAULT_ROUTE_IPV6 = "::/0"
 const val VPN_PERMISSION_REQUEST_CODE = 1001
 const val LOG_TAG = "DG"
+const val HEALTH_CHECK_INTERVAL = 30000L // 30 seconds
+const val DISCONNECTION_THRESHOLD = 3 * 60 * 1000L // 3 minutes
+
 
 /** WireguardPlugin */
 class WireguardPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
@@ -60,6 +65,12 @@ class WireguardPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
     private var backend: GoBackend? = null
     private lateinit var context: Context
     private val scope = CoroutineScope(Job() + Dispatchers.Main.immediate)
+    
+    // Connection health monitoring
+    private var lastTrafficTimestamp: Long = 0
+    private var isHealthy = false
+    private var healthCheckTimer: Timer? = null
+    private var lastTrafficBytes = Pair(0L, 0L) // (rx, tx)
 
     override fun onAttachedToEngine(flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
         context = flutterPluginBinding.applicationContext
@@ -93,6 +104,7 @@ class WireguardPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
 
     override fun onDetachedFromEngine(binding: FlutterPlugin.FlutterPluginBinding) {
         channel.setMethodCallHandler(null)
+        stopHealthMonitoring()
     }
 
     override fun onDetachedFromActivity() {
@@ -181,6 +193,9 @@ class WireguardPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
         futureBackend.await().setState(tunnel, Tunnel.State.DOWN, null)
         activeTunnel = null
         activeTunnelData = null
+        
+        stopHealthMonitoring()
+        
         // inform ui
         emitEvent(WireguardPluginEvent.TUNNEL_DOWN, null)
     }
@@ -237,7 +252,10 @@ class WireguardPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
                 activeTunnel = tunnel
                 activeTunnelData = tunnelData
 
-                // send event to UI
+                startHealthMonitoring()
+
+                // send event to UI and update traffic timestamp
+                updateTrafficTimestamp()
                 emitEvent(WireguardPluginEvent.TUNNEL_UP, json.encodeToString(tunnelData));
 
                 result.success(null)
@@ -260,5 +278,91 @@ class WireguardPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
             return true
         }
         return false
+    }
+
+    private fun startHealthMonitoring() {
+        Log.d(LOG_TAG, "Starting connection health monitoring")
+        
+        // Initialize health state
+        lastTrafficTimestamp = System.currentTimeMillis()
+        isHealthy = true
+        lastTrafficBytes = Pair(0L, 0L)
+        
+        // Stop any existing timer
+        stopHealthMonitoring()
+        
+        // Start periodic health checks
+        healthCheckTimer = Timer("HealthCheckTimer", true)
+        healthCheckTimer?.scheduleAtFixedRate(object : TimerTask() {
+            override fun run() {
+                performHealthCheck()
+            }
+        }, HEALTH_CHECK_INTERVAL, HEALTH_CHECK_INTERVAL)
+        
+        Log.d(LOG_TAG, "Health monitoring started - check interval: ${HEALTH_CHECK_INTERVAL}ms, disconnect threshold: ${DISCONNECTION_THRESHOLD}ms")
+    }
+    
+    private fun stopHealthMonitoring() {
+        healthCheckTimer?.cancel()
+        healthCheckTimer = null
+        isHealthy = false
+        Log.d(LOG_TAG, "Health monitoring stopped")
+    }
+    
+    private fun performHealthCheck() {
+        val currentTime = System.currentTimeMillis()
+        
+        // Check for tunnel activity by examining stats if available
+        activeTunnel?.let { tunnel ->
+            try {
+                // Try to get tunnel stats from the backend
+                scope.launch(Dispatchers.IO) {
+                    val stats = futureBackend.await().getStatistics(tunnel)
+                    stats?.let { tunnelStats ->
+                        val currentBytes = Pair(tunnelStats.totalRx(), tunnelStats.totalTx())
+                        
+                        // Check if there's been any data transfer since last check
+                        if (currentBytes.first > lastTrafficBytes.first || currentBytes.second > lastTrafficBytes.second) {
+                            lastTrafficBytes = currentBytes
+                            updateTrafficTimestamp()
+                            Log.d(LOG_TAG, "Traffic detected - RX: $currentRxBytes, TX: $currentTxBytes")
+                        } else {
+                            Log.d(LOG_TAG, "No traffic detected - RX: $currentRxBytes, TX: $currentTxBytes")
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e(LOG_TAG, "Error checking tunnel stats: ${e.message}")
+            }
+        }
+        
+        val timeSinceLastTraffic = currentTime - lastTrafficTimestamp
+        val newHealthy = activeTunnel != null && timeSinceLastTraffic <= DISCONNECTION_THRESHOLD
+        if (newHealthy != isHealthy) {
+            val oldHealthy = isHealthy
+            isHealthy = newHealthy
+            
+            Log.d(LOG_TAG, "Connection health changed: ${if (oldHealthy) "HEALTHY" else "DISCONNECTED"} -> ${if (newHealthy) "HEALTHY" else "DISCONNECTED"} (traffic silence: ${timeSinceLastTraffic}ms)")
+            
+            // Log specific threshold crosses
+            if (newHealthy) {
+                Log.i(LOG_TAG, "Connection restored to HEALTHY")
+            } else {
+                Log.w(LOG_TAG, "Connection considered DISCONNECTED - no traffic for ${timeSinceLastTraffic}ms (threshold: ${DISCONNECTION_THRESHOLD}ms)")
+            }
+        } else if (activeTunnel != null) {
+            // Log periodic status when tunnel is active but health hasn't changed
+            Log.d(LOG_TAG, "Health check: ${if (isHealthy) "HEALTHY" else "DISCONNECTED"} (traffic silence: ${timeSinceLastTraffic}ms)")
+        }
+    }
+    
+    private fun updateTrafficTimestamp() {
+        lastTrafficTimestamp = System.currentTimeMillis()
+        
+        // If we were disconnected and now have traffic, update immediately
+        if (!isHealthy) {
+            Log.d(LOG_TAG, "Traffic detected - updating health status")
+            isHealthy = true
+        }
     }
 }
