@@ -9,7 +9,7 @@ public enum MockEvents {
 
 class MockVPNManager: VPNManagement {
     public private(set) var providerManager: NETunnelProviderManager?
-    public var connectionStatus: NEVPNStatus = .disconnected
+    public var connectionStatus: NEVPNStatus? = .disconnected
     var events: [MockEvents] = []
 
     func loadProviderManager(completion: @escaping (NETunnelProviderManager?) -> Void) {

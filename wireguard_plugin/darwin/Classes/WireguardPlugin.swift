@@ -215,7 +215,7 @@ public class WireguardPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
 
     /// Updates the UI status of the VPN connection. Used when the status changes asynchronously.
     private func handleVPNStatusChange() {
-        guard let vpnStatus = vpnManager.providerManager?.connection.status else {
+        guard let vpnStatus = vpnManager.connectionStatus else {
             logger.log("Failed to get VPN status, the provider manager has not been loaded yet.")
             return
         }
@@ -317,7 +317,7 @@ public class WireguardPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
             providerManager.localizedDescription = config.locationName
             providerManager.isEnabled = true
 
-            if let status = self.vpnManager.providerManager?.connection.status {
+            if let status = self.vpnManager.connectionStatus {
                 if status == .connected || status == .connecting {
                     do {
                         try self.vpnManager.stopTunnel()
@@ -373,7 +373,7 @@ public class WireguardPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
             "Waiting for VPN status to change to one of: \(desiredStatuses.map { $0.rawValue })"
         )
         func check() {
-            guard let status = vpnManager.providerManager?.connection.status else {
+            guard let status = vpnManager.connectionStatus else {
                 self.logger.log("No VPN connection status available")
                 completion(nil)
                 return
@@ -425,7 +425,7 @@ public class WireguardPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
     private func closeTunnel(result: @escaping FlutterResult) {
         logger.log("Stopping tunnel")
 
-        guard let status = vpnManager.providerManager?.connection.status else {
+        guard let status = vpnManager.connectionStatus else {
             logger.log("No VPN connection status available")
             result(
                 VPNError.noManager(

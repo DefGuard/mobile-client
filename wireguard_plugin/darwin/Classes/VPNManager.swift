@@ -5,9 +5,10 @@ public enum VPNManagerError: Error {
     case providerManagerNotSet
 }
 
+/// Define protocol so `VPNManager` can be mocked for testing in `MockVPNManager`.
 public protocol VPNManagement {
     var providerManager: NETunnelProviderManager? { get }
-    var connectionStatus: NEVPNStatus { get }
+    var connectionStatus: NEVPNStatus? { get }
 
     func loadProviderManager(
         completion: @escaping (NETunnelProviderManager?) -> Void
@@ -28,8 +29,8 @@ public class VPNManager: VPNManagement {
 
     public private(set) var providerManager: NETunnelProviderManager?
 
-    public var connectionStatus: NEVPNStatus {
-        providerManager?.connection.status ?? NEVPNStatus.invalid
+    public var connectionStatus: NEVPNStatus? {
+        providerManager?.connection.status
     }
 
     /// Loads the provider manager from the system preferences.
