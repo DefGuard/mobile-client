@@ -235,25 +235,26 @@ class WireguardPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
                 }
 
                 val peer = peerBuilder.build()
-
                 val tunnel = SimpleTunnel("dg0")
-
                 val config = Config.Builder()
                     .setInterface(iface)
                     .addPeer(peer)
                     .build()
-
                 val tunnelData = ActiveTunnelData(
                     locationId = configData.locationId,
                     instanceId = configData.instanceId,
                     traffic = configData.traffic,
+                    mfaEnabled = !configData.presharedKey.isNullOrBlank(),
                 )
 
                 futureBackend.await().setState(tunnel, Tunnel.State.UP, config)
                 activeTunnel = tunnel
                 activeTunnelData = tunnelData
 
-                startHealthMonitoring()
+                // only monitor MFA connections
+                if (tunnelData.mfaEnabled) {
+                    startHealthMonitoring()
+                }
 
                 // send event to UI and update traffic timestamp
                 updateTrafficTimestamp()
@@ -300,7 +301,7 @@ class WireguardPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
             }
         }, HEALTH_CHECK_INTERVAL, HEALTH_CHECK_INTERVAL)
         
-        Log.d(LOG_TAG, "Health monitoring started - check interval: ${HEALTH_CHECK_INTERVAL}ms, disconnect threshold: ${DISCONNECTION_THRESHOLD}ms")
+        Log.d(LOG_TAG, "Health monitoring started - check interval: ${HEALTH_CHECK_INTERVAL}ms, disconnect threshold: ${activeTunnelData?.peerDisconnectThreshold}ms")
     }
     
     private fun stopHealthMonitoring() {
