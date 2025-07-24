@@ -1,7 +1,7 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mobile/data/plugin/plugin.dart';
-import 'package:mobile/notifications.dart';
+import 'package:mobile/utils/notifications.dart';
 import 'package:mobile/open/riverpod/plugin/plugin.dart';
 import 'package:wireguard_plugin/wireguard_plugin.dart';
 
@@ -49,11 +49,11 @@ class PluginEventRouter extends StateNotifier<void> {
           talker.error("Event handler did not received event data!");
         }
         break;
-      case "connection_lost":
+      case "mfa_session_expired":
         flutterLocalNotificationsPlugin.show(
           0,
           'Connection Lost',
-          'Your VPN connection has been lost. Please reconnect.',
+          'VPN gateway unreachable, MFA session expired. Reconnect to continue.',
           const NotificationDetails(
             android: AndroidNotificationDetails(
               'defguard_channel',

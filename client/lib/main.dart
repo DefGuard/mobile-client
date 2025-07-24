@@ -5,7 +5,7 @@ import 'package:mobile/open/riverpod/router/router.dart';
 import 'package:mobile/plugin.dart';
 import 'package:mobile/theme.dart';
 
-import 'package:mobile/notifications.dart';
+import 'package:mobile/utils/notifications.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

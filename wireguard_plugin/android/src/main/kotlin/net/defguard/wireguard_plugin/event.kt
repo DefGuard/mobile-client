@@ -6,7 +6,7 @@ enum class WireguardPluginEvent(val value: String) {
     TUNNEL_UP("tunnel_up"),
     TUNNEL_DOWN("tunnel_down"),
     TUNNEL_WAITING("tunnel_waiting"),
-    CONNECTION_LOST("connection_lost"),
+    MFA_SESSION_EXPIRED("mfa_session_expired"),
 }
 
 @Serializable

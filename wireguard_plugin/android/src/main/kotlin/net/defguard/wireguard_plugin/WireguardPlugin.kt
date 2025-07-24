@@ -350,7 +350,7 @@ class WireguardPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
                 Log.i(LOG_TAG, "Connection restored to HEALTHY")
             } else {
                 Log.w(LOG_TAG, "Connection considered DISCONNECTED - no traffic for ${timeSinceLastTraffic}ms (threshold: ${DISCONNECTION_THRESHOLD}ms)")
-                emitEvent(WireguardPluginEvent.CONNECTION_LOST, null)
+                emitEvent(WireguardPluginEvent.MFA_SESSION_EXPIRED, null)
             }
         } else if (activeTunnel != null) {
             // Log periodic status when tunnel is active but health hasn't changed
