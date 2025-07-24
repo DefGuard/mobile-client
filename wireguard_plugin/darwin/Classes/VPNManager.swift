@@ -1,11 +1,26 @@
 import NetworkExtension
 import os
 
-enum VPNManagerError: Error {
+public enum VPNManagerError: Error {
     case providerManagerNotSet
 }
 
-public class VPNManager {
+public protocol VPNManagement {
+    var providerManager: NETunnelProviderManager? { get }
+
+    func loadProviderManager(
+        completion: @escaping (NETunnelProviderManager?) -> Void
+    )
+    func saveProviderManager(
+        _ manager: NETunnelProviderManager,
+        completion: @escaping (Error?) -> Void
+    )
+    func startTunnel() throws
+    func stopTunnel() throws
+    func handleVPNConfigurationChange()
+}
+
+public class VPNManager: VPNManagement {
     static let shared = VPNManager()
     private var logger = Logger(subsystem: Bundle.main.bundleIdentifier!,
                                 category: "WireguardPlugin.VPNManager")

@@ -17,11 +17,11 @@ public class WireguardPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
     private var connectionObserver: NSObjectProtocol?
     private var appStateObservers: [NSObjectProtocol] = []
     private var configurationObserver: NSObjectProtocol?
-    private var vpnManager: VPNManager
+    private var vpnManager: VPNManagement
     private var logger = Logger(subsystem: Bundle.main.bundleIdentifier!,
                                 category: "WireguardPlugin")
 
-    public init(vpnManager: VPNManager? = nil) {
+    public init(vpnManager: VPNManagement? = nil) {
         if let vpnManager = vpnManager {
             self.logger.debug("Using provided VPN manager")
             self.vpnManager = vpnManager
