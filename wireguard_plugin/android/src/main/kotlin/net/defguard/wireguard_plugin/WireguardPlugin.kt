@@ -43,7 +43,8 @@ const val DEFAULT_ROUTE_IPV6 = "::/0"
 const val VPN_PERMISSION_REQUEST_CODE = 1001
 const val LOG_TAG = "DG"
 const val HEALTH_CHECK_INTERVAL = 30000L // 30 seconds
-const val DISCONNECTION_THRESHOLD = 3 * 60 * 1000L // 3 minutes
+// const val DISCONNECTION_THRESHOLD = 3 * 60 * 1000L // 3 minutes
+const val DISCONNECTION_THRESHOLD = 45 * 1000L // 45 seconds
 
 
 /** WireguardPlugin */
@@ -325,9 +326,9 @@ class WireguardPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
                         if (currentBytes.first > lastTrafficBytes.first || currentBytes.second > lastTrafficBytes.second) {
                             lastTrafficBytes = currentBytes
                             updateTrafficTimestamp()
-                            Log.d(LOG_TAG, "Traffic detected - RX: $currentRxBytes, TX: $currentTxBytes")
+                            Log.d(LOG_TAG, "Traffic detected - RX: ${currentBytes.first}, TX: ${currentBytes.second}")
                         } else {
-                            Log.d(LOG_TAG, "No traffic detected - RX: $currentRxBytes, TX: $currentTxBytes")
+                            Log.d(LOG_TAG, "No traffic detected - RX: ${currentBytes.first}, TX: ${currentBytes.second}")
                         }
                     }
                 }
@@ -349,6 +350,11 @@ class WireguardPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
                 Log.i(LOG_TAG, "Connection restored to HEALTHY")
             } else {
                 Log.w(LOG_TAG, "Connection considered DISCONNECTED - no traffic for ${timeSinceLastTraffic}ms (threshold: ${DISCONNECTION_THRESHOLD}ms)")
+                scope.launch(Dispatchers.IO) {
+                    activeTunnel?.let {
+                        closeTunnel(it);
+                    }
+                }
             }
         } else if (activeTunnel != null) {
             // Log periodic status when tunnel is active but health hasn't changed
