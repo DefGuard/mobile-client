@@ -67,6 +67,7 @@ dependencies:
   collection: ^1.19.1
   url_launcher: ^6.3.2
   uuid: ^4.5.1
+  flutter_local_notifications: ^19.3.1
 
 dev_dependencies:
   flutter_test:

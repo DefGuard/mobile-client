@@ -1,5 +1,7 @@
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mobile/data/plugin/plugin.dart';
+import 'package:mobile/notifications.dart';
 import 'package:mobile/open/riverpod/plugin/plugin.dart';
 import 'package:wireguard_plugin/wireguard_plugin.dart';
 
@@ -46,6 +48,24 @@ class PluginEventRouter extends StateNotifier<void> {
         } else {
           talker.error("Event handler did not received event data!");
         }
+        break;
+      case "connection_lost":
+        flutterLocalNotificationsPlugin.show(
+          0,
+          'Connection Lost',
+          'Your VPN connection has been lost. Please reconnect.',
+          const NotificationDetails(
+            android: AndroidNotificationDetails(
+              'defguard_channel',
+              'DefGuard',
+              channelDescription: 'DefGuard VPN notifications',
+              importance: Importance.max,
+              priority: Priority.high,
+              ticker: 'ticker',
+            ),
+          ),
+        );
+        ref.read(wireguardPluginProvider).closeTunnel();
         break;
       default:
         talker.error("EventRouter: received $event has no handler !");
