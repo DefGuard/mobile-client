@@ -47,7 +47,7 @@ class DgButton extends StatelessWidget {
   });
 
   factory DgButton({
-    required text,
+    required String text,
     Key? key,
     DgButtonVariant variant = DgButtonVariant.secondary,
     DgIcon? icon,
