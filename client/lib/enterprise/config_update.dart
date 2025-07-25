@@ -3,6 +3,7 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mobile/data/db/database.dart';
 import 'package:mobile/open/api.dart';
+import 'package:mobile/open/widgets/toaster/toast_manager.dart';
 import 'package:mobile/utils/update_instance.dart';
 
 import '../logging.dart';
@@ -14,6 +15,7 @@ class ConfigurationUpdater extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final toaster = ref.read(toastManagerProvider.notifier);
     final updatePending = useState(false);
     final db = ref.read(databaseProvider);
     final lifecycle = useAppLifecycleState();
@@ -44,7 +46,7 @@ class ConfigurationUpdater extends HookConsumerWidget {
               disableAllTraffic: false,
               enterpriseEnabled: false,
             );
-            await db.managers.defguardInstances.replace(instance);
+            await db.managers.defguardInstances.update((_) => instance);
             continue;
           }
           if (responseData == null) {
@@ -54,13 +56,28 @@ class ConfigurationUpdater extends HookConsumerWidget {
             continue;
           }
           try {
-            await updateInstance(
+            final updateResult = await updateInstance(
               db: db,
               instance: instance,
               configs: responseData.configs,
               info: responseData.instance,
               token: responseData.token,
             );
+            if (updateResult != null) {
+              talker.info(
+                "Instance ${instance.logName} results: Instance updated: ${updateResult.instanceChanged} | Locations updated: ${updateResult.locationsUpdated} | Locations removed: ${updateResult.locationsRemoved} | Locations added: ${updateResult.locationsAdded}",
+              );
+              if (updateResult.didChange) {
+                final message = getInstanceUpdateMessage(
+                  instance.name,
+                  updateResult,
+                );
+                toaster.showInfo(
+                  title: "Instance ${instance.name} update",
+                  message: message,
+                );
+              }
+            }
           } catch (e) {
             talker.error(
               "Failed to process update for ${instance.logName} ",
@@ -73,7 +90,7 @@ class ConfigurationUpdater extends HookConsumerWidget {
       } finally {
         updatePending.value = false;
       }
-    }, [updatePending]);
+    }, [updatePending, toaster]);
 
     useEffect(() {
       updateConfiguration();
@@ -86,7 +103,7 @@ class ConfigurationUpdater extends HookConsumerWidget {
         updateConfiguration();
       }
       return null;
-    }, [lifecycle]);
+    }, [lifecycle, updateConfiguration]);
 
     return child;
   }
