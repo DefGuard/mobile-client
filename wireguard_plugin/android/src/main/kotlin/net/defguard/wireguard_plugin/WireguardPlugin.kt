@@ -105,7 +105,6 @@ class WireguardPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
 
     override fun onDetachedFromEngine(binding: FlutterPlugin.FlutterPluginBinding) {
         channel.setMethodCallHandler(null)
-        stopHealthMonitoring()
     }
 
     override fun onDetachedFromActivity() {
@@ -301,7 +300,7 @@ class WireguardPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
             }
         }, HEALTH_CHECK_INTERVAL, HEALTH_CHECK_INTERVAL)
         
-        Log.d(LOG_TAG, "Health monitoring started - check interval: ${HEALTH_CHECK_INTERVAL}ms, disconnect threshold: ${activeTunnelData?.peerDisconnectThreshold}ms")
+        Log.d(LOG_TAG, "Health monitoring started - check interval: ${HEALTH_CHECK_INTERVAL}ms, disconnect threshold: ${DISCONNECTION_THRESHOLD}ms")
     }
     
     private fun stopHealthMonitoring() {
