@@ -22,6 +22,7 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerializationException
@@ -50,51 +51,133 @@ const val DISCONNECTION_THRESHOLD = 45 * 1000L // 45 seconds
 /** WireguardPlugin */
 class WireguardPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
     PluginRegistry.ActivityResultListener {
+    
+    companion object {
+        // Shared state across all plugin instances
+        @JvmStatic
+        private var sharedActiveTunnel: Tunnel? = null
+        @JvmStatic  
+        private var sharedActiveTunnelData: ActiveTunnelData? = null
+        @JvmStatic
+        private var sharedBackend: GoBackend? = null
+        @JvmStatic
+        private var sharedFutureBackend: CompletableDeferred<GoBackend>? = null
+        @JvmStatic
+        private var sharedHavePermission = false
+        @JvmStatic
+        private var sharedLastTrafficTimestamp: Long = 0
+        @JvmStatic
+        private var sharedIsHealthy = false
+        @JvmStatic
+        private var sharedHealthCheckTimer: Timer? = null
+        @JvmStatic
+        private var sharedLastTrafficBytes = Pair(0L, 0L)
+        @JvmStatic
+        private var sharedIsInitialized = false
+    }
     /// The MethodChannel that will the communication between Flutter and native Android
     ///
     /// This local reference serves to register the plugin with the Flutter Engine and unregister it
     /// when the Flutter Engine is detached from the Activity
     private lateinit var channel: MethodChannel
-    private var havePermission = false
     private var activity: Activity? = null
     private var pendingResult: Result? = null
     private lateinit var eventChannel: EventChannel
     private var eventSink: EventChannel.EventSink? = null
-    private var activeTunnel: Tunnel? = null
-    private var activeTunnelData: ActiveTunnelData? = null
-    private var futureBackend = CompletableDeferred<GoBackend>()
-    private var backend: GoBackend? = null
     private lateinit var context: Context
     private val scope = CoroutineScope(Job() + Dispatchers.Main.immediate)
     
-    // Connection health monitoring
-    private var lastTrafficTimestamp: Long = 0
-    private var isHealthy = false
-    private var healthCheckTimer: Timer? = null
-    private var lastTrafficBytes = Pair(0L, 0L) // (rx, tx)
+    // Properties that delegate to shared state
+    private var havePermission: Boolean
+        get() = sharedHavePermission
+        set(value) { sharedHavePermission = value }
+    
+    private var activeTunnel: Tunnel?
+        get() = sharedActiveTunnel
+        set(value) { sharedActiveTunnel = value }
+        
+    private var activeTunnelData: ActiveTunnelData?
+        get() = sharedActiveTunnelData
+        set(value) { sharedActiveTunnelData = value }
+        
+    private var backend: GoBackend?
+        get() = sharedBackend
+        set(value) { sharedBackend = value }
+        
+    private var futureBackend: CompletableDeferred<GoBackend>
+        get() = sharedFutureBackend ?: CompletableDeferred<GoBackend>().also { sharedFutureBackend = it }
+        set(value) { sharedFutureBackend = value }
+        
+    private var isInitialized: Boolean
+        get() = sharedIsInitialized
+        set(value) { sharedIsInitialized = value }
+        
+    // Connection health monitoring - delegate to shared state
+    private var lastTrafficTimestamp: Long
+        get() = sharedLastTrafficTimestamp
+        set(value) { sharedLastTrafficTimestamp = value }
+        
+    private var isHealthy: Boolean
+        get() = sharedIsHealthy
+        set(value) { sharedIsHealthy = value }
+        
+    private var healthCheckTimer: Timer?
+        get() = sharedHealthCheckTimer
+        set(value) { sharedHealthCheckTimer = value }
+        
+    private var lastTrafficBytes: Pair<Long, Long>
+        get() = sharedLastTrafficBytes
+        set(value) { sharedLastTrafficBytes = value }
 
     override fun onAttachedToEngine(flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
-        context = flutterPluginBinding.applicationContext
+        Log.d(LOG_TAG, "Plugin onAttachedToEngine - isInitialized: $isInitialized")
+        
+        // Always update method channels and event sink for Flutter communication
         channel = MethodChannel(flutterPluginBinding.binaryMessenger, METHOD_CHANNEL_NAME)
         eventChannel = EventChannel(flutterPluginBinding.binaryMessenger, METHOD_EVENT_NAME)
-        scope.launch(Dispatchers.IO) {
-            try {
-                backend = createBackend()
-                futureBackend.complete(backend!!)
-            } catch (e: Throwable) {
-                Log.e(LOG_TAG, Log.getStackTraceString(e));
-            }
-        }
         channel.setMethodCallHandler(this)
         eventChannel.setStreamHandler(object : EventChannel.StreamHandler {
             override fun onListen(arguments: Any?, events: EventChannel.EventSink?) {
                 eventSink = events
+                Log.d(LOG_TAG, "Event sink connected")
             }
 
             override fun onCancel(arguments: Any?) {
                 eventSink = null
+                Log.d(LOG_TAG, "Event sink disconnected")
             }
         })
+        
+        if (!isInitialized) {
+            // First time initialization
+            Log.d(LOG_TAG, "Performing initial plugin initialization")
+            context = flutterPluginBinding.applicationContext
+            scope.launch(Dispatchers.IO) {
+                try {
+                    backend = createBackend()
+                    futureBackend.complete(backend!!)
+                } catch (e: Throwable) {
+                    Log.e(LOG_TAG, Log.getStackTraceString(e));
+                }
+            }
+            isInitialized = true
+        } else {
+            // Reconnection after app restart
+            Log.d(LOG_TAG, "Plugin reconnecting after app restart")
+            
+            // If we have an active tunnel, immediately notify Flutter about it
+            activeTunnelData?.let { tunnelData ->
+                Log.i(LOG_TAG, "Active tunnel detected on reconnection: instance=${tunnelData.instanceId}, location=${tunnelData.locationId}")
+                scope.launch(Dispatchers.Main) {
+                    // Wait a bit for event sink to be ready
+                    delay(100)
+                    Log.i(LOG_TAG, "Emitting TUNNEL_UP event to restore Flutter state")
+                    emitEvent(WireguardPluginEvent.TUNNEL_UP, json.encodeToString(tunnelData))
+                }
+            } ?: run {
+                Log.d(LOG_TAG, "No active tunnel found on reconnection")
+            }
+        }
     }
 
     override fun onAttachedToActivity(binding: ActivityPluginBinding) {
