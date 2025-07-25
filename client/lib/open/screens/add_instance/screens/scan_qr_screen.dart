@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mobile/data/proxy/qr_register.dart';
+import 'package:mobile/logging.dart';
 import 'package:mobile/open/widgets/navigation/dg_scaffold.dart';
 import 'package:mobile/router/routes.dart';
 import 'package:mobile/theme/color.dart';
@@ -40,6 +41,9 @@ class ScanInstanceQrScreen extends HookConsumerWidget {
         child: SafeArea(
           top: false,
           child: MobileScanner(
+            onDetectError: (err, trace) {
+              talker.error("Mobile scanner widget failed !", err, trace);
+            },
             onDetect: (result) {
               final readResult = result.barcodes.first.rawValue;
               if (readResult != null) {
