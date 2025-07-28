@@ -44,8 +44,7 @@ const val DEFAULT_ROUTE_IPV6 = "::/0"
 const val VPN_PERMISSION_REQUEST_CODE = 1001
 const val LOG_TAG = "DG"
 const val HEALTH_CHECK_INTERVAL = 30000L // 30 seconds
-// const val DISCONNECTION_THRESHOLD = 3 * 60 * 1000L // 3 minutes
-const val DISCONNECTION_THRESHOLD = 45 * 1000L // 45 seconds
+const val DISCONNECTION_THRESHOLD = 3 * 60 * 1000L // 3 minutes
 
 
 /** WireguardPlugin */
