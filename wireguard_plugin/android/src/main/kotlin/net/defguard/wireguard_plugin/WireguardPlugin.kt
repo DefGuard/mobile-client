@@ -47,7 +47,6 @@ const val HEALTH_CHECK_INTERVAL = 30000L // 30 seconds
 const val DISCONNECTION_THRESHOLD = 3 * 60 * 1000L // 3 minutes
 
 
-/** WireguardPlugin */
 class WireguardPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
     PluginRegistry.ActivityResultListener {
     
