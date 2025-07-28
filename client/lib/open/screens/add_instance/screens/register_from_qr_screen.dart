@@ -1,6 +1,7 @@
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:mobile/data/db/database.dart';
 import 'package:mobile/data/proxy/enrollment.dart';
 import 'package:mobile/data/proxy/qr_register.dart';
 import 'package:mobile/open/api.dart';
@@ -16,7 +17,8 @@ class RegisterFromQrScreen extends HookConsumerWidget {
 
   const RegisterFromQrScreen({super.key, required this.instanceRegistration});
 
-  Future<void> _handleRegistration(BuildContext context) async {
+  Future<void> _handleRegistration(BuildContext context, AppDatabase db) async {
+    final messenger = ScaffoldMessenger.of(context);
     final url = Uri.parse(instanceRegistration.url);
     final requestData = EnrollmentStartRequest(
       token: instanceRegistration.token,
@@ -29,6 +31,19 @@ class RegisterFromQrScreen extends HookConsumerWidget {
         url,
         requestData,
       );
+      final instanceId = registrationResponse.instance.id;
+      final dbInstance = await db.managers.defguardInstances
+          .filter((row) => row.uuid.equals(instanceId))
+          .getSingleOrNull();
+      if (dbInstance != null) {
+        messenger.showSnackBar(
+          SnackBar(content: Text("Instance is already registered")),
+        );
+        if (context.mounted) {
+          HomeScreenRoute().go(context);
+          return;
+        }
+      }
       final NameDeviceScreenData routeData = NameDeviceScreenData(
         proxyUrl: url,
         startResponse: registrationResponse,
@@ -43,10 +58,12 @@ class RegisterFromQrScreen extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final db = ref.read(databaseProvider);
+
     useEffect(() {
-      _handleRegistration(context);
+      _handleRegistration(context, db);
       return null;
-    }, const []);
+    }, [db]);
 
     return Container(
       color: DgColor.mainPrimary,

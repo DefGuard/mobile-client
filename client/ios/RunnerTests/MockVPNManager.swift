@@ -1,10 +1,3 @@
-//
-//  MockVPNManager.swift
-//  Runner
-//
-//  Created by Aleksander on 17/07/2025.
-//
-
 import NetworkExtension
 import wireguard_plugin
 
@@ -15,13 +8,11 @@ public enum MockEvents {
 }
 
 class MockVPNManager: VPNManagement {
-    var providerManager: NETunnelProviderManager?
-    var connectionStatus: NEVPNStatus = .disconnected
+    public private(set) var providerManager: NETunnelProviderManager?
+    public var connectionStatus: NEVPNStatus? = .disconnected
     var events: [MockEvents] = []
 
-    func loadProviderManager(
-        completion: @escaping (NETunnelProviderManager?) -> Void
-    ) {
+    func loadProviderManager(completion: @escaping (NETunnelProviderManager?) -> Void) {
         completion(providerManager)
     }
 
@@ -33,40 +24,20 @@ class MockVPNManager: VPNManagement {
         completion(nil)
     }
 
-    func getConnectionStatus() -> NEVPNStatus? {
-        return connectionStatus
-    }
-
     func startTunnel() throws {
         guard providerManager != nil else {
-            throw NSError(
-                domain: "MockVPNManagerError",
-                code: 1,
-                userInfo: [
-                    NSLocalizedDescriptionKey: "Provider manager is not set"
-                ]
-            )
+            throw VPNManagerError.providerManagerNotSet
         }
-        self.connectionStatus = .connected
+        connectionStatus = .connected
         events.append(.connected)
     }
 
     func stopTunnel() throws {
         guard providerManager != nil else {
-            throw NSError(
-                domain: "MockVPNManagerError",
-                code: 2,
-                userInfo: [
-                    NSLocalizedDescriptionKey: "Provider manager is not set"
-                ]
-            )
+            throw VPNManagerError.providerManagerNotSet
         }
-        self.connectionStatus = .disconnected
+        connectionStatus = .disconnected
         events.append(.disconnected)
-    }
-
-    func getProviderManager() -> NETunnelProviderManager? {
-        return providerManager
     }
 
     func handleVPNConfigurationChange() {
@@ -77,13 +48,11 @@ class MockVPNManager: VPNManagement {
         events.removeAll()
     }
 
-    func vpnEventsEqual(_ otherEvents: [MockEvents], orderMatters: Bool = true)
-        -> Bool
-    {
-        if orderMatters {
-            return events == otherEvents
+    func vpnEventsEqual(_ otherEvents: [MockEvents], orderMatters: Bool = true) -> Bool {
+        return if orderMatters {
+            events == otherEvents
         } else {
-            return Set(events) == Set(otherEvents)
+            Set(events) == Set(otherEvents)
         }
     }
 }

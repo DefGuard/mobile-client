@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:mobile/data/db/database.dart';
 import 'package:mobile/data/proxy/enrollment.dart';
 import 'package:mobile/open/api.dart';
 import 'package:mobile/open/constants.dart';
@@ -63,13 +64,25 @@ bool _isValidUri(String value) {
 
 Future<void> _handleSubmit(
   BuildContext context,
+  AppDatabase db,
   String url,
   String token,
 ) async {
+  final messenger = ScaffoldMessenger.of(context);
   debugPrint('Submitted: URL=$url, Token=$token');
   final requestData = EnrollmentStartRequest(token: token);
   final uri = Uri.parse(url);
   final enrolmentResponse = await proxyApi.startEnrollment(uri, requestData);
+  final instanceId = enrolmentResponse.instance.id;
+  final dbInstance = await db.managers.defguardInstances
+      .filter((row) => row.uuid.equals(instanceId))
+      .getSingleOrNull();
+  if (dbInstance != null) {
+    messenger.showSnackBar(
+      SnackBar(content: Text("Instance is already registered")),
+    );
+    return;
+  }
   final routeData = NameDeviceScreenData(
     startResponse: enrolmentResponse,
     proxyUrl: uri,
@@ -94,6 +107,7 @@ class _AddInstanceForm extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final db = ref.read(databaseProvider);
     final formKey = useMemoized(() => GlobalKey<FormState>());
     final urlController = useTextEditingController(
       text: kDebugMode ? localDebugProxyUrl : null,
@@ -148,6 +162,7 @@ class _AddInstanceForm extends HookConsumerWidget {
                     try {
                       await _handleSubmit(
                         context,
+                        db,
                         urlController.text.trim(),
                         tokenController.text.trim(),
                       );

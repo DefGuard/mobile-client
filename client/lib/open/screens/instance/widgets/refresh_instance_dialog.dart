@@ -8,6 +8,7 @@ import 'package:mobile/open/widgets/buttons/dg_button.dart';
 import 'package:mobile/open/widgets/dg_dialog.dart';
 import 'package:mobile/open/widgets/dg_dialog_title.dart';
 import 'package:mobile/open/widgets/dg_text_form_field.dart';
+import 'package:mobile/open/widgets/toaster/toast_manager.dart';
 import 'package:mobile/theme/spacing.dart';
 import 'package:mobile/utils/update_instance.dart';
 
@@ -25,6 +26,7 @@ class RefreshInstanceDialog extends HookConsumerWidget {
       text: instance.proxyUrl,
     );
     final tokenController = useTextEditingController();
+    final toaster = ref.read(toastManagerProvider.notifier);
     final isLoading = useState(false);
 
     final submit = useCallback(() async {
@@ -37,15 +39,22 @@ class RefreshInstanceDialog extends HookConsumerWidget {
       final networkInfo = await proxyApi.networkInfo(uri, instance.pubKey);
       talker.debug("Retrieved new instance information from proxy");
       talker.debug("Updating instance info in DB");
-      await updateInstance(
+      final updateResult = await updateInstance(
         db: db,
         instance: instance,
         configs: networkInfo.configs,
         info: networkInfo.instance,
         token: networkInfo.token,
       );
+      if (updateResult != null && updateResult.didChange) {
+        final message = getInstanceUpdateMessage(instance.name, updateResult);
+        toaster.showInfo(
+          title: "Instance ${instance.name} updated",
+          message: message,
+        );
+      }
       talker.info("Instance information refreshed successfully");
-    }, [db, proxyUrlController, tokenController, isLoading]);
+    }, [db, proxyUrlController, tokenController, isLoading, toaster]);
 
     return DgDialog(
       child: Form(

@@ -33,7 +33,7 @@ final class Adapter /*: Sendable*/ {
 
     /// Designated initializer.
     /// - Parameter packetTunnelProvider: an instance of `NEPacketTunnelProvider`. Internally stored
-    public init(with packetTunnelProvider: NEPacketTunnelProvider) {
+    init(with packetTunnelProvider: NEPacketTunnelProvider) {
         self.packetTunnelProvider = packetTunnelProvider
     }
 
@@ -41,9 +41,9 @@ final class Adapter /*: Sendable*/ {
         self.stop()
     }
 
-    public func start(tunnelConfiguration: TunnelConfiguration) throws {
+    func start(tunnelConfiguration: TunnelConfiguration) throws {
         if let _ = tunnel {
-            logger.info("Cleaning exiting Tunnel...")
+            logger.info("Cleaning exiting Tunnel")
             tunnel = nil
             connection = nil
         }
@@ -55,7 +55,7 @@ final class Adapter /*: Sendable*/ {
         networkMonitor.start(queue: .main)
         self.networkMonitor = networkMonitor
 
-        logger.info("Initializing Tunnel...")
+        logger.info("Initializing Tunnel")
         tunnel = try Tunnel.init(
             privateKey: tunnelConfiguration.interface.privateKey,
             serverPublicKey: tunnelConfiguration.peers[0].publicKey,
@@ -64,7 +64,7 @@ final class Adapter /*: Sendable*/ {
             index: 0
         )
 
-        logger.info("Connecting to endpoint...")
+        logger.info("Connecting to endpoint")
         guard let endpoint = tunnelConfiguration.peers[0].endpoint else {
             logger.error("Endpoint is nil")
             return
@@ -72,14 +72,14 @@ final class Adapter /*: Sendable*/ {
         self.endpoint = endpoint.asNWEndpoint()
         initEndpoint()
 
-        logger.info("Sniffing packets...")
+        logger.info("Sniffing packets")
         readPackets()
 
         state = .running
     }
 
-    public func stop() {
-        logger.info("Stopping Adapter...")
+    func stop() {
+        logger.info("Stopping Adapter")
         connection?.cancel()
         connection = nil
         tunnel = nil
@@ -99,15 +99,23 @@ final class Adapter /*: Sendable*/ {
                 // Nothing to do.
                 break
             case .err(let error):
-                logger.error("Tunnel error \(String(describing: error), privacy: .public)")
-                if error == WireGuardError.ConnectionExpired {
-                    logger.error("Connecion has expired - stopping the tunnel")
-                    // The correct way is to call the packet tunnel provider, if there is one.
-                    if let provider = packetTunnelProvider {
-                        provider.cancelTunnelWithError(error)
-                    } else {
-                        stop()
-                    }
+                logger.error("Tunnel error \(error, privacy: .public)")
+                switch error {
+                    case .InvalidAeadTag:
+                        logger.error("Invalid pre-shared key; stopping tunnel")
+                        // The correct way is to call the packet tunnel provider, if there is one.
+                        if let provider = packetTunnelProvider {
+                            provider.cancelTunnelWithError(error)
+                        } else {
+                            stop()
+                        }
+                    case .ConnectionExpired:
+                        logger.error("Connecion has expired; re-connecting")
+                        packetTunnelProvider?.reasserting = true
+                        initEndpoint()
+                        packetTunnelProvider?.reasserting = false
+                    default:
+                        break
                 }
             case .writeToNetwork(let data):
                 sendToEndpoint(data: data)
@@ -142,18 +150,18 @@ final class Adapter /*: Sendable*/ {
 
     /// Setup UDP connection to endpoint. This method should be called when UDP connection is ready to send and receive.
     private func setupEndpoint() {
-        logger.info("Setup Endpoint")
+        logger.info("Setup endpoint")
 
         // Send initial handshake packet
         if let tunnel = self.tunnel {
             handleTunnelResult(tunnel.forceHandshake())
         }
-        logger.info("Receiving UDP from endpoint...")
+        logger.info("Receiving UDP from endpoint")
         receive()
 
         // Use Timer to send keep-alive packets.
         keepAliveTimer?.invalidate()
-        logger.info("Creating keep-alive timer...")
+        logger.info("Creating keep-alive timer")
         let timer = Timer(timeInterval: 0.25, repeats: true) { [weak self] timer in
             guard let self = self, let tunnel = self.tunnel else { return }
             self.handleTunnelResult(tunnel.tick())
