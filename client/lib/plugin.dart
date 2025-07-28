@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mobile/data/plugin/plugin.dart';
 import 'package:mobile/utils/notifications.dart';
 import 'package:mobile/open/riverpod/plugin/plugin.dart';
+import 'package:mobile/open/widgets/toaster/toast_manager.dart';
 import 'package:wireguard_plugin/wireguard_plugin.dart';
 
 import 'logging.dart';
@@ -50,6 +51,7 @@ class PluginEventRouter extends StateNotifier<void> {
         }
         break;
       case "mfa_session_expired":
+        // Show system notification
         flutterLocalNotificationsPlugin.show(
           0,
           'Connection Lost',
@@ -65,6 +67,13 @@ class PluginEventRouter extends StateNotifier<void> {
             ),
           ),
         );
+        
+        // Show in-app toast using ToastManager
+        ref.read(toastManagerProvider.notifier).showInfo(
+          title: 'Connection Lost',
+          message: 'VPN gateway unreachable, MFA session expired',
+        );
+        
         ref.read(wireguardPluginProvider).closeTunnel();
         break;
       default:
