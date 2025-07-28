@@ -32,6 +32,8 @@
             <!--           App launcher -->
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+                <action android:name="com.htc.intent.action.POST_NOTIFICATIONS" />
+                <action android:name="com.htc.intent.action.VIBRATE" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 

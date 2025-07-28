@@ -67,6 +67,7 @@ dependencies:
   collection: ^1.19.1
   url_launcher: ^6.3.2
   uuid: ^4.5.1
+  flutter_local_notifications: ^19.3.1
   # sqlite3_flutter_libs version 0.5.37 bumps minimum compatible iOS version
   sqlite3_flutter_libs: 0.5.36
 
