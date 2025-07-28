@@ -34,17 +34,17 @@ class PluginEventRouter extends StateNotifier<void> {
     } else {
       talker.debug("Event had no data");
     }
+    final notifier = ref.read(pluginActiveTunnelStateProvider.notifier);
     switch (event) {
       case "tunnel_down":
         // clear active connection
-        ref.read(pluginActiveTunnelStateProvider.notifier).clear();
+        notifier.clear();
         break;
       case "tunnel_up":
         if (data != null) {
           try {
-            final tunnelData = PluginTunnelEventData.fromJson(data);
             // display active connection
-            ref.read(pluginActiveTunnelStateProvider.notifier).set(tunnelData);
+            notifier.set(PluginTunnelEventData.fromJson(data));
           } catch (e) {
             talker.error("Event $event handler failed ! Reason: $e");
           }
@@ -54,7 +54,7 @@ class PluginEventRouter extends StateNotifier<void> {
         break;
       case "mfa_session_expired":
         // clear active connection
-        ref.read(pluginActiveTunnelStateProvider.notifier).clear();
+        notifier.clear();
         // show notifications
         notifyMfaSessionExpired();
         break;
@@ -63,7 +63,7 @@ class PluginEventRouter extends StateNotifier<void> {
     }
   }
 
-  /// Displays system and in-app toast
+  /// Displays system notification and in-app toast
   void notifyMfaSessionExpired() {
     // show system notification
     flutterLocalNotificationsPlugin.show(
