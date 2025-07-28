@@ -74,6 +74,8 @@ class WireguardPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
         private var sharedLastTrafficBytes = Pair(0L, 0L)
         @JvmStatic
         private var sharedIsInitialized = false
+        @JvmStatic
+        private var pendingRecoveryEvent: ActiveTunnelData? = null
     }
     /// The MethodChannel that will the communication between Flutter and native Android
     ///
@@ -128,6 +130,10 @@ class WireguardPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
     private var lastTrafficBytes: Pair<Long, Long>
         get() = sharedLastTrafficBytes
         set(value) { sharedLastTrafficBytes = value }
+        
+    private var pendingRecoveryEvent: ActiveTunnelData?
+        get() = Companion.pendingRecoveryEvent
+        set(value) { Companion.pendingRecoveryEvent = value }
 
     override fun onAttachedToEngine(flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
         Log.d(LOG_TAG, "Plugin onAttachedToEngine - isInitialized: $isInitialized")
@@ -140,6 +146,16 @@ class WireguardPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
             override fun onListen(arguments: Any?, events: EventChannel.EventSink?) {
                 eventSink = events
                 Log.d(LOG_TAG, "Event sink connected")
+                
+                // Check if we have a pending recovery event to send
+                pendingRecoveryEvent?.let { tunnelData ->
+                    Log.i(LOG_TAG, "Sending pending recovery event for active tunnel")
+                    scope.launch(Dispatchers.Main) {
+                        delay(50) // Small delay to ensure event sink is ready
+                        emitEvent(WireguardPluginEvent.TUNNEL_UP, json.encodeToString(tunnelData))
+                        pendingRecoveryEvent = null // Clear after sending
+                    }
+                }
             }
 
             override fun onCancel(arguments: Any?) {
@@ -165,15 +181,11 @@ class WireguardPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
             // Reconnection after app restart
             Log.d(LOG_TAG, "Plugin reconnecting after app restart")
             
-            // If we have an active tunnel, immediately notify Flutter about it
+            // If we have an active tunnel, queue it for recovery when event listener connects
             activeTunnelData?.let { tunnelData ->
                 Log.i(LOG_TAG, "Active tunnel detected on reconnection: instance=${tunnelData.instanceId}, location=${tunnelData.locationId}")
-                scope.launch(Dispatchers.Main) {
-                    // Wait a bit for event sink to be ready
-                    delay(100)
-                    Log.i(LOG_TAG, "Emitting TUNNEL_UP event to restore Flutter state")
-                    emitEvent(WireguardPluginEvent.TUNNEL_UP, json.encodeToString(tunnelData))
-                }
+                pendingRecoveryEvent = tunnelData
+                Log.i(LOG_TAG, "Queued TUNNEL_UP event for when Flutter event listener connects")
             } ?: run {
                 Log.d(LOG_TAG, "No active tunnel found on reconnection")
             }
@@ -251,7 +263,13 @@ class WireguardPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
                 "event" to eventType.value,
                 "data" to data
             )
-            eventSink?.success(message)
+            Log.d(LOG_TAG, "Emitting event: ${eventType.value}, eventSink available: ${eventSink != null}")
+            if (eventSink != null) {
+                eventSink?.success(message)
+                Log.d(LOG_TAG, "Event ${eventType.value} sent successfully")
+            } else {
+                Log.w(LOG_TAG, "Cannot emit event ${eventType.value} - eventSink is null")
+            }
         }
     }
 
