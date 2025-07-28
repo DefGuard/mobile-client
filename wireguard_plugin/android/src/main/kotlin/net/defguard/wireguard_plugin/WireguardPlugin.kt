@@ -52,28 +52,28 @@ const val DISCONNECTION_THRESHOLD = 45 * 1000L // 45 seconds
 class WireguardPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
     PluginRegistry.ActivityResultListener {
     
-    companion object {
-        // Shared state across all plugin instances
+    companion object Globals {
+        // Global state across all plugin instances
         @JvmStatic
-        private var sharedActiveTunnel: Tunnel? = null
+        private var activeTunnel: Tunnel? = null
         @JvmStatic  
-        private var sharedActiveTunnelData: ActiveTunnelData? = null
+        private var activeTunnelData: ActiveTunnelData? = null
         @JvmStatic
-        private var sharedBackend: GoBackend? = null
+        private var backend: GoBackend? = null
         @JvmStatic
-        private var sharedFutureBackend: CompletableDeferred<GoBackend>? = null
+        private var futureBackend: CompletableDeferred<GoBackend>? = null
         @JvmStatic
-        private var sharedHavePermission = false
+        private var havePermission = false
         @JvmStatic
-        private var sharedLastTrafficTimestamp: Long = 0
+        private var lastTrafficTimestamp: Long = 0
         @JvmStatic
-        private var sharedIsHealthy = false
+        private var isHealthy = false
         @JvmStatic
-        private var sharedHealthCheckTimer: Timer? = null
+        private var healthCheckTimer: Timer? = null
         @JvmStatic
-        private var sharedLastTrafficBytes = Pair(0L, 0L)
+        private var lastTrafficBytes = Pair(0L, 0L)
         @JvmStatic
-        private var sharedIsInitialized = false
+        private var isInitialized = false
         @JvmStatic
         private var pendingRecoveryEvent: ActiveTunnelData? = null
     }
@@ -89,51 +89,51 @@ class WireguardPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
     private lateinit var context: Context
     private val scope = CoroutineScope(Job() + Dispatchers.Main.immediate)
     
-    // Properties that delegate to shared state
+    // Properties that delegate to global state
     private var havePermission: Boolean
-        get() = sharedHavePermission
-        set(value) { sharedHavePermission = value }
+        get() = Globals.havePermission
+        set(value) { Globals.havePermission = value }
     
     private var activeTunnel: Tunnel?
-        get() = sharedActiveTunnel
-        set(value) { sharedActiveTunnel = value }
+        get() = Globals.activeTunnel
+        set(value) { Globals.activeTunnel = value }
         
     private var activeTunnelData: ActiveTunnelData?
-        get() = sharedActiveTunnelData
-        set(value) { sharedActiveTunnelData = value }
+        get() = Globals.activeTunnelData
+        set(value) { Globals.activeTunnelData = value }
         
     private var backend: GoBackend?
-        get() = sharedBackend
-        set(value) { sharedBackend = value }
+        get() = Globals.backend
+        set(value) { Globals.backend = value }
         
     private var futureBackend: CompletableDeferred<GoBackend>
-        get() = sharedFutureBackend ?: CompletableDeferred<GoBackend>().also { sharedFutureBackend = it }
-        set(value) { sharedFutureBackend = value }
+        get() = Globals.futureBackend ?: CompletableDeferred<GoBackend>().also { Globals.futureBackend = it }
+        set(value) { Globals.futureBackend = value }
         
     private var isInitialized: Boolean
-        get() = sharedIsInitialized
-        set(value) { sharedIsInitialized = value }
+        get() = Globals.isInitialized
+        set(value) { Globals.isInitialized = value }
         
-    // Connection health monitoring - delegate to shared state
+    // Connection health monitoring - delegate to global state
     private var lastTrafficTimestamp: Long
-        get() = sharedLastTrafficTimestamp
-        set(value) { sharedLastTrafficTimestamp = value }
+        get() = Globals.lastTrafficTimestamp
+        set(value) { Globals.lastTrafficTimestamp = value }
         
     private var isHealthy: Boolean
-        get() = sharedIsHealthy
-        set(value) { sharedIsHealthy = value }
+        get() = Globals.isHealthy
+        set(value) { Globals.isHealthy = value }
         
     private var healthCheckTimer: Timer?
-        get() = sharedHealthCheckTimer
-        set(value) { sharedHealthCheckTimer = value }
+        get() = Globals.healthCheckTimer
+        set(value) { Globals.healthCheckTimer = value }
         
     private var lastTrafficBytes: Pair<Long, Long>
-        get() = sharedLastTrafficBytes
-        set(value) { sharedLastTrafficBytes = value }
+        get() = Globals.lastTrafficBytes
+        set(value) { Globals.lastTrafficBytes = value }
         
     private var pendingRecoveryEvent: ActiveTunnelData?
-        get() = Companion.pendingRecoveryEvent
-        set(value) { Companion.pendingRecoveryEvent = value }
+        get() = Globals.pendingRecoveryEvent
+        set(value) { Globals.pendingRecoveryEvent = value }
 
     override fun onAttachedToEngine(flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
         Log.d(LOG_TAG, "Plugin onAttachedToEngine - isInitialized: $isInitialized")
