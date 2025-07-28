@@ -408,6 +408,14 @@ class WireguardPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
                 Log.i(LOG_TAG, "Connection restored to HEALTHY")
             } else {
                 Log.w(LOG_TAG, "Connection considered DISCONNECTED - no traffic for ${timeSinceLastTraffic}ms (threshold: ${DISCONNECTION_THRESHOLD}ms)")
+                // close the tunnel
+                if (Globals.activeTunnel != null) {
+                    scope.launch(Dispatchers.IO) {
+                        Globals.activeTunnel?.let {
+                            closeTunnel(it);
+                        }
+                    }
+                }
                 emitEvent(WireguardPluginEvent.MFA_SESSION_EXPIRED, null)
             }
         } else if (Globals.activeTunnel != null) {

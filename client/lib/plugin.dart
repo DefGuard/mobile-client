@@ -36,12 +36,14 @@ class PluginEventRouter extends StateNotifier<void> {
     }
     switch (event) {
       case "tunnel_down":
+        // clear active connection
         ref.read(pluginActiveTunnelStateProvider.notifier).clear();
         break;
       case "tunnel_up":
         if (data != null) {
           try {
             final tunnelData = PluginTunnelEventData.fromJson(data);
+            // display active connection
             ref.read(pluginActiveTunnelStateProvider.notifier).set(tunnelData);
           } catch (e) {
             talker.error("Event $event handler failed ! Reason: $e");
@@ -51,34 +53,42 @@ class PluginEventRouter extends StateNotifier<void> {
         }
         break;
       case "mfa_session_expired":
-        // Show system notification
-        flutterLocalNotificationsPlugin.show(
-          0,
-          'Connection Lost',
-          'VPN gateway unreachable, MFA session expired. Reconnect to continue.',
-          const NotificationDetails(
-            android: AndroidNotificationDetails(
-              'defguard_channel',
-              'DefGuard',
-              channelDescription: 'DefGuard VPN notifications',
-              importance: Importance.max,
-              priority: Priority.high,
-              ticker: 'ticker',
-            ),
-          ),
-        );
-        
-        // Show in-app toast using ToastManager
-        ref.read(toastManagerProvider.notifier).showInfo(
-          title: 'Connection Lost',
-          message: 'VPN gateway unreachable, MFA session expired',
-        );
-        
-        ref.read(wireguardPluginProvider).closeTunnel();
+        // clear active connection
+        ref.read(pluginActiveTunnelStateProvider.notifier).clear();
+        // show notifications
+        notifyMfaSessionExpired();
         break;
       default:
         talker.error("EventRouter: received $event has no handler !");
     }
+  }
+
+  /// Displays system and in-app toast
+  void notifyMfaSessionExpired() {
+    // show system notification
+    flutterLocalNotificationsPlugin.show(
+      0,
+      'Connection Lost',
+      'VPN gateway unreachable, MFA session expired. Reconnect to continue.',
+      const NotificationDetails(
+        android: AndroidNotificationDetails(
+          'defguard_channel',
+          'DefGuard',
+          channelDescription: 'DefGuard VPN notifications',
+          importance: Importance.max,
+          priority: Priority.high,
+          ticker: 'ticker',
+        ),
+      ),
+    );
+
+    // show in-app toast
+    ref
+        .read(toastManagerProvider.notifier)
+        .showInfo(
+          title: 'Connection Lost',
+          message: 'VPN gateway unreachable, MFA session expired',
+        );
   }
 }
 
