@@ -89,54 +89,11 @@ class WireguardPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
     private lateinit var context: Context
     private val scope = CoroutineScope(Job() + Dispatchers.Main.immediate)
     
-    // Properties that delegate to global state
-    private var havePermission: Boolean
-        get() = Globals.havePermission
-        set(value) { Globals.havePermission = value }
-    
-    private var activeTunnel: Tunnel?
-        get() = Globals.activeTunnel
-        set(value) { Globals.activeTunnel = value }
-        
-    private var activeTunnelData: ActiveTunnelData?
-        get() = Globals.activeTunnelData
-        set(value) { Globals.activeTunnelData = value }
-        
-    private var backend: GoBackend?
-        get() = Globals.backend
-        set(value) { Globals.backend = value }
-        
-    private var futureBackend: CompletableDeferred<GoBackend>
+    private val futureBackend: CompletableDeferred<GoBackend>
         get() = Globals.futureBackend ?: CompletableDeferred<GoBackend>().also { Globals.futureBackend = it }
-        set(value) { Globals.futureBackend = value }
-        
-    private var isInitialized: Boolean
-        get() = Globals.isInitialized
-        set(value) { Globals.isInitialized = value }
-        
-    // Connection health monitoring - delegate to global state
-    private var lastTrafficTimestamp: Long
-        get() = Globals.lastTrafficTimestamp
-        set(value) { Globals.lastTrafficTimestamp = value }
-        
-    private var isHealthy: Boolean
-        get() = Globals.isHealthy
-        set(value) { Globals.isHealthy = value }
-        
-    private var healthCheckTimer: Timer?
-        get() = Globals.healthCheckTimer
-        set(value) { Globals.healthCheckTimer = value }
-        
-    private var lastTrafficBytes: Pair<Long, Long>
-        get() = Globals.lastTrafficBytes
-        set(value) { Globals.lastTrafficBytes = value }
-        
-    private var pendingRecoveryEvent: ActiveTunnelData?
-        get() = Globals.pendingRecoveryEvent
-        set(value) { Globals.pendingRecoveryEvent = value }
 
     override fun onAttachedToEngine(flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
-        Log.d(LOG_TAG, "Plugin onAttachedToEngine - isInitialized: $isInitialized")
+        Log.d(LOG_TAG, "Plugin onAttachedToEngine - isInitialized: ${Globals.isInitialized}")
         
         // Always update method channels and event sink for Flutter communication
         channel = MethodChannel(flutterPluginBinding.binaryMessenger, METHOD_CHANNEL_NAME)
@@ -148,12 +105,12 @@ class WireguardPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
                 Log.d(LOG_TAG, "Event sink connected")
                 
                 // Check if we have a pending recovery event to send
-                pendingRecoveryEvent?.let { tunnelData ->
+                Globals.pendingRecoveryEvent?.let { tunnelData ->
                     Log.i(LOG_TAG, "Sending pending recovery event for active tunnel")
                     scope.launch(Dispatchers.Main) {
                         delay(50) // Small delay to ensure event sink is ready
                         emitEvent(WireguardPluginEvent.TUNNEL_UP, json.encodeToString(tunnelData))
-                        pendingRecoveryEvent = null // Clear after sending
+                        Globals.pendingRecoveryEvent = null // Clear after sending
                     }
                 }
             }
@@ -164,27 +121,27 @@ class WireguardPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
             }
         })
         
-        if (!isInitialized) {
+        if (!Globals.isInitialized) {
             // First time initialization
             Log.d(LOG_TAG, "Performing initial plugin initialization")
             context = flutterPluginBinding.applicationContext
             scope.launch(Dispatchers.IO) {
                 try {
-                    backend = createBackend()
-                    futureBackend.complete(backend!!)
+                    createBackend()
+                    futureBackend.complete(Globals.backend!!)
                 } catch (e: Throwable) {
                     Log.e(LOG_TAG, Log.getStackTraceString(e));
                 }
             }
-            isInitialized = true
+            Globals.isInitialized = true
         } else {
             // Reconnection after app restart
             Log.d(LOG_TAG, "Plugin reconnecting after app restart")
             
             // If we have an active tunnel, queue it for recovery when event listener connects
-            activeTunnelData?.let { tunnelData ->
+            Globals.activeTunnelData?.let { tunnelData ->
                 Log.i(LOG_TAG, "Active tunnel detected on reconnection: instance=${tunnelData.instanceId}, location=${tunnelData.locationId}")
-                pendingRecoveryEvent = tunnelData
+                Globals.pendingRecoveryEvent = tunnelData
                 Log.i(LOG_TAG, "Queued TUNNEL_UP event for when Flutter event listener connects")
             } ?: run {
                 Log.d(LOG_TAG, "No active tunnel found on reconnection")
@@ -230,9 +187,9 @@ class WireguardPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
             }
 
             "closeTunnel" -> {
-                if (activeTunnel != null) {
+                if (Globals.activeTunnel != null) {
                     scope.launch(Dispatchers.IO) {
-                        activeTunnel?.let {
+                        Globals.activeTunnel?.let {
                             closeTunnel(it);
                             result.success(null);
                         }
@@ -251,10 +208,10 @@ class WireguardPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
     }
 
     private fun createBackend(): GoBackend {
-        if (backend == null) {
-            backend = GoBackend(context);
+        if (Globals.backend == null) {
+            Globals.backend = GoBackend(context);
         }
-        return backend as GoBackend;
+        return Globals.backend as GoBackend;
     }
 
     private fun emitEvent(eventType: WireguardPluginEvent, data: String?) {
@@ -274,13 +231,13 @@ class WireguardPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
     }
 
     private fun requestPermissions(result: Result) {
-        if (havePermission) {
+        if (Globals.havePermission) {
             result.success(true)
         } else {
             scope.launch(Dispatchers.Main) {
                 val intent = GoBackend.VpnService.prepare(activity)
                 if (intent == null) {
-                    havePermission = true
+                    Globals.havePermission = true
                     result.success(true)
                 } else {
                     pendingResult = result
@@ -292,8 +249,8 @@ class WireguardPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
 
     private suspend fun closeTunnel(tunnel: Tunnel) {
         futureBackend.await().setState(tunnel, Tunnel.State.DOWN, null)
-        activeTunnel = null
-        activeTunnelData = null
+        Globals.activeTunnel = null
+        Globals.activeTunnelData = null
         
         stopHealthMonitoring()
         
@@ -305,7 +262,7 @@ class WireguardPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
         scope.launch(Dispatchers.IO) {
             try {
                 // Stop previous tunnel if one is running
-                activeTunnel?.let {
+                Globals.activeTunnel?.let {
                     closeTunnel(it);
                 }
 
@@ -348,8 +305,8 @@ class WireguardPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
                 )
 
                 futureBackend.await().setState(tunnel, Tunnel.State.UP, config)
-                activeTunnel = tunnel
-                activeTunnelData = tunnelData
+                Globals.activeTunnel = tunnel
+                Globals.activeTunnelData = tunnelData
 
                 // only monitor MFA connections
                 if (tunnelData.mfaEnabled) {
@@ -373,7 +330,7 @@ class WireguardPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
         if (requestCode == VPN_PERMISSION_REQUEST_CODE && pendingResult != null) {
             val granted = resultCode == Activity.RESULT_OK
             if (granted) {
-                havePermission = true
+                Globals.havePermission = true
             }
             pendingResult?.success(granted);
             pendingResult = null
@@ -386,16 +343,16 @@ class WireguardPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
         Log.d(LOG_TAG, "Starting connection health monitoring")
         
         // Initialize health state
-        lastTrafficTimestamp = System.currentTimeMillis()
-        isHealthy = true
-        lastTrafficBytes = Pair(0L, 0L)
+        Globals.lastTrafficTimestamp = System.currentTimeMillis()
+        Globals.isHealthy = true
+        Globals.lastTrafficBytes = Pair(0L, 0L)
         
         // Stop any existing timer
         stopHealthMonitoring()
         
         // Start periodic health checks
-        healthCheckTimer = Timer("HealthCheckTimer", true)
-        healthCheckTimer?.scheduleAtFixedRate(object : TimerTask() {
+        Globals.healthCheckTimer = Timer("HealthCheckTimer", true)
+        Globals.healthCheckTimer?.scheduleAtFixedRate(object : TimerTask() {
             override fun run() {
                 performHealthCheck()
             }
@@ -405,9 +362,9 @@ class WireguardPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
     }
     
     private fun stopHealthMonitoring() {
-        healthCheckTimer?.cancel()
-        healthCheckTimer = null
-        isHealthy = false
+        Globals.healthCheckTimer?.cancel()
+        Globals.healthCheckTimer = null
+        Globals.isHealthy = false
         Log.d(LOG_TAG, "Health monitoring stopped")
     }
     
@@ -415,7 +372,7 @@ class WireguardPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
         val currentTime = System.currentTimeMillis()
         
         // Check for tunnel activity by examining stats if available
-        activeTunnel?.let { tunnel ->
+        Globals.activeTunnel?.let { tunnel ->
             try {
                 // Try to get tunnel stats from the backend
                 scope.launch(Dispatchers.IO) {
@@ -424,8 +381,8 @@ class WireguardPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
                         val currentBytes = Pair(tunnelStats.totalRx(), tunnelStats.totalTx())
                         
                         // Check if there's been any data transfer since last check
-                        if (currentBytes.first > lastTrafficBytes.first || currentBytes.second > lastTrafficBytes.second) {
-                            lastTrafficBytes = currentBytes
+                        if (currentBytes.first > Globals.lastTrafficBytes.first || currentBytes.second > Globals.lastTrafficBytes.second) {
+                            Globals.lastTrafficBytes = currentBytes
                             updateTrafficTimestamp()
                             Log.d(LOG_TAG, "Traffic detected - RX: ${currentBytes.first}, TX: ${currentBytes.second}")
                         } else {
@@ -438,11 +395,11 @@ class WireguardPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
             }
         }
         
-        val timeSinceLastTraffic = currentTime - lastTrafficTimestamp
-        val newHealthy = activeTunnel != null && timeSinceLastTraffic <= DISCONNECTION_THRESHOLD
-        if (newHealthy != isHealthy) {
-            val oldHealthy = isHealthy
-            isHealthy = newHealthy
+        val timeSinceLastTraffic = currentTime - Globals.lastTrafficTimestamp
+        val newHealthy = Globals.activeTunnel != null && timeSinceLastTraffic <= DISCONNECTION_THRESHOLD
+        if (newHealthy != Globals.isHealthy) {
+            val oldHealthy = Globals.isHealthy
+            Globals.isHealthy = newHealthy
             
             Log.d(LOG_TAG, "Connection health changed: ${if (oldHealthy) "HEALTHY" else "DISCONNECTED"} -> ${if (newHealthy) "HEALTHY" else "DISCONNECTED"} (traffic silence: ${timeSinceLastTraffic}ms)")
             
@@ -453,19 +410,19 @@ class WireguardPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
                 Log.w(LOG_TAG, "Connection considered DISCONNECTED - no traffic for ${timeSinceLastTraffic}ms (threshold: ${DISCONNECTION_THRESHOLD}ms)")
                 emitEvent(WireguardPluginEvent.MFA_SESSION_EXPIRED, null)
             }
-        } else if (activeTunnel != null) {
+        } else if (Globals.activeTunnel != null) {
             // Log periodic status when tunnel is active but health hasn't changed
-            Log.d(LOG_TAG, "Health check: ${if (isHealthy) "HEALTHY" else "DISCONNECTED"} (traffic silence: ${timeSinceLastTraffic}ms)")
+            Log.d(LOG_TAG, "Health check: ${if (Globals.isHealthy) "HEALTHY" else "DISCONNECTED"} (traffic silence: ${timeSinceLastTraffic}ms)")
         }
     }
     
     private fun updateTrafficTimestamp() {
-        lastTrafficTimestamp = System.currentTimeMillis()
+        Globals.lastTrafficTimestamp = System.currentTimeMillis()
         
         // If we were disconnected and now have traffic, update immediately
-        if (!isHealthy) {
+        if (!Globals.isHealthy) {
             Log.d(LOG_TAG, "Traffic detected - updating health status")
-            isHealthy = true
+            Globals.isHealthy = true
         }
     }
 }
