@@ -13,5 +13,9 @@ Future<void> initNotifications() async {
   );
 
   await flutterLocalNotificationsPlugin.initialize(initializationSettings);
-  await Permission.notification.request();
+}
+
+Future<bool> requestNotificationPermissions() async {
+  final status = await Permission.notification.request();
+  return status.isGranted;
 }

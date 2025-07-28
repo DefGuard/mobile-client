@@ -13,6 +13,7 @@ import 'dart:convert';
 
 import '../../../../data/db/enums.dart';
 import '../../../../logging.dart';
+import '../../../../utils/notifications.dart';
 
 /// Handles MFA flows and tunnel connection
 class TunnelService {
@@ -65,6 +66,8 @@ class TunnelService {
 
     // handle MFA if configured
     if (checkMfaEnabled(location)) {
+      // Request notification permissions for MFA session expiry alerts
+      await requestNotificationPermissions();
       MfaMethod mfaMethod;
       if (location.locationMfaMode == LocationMfaMode.external) {
         // location setup for openid mfa login
