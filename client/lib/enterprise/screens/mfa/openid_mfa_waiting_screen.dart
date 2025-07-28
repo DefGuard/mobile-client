@@ -6,12 +6,12 @@ import 'package:mobile/data/proxy/mfa.dart';
 import 'package:mobile/open/api.dart';
 import 'package:mobile/open/widgets/buttons/dg_button.dart';
 import 'package:mobile/open/widgets/icons/openid_wait.dart';
+import 'package:mobile/open/widgets/navigation/dg_scaffold.dart';
 import 'package:mobile/theme/color.dart';
 import 'package:mobile/theme/spacing.dart';
 import 'package:mobile/theme/text.dart';
 
 import '../../../../../logging.dart';
-import '../../widgets/navigation/dg_scaffold.dart';
 
 class OpenIdMfaWaitingScreenData {
   final String proxyUrl;

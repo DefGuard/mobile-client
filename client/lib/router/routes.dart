@@ -9,8 +9,8 @@ import 'package:mobile/open/screens/add_instance/screens/scan_qr_screen.dart';
 import 'package:mobile/open/screens/home/home_screen.dart';
 import 'package:mobile/open/screens/instance/instance_screen.dart';
 import 'package:mobile/open/screens/mfa/mfa_code_screen.dart';
-import 'package:mobile/open/screens/mfa/openid_mfa_screen.dart';
-import 'package:mobile/open/screens/mfa/openid_mfa_waiting_screen.dart';
+import 'package:mobile/enterprise/screens/mfa/openid_mfa_screen.dart';
+import 'package:mobile/enterprise/screens/mfa/openid_mfa_waiting_screen.dart';
 import 'package:mobile/open/screens/toast_test_screen.dart';
 import 'package:talker_flutter/talker_flutter.dart';
 
