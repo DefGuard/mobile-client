@@ -71,7 +71,7 @@ class WireguardPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
         @JvmStatic
         private var healthCheckTimer: Timer? = null
         @JvmStatic
-        private var lastTrafficBytes = Pair(0L, 0L)
+        private var lastDownloadBytes = 0L
         @JvmStatic
         private var isInitialized = false
         @JvmStatic
@@ -345,7 +345,7 @@ class WireguardPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
         // Initialize health state
         Globals.lastTrafficTimestamp = System.currentTimeMillis()
         Globals.isHealthy = true
-        Globals.lastTrafficBytes = Pair(0L, 0L)
+        Globals.lastDownloadBytes = 0L
         
         // Stop any existing timer
         stopHealthMonitoring()
@@ -378,15 +378,15 @@ class WireguardPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
                 scope.launch(Dispatchers.IO) {
                     val stats = futureBackend.await().getStatistics(tunnel)
                     stats?.let { tunnelStats ->
-                        val currentBytes = Pair(tunnelStats.totalRx(), tunnelStats.totalTx())
+                        val currentDownloadBytes = tunnelStats.totalRx()
                         
                         // Check if there's been any data transfer since last check
-                        if (currentBytes.first > Globals.lastTrafficBytes.first || currentBytes.second > Globals.lastTrafficBytes.second) {
-                            Globals.lastTrafficBytes = currentBytes
+                        if (currentDownloadBytes > Globals.lastDownloadBytes) {
+                            Globals.lastDownloadBytes = currentDownloadBytes
                             updateTrafficTimestamp()
-                            Log.d(LOG_TAG, "Traffic detected - RX: ${currentBytes.first}, TX: ${currentBytes.second}")
+                            Log.d(LOG_TAG, "Traffic detected - RX: $currentDownloadBytes")
                         } else {
-                            Log.d(LOG_TAG, "No traffic detected - RX: ${currentBytes.first}, TX: ${currentBytes.second}")
+                            Log.d(LOG_TAG, "No traffic detected - RX: $currentDownloadBytes")
                         }
                     }
                 }
