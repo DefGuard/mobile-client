@@ -152,7 +152,11 @@ class _ScreenContent extends HookConsumerWidget {
             separatorBuilder: (_, _) => SizedBox(height: DgSpacing.s),
             itemBuilder: (BuildContext context, int index) {
               final location = screenData.locations[index];
-              return _LocationItem(location: location, instance: instance);
+              return _LocationItem(
+                key: Key(location.id.toString()),
+                location: location,
+                instance: instance,
+              );
             },
           ),
           SliverToBoxAdapter(child: SizedBox(height: DgSpacing.m)),
@@ -244,9 +248,7 @@ class _ScreenContent extends HookConsumerWidget {
               ),
             ),
           ),
-          SliverToBoxAdapter(
-            child: SizedBox(height: DgSpacing.m,),
-          )
+          SliverToBoxAdapter(child: SizedBox(height: DgSpacing.m)),
         ],
       ),
     );
@@ -257,7 +259,11 @@ class _LocationItem extends HookConsumerWidget {
   final Location location;
   final DefguardInstance instance;
 
-  const _LocationItem({required this.location, required this.instance});
+  const _LocationItem({
+    super.key,
+    required this.location,
+    required this.instance,
+  });
 
   bool checkConnected(PluginTunnelEventData? activeTunnel) {
     if (activeTunnel == null) return false;
