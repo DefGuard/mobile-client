@@ -5,6 +5,7 @@ import 'package:mobile/theme/text.dart';
 
 class DgTextFormField extends StatelessWidget {
   final TextEditingController controller;
+  final AutovalidateMode autovalidateMode;
   final String? hintText;
   final bool obscureText;
   final TextInputType keyboardType;
@@ -17,6 +18,7 @@ class DgTextFormField extends StatelessWidget {
   const DgTextFormField({
     super.key,
     required this.controller,
+    this.autovalidateMode = AutovalidateMode.onUserInteraction,
     this.hintText,
     this.validator,
     this.obscureText = false,
@@ -37,10 +39,15 @@ class DgTextFormField extends StatelessWidget {
         readOnly: readOnly,
         textAlignVertical: TextAlignVertical.center,
         controller: controller,
+        autovalidateMode: autovalidateMode,
         decoration: InputDecoration(
           filled: true,
           fillColor: DgColor.frameBg,
           errorBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide: BorderSide(color: DgColor.alertPrimary, width: 1),
+          ),
+          focusedErrorBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10),
             borderSide: BorderSide(color: DgColor.alertPrimary, width: 1),
           ),
@@ -59,6 +66,7 @@ class DgTextFormField extends StatelessWidget {
             borderSide: BorderSide(color: DgColor.borderPrimary, width: 1),
           ),
           hintStyle: DgText.input.copyWith(color: DgColor.textBodyTertiary),
+          errorStyle: DgText.buttonS.copyWith(color: DgColor.textAlert),
           suffixIcon: Align(
             widthFactor: 1.0,
             heightFactor: 1.0,
