@@ -97,6 +97,7 @@ class NameDeviceScreen extends HookConsumerWidget {
                 children: [
                   DgTextFormField(
                     controller: nameController,
+                    autovalidateMode: AutovalidateMode.always,
                     hintText: "Name this device",
                     validator: (value) {
                       if (value == null) {
