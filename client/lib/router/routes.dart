@@ -11,7 +11,6 @@ import 'package:mobile/open/screens/instance/instance_screen.dart';
 import 'package:mobile/open/screens/mfa/mfa_code_screen.dart';
 import 'package:mobile/enterprise/screens/mfa/openid_mfa_screen.dart';
 import 'package:mobile/enterprise/screens/mfa/openid_mfa_waiting_screen.dart';
-import 'package:mobile/open/screens/toast_test_screen.dart';
 import 'package:talker_flutter/talker_flutter.dart';
 
 import '../logging.dart';
@@ -145,16 +144,5 @@ class MfaCodeScreenRoute extends GoRouteData with _$MfaCodeScreenRoute {
   @override
   Widget build(BuildContext context, GoRouterState state) {
     return MfaCodeScreen(screenData: $extra);
-  }
-}
-
-@TypedGoRoute<ToastTestScreenRoute>(path: "/toast_test")
-@immutable
-class ToastTestScreenRoute extends GoRouteData with _$ToastTestScreenRoute {
-  const ToastTestScreenRoute();
-
-  @override
-  Widget build(BuildContext context, GoRouterState state) {
-    return const ToastTestScreen();
   }
 }
