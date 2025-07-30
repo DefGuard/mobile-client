@@ -3,6 +3,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mobile/data/db/database.dart';
 import 'package:mobile/open/widgets/buttons/dg_button.dart';
 import 'package:mobile/open/widgets/dg_dialog.dart';
+import 'package:mobile/open/widgets/dg_snackbar.dart';
 import 'package:mobile/open/widgets/icons/asset_icons_simple.dart';
 import 'package:mobile/router/routes.dart';
 import 'package:mobile/theme/text.dart';
@@ -26,7 +27,7 @@ class DeleteInstanceDialog extends HookConsumerWidget {
           .filter((row) => row.id.equals(instance.id))
           .delete();
       if (context.mounted) {
-        messenger.showSnackBar(SnackBar(content: Text("Instance Deleted")));
+        messenger.showSnackBar(dgSnackBar(text: "Instance deleted"));
         HomeScreenRoute().go(context);
       }
     }

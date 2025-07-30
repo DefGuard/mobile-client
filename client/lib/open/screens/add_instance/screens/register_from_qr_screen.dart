@@ -7,6 +7,7 @@ import 'package:mobile/data/proxy/qr_register.dart';
 import 'package:mobile/open/api.dart';
 import 'package:mobile/open/screens/add_instance/screens/name_device_screen.dart';
 import 'package:mobile/open/widgets/circular_progress.dart';
+import 'package:mobile/open/widgets/dg_snackbar.dart';
 import 'package:mobile/router/routes.dart';
 import 'package:mobile/theme/color.dart';
 import 'package:mobile/theme/spacing.dart';
@@ -37,7 +38,10 @@ class RegisterFromQrScreen extends HookConsumerWidget {
           .getSingleOrNull();
       if (dbInstance != null) {
         messenger.showSnackBar(
-          SnackBar(content: Text("Instance is already registered")),
+          dgSnackBar(
+            text: "Instance is already registered !",
+            textColor: DgColor.textAlert,
+          ),
         );
         if (context.mounted) {
           HomeScreenRoute().go(context);

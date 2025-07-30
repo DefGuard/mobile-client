@@ -15,6 +15,7 @@ import 'package:mobile/utils/screen_padding.dart';
 
 import '../../../api.dart';
 import '../../../widgets/navigation/dg_scaffold.dart';
+import '../../../widgets/dg_snackbar.dart';
 
 class NameDeviceScreenData {
   final EnrollmentStartResponse startResponse;
@@ -31,11 +32,9 @@ class NameDeviceScreen extends HookConsumerWidget {
 
   const NameDeviceScreen({super.key, required this.screenData});
 
-  Future<String> _handleRegistration(
-    BuildContext context,
-    AppDatabase db,
-    String name,
-  ) async {
+  Future<String> _handleRegistration(BuildContext context,
+      AppDatabase db,
+      String name,) async {
     final keyPair = await generateWireguardKeyPair();
     final createDeviceData = CreateDeviceRequest(
       name: name,
@@ -46,25 +45,27 @@ class NameDeviceScreen extends HookConsumerWidget {
       createDeviceData,
     );
     final instance = await db.managers.defguardInstances.createReturning(
-      (o) => o(
-        id: drift.Value.absent(),
-        pubKey: keyPair.pubKey,
-        privateKey: keyPair.privKey,
-        name: createResponse.instance.name,
-        uuid: createResponse.instance.id,
-        enterpriseEnabled: createResponse.instance.enterpriseEnabled,
-        disableAllTraffic: createResponse.instance.disableAllTraffic,
-        proxyUrl: createResponse.instance.proxyUrl,
-        url: screenData.startResponse.instance.url,
-        username: createResponse.instance.username,
-        token: createResponse.token,
-      ),
+          (o) =>
+          o(
+            id: drift.Value.absent(),
+            pubKey: keyPair.pubKey,
+            privateKey: keyPair.privKey,
+            name: createResponse.instance.name,
+            uuid: createResponse.instance.id,
+            enterpriseEnabled: createResponse.instance.enterpriseEnabled,
+            disableAllTraffic: createResponse.instance.disableAllTraffic,
+            proxyUrl: createResponse.instance.proxyUrl,
+            url: screenData.startResponse.instance.url,
+            username: createResponse.instance.username,
+            token: createResponse.token,
+          ),
       mode: drift.InsertMode.insertOrFail,
     );
     await db.managers.locations.bulkCreate(
-      (o) => createResponse.configs.map(
-        (config) => config.toCompanion(instanceId: instance.id),
-      ),
+          (o) =>
+          createResponse.configs.map(
+                (config) => config.toCompanion(instanceId: instance.id),
+          ),
     );
     return instance.name;
   }
@@ -111,9 +112,9 @@ class NameDeviceScreen extends HookConsumerWidget {
                             .deviceNames
                             .firstWhereOrNull(
                               (name) =>
-                                  name.toLowerCase() ==
-                                  valueText.toLowerCase().trim(),
-                            );
+                          name.toLowerCase() ==
+                              valueText.toLowerCase().trim(),
+                        );
                         if (matchedName != null) {
                           return "Name is already used";
                         }
@@ -130,7 +131,8 @@ class NameDeviceScreen extends HookConsumerWidget {
                       final messenger = ScaffoldMessenger.of(context);
                       if (!formKey.currentState!.validate()) {
                         messenger.showSnackBar(
-                          SnackBar(content: Text("Correct form errors")),
+                          dgSnackBar(text: "Correct form errors !",
+                              customDuration: Duration(seconds: 10)),
                         );
                         return;
                       }
@@ -141,11 +143,9 @@ class NameDeviceScreen extends HookConsumerWidget {
                           nameController.text.trim(),
                         );
                         messenger.showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              "Instance $instanceName registered successfully.",
-                            ),
-                          ),
+                          dgSnackBar(
+                              text: "Instance $instanceName registered successfully.",
+                              customDuration: Duration(seconds: 10)),
                         );
                         if (context.mounted) {
                           HomeScreenRoute().go(context);

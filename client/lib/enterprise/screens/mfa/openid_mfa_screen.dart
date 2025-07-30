@@ -3,6 +3,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mobile/enterprise/screens/mfa/openid_mfa_waiting_screen.dart';
 import 'package:mobile/open/widgets/buttons/dg_button.dart';
 import 'package:mobile/open/widgets/dg_single_child_scroll_view.dart';
+import 'package:mobile/open/widgets/dg_snackbar.dart';
 import 'package:mobile/open/widgets/icons/openid_open.dart';
 import 'package:mobile/open/widgets/navigation/dg_scaffold.dart';
 import 'package:mobile/theme/color.dart';
@@ -81,8 +82,10 @@ class OpenIdMfaScreen extends HookConsumerWidget {
               onTap: () async {
                 final navigator = Navigator.of(context);
                 final messenger = ScaffoldMessenger.of(context);
-                final errorSnack = SnackBar(
-                  content: Text("Error: Failed to open the browser."),
+                final errorSnack = dgSnackBar(
+                  text: "Failed to open the browser.",
+                  textColor: DgColor.textAlert,
+                  customDuration: Duration(seconds: 5),
                 );
                 try {
                   final launched = await _launchUrl();

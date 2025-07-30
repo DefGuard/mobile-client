@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:cookie_jar/cookie_jar.dart';
 import 'package:dio/dio.dart';
 import 'package:dio_cookie_manager/dio_cookie_manager.dart';
+import 'package:mobile/data/db/enums.dart';
 import 'package:mobile/data/proxy/config.dart';
 import 'package:mobile/data/proxy/enrollment.dart';
 import 'package:mobile/data/proxy/mfa.dart';
@@ -14,6 +15,17 @@ import '../logging.dart';
 const _apiV1Segments = ['api', 'v1'];
 final enrollmentPathSegments = ['api', 'v1', 'enrollment'];
 final mfaPathSegments = ['api', 'v1', 'client-mfa'];
+
+class MfaMethodNotAvailableException implements Exception {
+  final MfaMethod method;
+
+  const MfaMethodNotAvailableException(this.method);
+
+  @override
+  String toString() {
+    return "Requested Mfa method not available on the account - ${method.toReadableString()}";
+  }
+}
 
 class _ProxyApi {
   static final _ProxyApi _instance = _ProxyApi._internal();
@@ -123,6 +135,16 @@ class _ProxyApi {
       return StartMfaResponse.fromJson(response.data);
     } on DioException catch (e) {
       if (e.response != null) {
+        if (e.response!.data != null &&
+            e.response!.data is Map<String, dynamic>) {
+          final responseData = e.response!.data!;
+          final dataError = responseData['error'];
+          final missingMFAMethodError = "selected MFA method not available"
+              .toLowerCase();
+          if(dataError is String && dataError.toLowerCase().trim() == missingMFAMethodError) {
+            throw MfaMethodNotAvailableException(data.method);
+          }
+        }
         throw HttpException(
           "Failed to start MFA. Status: ${e.response?.statusCode} Body: ${e.response?.data}",
         );

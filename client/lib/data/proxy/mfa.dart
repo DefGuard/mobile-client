@@ -1,4 +1,5 @@
 import 'package:json_annotation/json_annotation.dart';
+import 'package:mobile/data/db/enums.dart';
 
 part 'mfa.g.dart';
 
@@ -6,7 +7,7 @@ part 'mfa.g.dart';
 class StartMfaRequest {
   final String pubkey;
   final int locationId;
-  final int method;
+  final MfaMethod method;
 
   const StartMfaRequest({
     required this.pubkey,

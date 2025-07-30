@@ -6,6 +6,7 @@ import 'package:mobile/data/proxy/mfa.dart';
 import 'package:mobile/open/api.dart';
 import 'package:mobile/open/widgets/buttons/dg_button.dart';
 import 'package:mobile/open/widgets/dg_single_child_scroll_view.dart';
+import 'package:mobile/open/widgets/dg_snackbar.dart';
 import 'package:mobile/open/widgets/dg_text_form_field.dart';
 import 'package:mobile/open/widgets/navigation/dg_scaffold.dart';
 import 'package:mobile/theme/color.dart';
@@ -154,7 +155,13 @@ class _CodeForm extends HookConsumerWidget {
                       }
                     } catch (e) {
                       messenger.showSnackBar(
-                        SnackBar(content: Text("Error: $e")),
+                        dgSnackBar(
+                          text: "Error: $e",
+                          textColor: DgColor.textAlert,
+                          onDismiss: () {
+                            messenger.hideCurrentSnackBar();
+                          },
+                        ),
                       );
                     } finally {
                       isLoading.value = false;
