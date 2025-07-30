@@ -17,7 +17,7 @@ SnackBar dgSnackBar({
   if (isDismissable && onlyDismiss) {
     duration = Duration(days: 1);
   }
-  duration ??= Duration(seconds: 20);
+  duration ??= Duration(seconds: 10);
 
   return SnackBar(
     elevation: 0,
