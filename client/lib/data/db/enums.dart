@@ -25,18 +25,13 @@ enum MfaMethod {
   static MfaMethod fromValue(int value) =>
       MfaMethod.values.firstWhere((e) => e.value == value);
 
-  String toReadableString() {
-    switch (value) {
-      case 0:
-        return "Totp";
-      case 1:
-        return "Email";
-      case 2:
-        return "OpenId";
-      default:
-        return "Unknown";
-    }
-  }
+  String toReadableString() => _readableNames[this] ?? 'Unknown';
+
+  static const Map<MfaMethod, String> _readableNames = {
+    MfaMethod.totp: 'Totp',
+    MfaMethod.email: 'Email',
+    MfaMethod.openid: 'OpenId',
+  };
 }
 
 class MfaMethodConverter extends TypeConverter<MfaMethod, int> {
