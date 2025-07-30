@@ -6,7 +6,7 @@ enum RoutingMethod {
   @j.JsonValue("all")
   all,
   @j.JsonValue("predefined")
-  predefined;
+  predefined,
 }
 
 @j.JsonEnum()
@@ -24,6 +24,19 @@ enum MfaMethod {
 
   static MfaMethod fromValue(int value) =>
       MfaMethod.values.firstWhere((e) => e.value == value);
+
+  String toReadableString() {
+    switch (value) {
+      case 0:
+        return "Totp";
+      case 1:
+        return "Email";
+      case 2:
+        return "OpenId";
+      default:
+        return "Unknown";
+    }
+  }
 }
 
 class MfaMethodConverter extends TypeConverter<MfaMethod, int> {

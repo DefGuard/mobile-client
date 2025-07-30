@@ -9,6 +9,7 @@ import 'package:mobile/data/plugin/plugin.dart';
 import 'package:mobile/open/screens/mfa/mfa_code_screen.dart';
 import 'package:mobile/open/screens/instance/widgets/mfa_method_dialog.dart';
 import 'package:mobile/open/screens/instance/widgets/routing_method_dialog.dart';
+import 'package:mobile/open/widgets/dg_snackbar.dart';
 import 'dart:convert';
 
 import '../../../../data/db/enums.dart';
@@ -153,7 +154,23 @@ class TunnelService {
           method: method,
         );
       }
+    } on MfaMethodNotAvailableException catch (e) {
+      final methodString = e.method.toReadableString();
+      talker.error(
+        "MFA method $methodString was not configured on the account. Connect Failed.",
+      );
+      messenger.showSnackBar(
+        dgSnackBar(
+          text:
+              "You do not have $methodString method configured. Please either select a different MFA method or configure it on your account.",
+          onDismiss: () {
+            messenger.hideCurrentSnackBar();
+          },
+        ),
+      );
+      return null;
     } on HttpException catch (e) {
+      talker.error("Connect MFA failed !", e);
       messenger.showSnackBar(SnackBar(content: Text("Error: ${e.message}")));
       return null;
     } catch (e) {
@@ -218,11 +235,13 @@ class TunnelService {
     int networkId,
     MfaMethod method,
   ) async {
-    talker.debug("Starting MFA for networkId: $networkId, method: $method");
+    talker.debug(
+      "Starting MFA for networkId: $networkId, method: ${method.toReadableString()}",
+    );
     final request = StartMfaRequest(
       pubkey: pubkey,
       locationId: networkId,
-      method: method.value,
+      method: method,
     );
 
     final uri = Uri.parse(url);

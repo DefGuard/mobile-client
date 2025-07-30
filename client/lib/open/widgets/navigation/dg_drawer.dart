@@ -46,7 +46,7 @@ class DgDrawer extends HookConsumerWidget {
       return [
         _DrawerItemData(label: "Instances", route: HomeScreenRoute()),
         _DrawerItemData(label: "Add Instance", route: AddInstanceScreenRoute()),
-        // _DrawerItemData(label: "Toaster test", route: ToastTestScreenRoute()),
+        // _DrawerItemData(label: "Toast test", route: ToastTestScreenRoute()),
         _DrawerItemData(
           label: "View Application Logs",
           route: TalkerScreenRoute(),

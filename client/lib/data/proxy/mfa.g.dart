@@ -11,7 +11,10 @@ StartMfaRequest _$StartMfaRequestFromJson(Map<String, dynamic> json) =>
       final val = StartMfaRequest(
         pubkey: $checkedConvert('pubkey', (v) => v as String),
         locationId: $checkedConvert('location_id', (v) => (v as num).toInt()),
-        method: $checkedConvert('method', (v) => (v as num).toInt()),
+        method: $checkedConvert(
+          'method',
+          (v) => $enumDecode(_$MfaMethodEnumMap, v),
+        ),
       );
       return val;
     }, fieldKeyMap: const {'locationId': 'location_id'});
@@ -26,8 +29,14 @@ Map<String, dynamic> _$StartMfaRequestToJson(StartMfaRequest instance) =>
     <String, dynamic>{
       'pubkey': instance.pubkey,
       'location_id': instance.locationId,
-      'method': instance.method,
+      'method': _$MfaMethodEnumMap[instance.method]!,
     };
+
+const _$MfaMethodEnumMap = {
+  MfaMethod.totp: 0,
+  MfaMethod.email: 1,
+  MfaMethod.openid: 2,
+};
 
 StartMfaResponse _$StartMfaResponseFromJson(Map<String, dynamic> json) =>
     $checkedCreate('StartMfaResponse', json, ($checkedConvert) {
