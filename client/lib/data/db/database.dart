@@ -37,6 +37,8 @@ class DefguardInstances extends Table with AutoIncrementingPrimaryKey {
 
   // user private key
   TextColumn get privateKey => text()();
+
+  BoolColumn get biometryRegistered => boolean()();
 }
 
 @DataClassName('Location')
@@ -120,6 +122,10 @@ AppDatabase database(Ref ref) {
 
 extension DefguardInstanceLogName on DefguardInstance {
   String get logName => '$name ($id)';
+}
+
+extension DefguardInstanceStorageKey on DefguardInstance {
+  String get secureStorageKey => 'mfa-$uuid';
 }
 
 extension LocationLogName on Location {

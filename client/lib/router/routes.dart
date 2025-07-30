@@ -14,6 +14,7 @@ import 'package:mobile/enterprise/screens/mfa/openid_mfa_waiting_screen.dart';
 import 'package:talker_flutter/talker_flutter.dart';
 
 import '../logging.dart';
+import '../open/screens/test_passkey.dart';
 
 part 'routes.g.dart';
 
@@ -144,5 +145,17 @@ class MfaCodeScreenRoute extends GoRouteData with _$MfaCodeScreenRoute {
   @override
   Widget build(BuildContext context, GoRouterState state) {
     return MfaCodeScreen(screenData: $extra);
+  }
+}
+
+@TypedGoRoute<TestPasskeyScreenRoute>(path: "/passkey_test")
+@immutable
+class TestPasskeyScreenRoute extends GoRouteData
+    with _$TestPasskeyScreenRoute {
+  const TestPasskeyScreenRoute();
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) {
+    return TestPasskeyScreen();
   }
 }

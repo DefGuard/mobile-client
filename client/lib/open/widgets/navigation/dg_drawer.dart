@@ -34,8 +34,11 @@ class DgDrawer extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final router = GoRouter.of(context);
-    final RouteMatch lastMatch = router.routerDelegate.currentConfiguration.last;
-    final RouteMatchList matchList = lastMatch is ImperativeRouteMatch ? lastMatch.matches : router.routerDelegate.currentConfiguration;
+    final RouteMatch lastMatch =
+        router.routerDelegate.currentConfiguration.last;
+    final RouteMatchList matchList = lastMatch is ImperativeRouteMatch
+        ? lastMatch.matches
+        : router.routerDelegate.currentConfiguration;
     final String location = matchList.uri.toString();
     final year = DateTime.now().year;
     final version = ref
@@ -49,6 +52,10 @@ class DgDrawer extends HookConsumerWidget {
         _DrawerItemData(
           label: "View Application Logs",
           route: TalkerScreenRoute(),
+        ),
+        _DrawerItemData(
+          label: "Test Biometry",
+          route: TestPasskeyScreenRoute(),
         ),
       ].where((item) => item.route.location != location).toList();
     }, [location]);

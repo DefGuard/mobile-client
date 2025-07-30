@@ -82,3 +82,30 @@ const _$FinishMfaResponseFieldMap = <String, String>{
 
 Map<String, dynamic> _$FinishMfaResponseToJson(FinishMfaResponse instance) =>
     <String, dynamic>{'preshared_key': instance.presharedKey};
+
+SecureInstanceStorage _$SecureInstanceStorageFromJson(
+  Map<String, dynamic> json,
+) => $checkedCreate(
+  'SecureInstanceStorage',
+  json,
+  ($checkedConvert) {
+    final val = SecureInstanceStorage(
+      privateKey: $checkedConvert('private_key', (v) => v as String),
+      publicKey: $checkedConvert('public_key', (v) => v as String),
+    );
+    return val;
+  },
+  fieldKeyMap: const {'privateKey': 'private_key', 'publicKey': 'public_key'},
+);
+
+const _$SecureInstanceStorageFieldMap = <String, String>{
+  'privateKey': 'private_key',
+  'publicKey': 'public_key',
+};
+
+Map<String, dynamic> _$SecureInstanceStorageToJson(
+  SecureInstanceStorage instance,
+) => <String, dynamic>{
+  'private_key': instance.privateKey,
+  'public_key': instance.publicKey,
+};
