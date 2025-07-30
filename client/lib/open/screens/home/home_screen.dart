@@ -6,6 +6,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mobile/data/db/database.dart';
 import 'package:mobile/open/riverpod/plugin/plugin.dart';
 import 'package:mobile/open/widgets/circular_progress.dart';
+import 'package:mobile/open/widgets/dg_snackbar.dart';
 import 'package:mobile/open/widgets/icons/arrow_single.dart';
 import 'package:mobile/open/widgets/icons/connection.dart';
 import 'package:mobile/open/widgets/limited_text.dart';
@@ -74,14 +75,22 @@ class _InstancesList extends HookConsumerWidget {
       await db.managers.defguardInstances
           .filter((f) => f.id(instanceId))
           .delete();
-      messenger.showSnackBar(SnackBar(content: const Text('Instance removed')));
+      messenger.showSnackBar(
+        dgSnackBar(
+          text: "Instance removed.",
+          customDuration: Duration(seconds: 5),
+        ),
+      );
     }
 
     Future<void> handleDeleteAll() async {
       final messenger = ScaffoldMessenger.of(context);
       await db.managers.defguardInstances.delete();
       messenger.showSnackBar(
-        SnackBar(content: const Text("All instances removed")),
+        dgSnackBar(
+          text: "All instances removed",
+          customDuration: Duration(seconds: 5),
+        ),
       );
     }
 

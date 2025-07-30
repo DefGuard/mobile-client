@@ -6,15 +6,15 @@ import 'package:mobile/theme/text.dart';
 
 SnackBar dgSnackBar({
   required String text,
-  bool dismissable = false,
+  // sets default timeout to 1 day
+  bool onlyDismiss = false,
+  Color textColor = DgColor.textBodyPrimary,
   Duration? customDuration,
   Function()? onDismiss,
 }) {
-  var duration = customDuration;
-  if (!dismissable && onDismiss != null) {
-    dismissable = true;
-  }
-  if (dismissable && onDismiss != null && customDuration == null) {
+  final bool isDismissable = onDismiss != null;
+  Duration? duration = customDuration;
+  if (isDismissable && onlyDismiss) {
     duration = Duration(days: 1);
   }
   duration ??= Duration(seconds: 20);
@@ -54,11 +54,11 @@ SnackBar dgSnackBar({
                 Expanded(
                   child: Text(
                     text,
-                    style: DgText.modal1,
+                    style: DgText.modal1.copyWith(color: textColor),
                     textAlign: TextAlign.left,
                   ),
                 ),
-                if (dismissable && onDismiss != null)
+                if (isDismissable)
                   DgTextButton(onTap: onDismiss ?? () {}, text: "Close"),
               ],
             ),

@@ -5,6 +5,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mobile/data/proxy/mfa.dart';
 import 'package:mobile/open/api.dart';
 import 'package:mobile/open/widgets/buttons/dg_button.dart';
+import 'package:mobile/open/widgets/dg_snackbar.dart';
 import 'package:mobile/open/widgets/icons/openid_wait.dart';
 import 'package:mobile/open/widgets/navigation/dg_scaffold.dart';
 import 'package:mobile/theme/color.dart';
@@ -72,8 +73,12 @@ class OpenIdMfaWaitingScreen extends HookConsumerWidget {
             if (finishMfaResponse == null) {
               // Timeout occurred
               messenger.showSnackBar(
-                SnackBar(
-                  content: Text("Authentication timed out. Please try again."),
+                dgSnackBar(
+                  text: "Authentication timed out. Please try again.",
+                  textColor: DgColor.textAlert,
+                  onDismiss: () {
+                    messenger.hideCurrentSnackBar();
+                  },
                 ),
               );
               navigator.pop();

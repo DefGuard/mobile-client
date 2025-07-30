@@ -10,6 +10,7 @@ import 'package:mobile/open/screens/mfa/mfa_code_screen.dart';
 import 'package:mobile/open/screens/instance/widgets/mfa_method_dialog.dart';
 import 'package:mobile/open/screens/instance/widgets/routing_method_dialog.dart';
 import 'package:mobile/open/widgets/dg_snackbar.dart';
+import 'package:mobile/theme/color.dart';
 import 'dart:convert';
 
 import '../../../../data/db/enums.dart';
@@ -171,7 +172,9 @@ class TunnelService {
       return null;
     } on HttpException catch (e) {
       talker.error("Connect MFA failed !", e);
-      messenger.showSnackBar(SnackBar(content: Text("Error: ${e.message}")));
+      messenger.showSnackBar(
+        dgSnackBar(text: "Error: ${e.message}", textColor: DgColor.textAlert),
+      );
       return null;
     } catch (e) {
       talker.error("MFA flow error: $e");
