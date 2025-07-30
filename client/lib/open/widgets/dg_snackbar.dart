@@ -59,7 +59,7 @@ SnackBar dgSnackBar({
                   ),
                 ),
                 if (isDismissable)
-                  DgTextButton(onTap: onDismiss ?? () {}, text: "Close"),
+                  DgTextButton(onTap: onDismiss, text: "Close"),
               ],
             ),
           ),
