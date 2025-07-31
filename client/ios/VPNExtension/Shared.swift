@@ -5,6 +5,8 @@
 
 import Foundation
 
+let suiteName = "group.net.defguard.mobile"
+
 public enum TunnelTraffic: String, Codable {
     case All = "all"
     case Predefined = "predefined"
@@ -56,4 +58,9 @@ public enum WireguardEvent: String {
     case tunnelUp = "tunnel_up"
     case tunnelDown = "tunnel_down"
     case tunnelWaiting = "tunnel_waiting"
+    case MFASessionExpired = "mfa_session_expired"
+}
+
+public enum TunnelStopError: String {
+    case mfaSessionExpired = "mfa_session_expired"
 }

@@ -30,6 +30,7 @@ final class Adapter /*: Sendable*/ {
     private lazy var logger = Logger(subsystem: Bundle.main.bundleIdentifier!, category: "Adapter")
     /// Adapter state.
     private var state: State = .stopped
+    private var reconnectOnExpiry: Bool = false
 
     /// Designated initializer.
     /// - Parameter packetTunnelProvider: an instance of `NEPacketTunnelProvider`. Internally stored
@@ -64,6 +65,14 @@ final class Adapter /*: Sendable*/ {
             index: 0
         )
 
+        if tunnelConfiguration.peers[0].preSharedKey != nil {
+            logger.info("Using pre-shared key, the tunnel won't be re-established on expiry")
+            reconnectOnExpiry = false
+        } else {
+            logger.info("No pre-shared key, the tunnel will be re-established on expiry")
+            reconnectOnExpiry = true
+        }
+
         logger.info("Connecting to endpoint")
         guard let endpoint = tunnelConfiguration.peers[0].endpoint else {
             logger.error("Endpoint is nil")
@@ -88,7 +97,6 @@ final class Adapter /*: Sendable*/ {
         // Cancel network monitor
         networkMonitor?.cancel()
         networkMonitor = nil
-
         state = .stopped
         logger.info("Tunnel stopped")
     }
@@ -110,9 +118,23 @@ final class Adapter /*: Sendable*/ {
                             stop()
                         }
                     case .ConnectionExpired:
-                        logger.error("Connecion has expired; re-connecting")
                         packetTunnelProvider?.reasserting = true
-                        initEndpoint()
+                        if self.reconnectOnExpiry {
+                            logger.error("Connecion has expired; re-connecting")
+                            initEndpoint()
+                            logger.info("Finished re-connecting")
+                        } else {
+                            logger.error("Connection has expired; stopping tunnel")
+                            let defaults = UserDefaults(suiteName: suiteName)
+                            defaults?.set(
+                                TunnelStopError.mfaSessionExpired.rawValue
+                                , forKey: "lastTunnelError")
+                            if let provider = packetTunnelProvider {
+                                provider.cancelTunnelWithError(error)
+                            } else {
+                                stop()
+                            }
+                        }
                         packetTunnelProvider?.reasserting = false
                     default:
                         break
