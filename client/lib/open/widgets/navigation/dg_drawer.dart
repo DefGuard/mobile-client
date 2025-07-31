@@ -53,10 +53,6 @@ class DgDrawer extends HookConsumerWidget {
           label: "View Application Logs",
           route: TalkerScreenRoute(),
         ),
-        _DrawerItemData(
-          label: "Test Biometry",
-          route: TestPasskeyScreenRoute(),
-        ),
       ].where((item) => item.route.location != location).toList();
     }, [location]);
 

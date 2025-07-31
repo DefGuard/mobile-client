@@ -283,7 +283,8 @@ class InstanceInfo {
       id: d.Value.absentIfNull(instance?.id),
       pubKey: d.Value.absentIfNull(instance?.pubKey),
       privateKey: d.Value.absentIfNull(instance?.privateKey),
-      token: d.Value.absentIfNull(instance?.token),
+      poolingToken: d.Value.absentIfNull(instance?.poolingToken),
+      mfaKeysStored: d.Value.absentIfNull(instance?.mfaKeysStored),
       name: d.Value(name),
       url: d.Value(url),
       proxyUrl: d.Value(proxyUrl),
@@ -318,4 +319,20 @@ class WireguardEncodedKeyPair {
       _$WireguardEncodedKeyPairFromJson(json);
 
   Map<String, dynamic> toJson() => _$WireguardEncodedKeyPairToJson(this);
+}
+
+@JsonSerializable()
+class RegisterMobileAuth {
+  final String authPubKey;
+  final String devicePubKey;
+
+  const RegisterMobileAuth({
+    required this.authPubKey,
+    required this.devicePubKey,
+  });
+
+  factory RegisterMobileAuth.fromJson(Map<String, dynamic> json) =>
+      _$RegisterMobileAuthFromJson(json);
+
+  Map<String, dynamic> toJson() => _$RegisterMobileAuthToJson(this);
 }

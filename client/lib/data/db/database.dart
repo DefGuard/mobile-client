@@ -24,7 +24,7 @@ class DefguardInstances extends Table with AutoIncrementingPrimaryKey {
 
   TextColumn get username => text()();
 
-  TextColumn get token => text()();
+  TextColumn get poolingToken => text()();
 
   @JsonKey('disable_all_traffic')
   BoolColumn get disableAllTraffic => boolean()();
@@ -38,7 +38,8 @@ class DefguardInstances extends Table with AutoIncrementingPrimaryKey {
   // user private key
   TextColumn get privateKey => text()();
 
-  BoolColumn get biometryRegistered => boolean()();
+  // tells if the secure biometric storage exists for this instance
+  BoolColumn get mfaKeysStored => boolean()();
 }
 
 @DataClassName('Location')

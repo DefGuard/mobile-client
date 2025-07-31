@@ -57,8 +57,8 @@ class NameDeviceScreen extends HookConsumerWidget {
             proxyUrl: createResponse.instance.proxyUrl,
             url: screenData.startResponse.instance.url,
             username: createResponse.instance.username,
-            token: createResponse.token,
-            biometryRegistered: false,
+            poolingToken: createResponse.token,
+            mfaKeysStored: false,
           ),
       mode: drift.InsertMode.insertOrFail,
     );

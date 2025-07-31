@@ -141,7 +141,8 @@ class _ProxyApi {
           final dataError = responseData['error'];
           final missingMFAMethodError = "selected MFA method not available"
               .toLowerCase();
-          if(dataError is String && dataError.toLowerCase().trim() == missingMFAMethodError) {
+          if (dataError is String &&
+              dataError.toLowerCase().trim() == missingMFAMethodError) {
             throw MfaMethodNotAvailableException(data.method);
           }
         }
@@ -177,6 +178,26 @@ class _ProxyApi {
     final body = {'pubkey': pubKey};
     final response = await _dio.postUri(endpoint, data: body);
     return NetworkInfoResponse.fromJson(response.data);
+  }
+
+  Future<void> registerMobileAuth(
+    Uri proxyUrl,
+    String authPubKey,
+    String devicePubKey,
+  ) async {
+    final endpoint = proxyUrl.replace(
+      pathSegments: [
+        ...proxyUrl.pathSegments,
+        ..._apiV1Segments,
+        'enrollment',
+        'register_mobile',
+      ],
+    );
+    final requestData = RegisterMobileAuth(
+      authPubKey: authPubKey,
+      devicePubKey: devicePubKey,
+    );
+    await _dio.postUri(endpoint, data: requestData.toJson());
   }
 }
 

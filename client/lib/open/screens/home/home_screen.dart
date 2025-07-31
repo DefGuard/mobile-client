@@ -163,6 +163,14 @@ class _InstanceItem extends HookConsumerWidget {
               final instanceSecureData = await getBiometricInstanceStorage(
                 instance,
               );
+              if (!instance.mfaKeysStored) {
+                final dbInstance = await db.managers.defguardInstances
+                    .filter((row) => row.id.equals(instance.id))
+                    .getSingle();
+                await db.managers.defguardInstances.update(
+                  (_) => dbInstance.copyWith(mfaKeysStored: true),
+                );
+              }
               msg.showSnackBar(
                 dgSnackBar(
                   text: 'Private key: ${instanceSecureData.privateKey}',

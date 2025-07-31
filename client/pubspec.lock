@@ -361,22 +361,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.7.11"
-  device_info_plus:
-    dependency: transitive
-    description:
-      name: device_info_plus
-      sha256: "98f28b42168cc509abc92f88518882fd58061ea372d7999aecc424345c7bff6a"
-      url: "https://pub.dev"
-    source: hosted
-    version: "11.5.0"
-  device_info_plus_platform_interface:
-    dependency: transitive
-    description:
-      name: device_info_plus_platform_interface
-      sha256: e1ea89119e34903dca74b883d0dd78eb762814f97fb6c76f35e9ff74d261a18f
-      url: "https://pub.dev"
-    source: hosted
-    version: "7.0.3"
   dio:
     dependency: "direct main"
     description:
@@ -888,54 +872,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.2.0"
-  passkeys:
-    dependency: "direct main"
-    description:
-      name: passkeys
-      sha256: "5e42162262b804a119dd72693c5ec0fd6c4d68ddc7fce548f94f9ee562af48cb"
-      url: "https://pub.dev"
-    source: hosted
-    version: "2.11.0"
-  passkeys_android:
-    dependency: transitive
-    description:
-      name: passkeys_android
-      sha256: e02c69a89634e1fcfae663ea4f7100a2bd8c3dd18ed1b06c5690ab58d6744c8d
-      url: "https://pub.dev"
-    source: hosted
-    version: "2.9.0"
-  passkeys_doctor:
-    dependency: transitive
-    description:
-      name: passkeys_doctor
-      sha256: e380712ec530d8c1fbaa6d64cdc390767a505864c5f653812df3fdb0ce54a22b
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.1.0"
-  passkeys_ios:
-    dependency: transitive
-    description:
-      name: passkeys_ios
-      sha256: ed7b95444c9032d2aa9df71fe358ae842ccb173d2eb5266aa25d178689d3e474
-      url: "https://pub.dev"
-    source: hosted
-    version: "2.7.0"
-  passkeys_platform_interface:
-    dependency: transitive
-    description:
-      name: passkeys_platform_interface
-      sha256: "6003fafa1da65b3d73c582fc7f7ada358d38f2d511b98f8b8fd3077786f4b71c"
-      url: "https://pub.dev"
-    source: hosted
-    version: "2.3.1"
-  passkeys_web:
-    dependency: transitive
-    description:
-      name: passkeys_web
-      sha256: "98d28223292738a9fbb24db33cdba00609675d54521694fdde45b7e5caf59b19"
-      url: "https://pub.dev"
-    source: hosted
-    version: "2.6.0"
   path:
     dependency: "direct main"
     description:
@@ -1413,14 +1349,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.4.0"
-  ua_client_hints:
-    dependency: transitive
-    description:
-      name: ua_client_hints
-      sha256: "1b8759a46bfeab355252881df27f2604c01bded86aa2b578869fb1b638b23118"
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.4.1"
   universal_io:
     dependency: transitive
     description:
@@ -1589,14 +1517,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "5.14.0"
-  win32_registry:
-    dependency: transitive
-    description:
-      name: win32_registry
-      sha256: "6f1b564492d0147b330dd794fee8f512cec4977957f310f9951b5f9d83618dae"
-      url: "https://pub.dev"
-    source: hosted
-    version: "2.1.0"
   wireguard_plugin:
     dependency: "direct main"
     description:

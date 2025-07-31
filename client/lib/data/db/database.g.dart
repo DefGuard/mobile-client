@@ -71,10 +71,12 @@ class $DefguardInstancesTable extends DefguardInstances
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _tokenMeta = const VerificationMeta('token');
+  static const VerificationMeta _poolingTokenMeta = const VerificationMeta(
+    'poolingToken',
+  );
   @override
-  late final GeneratedColumn<String> token = GeneratedColumn<String>(
-    'token',
+  late final GeneratedColumn<String> poolingToken = GeneratedColumn<String>(
+    'pooling_token',
     aliasedName,
     false,
     type: DriftSqlType.string,
@@ -128,17 +130,18 @@ class $DefguardInstancesTable extends DefguardInstances
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _biometryRegisteredMeta =
-      const VerificationMeta('biometryRegistered');
+  static const VerificationMeta _mfaKeysStoredMeta = const VerificationMeta(
+    'mfaKeysStored',
+  );
   @override
-  late final GeneratedColumn<bool> biometryRegistered = GeneratedColumn<bool>(
-    'biometry_registered',
+  late final GeneratedColumn<bool> mfaKeysStored = GeneratedColumn<bool>(
+    'mfa_keys_stored',
     aliasedName,
     false,
     type: DriftSqlType.bool,
     requiredDuringInsert: true,
     defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'CHECK ("biometry_registered" IN (0, 1))',
+      'CHECK ("mfa_keys_stored" IN (0, 1))',
     ),
   );
   @override
@@ -149,12 +152,12 @@ class $DefguardInstancesTable extends DefguardInstances
     url,
     proxyUrl,
     username,
-    token,
+    poolingToken,
     disableAllTraffic,
     enterpriseEnabled,
     pubKey,
     privateKey,
-    biometryRegistered,
+    mfaKeysStored,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -211,13 +214,16 @@ class $DefguardInstancesTable extends DefguardInstances
     } else if (isInserting) {
       context.missing(_usernameMeta);
     }
-    if (data.containsKey('token')) {
+    if (data.containsKey('pooling_token')) {
       context.handle(
-        _tokenMeta,
-        token.isAcceptableOrUnknown(data['token']!, _tokenMeta),
+        _poolingTokenMeta,
+        poolingToken.isAcceptableOrUnknown(
+          data['pooling_token']!,
+          _poolingTokenMeta,
+        ),
       );
     } else if (isInserting) {
-      context.missing(_tokenMeta);
+      context.missing(_poolingTokenMeta);
     }
     if (data.containsKey('disable_all_traffic')) {
       context.handle(
@@ -257,16 +263,16 @@ class $DefguardInstancesTable extends DefguardInstances
     } else if (isInserting) {
       context.missing(_privateKeyMeta);
     }
-    if (data.containsKey('biometry_registered')) {
+    if (data.containsKey('mfa_keys_stored')) {
       context.handle(
-        _biometryRegisteredMeta,
-        biometryRegistered.isAcceptableOrUnknown(
-          data['biometry_registered']!,
-          _biometryRegisteredMeta,
+        _mfaKeysStoredMeta,
+        mfaKeysStored.isAcceptableOrUnknown(
+          data['mfa_keys_stored']!,
+          _mfaKeysStoredMeta,
         ),
       );
     } else if (isInserting) {
-      context.missing(_biometryRegisteredMeta);
+      context.missing(_mfaKeysStoredMeta);
     }
     return context;
   }
@@ -301,9 +307,9 @@ class $DefguardInstancesTable extends DefguardInstances
         DriftSqlType.string,
         data['${effectivePrefix}username'],
       )!,
-      token: attachedDatabase.typeMapping.read(
+      poolingToken: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
-        data['${effectivePrefix}token'],
+        data['${effectivePrefix}pooling_token'],
       )!,
       disableAllTraffic: attachedDatabase.typeMapping.read(
         DriftSqlType.bool,
@@ -321,9 +327,9 @@ class $DefguardInstancesTable extends DefguardInstances
         DriftSqlType.string,
         data['${effectivePrefix}private_key'],
       )!,
-      biometryRegistered: attachedDatabase.typeMapping.read(
+      mfaKeysStored: attachedDatabase.typeMapping.read(
         DriftSqlType.bool,
-        data['${effectivePrefix}biometry_registered'],
+        data['${effectivePrefix}mfa_keys_stored'],
       )!,
     );
   }
@@ -342,12 +348,12 @@ class DefguardInstance extends DataClass
   final String url;
   final String proxyUrl;
   final String username;
-  final String token;
+  final String poolingToken;
   final bool disableAllTraffic;
   final bool enterpriseEnabled;
   final String pubKey;
   final String privateKey;
-  final bool biometryRegistered;
+  final bool mfaKeysStored;
   const DefguardInstance({
     required this.id,
     required this.name,
@@ -355,12 +361,12 @@ class DefguardInstance extends DataClass
     required this.url,
     required this.proxyUrl,
     required this.username,
-    required this.token,
+    required this.poolingToken,
     required this.disableAllTraffic,
     required this.enterpriseEnabled,
     required this.pubKey,
     required this.privateKey,
-    required this.biometryRegistered,
+    required this.mfaKeysStored,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -371,12 +377,12 @@ class DefguardInstance extends DataClass
     map['url'] = Variable<String>(url);
     map['proxy_url'] = Variable<String>(proxyUrl);
     map['username'] = Variable<String>(username);
-    map['token'] = Variable<String>(token);
+    map['pooling_token'] = Variable<String>(poolingToken);
     map['disable_all_traffic'] = Variable<bool>(disableAllTraffic);
     map['enterprise_enabled'] = Variable<bool>(enterpriseEnabled);
     map['pub_key'] = Variable<String>(pubKey);
     map['private_key'] = Variable<String>(privateKey);
-    map['biometry_registered'] = Variable<bool>(biometryRegistered);
+    map['mfa_keys_stored'] = Variable<bool>(mfaKeysStored);
     return map;
   }
 
@@ -388,12 +394,12 @@ class DefguardInstance extends DataClass
       url: Value(url),
       proxyUrl: Value(proxyUrl),
       username: Value(username),
-      token: Value(token),
+      poolingToken: Value(poolingToken),
       disableAllTraffic: Value(disableAllTraffic),
       enterpriseEnabled: Value(enterpriseEnabled),
       pubKey: Value(pubKey),
       privateKey: Value(privateKey),
-      biometryRegistered: Value(biometryRegistered),
+      mfaKeysStored: Value(mfaKeysStored),
     );
   }
 
@@ -409,12 +415,12 @@ class DefguardInstance extends DataClass
       url: serializer.fromJson<String>(json['url']),
       proxyUrl: serializer.fromJson<String>(json['proxy_url']),
       username: serializer.fromJson<String>(json['username']),
-      token: serializer.fromJson<String>(json['token']),
+      poolingToken: serializer.fromJson<String>(json['poolingToken']),
       disableAllTraffic: serializer.fromJson<bool>(json['disable_all_traffic']),
       enterpriseEnabled: serializer.fromJson<bool>(json['enterprise_enabled']),
       pubKey: serializer.fromJson<String>(json['pubKey']),
       privateKey: serializer.fromJson<String>(json['privateKey']),
-      biometryRegistered: serializer.fromJson<bool>(json['biometryRegistered']),
+      mfaKeysStored: serializer.fromJson<bool>(json['mfaKeysStored']),
     );
   }
   @override
@@ -427,12 +433,12 @@ class DefguardInstance extends DataClass
       'url': serializer.toJson<String>(url),
       'proxy_url': serializer.toJson<String>(proxyUrl),
       'username': serializer.toJson<String>(username),
-      'token': serializer.toJson<String>(token),
+      'poolingToken': serializer.toJson<String>(poolingToken),
       'disable_all_traffic': serializer.toJson<bool>(disableAllTraffic),
       'enterprise_enabled': serializer.toJson<bool>(enterpriseEnabled),
       'pubKey': serializer.toJson<String>(pubKey),
       'privateKey': serializer.toJson<String>(privateKey),
-      'biometryRegistered': serializer.toJson<bool>(biometryRegistered),
+      'mfaKeysStored': serializer.toJson<bool>(mfaKeysStored),
     };
   }
 
@@ -443,12 +449,12 @@ class DefguardInstance extends DataClass
     String? url,
     String? proxyUrl,
     String? username,
-    String? token,
+    String? poolingToken,
     bool? disableAllTraffic,
     bool? enterpriseEnabled,
     String? pubKey,
     String? privateKey,
-    bool? biometryRegistered,
+    bool? mfaKeysStored,
   }) => DefguardInstance(
     id: id ?? this.id,
     name: name ?? this.name,
@@ -456,12 +462,12 @@ class DefguardInstance extends DataClass
     url: url ?? this.url,
     proxyUrl: proxyUrl ?? this.proxyUrl,
     username: username ?? this.username,
-    token: token ?? this.token,
+    poolingToken: poolingToken ?? this.poolingToken,
     disableAllTraffic: disableAllTraffic ?? this.disableAllTraffic,
     enterpriseEnabled: enterpriseEnabled ?? this.enterpriseEnabled,
     pubKey: pubKey ?? this.pubKey,
     privateKey: privateKey ?? this.privateKey,
-    biometryRegistered: biometryRegistered ?? this.biometryRegistered,
+    mfaKeysStored: mfaKeysStored ?? this.mfaKeysStored,
   );
   DefguardInstance copyWithCompanion(DefguardInstancesCompanion data) {
     return DefguardInstance(
@@ -471,7 +477,9 @@ class DefguardInstance extends DataClass
       url: data.url.present ? data.url.value : this.url,
       proxyUrl: data.proxyUrl.present ? data.proxyUrl.value : this.proxyUrl,
       username: data.username.present ? data.username.value : this.username,
-      token: data.token.present ? data.token.value : this.token,
+      poolingToken: data.poolingToken.present
+          ? data.poolingToken.value
+          : this.poolingToken,
       disableAllTraffic: data.disableAllTraffic.present
           ? data.disableAllTraffic.value
           : this.disableAllTraffic,
@@ -482,9 +490,9 @@ class DefguardInstance extends DataClass
       privateKey: data.privateKey.present
           ? data.privateKey.value
           : this.privateKey,
-      biometryRegistered: data.biometryRegistered.present
-          ? data.biometryRegistered.value
-          : this.biometryRegistered,
+      mfaKeysStored: data.mfaKeysStored.present
+          ? data.mfaKeysStored.value
+          : this.mfaKeysStored,
     );
   }
 
@@ -497,12 +505,12 @@ class DefguardInstance extends DataClass
           ..write('url: $url, ')
           ..write('proxyUrl: $proxyUrl, ')
           ..write('username: $username, ')
-          ..write('token: $token, ')
+          ..write('poolingToken: $poolingToken, ')
           ..write('disableAllTraffic: $disableAllTraffic, ')
           ..write('enterpriseEnabled: $enterpriseEnabled, ')
           ..write('pubKey: $pubKey, ')
           ..write('privateKey: $privateKey, ')
-          ..write('biometryRegistered: $biometryRegistered')
+          ..write('mfaKeysStored: $mfaKeysStored')
           ..write(')'))
         .toString();
   }
@@ -515,12 +523,12 @@ class DefguardInstance extends DataClass
     url,
     proxyUrl,
     username,
-    token,
+    poolingToken,
     disableAllTraffic,
     enterpriseEnabled,
     pubKey,
     privateKey,
-    biometryRegistered,
+    mfaKeysStored,
   );
   @override
   bool operator ==(Object other) =>
@@ -532,12 +540,12 @@ class DefguardInstance extends DataClass
           other.url == this.url &&
           other.proxyUrl == this.proxyUrl &&
           other.username == this.username &&
-          other.token == this.token &&
+          other.poolingToken == this.poolingToken &&
           other.disableAllTraffic == this.disableAllTraffic &&
           other.enterpriseEnabled == this.enterpriseEnabled &&
           other.pubKey == this.pubKey &&
           other.privateKey == this.privateKey &&
-          other.biometryRegistered == this.biometryRegistered);
+          other.mfaKeysStored == this.mfaKeysStored);
 }
 
 class DefguardInstancesCompanion extends UpdateCompanion<DefguardInstance> {
@@ -547,12 +555,12 @@ class DefguardInstancesCompanion extends UpdateCompanion<DefguardInstance> {
   final Value<String> url;
   final Value<String> proxyUrl;
   final Value<String> username;
-  final Value<String> token;
+  final Value<String> poolingToken;
   final Value<bool> disableAllTraffic;
   final Value<bool> enterpriseEnabled;
   final Value<String> pubKey;
   final Value<String> privateKey;
-  final Value<bool> biometryRegistered;
+  final Value<bool> mfaKeysStored;
   const DefguardInstancesCompanion({
     this.id = const Value.absent(),
     this.name = const Value.absent(),
@@ -560,12 +568,12 @@ class DefguardInstancesCompanion extends UpdateCompanion<DefguardInstance> {
     this.url = const Value.absent(),
     this.proxyUrl = const Value.absent(),
     this.username = const Value.absent(),
-    this.token = const Value.absent(),
+    this.poolingToken = const Value.absent(),
     this.disableAllTraffic = const Value.absent(),
     this.enterpriseEnabled = const Value.absent(),
     this.pubKey = const Value.absent(),
     this.privateKey = const Value.absent(),
-    this.biometryRegistered = const Value.absent(),
+    this.mfaKeysStored = const Value.absent(),
   });
   DefguardInstancesCompanion.insert({
     this.id = const Value.absent(),
@@ -574,23 +582,23 @@ class DefguardInstancesCompanion extends UpdateCompanion<DefguardInstance> {
     required String url,
     required String proxyUrl,
     required String username,
-    required String token,
+    required String poolingToken,
     required bool disableAllTraffic,
     required bool enterpriseEnabled,
     required String pubKey,
     required String privateKey,
-    required bool biometryRegistered,
+    required bool mfaKeysStored,
   }) : name = Value(name),
        uuid = Value(uuid),
        url = Value(url),
        proxyUrl = Value(proxyUrl),
        username = Value(username),
-       token = Value(token),
+       poolingToken = Value(poolingToken),
        disableAllTraffic = Value(disableAllTraffic),
        enterpriseEnabled = Value(enterpriseEnabled),
        pubKey = Value(pubKey),
        privateKey = Value(privateKey),
-       biometryRegistered = Value(biometryRegistered);
+       mfaKeysStored = Value(mfaKeysStored);
   static Insertable<DefguardInstance> custom({
     Expression<int>? id,
     Expression<String>? name,
@@ -598,12 +606,12 @@ class DefguardInstancesCompanion extends UpdateCompanion<DefguardInstance> {
     Expression<String>? url,
     Expression<String>? proxyUrl,
     Expression<String>? username,
-    Expression<String>? token,
+    Expression<String>? poolingToken,
     Expression<bool>? disableAllTraffic,
     Expression<bool>? enterpriseEnabled,
     Expression<String>? pubKey,
     Expression<String>? privateKey,
-    Expression<bool>? biometryRegistered,
+    Expression<bool>? mfaKeysStored,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -612,12 +620,12 @@ class DefguardInstancesCompanion extends UpdateCompanion<DefguardInstance> {
       if (url != null) 'url': url,
       if (proxyUrl != null) 'proxy_url': proxyUrl,
       if (username != null) 'username': username,
-      if (token != null) 'token': token,
+      if (poolingToken != null) 'pooling_token': poolingToken,
       if (disableAllTraffic != null) 'disable_all_traffic': disableAllTraffic,
       if (enterpriseEnabled != null) 'enterprise_enabled': enterpriseEnabled,
       if (pubKey != null) 'pub_key': pubKey,
       if (privateKey != null) 'private_key': privateKey,
-      if (biometryRegistered != null) 'biometry_registered': biometryRegistered,
+      if (mfaKeysStored != null) 'mfa_keys_stored': mfaKeysStored,
     });
   }
 
@@ -628,12 +636,12 @@ class DefguardInstancesCompanion extends UpdateCompanion<DefguardInstance> {
     Value<String>? url,
     Value<String>? proxyUrl,
     Value<String>? username,
-    Value<String>? token,
+    Value<String>? poolingToken,
     Value<bool>? disableAllTraffic,
     Value<bool>? enterpriseEnabled,
     Value<String>? pubKey,
     Value<String>? privateKey,
-    Value<bool>? biometryRegistered,
+    Value<bool>? mfaKeysStored,
   }) {
     return DefguardInstancesCompanion(
       id: id ?? this.id,
@@ -642,12 +650,12 @@ class DefguardInstancesCompanion extends UpdateCompanion<DefguardInstance> {
       url: url ?? this.url,
       proxyUrl: proxyUrl ?? this.proxyUrl,
       username: username ?? this.username,
-      token: token ?? this.token,
+      poolingToken: poolingToken ?? this.poolingToken,
       disableAllTraffic: disableAllTraffic ?? this.disableAllTraffic,
       enterpriseEnabled: enterpriseEnabled ?? this.enterpriseEnabled,
       pubKey: pubKey ?? this.pubKey,
       privateKey: privateKey ?? this.privateKey,
-      biometryRegistered: biometryRegistered ?? this.biometryRegistered,
+      mfaKeysStored: mfaKeysStored ?? this.mfaKeysStored,
     );
   }
 
@@ -672,8 +680,8 @@ class DefguardInstancesCompanion extends UpdateCompanion<DefguardInstance> {
     if (username.present) {
       map['username'] = Variable<String>(username.value);
     }
-    if (token.present) {
-      map['token'] = Variable<String>(token.value);
+    if (poolingToken.present) {
+      map['pooling_token'] = Variable<String>(poolingToken.value);
     }
     if (disableAllTraffic.present) {
       map['disable_all_traffic'] = Variable<bool>(disableAllTraffic.value);
@@ -687,8 +695,8 @@ class DefguardInstancesCompanion extends UpdateCompanion<DefguardInstance> {
     if (privateKey.present) {
       map['private_key'] = Variable<String>(privateKey.value);
     }
-    if (biometryRegistered.present) {
-      map['biometry_registered'] = Variable<bool>(biometryRegistered.value);
+    if (mfaKeysStored.present) {
+      map['mfa_keys_stored'] = Variable<bool>(mfaKeysStored.value);
     }
     return map;
   }
@@ -702,12 +710,12 @@ class DefguardInstancesCompanion extends UpdateCompanion<DefguardInstance> {
           ..write('url: $url, ')
           ..write('proxyUrl: $proxyUrl, ')
           ..write('username: $username, ')
-          ..write('token: $token, ')
+          ..write('poolingToken: $poolingToken, ')
           ..write('disableAllTraffic: $disableAllTraffic, ')
           ..write('enterpriseEnabled: $enterpriseEnabled, ')
           ..write('pubKey: $pubKey, ')
           ..write('privateKey: $privateKey, ')
-          ..write('biometryRegistered: $biometryRegistered')
+          ..write('mfaKeysStored: $mfaKeysStored')
           ..write(')'))
         .toString();
   }
@@ -1574,12 +1582,12 @@ typedef $$DefguardInstancesTableCreateCompanionBuilder =
       required String url,
       required String proxyUrl,
       required String username,
-      required String token,
+      required String poolingToken,
       required bool disableAllTraffic,
       required bool enterpriseEnabled,
       required String pubKey,
       required String privateKey,
-      required bool biometryRegistered,
+      required bool mfaKeysStored,
     });
 typedef $$DefguardInstancesTableUpdateCompanionBuilder =
     DefguardInstancesCompanion Function({
@@ -1589,12 +1597,12 @@ typedef $$DefguardInstancesTableUpdateCompanionBuilder =
       Value<String> url,
       Value<String> proxyUrl,
       Value<String> username,
-      Value<String> token,
+      Value<String> poolingToken,
       Value<bool> disableAllTraffic,
       Value<bool> enterpriseEnabled,
       Value<String> pubKey,
       Value<String> privateKey,
-      Value<bool> biometryRegistered,
+      Value<bool> mfaKeysStored,
     });
 
 final class $$DefguardInstancesTableReferences
@@ -1671,8 +1679,8 @@ class $$DefguardInstancesTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<String> get token => $composableBuilder(
-    column: $table.token,
+  ColumnFilters<String> get poolingToken => $composableBuilder(
+    column: $table.poolingToken,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -1696,8 +1704,8 @@ class $$DefguardInstancesTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<bool> get biometryRegistered => $composableBuilder(
-    column: $table.biometryRegistered,
+  ColumnFilters<bool> get mfaKeysStored => $composableBuilder(
+    column: $table.mfaKeysStored,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -1766,8 +1774,8 @@ class $$DefguardInstancesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<String> get token => $composableBuilder(
-    column: $table.token,
+  ColumnOrderings<String> get poolingToken => $composableBuilder(
+    column: $table.poolingToken,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -1791,8 +1799,8 @@ class $$DefguardInstancesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<bool> get biometryRegistered => $composableBuilder(
-    column: $table.biometryRegistered,
+  ColumnOrderings<bool> get mfaKeysStored => $composableBuilder(
+    column: $table.mfaKeysStored,
     builder: (column) => ColumnOrderings(column),
   );
 }
@@ -1824,8 +1832,10 @@ class $$DefguardInstancesTableAnnotationComposer
   GeneratedColumn<String> get username =>
       $composableBuilder(column: $table.username, builder: (column) => column);
 
-  GeneratedColumn<String> get token =>
-      $composableBuilder(column: $table.token, builder: (column) => column);
+  GeneratedColumn<String> get poolingToken => $composableBuilder(
+    column: $table.poolingToken,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<bool> get disableAllTraffic => $composableBuilder(
     column: $table.disableAllTraffic,
@@ -1845,8 +1855,8 @@ class $$DefguardInstancesTableAnnotationComposer
     builder: (column) => column,
   );
 
-  GeneratedColumn<bool> get biometryRegistered => $composableBuilder(
-    column: $table.biometryRegistered,
+  GeneratedColumn<bool> get mfaKeysStored => $composableBuilder(
+    column: $table.mfaKeysStored,
     builder: (column) => column,
   );
 
@@ -1915,12 +1925,12 @@ class $$DefguardInstancesTableTableManager
                 Value<String> url = const Value.absent(),
                 Value<String> proxyUrl = const Value.absent(),
                 Value<String> username = const Value.absent(),
-                Value<String> token = const Value.absent(),
+                Value<String> poolingToken = const Value.absent(),
                 Value<bool> disableAllTraffic = const Value.absent(),
                 Value<bool> enterpriseEnabled = const Value.absent(),
                 Value<String> pubKey = const Value.absent(),
                 Value<String> privateKey = const Value.absent(),
-                Value<bool> biometryRegistered = const Value.absent(),
+                Value<bool> mfaKeysStored = const Value.absent(),
               }) => DefguardInstancesCompanion(
                 id: id,
                 name: name,
@@ -1928,12 +1938,12 @@ class $$DefguardInstancesTableTableManager
                 url: url,
                 proxyUrl: proxyUrl,
                 username: username,
-                token: token,
+                poolingToken: poolingToken,
                 disableAllTraffic: disableAllTraffic,
                 enterpriseEnabled: enterpriseEnabled,
                 pubKey: pubKey,
                 privateKey: privateKey,
-                biometryRegistered: biometryRegistered,
+                mfaKeysStored: mfaKeysStored,
               ),
           createCompanionCallback:
               ({
@@ -1943,12 +1953,12 @@ class $$DefguardInstancesTableTableManager
                 required String url,
                 required String proxyUrl,
                 required String username,
-                required String token,
+                required String poolingToken,
                 required bool disableAllTraffic,
                 required bool enterpriseEnabled,
                 required String pubKey,
                 required String privateKey,
-                required bool biometryRegistered,
+                required bool mfaKeysStored,
               }) => DefguardInstancesCompanion.insert(
                 id: id,
                 name: name,
@@ -1956,12 +1966,12 @@ class $$DefguardInstancesTableTableManager
                 url: url,
                 proxyUrl: proxyUrl,
                 username: username,
-                token: token,
+                poolingToken: poolingToken,
                 disableAllTraffic: disableAllTraffic,
                 enterpriseEnabled: enterpriseEnabled,
                 pubKey: pubKey,
                 privateKey: privateKey,
-                biometryRegistered: biometryRegistered,
+                mfaKeysStored: mfaKeysStored,
               ),
           withReferenceMapper: (p0) => p0
               .map(

@@ -60,7 +60,7 @@ Future<UpdateInstanceResult?> updateInstance({
         await db.managers.defguardInstances
             .filter((row) => row.id.equals(instance.id))
             .update(
-              (_) => DefguardInstancesCompanion(token: drift.Value(token)),
+              (_) => DefguardInstancesCompanion(poolingToken: drift.Value(token)),
             );
         talker.debug("${instance.logName} token updated");
       }

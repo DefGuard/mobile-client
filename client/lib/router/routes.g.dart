@@ -18,7 +18,6 @@ List<RouteBase> get $appRoutes => [
   $openIdMfaScreenRoute,
   $openIdMfaWaitingScreenRoute,
   $mfaCodeScreenRoute,
-  $testPasskeyScreenRoute,
 ];
 
 RouteBase get $homeScreenRoute =>
@@ -336,31 +335,4 @@ mixin _$MfaCodeScreenRoute on GoRouteData {
   @override
   void replace(BuildContext context) =>
       context.replace(location, extra: _self.$extra);
-}
-
-RouteBase get $testPasskeyScreenRoute => GoRouteData.$route(
-  path: '/passkey_test',
-
-  factory: _$TestPasskeyScreenRoute._fromState,
-);
-
-mixin _$TestPasskeyScreenRoute on GoRouteData {
-  static TestPasskeyScreenRoute _fromState(GoRouterState state) =>
-      const TestPasskeyScreenRoute();
-
-  @override
-  String get location => GoRouteData.$location('/passkey_test');
-
-  @override
-  void go(BuildContext context) => context.go(location);
-
-  @override
-  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
-
-  @override
-  void pushReplacement(BuildContext context) =>
-      context.pushReplacement(location);
-
-  @override
-  void replace(BuildContext context) => context.replace(location);
 }

@@ -68,7 +68,6 @@ dependencies:
   flutter_local_notifications: ^19.3.1
   # sqlite3_flutter_libs version 0.5.37 bumps minimum compatible iOS version
   sqlite3_flutter_libs: 0.5.36
-  passkeys: ^2.11.0
   flutter_secure_storage: ^9.2.4
   x25519: ^0.1.1
   ed25519_edwards: ^0.3.1
