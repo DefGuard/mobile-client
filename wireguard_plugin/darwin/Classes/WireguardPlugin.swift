@@ -267,9 +267,23 @@ public class WireguardPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
                 )
                 // no point in emitting this event if we already agree that the tunnel is down
                 if activeTunnelData != nil {
+                    if let lastError = getLastTunnelError() {
+                        logger.log("Detected that the tunnel stopped due to the following error: \(lastError.rawValue, privacy: .public)")
+                        if lastError == .mfaSessionExpired {
+                            logger.log("Detected that the tunnel stopped due to MFA session expiration, emitting event.")
+                            emitEvent(event: WireguardEvent.MFASessionExpired, data: nil)
+                        } else {
+                            logger.warning("Detected that the tunnel stopped due to an unknown error: \(lastError.rawValue, privacy: .public)")
+                            emitEvent(event: WireguardEvent.tunnelDown, data: nil)
+                        }
+                        resetLastTunnelError()
+                    } else {
+                        emitEvent(event: WireguardEvent.tunnelDown, data: nil)
+                    }
+
                     activeTunnelData = nil
-                    emitEvent(event: WireguardEvent.tunnelDown, data: nil)
-                    logger.log("Our state differed, emitted tunnelDown event.")
+
+                    logger.log("Our state differed, emitted event to inform the frontend about stopped tunnel.")
                 } else {
                     logger.log("Our state did not differ, no event emitted.")
                 }
@@ -286,6 +300,26 @@ public class WireguardPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
                     "Detected unknown VPN status: \(vpnStatus.rawValue, privacy: .public), ignoring it since it is a state we don't handle."
                 )
         }
+    }
+
+    private func getLastTunnelError() -> TunnelStopError? {
+        let defaults = UserDefaults(suiteName: suiteName)
+        guard let lastError = defaults?.string(forKey: "lastTunnelError") else {
+            logger.log("No last tunnel error found in user defaults")
+            return nil
+        }
+        logger.log("Last tunnel error found: \(lastError, privacy: .public)")
+        if let error = TunnelStopError(rawValue: lastError) {
+            return error
+        } else {
+            logger.error("Last tunnel error is not a valid TunnelStopError: \(lastError, privacy: .public)")
+            return nil
+        }
+    }
+
+    private func resetLastTunnelError() {
+        let defaults = UserDefaults(suiteName: suiteName)
+        defaults?.removeObject(forKey: "lastTunnelError")
     }
 
     private func startTunnel(
