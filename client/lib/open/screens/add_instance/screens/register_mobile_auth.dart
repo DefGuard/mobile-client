@@ -38,7 +38,7 @@ Stream<DefguardInstance> _screenData(Ref ref, int id) {
 class _ScreenContent extends HookConsumerWidget {
   final int instanceId;
 
-  const _ScreenContent({super.key, required this.instanceId});
+  const _ScreenContent({required this.instanceId});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
