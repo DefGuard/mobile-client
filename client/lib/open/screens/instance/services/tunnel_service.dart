@@ -101,6 +101,7 @@ class TunnelService {
         proxyUrl: instance.proxyUrl,
         payload: payload,
         method: mfaMethod,
+        secureStorageKey: instance.secureStorageKey
       );
       if (presharedKey == null) {
         // user dismissed the dialog
