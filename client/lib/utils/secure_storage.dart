@@ -1,10 +1,26 @@
 import 'dart:convert';
 
 import 'package:biometric_storage/biometric_storage.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:mobile/data/db/database.dart';
 import 'package:ed25519_edwards/ed25519_edwards.dart' as ed;
 import 'package:mobile/data/proxy/mfa.dart';
+
+class SecureStorageError implements Exception {
+  final CanAuthenticateResponse storageResponse;
+
+  const SecureStorageError(this.storageResponse);
+
+  @override
+  String toString() {
+    return "SecureStorageError - capability check result rejected: ${storageResponse.toString()}";
+  }
+}
+
+String signChallenge(String challenge, String privateKey) {
+  final List<int> decodedKey = base64.decode(privateKey).toList();
+  final private = ed.PrivateKey(decodedKey);
+  final signed = ed.sign(private, utf8.encode(challenge));
+  return base64.encode(signed.toList());
+}
 
 SecureInstanceStorage _generateInstanceStorage() {
   final keyPair = ed.generateKey();
@@ -13,34 +29,15 @@ SecureInstanceStorage _generateInstanceStorage() {
   return SecureInstanceStorage(privateKey: privateKey, publicKey: publicKey);
 }
 
-FlutterSecureStorage getSecureStorage() {
-  final aOptions = AndroidOptions(encryptedSharedPreferences: true);
-  return FlutterSecureStorage(aOptions: aOptions);
-}
-
-Future<SecureInstanceStorage> getInstanceSecureStorage(
-  DefguardInstance instance,
-) async {
-  final storage = getSecureStorage();
-  String? storageValue = await storage.read(key: instance.secureStorageKey);
-  if (storageValue != null) {
-    final parsed = SecureInstanceStorage.fromJson(jsonDecode(storageValue));
-    return parsed;
-  }
-  final instanceStorageValue = _generateInstanceStorage();
-  await storage.write(
-    key: instance.secureStorageKey,
-    value: jsonEncode(instanceStorageValue.toJson()),
-  );
-  return instanceStorageValue;
-}
-
 Future<SecureInstanceStorage> getBiometricInstanceStorage(
-  DefguardInstance instance,
+  String storageKey,
 ) async {
-  final storage = await BiometricStorage().getStorage(
-    instance.secureStorageKey,
-  );
+  final capabilityCheck = await BiometricStorage().canAuthenticate();
+  if (capabilityCheck != CanAuthenticateResponse.success) {
+    throw SecureStorageError(capabilityCheck);
+  }
+  // First creation of the storage doesn't require user interaction since we only write fresh data into the new storage it should be fine.
+  final storage = await BiometricStorage().getStorage(storageKey);
   final storeRawData = await storage.read();
   if (storeRawData != null) {
     return SecureInstanceStorage.fromJson(jsonDecode(storeRawData));

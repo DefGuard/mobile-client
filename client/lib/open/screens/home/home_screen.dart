@@ -161,7 +161,7 @@ class _InstanceItem extends HookConsumerWidget {
             }
             try {
               final instanceSecureData = await getBiometricInstanceStorage(
-                instance,
+                instance.secureStorageKey,
               );
               if (!instance.mfaKeysStored) {
                 final dbInstance = await db.managers.defguardInstances

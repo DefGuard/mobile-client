@@ -95,6 +95,13 @@ class MfaMethodDialog extends HookConsumerWidget {
                   selectedMethod.value = MfaMethod.totp;
                 },
               ),
+              DgRadioBox(
+                text: "Biometric",
+                active: selectedMethod.value == MfaMethod.biometric,
+                onTap: () {
+                  selectedMethod.value = MfaMethod.biometric;
+                },
+              ),
               DgSeparator(),
               if (intention != MfaMethodDialogIntention.save)
                 DgCheckbox(

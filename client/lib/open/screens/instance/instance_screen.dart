@@ -4,6 +4,7 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mobile/data/db/database.dart';
 import 'package:mobile/data/plugin/plugin.dart';
+import 'package:mobile/open/api.dart';
 import 'package:mobile/open/riverpod/plugin/plugin.dart';
 import 'package:mobile/open/screens/instance/widgets/connection_conflict_dialog.dart';
 import 'package:mobile/open/screens/instance/widgets/delete_instance_dialog.dart';
@@ -14,6 +15,7 @@ import 'package:mobile/open/screens/instance/widgets/routing_method_dialog.dart'
 import 'package:mobile/open/widgets/buttons/dg_button.dart';
 import 'package:mobile/open/widgets/dg_menu.dart';
 import 'package:mobile/open/widgets/dg_pill.dart';
+import 'package:mobile/open/widgets/dg_snackbar.dart';
 import 'package:mobile/open/widgets/icons/arrow_single.dart';
 import 'package:mobile/open/widgets/icons/asset_icons_simple.dart';
 import 'package:mobile/open/widgets/icons/connection.dart';
@@ -25,6 +27,7 @@ import 'package:mobile/theme/color.dart';
 import 'package:mobile/theme/spacing.dart';
 import 'package:mobile/theme/text.dart';
 import 'package:mobile/utils/position.dart';
+import 'package:mobile/utils/update_instance.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../data/db/enums.dart';
@@ -84,10 +87,13 @@ class InstanceScreen extends HookConsumerWidget {
               HomeScreenRoute().go(context);
               return null;
             }
-            return _ScreenContent(
-              screenData: screenData,
-              instance: screenData.instance,
-            );
+            if (screenData.instance.enterpriseEnabled) {
+              return _PullWrapper(
+                screenData: screenData,
+                child: _ScreenContent(screenData: screenData),
+              );
+            }
+            return _ScreenContent(screenData: screenData);
           },
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (err, _) {
@@ -101,11 +107,64 @@ class InstanceScreen extends HookConsumerWidget {
   }
 }
 
+class _PullWrapper extends HookConsumerWidget {
+  final Widget child;
+  final _ScreenData screenData;
+
+  const _PullWrapper({required this.screenData, required this.child});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final db = ref.read(databaseProvider);
+    return RefreshIndicator(
+      color: DgColor.mainPrimary,
+      onRefresh: () async {
+        final msg = ScaffoldMessenger.of(context);
+        try {
+          final instance = screenData.instance;
+          final (responseData, responseStatus) = await proxyApi
+              .pollConfiguration(instance.proxyUrl, instance.poolingToken);
+          if (responseData == null) {
+            msg.showSnackBar(
+              dgSnackBar(text: "Failed to get new information for instance."),
+            );
+            talker.error(
+              "Failed to pull refresh instance data. Proxy response status: $responseStatus",
+            );
+            return;
+          }
+          await updateInstance(
+            db: db,
+            instance: instance,
+            configs: responseData.configs,
+            info: responseData.instance,
+            token: responseData.token,
+          );
+          msg.showSnackBar(
+            dgSnackBar(
+              text: "Instance information updated",
+              customDuration: Duration(seconds: 5),
+            ),
+          );
+        } catch (e) {
+          msg.showSnackBar(
+            dgSnackBar(
+              text: "Failed to get new information for instance.",
+              customDuration: Duration(seconds: 5),
+            ),
+          );
+          talker.error("Failed pull refresh instance data.", e);
+        }
+      },
+      child: child,
+    );
+  }
+}
+
 class _ScreenContent extends HookConsumerWidget {
   final _ScreenData screenData;
-  final DefguardInstance instance;
 
-  const _ScreenContent({required this.screenData, required this.instance});
+  const _ScreenContent({required this.screenData});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -155,7 +214,7 @@ class _ScreenContent extends HookConsumerWidget {
               return _LocationItem(
                 key: Key(location.id.toString()),
                 location: location,
-                instance: instance,
+                instance: screenData.instance,
               );
             },
           ),
@@ -194,7 +253,7 @@ class _ScreenContent extends HookConsumerWidget {
                                   context: context,
                                   builder: (BuildContext context) {
                                     return DeleteInstanceDialog(
-                                      instance: instance,
+                                      instance: screenData.instance,
                                     );
                                   },
                                 );
@@ -229,8 +288,9 @@ class _ScreenContent extends HookConsumerWidget {
                           onTap: () {
                             showDialog(
                               context: context,
-                              builder: (_) =>
-                                  RefreshInstanceDialog(instance: instance),
+                              builder: (_) => RefreshInstanceDialog(
+                                instance: screenData.instance,
+                              ),
                             );
                           },
                           child: Text(

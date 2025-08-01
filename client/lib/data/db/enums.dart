@@ -16,7 +16,9 @@ enum MfaMethod {
   @j.JsonValue(1)
   email(1),
   @j.JsonValue(2)
-  openid(2);
+  openid(2),
+  @j.JsonValue(3)
+  biometric(3);
 
   final int value;
 
@@ -31,6 +33,7 @@ enum MfaMethod {
     MfaMethod.totp: 'Totp',
     MfaMethod.email: 'Email',
     MfaMethod.openid: 'OpenId',
+    MfaMethod.biometric: "Biometric",
   };
 }
 

@@ -36,20 +36,25 @@ const _$MfaMethodEnumMap = {
   MfaMethod.totp: 0,
   MfaMethod.email: 1,
   MfaMethod.openid: 2,
+  MfaMethod.biometric: 3,
 };
 
 StartMfaResponse _$StartMfaResponseFromJson(Map<String, dynamic> json) =>
     $checkedCreate('StartMfaResponse', json, ($checkedConvert) {
       final val = StartMfaResponse(
         token: $checkedConvert('token', (v) => v as String),
+        challenge: $checkedConvert('challenge', (v) => v as String?),
       );
       return val;
     });
 
-const _$StartMfaResponseFieldMap = <String, String>{'token': 'token'};
+const _$StartMfaResponseFieldMap = <String, String>{
+  'token': 'token',
+  'challenge': 'challenge',
+};
 
 Map<String, dynamic> _$StartMfaResponseToJson(StartMfaResponse instance) =>
-    <String, dynamic>{'token': instance.token};
+    <String, dynamic>{'token': instance.token, 'challenge': instance.challenge};
 
 FinishMfaRequest _$FinishMfaRequestFromJson(Map<String, dynamic> json) =>
     $checkedCreate('FinishMfaRequest', json, ($checkedConvert) {

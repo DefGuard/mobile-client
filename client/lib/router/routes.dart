@@ -5,6 +5,7 @@ import 'package:mobile/open/screens/add_instance/add_instance_screen.dart';
 import 'package:mobile/open/screens/add_instance/screens/add_instance_form.dart';
 import 'package:mobile/open/screens/add_instance/screens/name_device_screen.dart';
 import 'package:mobile/open/screens/add_instance/screens/register_from_qr_screen.dart';
+import 'package:mobile/open/screens/add_instance/screens/register_mobile_auth.dart';
 import 'package:mobile/open/screens/add_instance/screens/scan_qr_screen.dart';
 import 'package:mobile/open/screens/home/home_screen.dart';
 import 'package:mobile/open/screens/instance/instance_screen.dart';
@@ -144,5 +145,19 @@ class MfaCodeScreenRoute extends GoRouteData with _$MfaCodeScreenRoute {
   @override
   Widget build(BuildContext context, GoRouterState state) {
     return MfaCodeScreen(screenData: $extra);
+  }
+}
+
+@TypedGoRoute<RegisterMobileAuthScreenRoute>(path: "/register_mobile_auth/:id")
+@immutable
+class RegisterMobileAuthScreenRoute extends GoRouteData
+    with _$RegisterMobileAuthScreenRoute {
+  final String id;
+
+  const RegisterMobileAuthScreenRoute({required this.id});
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) {
+    return RegisterMobileAuthScreen(instanceId: int.parse(id));
   }
 }
