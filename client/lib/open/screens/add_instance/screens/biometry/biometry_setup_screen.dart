@@ -59,6 +59,7 @@ class _ScreenContent extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final db = ref.read(databaseProvider);
     final instanceFuture = ref.watch(_screenDataProvider(instanceId));
     final isLoading = useState(false);
 
@@ -74,6 +75,13 @@ class _ScreenContent extends HookConsumerWidget {
           authSecret.publicKey,
           instance.pubKey,
         );
+        // update instance information
+        final instanceDb = await db.managers.defguardInstances
+            .filter((row) => row.id.equals(instanceId))
+            .getSingle();
+        await db.managers.defguardInstances.update(
+          (_) => instanceDb.copyWith(mfaKeysStored: true),
+        );
         isLoading.value = false;
         if (context.mounted) {
           BiometryFinishScreenRoute().go(context);
@@ -81,7 +89,7 @@ class _ScreenContent extends HookConsumerWidget {
         }
       } catch (e) {
         talker.error("Failed mobile auth registration!", e);
-        if(context.mounted) {
+        if (context.mounted) {
           isLoading.value = false;
           BiometrySetupFailedScreenRoute().push(context);
           return;
@@ -89,7 +97,7 @@ class _ScreenContent extends HookConsumerWidget {
       } finally {
         isLoading.value = false;
       }
-    }, [context, isLoading]);
+    }, [context, isLoading, db]);
 
     return instanceFuture.when(
       loading: () => LoadingView(),
