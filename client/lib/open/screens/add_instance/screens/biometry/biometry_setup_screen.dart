@@ -74,6 +74,11 @@ class _ScreenContent extends HookConsumerWidget {
           authSecret.publicKey,
           instance.pubKey,
         );
+        isLoading.value = false;
+        if (context.mounted) {
+          BiometryFinishScreenRoute().go(context);
+          return;
+        }
       } catch (e) {
         talker.error("Failed mobile auth registration!", e);
         if(context.mounted) {
@@ -83,9 +88,6 @@ class _ScreenContent extends HookConsumerWidget {
         }
       } finally {
         isLoading.value = false;
-      }
-      if (context.mounted) {
-        BiometryFinishScreenRoute().go(context);
       }
     }, [context, isLoading]);
 

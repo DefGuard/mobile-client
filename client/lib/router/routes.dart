@@ -176,7 +176,7 @@ class BiometrySetupFailedScreenRoute extends GoRouteData
   }
 }
 
-@TypedGoRoute<BiometryFinishScreenRoute>(path: "biometry_finish")
+@TypedGoRoute<BiometryFinishScreenRoute>(path: "/biometry_finish")
 @immutable
 class BiometryFinishScreenRoute extends GoRouteData
     with _$BiometryFinishScreenRoute {

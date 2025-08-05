@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:mobile/open/screens/add_instance/screens/biometry/widgets/biometry_setup_banner.dart';
 import 'package:mobile/open/widgets/buttons/dg_button.dart';
 import 'package:mobile/open/widgets/dg_single_child_scroll_view.dart';
 import 'package:mobile/open/widgets/navigation/dg_scaffold.dart';
 import 'package:mobile/router/routes.dart';
 import 'package:mobile/theme/color.dart';
+import 'package:mobile/theme/spacing.dart';
 import 'package:mobile/theme/text.dart';
 
 const String message = r"""
@@ -19,6 +21,10 @@ class BiometryFinishScreen extends StatelessWidget {
       title: "Add Instance",
       child: DgSingleChildScrollView(
         child: Column(
+          mainAxisSize: MainAxisSize.max,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.center,
+          spacing: DgSpacing.m,
           children: [
             Center(
               child: Text(
@@ -27,7 +33,7 @@ class BiometryFinishScreen extends StatelessWidget {
                 textAlign: TextAlign.center,
               ),
             ),
-            BiometryFinishScreen(),
+            BiometrySetupBanner(),
             Text(
               message,
               style: DgText.body2.copyWith(color: DgColor.textBodySecondary),

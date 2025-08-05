@@ -398,7 +398,7 @@ mixin _$BiometrySetupFailedScreenRoute on GoRouteData {
 }
 
 RouteBase get $biometryFinishScreenRoute => GoRouteData.$route(
-  path: 'biometry_finish',
+  path: '/biometry_finish',
 
   factory: _$BiometryFinishScreenRoute._fromState,
 );
@@ -408,7 +408,7 @@ mixin _$BiometryFinishScreenRoute on GoRouteData {
       const BiometryFinishScreenRoute();
 
   @override
-  String get location => GoRouteData.$location('biometry_finish');
+  String get location => GoRouteData.$location('/biometry_finish');
 
   @override
   void go(BuildContext context) => context.go(location);
