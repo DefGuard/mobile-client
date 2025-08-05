@@ -6,9 +6,11 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mobile/data/proxy/qr_register.dart';
 import 'package:mobile/logging.dart';
+import 'package:mobile/open/widgets/buttons/dg_button.dart';
 import 'package:mobile/open/widgets/navigation/dg_scaffold.dart';
 import 'package:mobile/router/routes.dart';
 import 'package:mobile/theme/color.dart';
+import 'package:mobile/theme/spacing.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
 class ScanInstanceQrScreen extends HookConsumerWidget {
@@ -40,24 +42,44 @@ class ScanInstanceQrScreen extends HookConsumerWidget {
         color: DgColor.frameBg,
         child: SafeArea(
           top: false,
-          child: MobileScanner(
-            onDetectError: (err, trace) {
-              talker.error("Mobile scanner widget failed !", err, trace);
-            },
-            onDetect: (result) {
-              final readResult = result.barcodes.first.rawValue;
-              if (readResult != null) {
-                try {
-                  final decodedString = utf8.decode(base64Decode(readResult));
-                  final data = QrInstanceRegistration.fromJson(
-                    jsonDecode(decodedString),
-                  );
-                  controllerRef.value.add(data);
-                } catch (e) {
-                  debugPrint("Error $e");
-                }
-              }
-            },
+          child: Stack(
+            children: [
+              MobileScanner(
+                onDetectError: (err, trace) {
+                  talker.error("Mobile scanner widget failed !", err, trace);
+                },
+                onDetect: (result) {
+                  final readResult = result.barcodes.first.rawValue;
+                  if (readResult != null) {
+                    try {
+                      final decodedString = utf8.decode(
+                        base64Decode(readResult),
+                      );
+                      final data = QrInstanceRegistration.fromJson(
+                        jsonDecode(decodedString),
+                      );
+                      controllerRef.value.add(data);
+                    } catch (e) {
+                      debugPrint("Error $e");
+                    }
+                  }
+                },
+              ),
+              Positioned(
+                bottom: DgSpacing.s,
+                left: 0,
+                right: 0,
+                child: Center(
+                  child: DgButton(
+                    text: "Cancel",
+                    minWidth: 100,
+                    onTap: () {
+                      Navigator.of(context).pop();
+                    },
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ),
