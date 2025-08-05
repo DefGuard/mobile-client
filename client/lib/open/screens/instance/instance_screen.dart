@@ -355,6 +355,7 @@ class _LocationItem extends HookConsumerWidget {
               showDialog(
                 context: context,
                 builder: (_) => MfaMethodDialog(
+                  instance: instance,
                   location: location,
                   intention: MfaMethodDialogIntention.save,
                 ),

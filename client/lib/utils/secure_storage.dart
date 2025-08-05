@@ -29,15 +29,34 @@ SecureInstanceStorage _generateInstanceStorage() {
   return SecureInstanceStorage(privateKey: privateKey, publicKey: publicKey);
 }
 
+PromptInfo _makePrompt(String text) {
+  return PromptInfo(
+    androidPromptInfo: AndroidPromptInfo(
+      title: text,
+      confirmationRequired: true,
+      negativeButton: "Cancel",
+    ),
+    iosPromptInfo: IosPromptInfo(accessTitle: text, saveTitle: text),
+    macOsPromptInfo: IosPromptInfo(accessTitle: text, saveTitle: text),
+  );
+}
+
 Future<SecureInstanceStorage> getBiometricInstanceStorage(
-  String storageKey,
-) async {
+  String storageKey, {
+  String? prompt,
+}) async {
+  final promptInfo = prompt != null
+      ? _makePrompt(prompt)
+      : PromptInfo.defaultValues;
   final capabilityCheck = await BiometricStorage().canAuthenticate();
   if (capabilityCheck != CanAuthenticateResponse.success) {
     throw SecureStorageError(capabilityCheck);
   }
   // First creation of the storage doesn't require user interaction since we only write fresh data into the new storage it should be fine.
-  final storage = await BiometricStorage().getStorage(storageKey);
+  final storage = await BiometricStorage().getStorage(
+    storageKey,
+    promptInfo: promptInfo,
+  );
   final storeRawData = await storage.read();
   if (storeRawData != null) {
     return SecureInstanceStorage.fromJson(jsonDecode(storeRawData));
@@ -45,6 +64,6 @@ Future<SecureInstanceStorage> getBiometricInstanceStorage(
   // gen new save and then return
   final instanceStorage = _generateInstanceStorage();
   final serializedStorage = jsonEncode(instanceStorage.toJson());
-  storage.write(serializedStorage);
+  storage.write(serializedStorage, promptInfo: promptInfo);
   return instanceStorage;
 }

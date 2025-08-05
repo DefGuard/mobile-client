@@ -18,7 +18,9 @@ List<RouteBase> get $appRoutes => [
   $openIdMfaScreenRoute,
   $openIdMfaWaitingScreenRoute,
   $mfaCodeScreenRoute,
-  $registerMobileAuthScreenRoute,
+  $biometrySetupScreenRoute,
+  $biometrySetupFailedScreenRoute,
+  $biometryFinishScreenRoute,
 ];
 
 RouteBase get $homeScreenRoute =>
@@ -338,23 +340,75 @@ mixin _$MfaCodeScreenRoute on GoRouteData {
       context.replace(location, extra: _self.$extra);
 }
 
-RouteBase get $registerMobileAuthScreenRoute => GoRouteData.$route(
-  path: '/register_mobile_auth/:id',
+RouteBase get $biometrySetupScreenRoute => GoRouteData.$route(
+  path: '/biometry_setup/:id',
 
-  factory: _$RegisterMobileAuthScreenRoute._fromState,
+  factory: _$BiometrySetupScreenRoute._fromState,
 );
 
-mixin _$RegisterMobileAuthScreenRoute on GoRouteData {
-  static RegisterMobileAuthScreenRoute _fromState(GoRouterState state) =>
-      RegisterMobileAuthScreenRoute(id: state.pathParameters['id']!);
+mixin _$BiometrySetupScreenRoute on GoRouteData {
+  static BiometrySetupScreenRoute _fromState(GoRouterState state) =>
+      BiometrySetupScreenRoute(id: state.pathParameters['id']!);
 
-  RegisterMobileAuthScreenRoute get _self =>
-      this as RegisterMobileAuthScreenRoute;
+  BiometrySetupScreenRoute get _self => this as BiometrySetupScreenRoute;
 
   @override
-  String get location => GoRouteData.$location(
-    '/register_mobile_auth/${Uri.encodeComponent(_self.id)}',
-  );
+  String get location =>
+      GoRouteData.$location('/biometry_setup/${Uri.encodeComponent(_self.id)}');
+
+  @override
+  void go(BuildContext context) => context.go(location);
+
+  @override
+  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
+
+  @override
+  void pushReplacement(BuildContext context) =>
+      context.pushReplacement(location);
+
+  @override
+  void replace(BuildContext context) => context.replace(location);
+}
+
+RouteBase get $biometrySetupFailedScreenRoute => GoRouteData.$route(
+  path: '/biometry_failed',
+
+  factory: _$BiometrySetupFailedScreenRoute._fromState,
+);
+
+mixin _$BiometrySetupFailedScreenRoute on GoRouteData {
+  static BiometrySetupFailedScreenRoute _fromState(GoRouterState state) =>
+      const BiometrySetupFailedScreenRoute();
+
+  @override
+  String get location => GoRouteData.$location('/biometry_failed');
+
+  @override
+  void go(BuildContext context) => context.go(location);
+
+  @override
+  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
+
+  @override
+  void pushReplacement(BuildContext context) =>
+      context.pushReplacement(location);
+
+  @override
+  void replace(BuildContext context) => context.replace(location);
+}
+
+RouteBase get $biometryFinishScreenRoute => GoRouteData.$route(
+  path: '/biometry_finish',
+
+  factory: _$BiometryFinishScreenRoute._fromState,
+);
+
+mixin _$BiometryFinishScreenRoute on GoRouteData {
+  static BiometryFinishScreenRoute _fromState(GoRouterState state) =>
+      const BiometryFinishScreenRoute();
+
+  @override
+  String get location => GoRouteData.$location('/biometry_finish');
 
   @override
   void go(BuildContext context) => context.go(location);

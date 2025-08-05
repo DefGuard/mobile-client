@@ -3,9 +3,11 @@ import 'package:go_router/go_router.dart';
 import 'package:mobile/data/proxy/qr_register.dart';
 import 'package:mobile/open/screens/add_instance/add_instance_screen.dart';
 import 'package:mobile/open/screens/add_instance/screens/add_instance_form.dart';
+import 'package:mobile/open/screens/add_instance/screens/biometry/biometry_finish_screen.dart';
+import 'package:mobile/open/screens/add_instance/screens/biometry/biometry_setup_failed_screen.dart';
+import 'package:mobile/open/screens/add_instance/screens/biometry/biometry_setup_screen.dart';
 import 'package:mobile/open/screens/add_instance/screens/name_device_screen.dart';
 import 'package:mobile/open/screens/add_instance/screens/register_from_qr_screen.dart';
-import 'package:mobile/open/screens/add_instance/screens/register_mobile_auth.dart';
 import 'package:mobile/open/screens/add_instance/screens/scan_qr_screen.dart';
 import 'package:mobile/open/screens/home/home_screen.dart';
 import 'package:mobile/open/screens/instance/instance_screen.dart';
@@ -148,16 +150,40 @@ class MfaCodeScreenRoute extends GoRouteData with _$MfaCodeScreenRoute {
   }
 }
 
-@TypedGoRoute<RegisterMobileAuthScreenRoute>(path: "/register_mobile_auth/:id")
+@TypedGoRoute<BiometrySetupScreenRoute>(path: "/biometry_setup/:id")
 @immutable
-class RegisterMobileAuthScreenRoute extends GoRouteData
-    with _$RegisterMobileAuthScreenRoute {
+class BiometrySetupScreenRoute extends GoRouteData
+    with _$BiometrySetupScreenRoute {
   final String id;
 
-  const RegisterMobileAuthScreenRoute({required this.id});
+  const BiometrySetupScreenRoute({required this.id});
 
   @override
   Widget build(BuildContext context, GoRouterState state) {
-    return RegisterMobileAuthScreen(instanceId: int.parse(id));
+    return BiometrySetupScreen(instanceId: int.parse(id));
+  }
+}
+
+@TypedGoRoute<BiometrySetupFailedScreenRoute>(path: "/biometry_failed")
+@immutable
+class BiometrySetupFailedScreenRoute extends GoRouteData
+    with _$BiometrySetupFailedScreenRoute {
+  const BiometrySetupFailedScreenRoute();
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) {
+    return BiometrySetupFailedScreen();
+  }
+}
+
+@TypedGoRoute<BiometryFinishScreenRoute>(path: "/biometry_finish")
+@immutable
+class BiometryFinishScreenRoute extends GoRouteData
+    with _$BiometryFinishScreenRoute {
+  const BiometryFinishScreenRoute();
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) {
+    return BiometryFinishScreen();
   }
 }

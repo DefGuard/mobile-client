@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'register_mobile_auth.dart';
+part of 'biometry_setup_screen.dart';
 
 // **************************************************************************
 // RiverpodGenerator
