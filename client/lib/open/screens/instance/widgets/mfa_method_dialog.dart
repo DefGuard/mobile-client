@@ -18,6 +18,7 @@ import '../../../../../logging.dart';
 enum MfaMethodDialogIntention { connect, save }
 
 class MfaMethodDialog extends HookConsumerWidget {
+  final DefguardInstance instance;
   final Location location;
   final MfaMethodDialogIntention intention;
 
@@ -25,6 +26,7 @@ class MfaMethodDialog extends HookConsumerWidget {
     super.key,
     required this.location,
     required this.intention,
+    required this.instance,
   });
 
   String _getSubmitText() {
@@ -95,13 +97,14 @@ class MfaMethodDialog extends HookConsumerWidget {
                   selectedMethod.value = MfaMethod.totp;
                 },
               ),
-              DgRadioBox(
-                text: "Biometric",
-                active: selectedMethod.value == MfaMethod.biometric,
-                onTap: () {
-                  selectedMethod.value = MfaMethod.biometric;
-                },
-              ),
+              if (instance.mfaKeysStored)
+                DgRadioBox(
+                  text: "Biometric",
+                  active: selectedMethod.value == MfaMethod.biometric,
+                  onTap: () {
+                    selectedMethod.value = MfaMethod.biometric;
+                  },
+                ),
               DgSeparator(),
               if (intention != MfaMethodDialogIntention.save)
                 DgCheckbox(

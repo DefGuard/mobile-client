@@ -81,6 +81,7 @@ class TunnelService {
           final userSelection = await _showDialog<MfaMethod?>(
             navigator: navigator,
             builder: (_) => MfaMethodDialog(
+              instance: instance,
               location: location,
               intention: MfaMethodDialogIntention.connect,
             ),
