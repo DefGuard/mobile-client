@@ -11,6 +11,7 @@ import 'package:mobile/open/screens/instance/widgets/mfa_method_dialog.dart';
 import 'package:mobile/open/screens/instance/widgets/routing_method_dialog.dart';
 import 'package:mobile/open/widgets/dg_snackbar.dart';
 import 'package:mobile/theme/color.dart';
+import 'package:mobile/utils/secure_storage.dart';
 import 'dart:convert';
 
 import '../../../../data/db/enums.dart';
@@ -100,6 +101,7 @@ class TunnelService {
         proxyUrl: instance.proxyUrl,
         payload: payload,
         method: mfaMethod,
+        secureStorageKey: instance.secureStorageKey
       );
       if (presharedKey == null) {
         // user dismissed the dialog
@@ -127,6 +129,7 @@ class TunnelService {
     required String proxyUrl,
     required PluginConnectPayload payload,
     required MfaMethod method,
+    String? secureStorageKey,
   }) async {
     // prepare messenger to avoid "context use across async gaps"
     final messenger = ScaffoldMessenger.of(navigator.context);
@@ -146,15 +149,38 @@ class TunnelService {
           proxyUrl: proxyUrl,
           method: method,
         );
-      } else {
-        // perform non-openid-based MFA
-        return await _handleCodeInput(
-          navigator: navigator,
-          token: startMfaResponse.token,
-          proxyUrl: proxyUrl,
-          method: method,
-        );
       }
+      if (method == MfaMethod.biometric) {
+        if (startMfaResponse.challenge == null) {
+          throw "Challenge not found in start response";
+        }
+        if (secureStorageKey == null) {
+          throw "Storage key not provided";
+        }
+        final secureStorage = await getBiometricInstanceStorage(
+          secureStorageKey,
+        );
+        final signed = signChallenge(
+          startMfaResponse.challenge!,
+          secureStorage.privateKey,
+        );
+        final finishData = FinishMfaRequest(
+          token: startMfaResponse.token,
+          code: signed,
+        );
+        final response = await proxyApi.finishMfa(
+          Uri.parse(proxyUrl),
+          finishData,
+        );
+        return response.presharedKey;
+      }
+      // perform email or totp MFA
+      return await _handleCodeInput(
+        navigator: navigator,
+        token: startMfaResponse.token,
+        proxyUrl: proxyUrl,
+        method: method,
+      );
     } on MfaMethodNotAvailableException catch (e) {
       final methodString = e.method.toReadableString();
       talker.error(

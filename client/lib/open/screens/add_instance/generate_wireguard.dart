@@ -1,15 +1,16 @@
 import 'dart:convert';
 
-import 'package:cryptography_plus/cryptography_plus.dart';
 import 'package:mobile/data/proxy/enrollment.dart';
+import 'package:x25519/x25519.dart' as x;
+
 
 Future<WireguardEncodedKeyPair> generateWireguardKeyPair() async {
-  final algorithm = X25519();
-  final keyPair = await algorithm.newKeyPair();
-  final privateKeyBytes = await keyPair.extractPrivateKeyBytes();
-  final publicKey = await keyPair.extractPublicKey();
-  final encodedPriv = base64Encode(privateKeyBytes);
-  final encodedPublic = base64Encode(publicKey.bytes);
+  final keyPair = x.generateKeyPair();
+  final encodedPriv = base64Encode(keyPair.privateKey);
+  final encodedPub = base64Encode(keyPair.publicKey);
 
-  return WireguardEncodedKeyPair(privKey: encodedPriv, pubKey: encodedPublic);
+  return WireguardEncodedKeyPair(
+    privKey: encodedPriv,
+    pubKey: encodedPub,
+  );
 }

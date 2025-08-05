@@ -459,3 +459,31 @@ Map<String, dynamic> _$WireguardEncodedKeyPairToJson(
   'pub_key': instance.pubKey,
   'priv_key': instance.privKey,
 };
+
+RegisterMobileAuth _$RegisterMobileAuthFromJson(Map<String, dynamic> json) =>
+    $checkedCreate(
+      'RegisterMobileAuth',
+      json,
+      ($checkedConvert) {
+        final val = RegisterMobileAuth(
+          authPubKey: $checkedConvert('auth_pub_key', (v) => v as String),
+          devicePubKey: $checkedConvert('device_pub_key', (v) => v as String),
+        );
+        return val;
+      },
+      fieldKeyMap: const {
+        'authPubKey': 'auth_pub_key',
+        'devicePubKey': 'device_pub_key',
+      },
+    );
+
+const _$RegisterMobileAuthFieldMap = <String, String>{
+  'authPubKey': 'auth_pub_key',
+  'devicePubKey': 'device_pub_key',
+};
+
+Map<String, dynamic> _$RegisterMobileAuthToJson(RegisterMobileAuth instance) =>
+    <String, dynamic>{
+      'auth_pub_key': instance.authPubKey,
+      'device_pub_key': instance.devicePubKey,
+    };

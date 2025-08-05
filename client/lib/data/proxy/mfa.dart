@@ -24,13 +24,14 @@ class StartMfaRequest {
 @JsonSerializable()
 class StartMfaResponse {
   final String token;
+  final String? challenge;
 
   factory StartMfaResponse.fromJson(Map<String, dynamic> json) =>
       _$StartMfaResponseFromJson(json);
 
   Map<String, dynamic> toJson() => _$StartMfaResponseToJson(this);
 
-  const StartMfaResponse({required this.token});
+  const StartMfaResponse({required this.token, required this.challenge});
 }
 
 @JsonSerializable()
@@ -38,10 +39,7 @@ class FinishMfaRequest {
   final String token;
   final String? code;
 
-  const FinishMfaRequest({
-    required this.token,
-    this.code,
-  });
+  const FinishMfaRequest({required this.token, this.code});
 
   factory FinishMfaRequest.fromJson(Map<String, dynamic> json) =>
       _$FinishMfaRequestFromJson(json);
@@ -59,4 +57,20 @@ class FinishMfaResponse {
   Map<String, dynamic> toJson() => _$FinishMfaResponseToJson(this);
 
   const FinishMfaResponse({required this.presharedKey});
+}
+
+@JsonSerializable()
+class SecureInstanceStorage {
+  final String privateKey;
+  final String publicKey;
+
+  factory SecureInstanceStorage.fromJson(Map<String, dynamic> json) =>
+      _$SecureInstanceStorageFromJson(json);
+
+  Map<String, dynamic> toJson() => _$SecureInstanceStorageToJson(this);
+
+  const SecureInstanceStorage({
+    required this.privateKey,
+    required this.publicKey,
+  });
 }

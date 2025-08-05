@@ -51,5 +51,7 @@
 	<string>Your camera is used to scan QR codes making it easy to add new VPN instances.</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
+	<key>NSFaceIDUsageDescription</key>
+	<string>Face ID can be used to authenticate a VPN connection.</string>
 </dict>
 </plist>

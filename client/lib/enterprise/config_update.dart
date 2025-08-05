@@ -39,7 +39,7 @@ class ConfigurationUpdater extends HookConsumerWidget {
             "Auto configuration update started for ${instance.name} (${instance.id})",
           );
           final (responseData, responseStatus) = await proxyApi
-              .pollConfiguration(instance.proxyUrl, instance.token);
+              .pollConfiguration(instance.proxyUrl, instance.poolingToken);
           // instance lost it's enterprise status
           if (responseStatus == 402) {
             instance.copyWith(

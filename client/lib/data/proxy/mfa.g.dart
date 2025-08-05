@@ -36,20 +36,25 @@ const _$MfaMethodEnumMap = {
   MfaMethod.totp: 0,
   MfaMethod.email: 1,
   MfaMethod.openid: 2,
+  MfaMethod.biometric: 3,
 };
 
 StartMfaResponse _$StartMfaResponseFromJson(Map<String, dynamic> json) =>
     $checkedCreate('StartMfaResponse', json, ($checkedConvert) {
       final val = StartMfaResponse(
         token: $checkedConvert('token', (v) => v as String),
+        challenge: $checkedConvert('challenge', (v) => v as String?),
       );
       return val;
     });
 
-const _$StartMfaResponseFieldMap = <String, String>{'token': 'token'};
+const _$StartMfaResponseFieldMap = <String, String>{
+  'token': 'token',
+  'challenge': 'challenge',
+};
 
 Map<String, dynamic> _$StartMfaResponseToJson(StartMfaResponse instance) =>
-    <String, dynamic>{'token': instance.token};
+    <String, dynamic>{'token': instance.token, 'challenge': instance.challenge};
 
 FinishMfaRequest _$FinishMfaRequestFromJson(Map<String, dynamic> json) =>
     $checkedCreate('FinishMfaRequest', json, ($checkedConvert) {
@@ -82,3 +87,30 @@ const _$FinishMfaResponseFieldMap = <String, String>{
 
 Map<String, dynamic> _$FinishMfaResponseToJson(FinishMfaResponse instance) =>
     <String, dynamic>{'preshared_key': instance.presharedKey};
+
+SecureInstanceStorage _$SecureInstanceStorageFromJson(
+  Map<String, dynamic> json,
+) => $checkedCreate(
+  'SecureInstanceStorage',
+  json,
+  ($checkedConvert) {
+    final val = SecureInstanceStorage(
+      privateKey: $checkedConvert('private_key', (v) => v as String),
+      publicKey: $checkedConvert('public_key', (v) => v as String),
+    );
+    return val;
+  },
+  fieldKeyMap: const {'privateKey': 'private_key', 'publicKey': 'public_key'},
+);
+
+const _$SecureInstanceStorageFieldMap = <String, String>{
+  'privateKey': 'private_key',
+  'publicKey': 'public_key',
+};
+
+Map<String, dynamic> _$SecureInstanceStorageToJson(
+  SecureInstanceStorage instance,
+) => <String, dynamic>{
+  'private_key': instance.privateKey,
+  'public_key': instance.publicKey,
+};

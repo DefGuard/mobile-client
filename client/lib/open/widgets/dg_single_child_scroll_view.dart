@@ -29,7 +29,7 @@ class DgSingleChildScrollView extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constrains) {
         return SingleChildScrollView(
-          padding: padding,
+          padding: getPadding(context),
           child: ConstrainedBox(
             constraints: BoxConstraints(
               minHeight: constrains.maxHeight - getPadding(context).vertical,

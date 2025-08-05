@@ -18,6 +18,7 @@ List<RouteBase> get $appRoutes => [
   $openIdMfaScreenRoute,
   $openIdMfaWaitingScreenRoute,
   $mfaCodeScreenRoute,
+  $registerMobileAuthScreenRoute,
 ];
 
 RouteBase get $homeScreenRoute =>
@@ -335,4 +336,36 @@ mixin _$MfaCodeScreenRoute on GoRouteData {
   @override
   void replace(BuildContext context) =>
       context.replace(location, extra: _self.$extra);
+}
+
+RouteBase get $registerMobileAuthScreenRoute => GoRouteData.$route(
+  path: '/register_mobile_auth/:id',
+
+  factory: _$RegisterMobileAuthScreenRoute._fromState,
+);
+
+mixin _$RegisterMobileAuthScreenRoute on GoRouteData {
+  static RegisterMobileAuthScreenRoute _fromState(GoRouterState state) =>
+      RegisterMobileAuthScreenRoute(id: state.pathParameters['id']!);
+
+  RegisterMobileAuthScreenRoute get _self =>
+      this as RegisterMobileAuthScreenRoute;
+
+  @override
+  String get location => GoRouteData.$location(
+    '/register_mobile_auth/${Uri.encodeComponent(_self.id)}',
+  );
+
+  @override
+  void go(BuildContext context) => context.go(location);
+
+  @override
+  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
+
+  @override
+  void pushReplacement(BuildContext context) =>
+      context.pushReplacement(location);
+
+  @override
+  void replace(BuildContext context) => context.replace(location);
 }
