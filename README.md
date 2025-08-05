@@ -8,11 +8,10 @@ This mobile app is part of the [Defguard](https://defguard.net) ecosystem – a 
 
 ## Features
 
-- Connect and disconnect from WireGuard tunnels
-- MFA-secured access (TOTP)
+- Multi-Factor Authentication with Internal SSO/OIDC (Biometrics, TOTP, Email) or External SSO (Google, Okta, Microsoft EntraID, JumpCloud, ...)
 - Easy QR-based onboarding (or via url and tokens)
-- Traffic Routing (All Traffic or just predefined)
-- Synchronization configuration with Defguard server
+- Traffic Routing (All Traffic via VPN or just predefined routing)
+- Real-time synchronization of configuration with Defguard server
 - Cross-platform support (iOS & Android)
 
 ## Screenshots
