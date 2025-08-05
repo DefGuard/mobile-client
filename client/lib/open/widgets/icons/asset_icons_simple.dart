@@ -62,3 +62,21 @@ class DgIconCheckmark extends DgIcon {
     super.color = DgColor.iconSecondary,
   });
 }
+
+class DgIconPasskeyFace extends DgIcon {
+  const DgIconPasskeyFace({
+    super.key,
+    super.size = 60,
+    super.asset = "$_defaultPath/passkey-face.svg",
+    super.color = DgColor.mainPrimary,
+  });
+}
+
+class DgIconPasskeyFingerprint extends DgIcon {
+  const DgIconPasskeyFingerprint({
+    super.key,
+    super.size = 60,
+    super.asset = "$_defaultPath/passkey-fingerprint.svg",
+    super.color = DgColor.mainPrimary,
+  });
+}

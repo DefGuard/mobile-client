@@ -156,7 +156,7 @@ class NameDeviceScreen extends HookConsumerWidget {
                           ),
                         );
                         if (context.mounted) {
-                          RegisterMobileAuthScreenRoute(
+                          BiometrySetupScreenRoute(
                             id: instance.id.toString(),
                           ).go(context);
                         }

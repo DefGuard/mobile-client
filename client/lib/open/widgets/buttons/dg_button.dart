@@ -182,7 +182,7 @@ class DgButton extends StatelessWidget {
 
       switch (size) {
         case DgButtonSize.big:
-          progressSize = 32;
+          progressSize = 22;
           break;
         case DgButtonSize.standard || DgButtonSize.small:
           progressSize = 18;
@@ -214,7 +214,7 @@ class DgButton extends StatelessWidget {
     if (minWidth != null) {
       return BoxConstraints(minWidth: minWidth!, minHeight: height);
     }
-    return null;
+    return BoxConstraints(minHeight: height);
   }
 
   @override

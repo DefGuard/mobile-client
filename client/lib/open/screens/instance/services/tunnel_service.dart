@@ -101,7 +101,7 @@ class TunnelService {
         proxyUrl: instance.proxyUrl,
         payload: payload,
         method: mfaMethod,
-        secureStorageKey: instance.secureStorageKey
+        secureStorageKey: instance.secureStorageKey,
       );
       if (presharedKey == null) {
         // user dismissed the dialog
@@ -159,6 +159,7 @@ class TunnelService {
         }
         final secureStorage = await getBiometricInstanceStorage(
           secureStorageKey,
+          prompt: "Confirm to connect",
         );
         final signed = signChallenge(
           startMfaResponse.challenge!,
