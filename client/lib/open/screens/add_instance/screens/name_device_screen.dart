@@ -148,20 +148,17 @@ class NameDeviceScreen extends HookConsumerWidget {
                           db,
                           nameController.text.trim(),
                         );
-                        messenger.showSnackBar(
-                          dgSnackBar(
-                            text:
-                                "Instance ${instance.name} registered successfully.",
-                            customDuration: Duration(seconds: 5),
-                          ),
-                        );
                         if (context.mounted) {
                           BiometrySetupScreenRoute(
                             id: instance.id.toString(),
                           ).go(context);
                         }
                       } catch (e) {
-                        debugPrint("Registration failed, Reason:\n$e");
+                        messenger.showSnackBar(
+                          dgSnackBar(
+                            text: "Something went wrong. Please try again.",
+                          ),
+                        );
                       } finally {
                         isLoading.value = false;
                       }
