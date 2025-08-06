@@ -22,13 +22,14 @@ part 'biometry_setup_screen.g.dart';
 
 const String title = "Enable Biometric Authentication";
 
-const String message = r"""
+const String message1 = r"""
 Do you want to enable biometrics as a Multi-Factor Authentication (MFA) method when connecting to locations that require MFA?
 
 If you enable biometrics, by default, all locations requiring internal Defguard MFA will prompt you to authenticate using your device’s biometric method during connection.
-
-If you skip this step, you will need to use other MFA methods configured in your user profile (such as TOTP/Authenticator app or email codes).
 """;
+
+const String message2 =
+    "\nIf you skip this step, you will need to use other MFA methods configured in your user profile (such as TOTP/Authenticator app or email codes).";
 
 class BiometrySetupScreen extends StatelessWidget {
   final int instanceId;
@@ -132,9 +133,24 @@ class _ScreenContent extends HookConsumerWidget {
               ),
             ),
             BiometrySetupBanner(),
-            Text(
-              message,
-              style: DgText.body2.copyWith(color: DgColor.textBodySecondary),
+            RichText(
+              text: TextSpan(
+                children: [
+                  TextSpan(
+                    text: message1,
+                    style: DgText.body2.copyWith(
+                      color: DgColor.textBodySecondary,
+                    ),
+                  ),
+                  TextSpan(
+                    text: message2,
+                    style: DgText.body2.copyWith(
+                      color: DgColor.textBodySecondary,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
             ),
             Row(
               spacing: DgSpacing.m,
