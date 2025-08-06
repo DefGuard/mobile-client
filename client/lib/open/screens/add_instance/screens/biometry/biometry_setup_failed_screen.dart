@@ -5,6 +5,7 @@ import 'package:mobile/open/widgets/navigation/dg_scaffold.dart';
 import 'package:mobile/router/routes.dart';
 import 'package:mobile/theme/spacing.dart';
 
+import '../../../../../theme/color.dart';
 import '../../../../../theme/text.dart';
 
 class BiometrySetupFailedScreen extends StatelessWidget {
@@ -34,6 +35,8 @@ class BiometrySetupFailedScreen extends StatelessWidget {
             ),
             Text(
               "We couldn't enable biometric authentication. Please try again.",
+              style: DgText.body2.copyWith(color: DgColor.textBodySecondary),
+              textAlign: TextAlign.center,
             ),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
