@@ -41,7 +41,7 @@ class MfaMethodDialog extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final db = ref.read(databaseProvider);
-    final selectedMethod = useState(location.mfaMethod ?? MfaMethod.email);
+    final selectedMethod = useState(location.mfaMethod ?? MfaMethod.biometric);
     final shouldRemember = useState(true);
     final isLoading = useState(false);
 
@@ -83,20 +83,6 @@ class MfaMethodDialog extends HookConsumerWidget {
             mainAxisSize: MainAxisSize.min,
             spacing: DgSpacing.s,
             children: [
-              DgRadioBox(
-                text: "Email",
-                active: selectedMethod.value == MfaMethod.email,
-                onTap: () {
-                  selectedMethod.value = MfaMethod.email;
-                },
-              ),
-              DgRadioBox(
-                text: "Authenticator App",
-                active: selectedMethod.value == MfaMethod.totp,
-                onTap: () {
-                  selectedMethod.value = MfaMethod.totp;
-                },
-              ),
               if (instance.mfaKeysStored)
                 DgRadioBox(
                   text: "Biometric",
@@ -105,6 +91,20 @@ class MfaMethodDialog extends HookConsumerWidget {
                     selectedMethod.value = MfaMethod.biometric;
                   },
                 ),
+              DgRadioBox(
+                text: "Authenticator App",
+                active: selectedMethod.value == MfaMethod.totp,
+                onTap: () {
+                  selectedMethod.value = MfaMethod.totp;
+                },
+              ),
+              DgRadioBox(
+                text: "Email",
+                active: selectedMethod.value == MfaMethod.email,
+                onTap: () {
+                  selectedMethod.value = MfaMethod.email;
+                },
+              ),
               DgSeparator(),
               if (intention != MfaMethodDialogIntention.save)
                 DgCheckbox(
