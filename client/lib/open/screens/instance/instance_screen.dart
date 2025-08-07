@@ -84,8 +84,12 @@ class InstanceScreen extends HookConsumerWidget {
           data: (screenData) {
             if (screenData == null) {
               talker.debug("Instance $id not found id DB, redirecting.");
-              HomeScreenRoute().go(context);
-              return null;
+              Future.microtask(() {
+                if (context.mounted) {
+                  HomeScreenRoute().go(context);
+                }
+              });
+              return const SizedBox();
             }
             if (screenData.instance.enterpriseEnabled) {
               return _PullWrapper(
