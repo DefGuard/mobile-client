@@ -362,20 +362,21 @@ class _LocationItem extends HookConsumerWidget {
               );
             },
           ),
-        DgMenuItem(
-          text: "Select Traffic Routing",
-          onTap: () {
-            showDialog(
-              context: context,
-              builder: (_) => RoutingMethodDialog(
-                location: location,
-                intention: RoutingMethodDialogIntention.save,
-              ),
-            );
-          },
-        ),
+        if (!instance.disableAllTraffic)
+          DgMenuItem(
+            text: "Select Traffic Routing",
+            onTap: () {
+              showDialog(
+                context: context,
+                builder: (_) => RoutingMethodDialog(
+                  location: location,
+                  intention: RoutingMethodDialogIntention.save,
+                ),
+              );
+            },
+          ),
       ];
-    }, [location]);
+    }, [location, instance]);
 
     final disconnect = useCallback<Future<bool> Function()>(() async {
       try {
