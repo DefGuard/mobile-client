@@ -5,7 +5,6 @@ import 'package:mobile/open/widgets/buttons/dg_button.dart';
 import 'package:mobile/open/widgets/dg_dialog.dart';
 import 'package:mobile/open/widgets/dg_snackbar.dart';
 import 'package:mobile/open/widgets/icons/asset_icons_simple.dart';
-import 'package:mobile/router/routes.dart';
 import 'package:mobile/theme/text.dart';
 
 
@@ -28,7 +27,7 @@ class DeleteInstanceDialog extends HookConsumerWidget {
           .delete();
       if (context.mounted) {
         messenger.showSnackBar(dgSnackBar(text: "Instance deleted"));
-        HomeScreenRoute().go(context);
+        Navigator.of(context).pop();
       }
     }
 
