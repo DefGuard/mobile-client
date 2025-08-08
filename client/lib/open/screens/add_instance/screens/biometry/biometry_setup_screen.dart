@@ -1,3 +1,4 @@
+import 'package:biometric_storage/biometric_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -31,6 +32,9 @@ If you enable biometrics, by default, all locations requiring internal Defguard 
 const String message2 =
     "\nIf you skip this step, you will need to use other MFA methods configured in your user profile (such as TOTP/Authenticator app or email codes).";
 
+const String message3 =
+    "Biometry is not available on the system please add it and return to this screen or you can skip it.";
+
 class BiometrySetupScreen extends StatelessWidget {
   final int instanceId;
 
@@ -63,6 +67,8 @@ class _ScreenContent extends HookConsumerWidget {
     final db = ref.read(databaseProvider);
     final instanceFuture = ref.watch(_screenDataProvider(instanceId));
     final isLoading = useState(false);
+    final biometryEnabled = useState(false);
+    final lifecycle = useAppLifecycleState();
 
     final handleRegister = useCallback((DefguardInstance instance) async {
       isLoading.value = true;
@@ -99,6 +105,17 @@ class _ScreenContent extends HookConsumerWidget {
         isLoading.value = false;
       }
     }, [context, isLoading, db]);
+
+    final handleBiometryCheck = useCallback(() async {
+      final status = await BiometricStorage().canAuthenticate();
+      talker.debug(status);
+      biometryEnabled.value = status == CanAuthenticateResponse.success;
+    }, []);
+
+    useEffect(() {
+      handleBiometryCheck();
+      return null;
+    }, [lifecycle]);
 
     return instanceFuture.when(
       loading: () => LoadingView(),
@@ -152,6 +169,11 @@ class _ScreenContent extends HookConsumerWidget {
                 ],
               ),
             ),
+            if (!biometryEnabled.value)
+              Text(
+                message3,
+                style: DgText.body2.copyWith(color: DgColor.textAlert),
+              ),
             Row(
               spacing: DgSpacing.m,
               mainAxisSize: MainAxisSize.max,
@@ -176,6 +198,7 @@ class _ScreenContent extends HookConsumerWidget {
                   fit: FlexFit.tight,
                   child: DgButton(
                     text: "Yes",
+                    disabled: !biometryEnabled.value,
                     loading: isLoading.value,
                     size: DgButtonSize.big,
                     variant: DgButtonVariant.primary,

@@ -1,3 +1,4 @@
+import 'package:biometric_storage/biometric_storage.dart';
 import 'package:drift/drift.dart' as drift;
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
@@ -44,6 +45,17 @@ class MfaMethodDialog extends HookConsumerWidget {
     final selectedMethod = useState(location.mfaMethod ?? MfaMethod.biometric);
     final shouldRemember = useState(true);
     final isLoading = useState(false);
+    final biometryEnabled = useState(false);
+    final lifecycle = useAppLifecycleState();
+
+    final checkBiometry = useCallback(() async {
+      final status = await BiometricStorage().canAuthenticate();
+      biometryEnabled.value = status == CanAuthenticateResponse.success;
+      if (status != CanAuthenticateResponse.success &&
+          selectedMethod.value == MfaMethod.biometric) {
+        selectedMethod.value = MfaMethod.totp;
+      }
+    }, []);
 
     final remember = useCallback((MfaMethod method) async {
       try {
@@ -60,6 +72,11 @@ class MfaMethodDialog extends HookConsumerWidget {
         );
       }
     }, [db]);
+
+    useEffect(() {
+      checkBiometry();
+      return null;
+    }, [lifecycle]);
 
     return DgDialog(
       child: Column(
@@ -83,7 +100,7 @@ class MfaMethodDialog extends HookConsumerWidget {
             mainAxisSize: MainAxisSize.min,
             spacing: DgSpacing.s,
             children: [
-              if (instance.mfaKeysStored)
+              if (instance.mfaKeysStored && biometryEnabled.value)
                 DgRadioBox(
                   text: "Biometric",
                   active: selectedMethod.value == MfaMethod.biometric,

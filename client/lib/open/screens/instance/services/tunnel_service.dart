@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:biometric_storage/biometric_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:mobile/data/db/database.dart';
 import 'package:mobile/data/proxy/mfa.dart';
@@ -76,8 +77,12 @@ class TunnelService {
         // location setup for openid mfa login
         mfaMethod = MfaMethod.openid;
       } else {
+        final canUseBiometry =
+            await BiometricStorage().canAuthenticate() ==
+            CanAuthenticateResponse.success;
         // non-openid mfa setup, use stored method or show method choice dialog
-        if (location.mfaMethod == null) {
+        if (location.mfaMethod == null ||
+            (location.mfaMethod == MfaMethod.biometric && !canUseBiometry)) {
           final userSelection = await _showDialog<MfaMethod?>(
             navigator: navigator,
             builder: (_) => MfaMethodDialog(
