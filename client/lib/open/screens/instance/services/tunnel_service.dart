@@ -206,6 +206,9 @@ class TunnelService {
       return null;
     } catch (e) {
       talker.error("MFA flow error: $e");
+      messenger.showSnackBar(
+        dgSnackBar(text: "Error: $e", textColor: DgColor.textAlert),
+      );
       return null;
     }
   }

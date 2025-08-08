@@ -18,21 +18,63 @@ class ScanInstanceQrScreen extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final lifecycle = useAppLifecycleState();
+    final scannerController = useMemoized(
+      () => MobileScannerController(
+        autoStart: false,
+        detectionSpeed: DetectionSpeed.noDuplicates,
+        detectionTimeoutMs: 250,
+        formats: [BarcodeFormat.qrCode],
+      ),
+      [],
+    );
     final controller = useMemoized(
       () => StreamController<QrInstanceRegistration>.broadcast(),
     );
     final controllerRef = useRef(controller);
 
-    useEffect(() {
-      final sub = controllerRef.value.stream.take(1).listen((data) {
+    final handleSuccessScan = useCallback((QrInstanceRegistration data) async {
+      await scannerController.stop();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
         if (context.mounted) {
           RegisterFromQrScreenRoute(data).push(context);
         }
       });
+    }, [scannerController, context]);
 
+    useEffect(() {
+      final sub = controllerRef.value.stream.take(1).listen((data) {
+        handleSuccessScan(data);
+      });
       return () {
         sub.cancel();
+      };
+    } , [handleSuccessScan]);
+
+    useEffect(() {
+      print(lifecycle);
+      if (lifecycle != null) {
+        switch (lifecycle) {
+          case AppLifecycleState.resumed:
+            if(!scannerController.value.isRunning && !scannerController.value.isStarting) {
+              unawaited(scannerController.start());
+            }
+            break;
+          case AppLifecycleState.inactive:
+            if(scannerController.value.isRunning) {
+              unawaited(scannerController.stop());
+            }
+            break;
+          default:
+        }
+      }
+      return null;
+    }, [lifecycle]);
+
+    useEffect(() {
+      return () {
         controllerRef.value.close();
+        scannerController.dispose();
       };
     }, []);
 
@@ -45,6 +87,7 @@ class ScanInstanceQrScreen extends HookConsumerWidget {
           child: Stack(
             children: [
               MobileScanner(
+                controller: scannerController,
                 onDetectError: (err, trace) {
                   talker.error("Mobile scanner widget failed !", err, trace);
                 },

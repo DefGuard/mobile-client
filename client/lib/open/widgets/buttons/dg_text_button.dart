@@ -39,7 +39,7 @@ class DgTextButton extends StatelessWidget {
           child: Text(
             text,
             textAlign: TextAlign.center,
-            style: textStyle.copyWith(decoration: TextDecoration.underline),
+            style: textStyle.copyWith(decoration: TextDecoration.underline, decorationColor: textStyle.color),
           ),
         ),
       ),

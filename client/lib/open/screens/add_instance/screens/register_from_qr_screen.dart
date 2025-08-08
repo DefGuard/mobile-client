@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -7,6 +9,7 @@ import 'package:mobile/data/proxy/qr_register.dart';
 import 'package:mobile/logging.dart';
 import 'package:mobile/open/api.dart';
 import 'package:mobile/open/screens/add_instance/screens/name_device_screen.dart';
+import 'package:mobile/open/widgets/buttons/dg_text_button.dart';
 import 'package:mobile/open/widgets/circular_progress.dart';
 import 'package:mobile/open/widgets/dg_snackbar.dart';
 import 'package:mobile/router/routes.dart';
@@ -25,7 +28,7 @@ class RegisterFromQrScreen extends HookConsumerWidget {
     final requestData = EnrollmentStartRequest(
       token: instanceRegistration.token,
     );
-    debugPrint(
+    talker.debug(
       "Start Enrollment request data:\ntoken:${instanceRegistration.token}\nurl:${instanceRegistration.url.toString()}",
     );
     try {
@@ -44,29 +47,35 @@ class RegisterFromQrScreen extends HookConsumerWidget {
             textColor: DgColor.textAlert,
           ),
         );
-        if (context.mounted) {
-          HomeScreenRoute().go(context);
-          return;
-        }
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (context.mounted) {
+            HomeScreenRoute().go(context);
+            return;
+          }
+        });
       }
       final NameDeviceScreenData routeData = NameDeviceScreenData(
         proxyUrl: url,
         startResponse: registrationResponse,
       );
-      if (context.mounted) {
-        NameDeviceScreenRoute(routeData).push(context);
-      }
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (context.mounted) {
+          NameDeviceScreenRoute(routeData).push(context);
+        }
+      });
     } catch (e) {
       talker.error("Enrollment via QR start failed !", e);
-      if (context.mounted) {
-        messenger.showSnackBar(
-          dgSnackBar(
-            text: "Something went wrong. Try again.",
-            textColor: DgColor.textAlert,
-          ),
-        );
-        Navigator.pop(context);
-      }
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (context.mounted) {
+          messenger.showSnackBar(
+            dgSnackBar(
+              text: "Something went wrong. Try again.",
+              textColor: DgColor.textAlert,
+            ),
+          );
+          AddInstanceScreenRoute().go(context);
+        }
+      });
     }
   }
 
@@ -75,9 +84,12 @@ class RegisterFromQrScreen extends HookConsumerWidget {
     final db = ref.read(databaseProvider);
 
     useEffect(() {
-      _handleRegistration(context, db);
+      if (!context.mounted) return null;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        unawaited(_handleRegistration(context, db));
+      });
       return null;
-    }, [db]);
+    }, []);
 
     return Container(
       color: DgColor.mainPrimary,
@@ -95,6 +107,15 @@ class RegisterFromQrScreen extends HookConsumerWidget {
               ),
             ),
             DgCircularProgress(color: DgColor.iconSecondary),
+            DgTextButton(
+              onTap: () {
+                AddInstanceScreenRoute().go(context);
+              },
+              text: "Cancel",
+              textStyle: DgText.buttonS.copyWith(
+                color: DgColor.textButtonSecondary,
+              ),
+            ),
           ],
         ),
       ),

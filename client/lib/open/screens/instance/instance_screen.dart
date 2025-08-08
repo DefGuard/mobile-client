@@ -491,6 +491,7 @@ class _LocationItem extends HookConsumerWidget {
                   text: isConnected.value ? "Disconnect" : "Connect",
                   loading: isLoading.value,
                   onTap: () async {
+                    final msg = ScaffoldMessenger.of(context);
                     print("Location traffic pref: ${location.trafficMethod}");
                     isLoading.value = true;
                     // check if there is active tunnel if so ask user if he want to change the active connection
@@ -544,6 +545,12 @@ class _LocationItem extends HookConsumerWidget {
                     } catch (e) {
                       talker.error(
                         "Failed to connect into ${instance.name}-${location.name} ! Reason: $e",
+                      );
+                      msg.showSnackBar(
+                        dgSnackBar(
+                          text: "Failed to connect.",
+                          textColor: DgColor.textAlert,
+                        ),
                       );
                     } finally {
                       isLoading.value = false;
