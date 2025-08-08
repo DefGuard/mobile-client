@@ -29,6 +29,8 @@ import 'package:mobile/theme/text.dart';
 import 'package:mobile/utils/position.dart';
 import 'package:mobile/utils/update_instance.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:rxdart/rxdart.dart';
+import 'package:tuple/tuple.dart';
 
 import '../../../data/db/enums.dart';
 import '../../../logging.dart';
@@ -37,9 +39,14 @@ part 'instance_screen.g.dart';
 
 class _ScreenData {
   final DefguardInstance instance;
+  final int instancesCount;
   final List<Location> locations;
 
-  const _ScreenData({required this.instance, required this.locations});
+  const _ScreenData({
+    required this.instance,
+    required this.locations,
+    required this.instancesCount,
+  });
 }
 
 @riverpod
@@ -52,7 +59,7 @@ Stream<_ScreenData?> _screenData(Ref ref, String id) {
       db.locations.instance.equalsExp(db.defguardInstances.id),
     ),
   ])..where(db.defguardInstances.id.equals(parsedId));
-  return query.watch().map((rows) {
+  final instanceDataStream = query.watch().map((rows) {
     if (rows.isEmpty) {
       return null;
     }
@@ -63,7 +70,19 @@ Stream<_ScreenData?> _screenData(Ref ref, String id) {
         .whereType<Location>()
         .toList();
 
-    return _ScreenData(instance: instance, locations: locations);
+    return Tuple2(instance, locations);
+  });
+  final instancesCountStream = db.defguardInstances.count().watchSingle();
+  return Rx.combineLatest2(instanceDataStream, instancesCountStream, (
+    data,
+    count,
+  ) {
+    if (data == null) return null;
+    return _ScreenData(
+      instance: data.item1,
+      locations: data.item2,
+      instancesCount: count,
+    );
   });
 }
 
@@ -185,19 +204,20 @@ class _ScreenContent extends HookConsumerWidget {
               child: Column(
                 spacing: DgSpacing.m,
                 children: [
-                  DgButton(
-                    width: double.infinity,
-                    variant: DgButtonVariant.secondary,
-                    size: DgButtonSize.standard,
-                    text: "Back to instances list",
-                    icon: DgIconArrowSingle(
-                      size: 18,
-                      direction: DgIconDirection.left,
+                  if (screenData.instancesCount > 1)
+                    DgButton(
+                      width: double.infinity,
+                      variant: DgButtonVariant.secondary,
+                      size: DgButtonSize.standard,
+                      text: "Back to instances list",
+                      icon: DgIconArrowSingle(
+                        size: 18,
+                        direction: DgIconDirection.left,
+                      ),
+                      onTap: () {
+                        HomeScreenRoute().go(context);
+                      },
                     ),
-                    onTap: () {
-                      HomeScreenRoute().go(context);
-                    },
-                  ),
                   SizedBox(
                     width: double.infinity,
                     child: Text(
