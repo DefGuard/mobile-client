@@ -1,8 +1,10 @@
+import 'package:drift/drift.dart' as drift;
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:mobile/data/db/database.dart';
 import 'package:mobile/open/riverpod/package_info/package_info.dart';
 import 'package:mobile/router/routes.dart';
 import 'package:mobile/theme/color.dart';
@@ -28,11 +30,19 @@ class _DrawerItemData {
   const _DrawerItemData({required this.label, required this.route});
 }
 
+final allInstancesProvider = StreamProvider.autoDispose<List<DefguardInstance>>(
+  (ref) {
+    final db = ref.watch(databaseProvider);
+    return db.defguardInstances.all().watch();
+  },
+);
+
 class DgDrawer extends HookConsumerWidget {
   const DgDrawer({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final instancesAsync = ref.watch(allInstancesProvider);
     final router = GoRouter.of(context);
     final RouteMatch lastMatch =
         router.routerDelegate.currentConfiguration.last;
@@ -47,14 +57,22 @@ class DgDrawer extends HookConsumerWidget {
 
     final items = useMemoized<List<_DrawerItemData>>(() {
       return [
-        _DrawerItemData(label: "Instances", route: HomeScreenRoute()),
+        if (instancesAsync.value != null && instancesAsync.value!.length > 1)
+          _DrawerItemData(label: "Instances", route: HomeScreenRoute()),
+        if (instancesAsync.value != null && instancesAsync.value!.length == 1)
+          _DrawerItemData(
+            label: "Locations",
+            route: InstanceScreenRoute(
+              id: instancesAsync.value![0].id.toString(),
+            ),
+          ),
         _DrawerItemData(label: "Add Instance", route: AddInstanceScreenRoute()),
         _DrawerItemData(
           label: "View Application Logs",
           route: TalkerScreenRoute(),
         ),
       ].where((item) => item.route.location != location).toList();
-    }, [location]);
+    }, [location, instancesAsync]);
 
     return Container(
       color: DgColor.navBg,
