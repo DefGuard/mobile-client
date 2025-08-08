@@ -59,7 +59,7 @@ class PluginEventRouter extends StateNotifier<void> {
         notifyMfaSessionExpired();
         break;
       default:
-        talker.error("EventRouter: received $event has no handler !");
+        talker.error("EventRouter: received $event has no handler!");
     }
   }
 

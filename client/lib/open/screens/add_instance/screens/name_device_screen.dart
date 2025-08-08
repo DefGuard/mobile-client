@@ -135,7 +135,7 @@ class NameDeviceScreen extends HookConsumerWidget {
                       if (!formKey.currentState!.validate()) {
                         messenger.showSnackBar(
                           dgSnackBar(
-                            text: "Correct form errors !",
+                            text: "Correct form errors!",
                             customDuration: Duration(seconds: 10),
                           ),
                         );

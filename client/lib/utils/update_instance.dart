@@ -114,7 +114,7 @@ Future<UpdateInstanceResult?> updateInstance({
     talker.debug("Instance ${instance.logName} update transaction finished");
     return result;
   } catch (e) {
-    talker.error("Instance ${instance.logName} update transaction failed !", e);
+    talker.error("Instance ${instance.logName} update transaction failed!", e);
   }
   return null;
 }

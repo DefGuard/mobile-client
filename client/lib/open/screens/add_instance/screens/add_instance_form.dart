@@ -80,7 +80,7 @@ Future<void> _handleSubmit(
       .getSingleOrNull();
   if (dbInstance != null) {
     messenger.showSnackBar(
-      dgSnackBar(text: "Instance is already registered !"),
+      dgSnackBar(text: "Instance is already registered!"),
     );
     return;
   }

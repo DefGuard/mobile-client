@@ -51,7 +51,7 @@ class DgMessageBox extends StatelessWidget {
         backgroundColor = DgColor.infoModal;
       default:
         throw UnimplementedError(
-          "Messagebox variant $variant is unimplemented !",
+          "Messagebox variant $variant is unimplemented!",
         );
     }
     return DgMessageBox._(

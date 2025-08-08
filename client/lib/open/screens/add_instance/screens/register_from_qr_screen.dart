@@ -43,7 +43,7 @@ class RegisterFromQrScreen extends HookConsumerWidget {
       if (dbInstance != null) {
         messenger.showSnackBar(
           dgSnackBar(
-            text: "Instance is already registered !",
+            text: "Instance is already registered!",
             textColor: DgColor.textAlert,
           ),
         );
@@ -64,7 +64,7 @@ class RegisterFromQrScreen extends HookConsumerWidget {
         }
       });
     } catch (e) {
-      talker.error("Enrollment via QR start failed !", e);
+      talker.error("Enrollment via QR start failed!", e);
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (context.mounted) {
           messenger.showSnackBar(

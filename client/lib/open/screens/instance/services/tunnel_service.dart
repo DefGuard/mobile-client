@@ -199,7 +199,7 @@ class TunnelService {
       );
       return null;
     } on HttpException catch (e) {
-      talker.error("Connect MFA failed !", e);
+      talker.error("Connect MFA failed!", e);
       messenger.showSnackBar(
         dgSnackBar(text: "Error: ${e.message}", textColor: DgColor.textAlert),
       );
