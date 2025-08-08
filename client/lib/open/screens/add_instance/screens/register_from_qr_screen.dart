@@ -9,6 +9,7 @@ import 'package:mobile/data/proxy/qr_register.dart';
 import 'package:mobile/logging.dart';
 import 'package:mobile/open/api.dart';
 import 'package:mobile/open/screens/add_instance/screens/name_device_screen.dart';
+import 'package:mobile/open/widgets/buttons/dg_text_button.dart';
 import 'package:mobile/open/widgets/circular_progress.dart';
 import 'package:mobile/open/widgets/dg_snackbar.dart';
 import 'package:mobile/router/routes.dart';
@@ -72,7 +73,7 @@ class RegisterFromQrScreen extends HookConsumerWidget {
               textColor: DgColor.textAlert,
             ),
           );
-          Navigator.pop(context);
+          AddInstanceScreenRoute().go(context);
         }
       });
     }
@@ -83,7 +84,7 @@ class RegisterFromQrScreen extends HookConsumerWidget {
     final db = ref.read(databaseProvider);
 
     useEffect(() {
-      if(!context.mounted) return null;
+      if (!context.mounted) return null;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         unawaited(_handleRegistration(context, db));
       });
@@ -106,6 +107,15 @@ class RegisterFromQrScreen extends HookConsumerWidget {
               ),
             ),
             DgCircularProgress(color: DgColor.iconSecondary),
+            DgTextButton(
+              onTap: () {
+                AddInstanceScreenRoute().go(context);
+              },
+              text: "Cancel",
+              textStyle: DgText.buttonS.copyWith(
+                color: DgColor.textButtonSecondary,
+              ),
+            ),
           ],
         ),
       ),

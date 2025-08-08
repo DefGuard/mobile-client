@@ -35,7 +35,7 @@ class _ProxyApi {
   final Dio _dio = Dio(
     BaseOptions(
       responseType: ResponseType.json,
-      connectTimeout: Duration(seconds: 10),
+      connectTimeout: Duration(seconds: 20),
       receiveTimeout: Duration(seconds: 30),
     ),
   );
