@@ -66,7 +66,7 @@ class _ProxyApi {
       final responseData = InstanceInfoResponse.fromJson(response.data);
       return (responseData.deviceConfig, status);
     } catch (e) {
-      talker.error("Failed to poll configuration !", e);
+      talker.error("Failed to poll configuration!", e);
     }
     return (null, null);
   }

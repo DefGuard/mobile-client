@@ -49,19 +49,20 @@ class ScanInstanceQrScreen extends HookConsumerWidget {
       return () {
         sub.cancel();
       };
-    } , [handleSuccessScan]);
+    }, [handleSuccessScan]);
 
     useEffect(() {
       print(lifecycle);
       if (lifecycle != null) {
         switch (lifecycle) {
           case AppLifecycleState.resumed:
-            if(!scannerController.value.isRunning && !scannerController.value.isStarting) {
+            if (!scannerController.value.isRunning &&
+                !scannerController.value.isStarting) {
               unawaited(scannerController.start());
             }
             break;
           case AppLifecycleState.inactive:
-            if(scannerController.value.isRunning) {
+            if (scannerController.value.isRunning) {
               unawaited(scannerController.stop());
             }
             break;
@@ -89,7 +90,7 @@ class ScanInstanceQrScreen extends HookConsumerWidget {
               MobileScanner(
                 controller: scannerController,
                 onDetectError: (err, trace) {
-                  talker.error("Mobile scanner widget failed !", err, trace);
+                  talker.error("Mobile scanner widget failed!", err, trace);
                 },
                 onDetect: (result) {
                   final readResult = result.barcodes.first.rawValue;

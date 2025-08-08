@@ -43,16 +43,16 @@ class RegisterFromQrScreen extends HookConsumerWidget {
       if (dbInstance != null) {
         messenger.showSnackBar(
           dgSnackBar(
-            text: "Instance is already registered !",
+            text: "Instance is already registered!",
             textColor: DgColor.textAlert,
           ),
         );
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (context.mounted) {
             HomeScreenRoute().go(context);
-            return;
           }
         });
+        return;
       }
       final NameDeviceScreenData routeData = NameDeviceScreenData(
         proxyUrl: url,
@@ -64,7 +64,7 @@ class RegisterFromQrScreen extends HookConsumerWidget {
         }
       });
     } catch (e) {
-      talker.error("Enrollment via QR start failed !", e);
+      talker.error("Enrollment via QR start failed!", e);
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (context.mounted) {
           messenger.showSnackBar(

@@ -86,7 +86,7 @@ class ConfigurationUpdater extends HookConsumerWidget {
           }
         }
       } catch (e) {
-        talker.error("Auto configuration update handler failed !", e);
+        talker.error("Auto configuration update handler failed!", e);
       } finally {
         updatePending.value = false;
       }
