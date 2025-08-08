@@ -50,9 +50,9 @@ class RegisterFromQrScreen extends HookConsumerWidget {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (context.mounted) {
             HomeScreenRoute().go(context);
-            return;
           }
         });
+        return;
       }
       final NameDeviceScreenData routeData = NameDeviceScreenData(
         proxyUrl: url,

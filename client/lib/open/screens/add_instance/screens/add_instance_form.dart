@@ -9,6 +9,7 @@ import 'package:mobile/open/screens/add_instance/screens/name_device_screen.dart
 import 'package:mobile/open/widgets/buttons/dg_button.dart';
 import 'package:mobile/open/widgets/dg_message_box.dart';
 import 'package:mobile/open/widgets/dg_single_child_scroll_view.dart';
+import 'package:mobile/open/widgets/dg_snackbar.dart';
 import 'package:mobile/open/widgets/dg_text_form_field.dart';
 import 'package:mobile/open/widgets/icons/arrow_single.dart';
 import 'package:mobile/open/widgets/icons/asset_icons_simple.dart';
@@ -79,7 +80,7 @@ Future<void> _handleSubmit(
       .getSingleOrNull();
   if (dbInstance != null) {
     messenger.showSnackBar(
-      SnackBar(content: Text("Instance is already registered")),
+      dgSnackBar(text: "Instance is already registered !"),
     );
     return;
   }
