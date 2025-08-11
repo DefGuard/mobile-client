@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:biometric_storage/biometric_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:mobile/data/db/database.dart';
 import 'package:mobile/data/proxy/mfa.dart';
@@ -12,6 +11,7 @@ import 'package:mobile/open/screens/instance/widgets/mfa_method_dialog.dart';
 import 'package:mobile/open/screens/instance/widgets/routing_method_dialog.dart';
 import 'package:mobile/open/widgets/dg_snackbar.dart';
 import 'package:mobile/theme/color.dart';
+import 'package:mobile/utils/biometrics.dart';
 import 'package:mobile/utils/secure_storage.dart';
 import 'dart:convert';
 
@@ -77,9 +77,13 @@ class TunnelService {
         // location setup for openid mfa login
         mfaMethod = MfaMethod.openid;
       } else {
-        final canUseBiometry =
-            await BiometricStorage().canAuthenticate() ==
-            CanAuthenticateResponse.success;
+        var canUseBiometry = false;
+        try {
+          final result = await canAuthWithBiometrics();
+          canUseBiometry = result.item1;
+        } catch (e) {
+          talker.error("Failed to check device biometry.", e);
+        }
         // non-openid mfa setup, use stored method or show method choice dialog
         if (location.mfaMethod == null ||
             (location.mfaMethod == MfaMethod.biometric && !canUseBiometry)) {

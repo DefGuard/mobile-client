@@ -1,11 +1,12 @@
-import 'package:biometric_storage/biometric_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:local_auth/local_auth.dart';
 import 'package:mobile/open/screens/add_instance/screens/biometry/widgets/biometry_setup_banner.dart';
 import 'package:mobile/open/widgets/dg_single_child_scroll_view.dart';
 import 'package:mobile/open/widgets/navigation/dg_scaffold.dart';
 import 'package:mobile/theme/spacing.dart';
+import 'package:mobile/utils/biometrics.dart';
 import 'package:mobile/utils/screen_padding.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -32,8 +33,11 @@ If you enable biometrics, by default, all locations requiring internal Defguard 
 const String message2 =
     "\nIf you skip this step, you will need to use other MFA methods configured in your user profile (such as TOTP/Authenticator app or email codes).";
 
-const String message3 =
+const String biometryNotEnabledMessage =
     "Biometry is not available on the system please add it and return to this screen or you can skip it.";
+
+const String biometryWeakMessage =
+    "Your device doesn't meet the required standards for the biometry MFA. Try to enable fingerprint auth or use other MFA method.";
 
 class BiometrySetupScreen extends StatelessWidget {
   final int instanceId;
@@ -67,7 +71,8 @@ class _ScreenContent extends HookConsumerWidget {
     final db = ref.read(databaseProvider);
     final instanceFuture = ref.watch(_screenDataProvider(instanceId));
     final isLoading = useState(false);
-    final biometryEnabled = useState(false);
+    final canRegisterBiometry = useState(false);
+    final deviceIsSecure = useState(true);
     final lifecycle = useAppLifecycleState();
 
     final handleRegister = useCallback((DefguardInstance instance) async {
@@ -107,9 +112,26 @@ class _ScreenContent extends HookConsumerWidget {
     }, [context, isLoading, db]);
 
     final handleBiometryCheck = useCallback(() async {
-      final status = await BiometricStorage().canAuthenticate();
-      talker.debug(status);
-      biometryEnabled.value = status == CanAuthenticateResponse.success;
+      try {
+        final result = await canAuthWithBiometrics();
+        final canAuth = result.item1;
+        final detectedMethods = result.item2;
+        canRegisterBiometry.value = canAuth;
+        if (detectedMethods.contains(BiometricType.weak)) {
+          deviceIsSecure.value = false;
+        } else {
+          deviceIsSecure.value = true;
+        }
+      } on BiometricsCheckError catch (e) {
+        talker.error("Biometry MFA unavailable on the device. Reason: $e");
+        canRegisterBiometry.value = false;
+      } catch (e) {
+        talker.error(
+          "Failed to check if biometry is available on the device!",
+          e,
+        );
+        canRegisterBiometry.value = false;
+      }
     }, []);
 
     useEffect(() {
@@ -169,10 +191,21 @@ class _ScreenContent extends HookConsumerWidget {
                 ],
               ),
             ),
-            if (!biometryEnabled.value)
+            if (!canRegisterBiometry.value && deviceIsSecure.value)
               Text(
-                message3,
-                style: DgText.body2.copyWith(color: DgColor.textAlert),
+                biometryNotEnabledMessage,
+                style: DgText.body2.copyWith(
+                  fontSize: 14,
+                  color: DgColor.textAlert,
+                ),
+              ),
+            if (!canRegisterBiometry.value && !deviceIsSecure.value)
+              Text(
+                biometryWeakMessage,
+                style: DgText.body2.copyWith(
+                  fontSize: 14,
+                  color: DgColor.textAlert,
+                ),
               ),
             Row(
               spacing: DgSpacing.m,
@@ -198,7 +231,7 @@ class _ScreenContent extends HookConsumerWidget {
                   fit: FlexFit.tight,
                   child: DgButton(
                     text: "Yes",
-                    disabled: !biometryEnabled.value,
+                    disabled: !canRegisterBiometry.value,
                     loading: isLoading.value,
                     size: DgButtonSize.big,
                     variant: DgButtonVariant.primary,

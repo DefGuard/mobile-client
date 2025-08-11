@@ -1,4 +1,3 @@
-import 'package:biometric_storage/biometric_storage.dart';
 import 'package:drift/drift.dart' as drift;
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
@@ -13,6 +12,7 @@ import 'package:mobile/open/widgets/dg_radio_box.dart';
 import 'package:mobile/open/widgets/dg_separator.dart';
 import 'package:mobile/theme/spacing.dart';
 import 'package:mobile/theme/text.dart';
+import 'package:mobile/utils/biometrics.dart';
 
 import '../../../../../logging.dart';
 
@@ -49,11 +49,16 @@ class MfaMethodDialog extends HookConsumerWidget {
     final lifecycle = useAppLifecycleState();
 
     final checkBiometry = useCallback(() async {
-      final status = await BiometricStorage().canAuthenticate();
-      biometryEnabled.value = status == CanAuthenticateResponse.success;
-      if (status != CanAuthenticateResponse.success &&
-          selectedMethod.value == MfaMethod.biometric) {
+      try {
+        final result = await canAuthWithBiometrics();
+        if (selectedMethod.value == MfaMethod.biometric && !result.item1) {
+          selectedMethod.value = MfaMethod.totp;
+        }
+        biometryEnabled.value = result.item1;
+      } catch (e) {
+        talker.error("Failed to check device  biometry.", e);
         selectedMethod.value = MfaMethod.totp;
+        biometryEnabled.value = false;
       }
     }, []);
 
@@ -71,7 +76,7 @@ class MfaMethodDialog extends HookConsumerWidget {
           e,
         );
       }
-    }, [db]);
+    }, []);
 
     useEffect(() {
       checkBiometry();
