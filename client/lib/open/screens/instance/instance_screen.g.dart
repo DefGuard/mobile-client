@@ -6,7 +6,7 @@ part of 'instance_screen.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$screenDataHash() => r'c017302ad14b73b0541adefc084c5468f2cfa3c1';
+String _$screenDataHash() => r'016a0d30ae8ccf1c897eaa360df857cc9ab8dd4e';
 
 /// Copied from Dart SDK
 class _SystemHash {
