@@ -219,7 +219,7 @@ class DgButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bool isInteractive = !loading;
+    final bool isInteractive = !loading && !disabled;
 
     return AnimatedOpacity(
       duration: const Duration(milliseconds: 100),

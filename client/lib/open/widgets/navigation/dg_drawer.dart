@@ -5,11 +5,15 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mobile/data/db/database.dart';
+import 'package:mobile/logging.dart';
 import 'package:mobile/open/riverpod/package_info/package_info.dart';
 import 'package:mobile/router/routes.dart';
 import 'package:mobile/theme/color.dart';
 import 'package:mobile/theme/spacing.dart';
 import 'package:mobile/theme/text.dart';
+import 'package:url_launcher/url_launcher.dart';
+
+const String _helpUrl = "https://docs.defguard.net/support";
 
 class _DrawerLogo extends StatelessWidget {
   const _DrawerLogo();
@@ -25,9 +29,10 @@ class _DrawerLogo extends StatelessWidget {
 
 class _DrawerItemData {
   final String label;
-  final GoRouteData route;
+  final GoRouteData? route;
+  final Function()? onPressed;
 
-  const _DrawerItemData({required this.label, required this.route});
+  const _DrawerItemData({required this.label, this.route, this.onPressed});
 }
 
 final allInstancesProvider = StreamProvider.autoDispose<List<DefguardInstance>>(
@@ -57,21 +62,43 @@ class DgDrawer extends HookConsumerWidget {
 
     final items = useMemoized<List<_DrawerItemData>>(() {
       return [
-        if (instancesAsync.value != null && instancesAsync.value!.length > 1)
-          _DrawerItemData(label: "Instances", route: HomeScreenRoute()),
-        if (instancesAsync.value != null && instancesAsync.value!.length == 1)
-          _DrawerItemData(
-            label: "Locations",
-            route: InstanceScreenRoute(
-              id: instancesAsync.value![0].id.toString(),
+            if (instancesAsync.value != null &&
+                instancesAsync.value!.length > 1)
+              _DrawerItemData(label: "Instances", route: HomeScreenRoute()),
+            if (instancesAsync.value != null &&
+                instancesAsync.value!.length == 1)
+              _DrawerItemData(
+                label: "Locations",
+                route: InstanceScreenRoute(
+                  id: instancesAsync.value![0].id.toString(),
+                ),
+              ),
+            _DrawerItemData(
+              label: "Add Instance",
+              route: AddInstanceScreenRoute(),
             ),
-          ),
-        _DrawerItemData(label: "Add Instance", route: AddInstanceScreenRoute()),
-        _DrawerItemData(
-          label: "View Application Logs",
-          route: TalkerScreenRoute(),
-        ),
-      ].where((item) => item.route.location != location).toList();
+            _DrawerItemData(
+              label: "View Application Logs",
+              route: TalkerScreenRoute(),
+            ),
+            _DrawerItemData(
+              label: "Help & Support",
+              onPressed: () async {
+                final uri = Uri.parse(_helpUrl);
+                try {
+                  await launchUrl(uri, mode: LaunchMode.externalApplication);
+                } catch (e) {
+                  talker.error(e);
+                }
+              },
+            ),
+          ]
+          .where(
+            (item) =>
+                item.route == null ||
+                (item.route != null && item.route!.location != location),
+          )
+          .toList();
     }, [location, instancesAsync]);
 
     return Container(
@@ -122,8 +149,9 @@ class DgDrawer extends HookConsumerWidget {
                       children: items
                           .map(
                             (data) => _MenuButton(
-                              text: data.label,
+                              data.label,
                               route: data.route,
+                              onPressed: data.onPressed,
                             ),
                           )
                           .toList(),
@@ -191,9 +219,10 @@ class DgDrawer extends HookConsumerWidget {
 
 class _MenuButton extends StatelessWidget {
   final String text;
-  final GoRouteData route;
+  final GoRouteData? route;
+  final Function()? onPressed;
 
-  const _MenuButton({required this.text, required this.route});
+  const _MenuButton(this.text, {this.route, this.onPressed});
 
   @override
   Widget build(BuildContext context) {
@@ -209,7 +238,12 @@ class _MenuButton extends StatelessWidget {
       ),
       onPressed: () {
         Navigator.of(context).pop();
-        route.push(context);
+        if (onPressed != null) {
+          onPressed!();
+        }
+        if (route != null) {
+          route!.push(context);
+        }
       },
       child: Align(
         alignment: Alignment.centerLeft,
