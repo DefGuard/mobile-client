@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart' as drift;
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mobile/data/db/database.dart';
 import 'package:mobile/data/plugin/plugin.dart';
@@ -12,6 +13,7 @@ import 'package:mobile/open/screens/instance/services/tunnel_service.dart';
 import 'package:mobile/open/screens/instance/widgets/mfa_method_dialog.dart';
 import 'package:mobile/open/screens/instance/widgets/refresh_instance_dialog.dart';
 import 'package:mobile/open/screens/instance/widgets/routing_method_dialog.dart';
+import 'package:mobile/open/screens/scan_qr_screen.dart';
 import 'package:mobile/open/widgets/buttons/dg_button.dart';
 import 'package:mobile/open/widgets/dg_menu.dart';
 import 'package:mobile/open/widgets/dg_pill.dart';
@@ -97,6 +99,37 @@ class InstanceScreen extends HookConsumerWidget {
 
     return DgScaffold(
       title: "Locations",
+      floatingActionButton: screenData.when(
+        data: (screenData) {
+          if (screenData != null) {
+            return SizedBox(
+              height: 60,
+              width: 60,
+              child: FloatingActionButton(
+                onPressed: () {
+                  final data = ScanQrScreenData(
+                    intent: ScanQrScreenDataIntent.remoteMfa,
+                    instance: screenData.instance,
+                  );
+                  QRScreenRoute(data).push(context);
+                },
+                backgroundColor: DgColor.mainPrimary,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                child: SvgPicture.asset(
+                  "assets/icons/icon-qr.svg",
+                  width: 32,
+                  height: 32,
+                ),
+              ),
+            );
+          }
+          return null;
+        },
+        loading: () => null,
+        error: (_, _) => null,
+      ),
       child: Container(
         color: DgColor.frameBg,
         child: screenData.when(

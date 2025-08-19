@@ -14,6 +14,7 @@ import 'package:mobile/open/screens/instance/instance_screen.dart';
 import 'package:mobile/open/screens/mfa/mfa_code_screen.dart';
 import 'package:mobile/enterprise/screens/mfa/openid_mfa_screen.dart';
 import 'package:mobile/enterprise/screens/mfa/openid_mfa_waiting_screen.dart';
+import 'package:mobile/open/screens/scan_qr_screen.dart';
 import 'package:talker_flutter/talker_flutter.dart';
 
 import '../logging.dart';
@@ -28,6 +29,19 @@ class HomeScreenRoute extends GoRouteData with _$HomeScreenRoute {
   @override
   Widget build(BuildContext context, GoRouterState state) {
     return const HomeScreen();
+  }
+}
+
+@TypedGoRoute<QRScreenRoute>(path: "/qr")
+@immutable
+class QRScreenRoute extends GoRouteData with _$QRScreenRoute {
+  const QRScreenRoute(this.$extra);
+
+  final ScanQrScreenData $extra;
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) {
+    return ScanQrScreen(screenData: $extra);
   }
 }
 

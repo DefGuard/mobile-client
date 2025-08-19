@@ -61,17 +61,23 @@ FinishMfaRequest _$FinishMfaRequestFromJson(Map<String, dynamic> json) =>
       final val = FinishMfaRequest(
         token: $checkedConvert('token', (v) => v as String),
         code: $checkedConvert('code', (v) => v as String?),
+        authPubKey: $checkedConvert('auth_pub_key', (v) => v as String?),
       );
       return val;
-    });
+    }, fieldKeyMap: const {'authPubKey': 'auth_pub_key'});
 
 const _$FinishMfaRequestFieldMap = <String, String>{
   'token': 'token',
   'code': 'code',
+  'authPubKey': 'auth_pub_key',
 };
 
 Map<String, dynamic> _$FinishMfaRequestToJson(FinishMfaRequest instance) =>
-    <String, dynamic>{'token': instance.token, 'code': instance.code};
+    <String, dynamic>{
+      'token': instance.token,
+      'code': instance.code,
+      'auth_pub_key': instance.authPubKey,
+    };
 
 FinishMfaResponse _$FinishMfaResponseFromJson(Map<String, dynamic> json) =>
     $checkedCreate('FinishMfaResponse', json, ($checkedConvert) {
@@ -114,3 +120,26 @@ Map<String, dynamic> _$SecureInstanceStorageToJson(
   'private_key': instance.privateKey,
   'public_key': instance.publicKey,
 };
+
+RemoteMfaQr _$RemoteMfaQrFromJson(Map<String, dynamic> json) =>
+    $checkedCreate('RemoteMfaQr', json, ($checkedConvert) {
+      final val = RemoteMfaQr(
+        instanceId: $checkedConvert('instance_id', (v) => v as String),
+        token: $checkedConvert('token', (v) => v as String),
+        challenge: $checkedConvert('challenge', (v) => v as String),
+      );
+      return val;
+    }, fieldKeyMap: const {'instanceId': 'instance_id'});
+
+const _$RemoteMfaQrFieldMap = <String, String>{
+  'instanceId': 'instance_id',
+  'token': 'token',
+  'challenge': 'challenge',
+};
+
+Map<String, dynamic> _$RemoteMfaQrToJson(RemoteMfaQr instance) =>
+    <String, dynamic>{
+      'instance_id': instance.instanceId,
+      'token': instance.token,
+      'challenge': instance.challenge,
+    };

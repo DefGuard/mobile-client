@@ -8,6 +8,7 @@ part of 'routes.dart';
 
 List<RouteBase> get $appRoutes => [
   $homeScreenRoute,
+  $qRScreenRoute,
   $instanceScreenRoute,
   $nameDeviceScreenRoute,
   $scanInstanceQrRoute,
@@ -45,6 +46,34 @@ mixin _$HomeScreenRoute on GoRouteData {
 
   @override
   void replace(BuildContext context) => context.replace(location);
+}
+
+RouteBase get $qRScreenRoute =>
+    GoRouteData.$route(path: '/qr', factory: _$QRScreenRoute._fromState);
+
+mixin _$QRScreenRoute on GoRouteData {
+  static QRScreenRoute _fromState(GoRouterState state) =>
+      QRScreenRoute(state.extra as ScanQrScreenData);
+
+  QRScreenRoute get _self => this as QRScreenRoute;
+
+  @override
+  String get location => GoRouteData.$location('/qr');
+
+  @override
+  void go(BuildContext context) => context.go(location, extra: _self.$extra);
+
+  @override
+  Future<T?> push<T>(BuildContext context) =>
+      context.push<T>(location, extra: _self.$extra);
+
+  @override
+  void pushReplacement(BuildContext context) =>
+      context.pushReplacement(location, extra: _self.$extra);
+
+  @override
+  void replace(BuildContext context) =>
+      context.replace(location, extra: _self.$extra);
 }
 
 RouteBase get $instanceScreenRoute => GoRouteData.$route(
