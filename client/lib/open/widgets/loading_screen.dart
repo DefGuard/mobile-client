@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:mobile/open/widgets/buttons/dg_text_button.dart';
 import 'package:mobile/open/widgets/circular_progress.dart';
 import 'package:mobile/utils/screen_padding.dart';
 
