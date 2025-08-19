@@ -101,7 +101,7 @@ class InstanceScreen extends HookConsumerWidget {
       title: "Locations",
       floatingActionButton: screenData.when(
         data: (screenData) {
-          if (screenData != null) {
+          if (screenData != null && screenData.instance.mfaKeysStored) {
             return SizedBox(
               height: 60,
               width: 60,

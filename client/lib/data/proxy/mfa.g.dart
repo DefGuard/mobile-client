@@ -82,7 +82,7 @@ Map<String, dynamic> _$FinishMfaRequestToJson(FinishMfaRequest instance) =>
 FinishMfaResponse _$FinishMfaResponseFromJson(Map<String, dynamic> json) =>
     $checkedCreate('FinishMfaResponse', json, ($checkedConvert) {
       final val = FinishMfaResponse(
-        presharedKey: $checkedConvert('preshared_key', (v) => v as String),
+        presharedKey: $checkedConvert('preshared_key', (v) => v as String?),
       );
       return val;
     }, fieldKeyMap: const {'presharedKey': 'preshared_key'});

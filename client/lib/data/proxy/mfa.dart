@@ -50,14 +50,14 @@ class FinishMfaRequest {
 
 @JsonSerializable()
 class FinishMfaResponse {
-  final String presharedKey;
+  final String? presharedKey;
 
   factory FinishMfaResponse.fromJson(Map<String, dynamic> json) =>
       _$FinishMfaResponseFromJson(json);
 
   Map<String, dynamic> toJson() => _$FinishMfaResponseToJson(this);
 
-  const FinishMfaResponse({required this.presharedKey});
+  const FinishMfaResponse({this.presharedKey});
 }
 
 @JsonSerializable()

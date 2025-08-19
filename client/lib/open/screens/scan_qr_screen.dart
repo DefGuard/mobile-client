@@ -78,6 +78,12 @@ class ScanQrScreen extends HookConsumerWidget {
         );
       } catch (e) {
         talker.error(e);
+        msg.showSnackBar(
+          dgSnackBar(
+            text: "Failed to authenticate desktop client.",
+            textColor: DgColor.textAlert,
+          ),
+        );
       } finally {
         waitingForProxy.value = false;
         WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -156,7 +162,7 @@ class ScanQrScreen extends HookConsumerWidget {
                   minWidth: 100,
                   onTap: () async {
                     await scannerController.stop();
-                    if(context.mounted) {
+                    if (context.mounted) {
                       Navigator.of(context).pop();
                     }
                   },
