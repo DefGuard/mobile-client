@@ -103,7 +103,7 @@ class ConfigurationUpdater extends HookConsumerWidget {
         updateConfiguration();
       }
       return null;
-    }, [lifecycle, updateConfiguration]);
+    }, [lifecycle]);
 
     return child;
   }
