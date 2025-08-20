@@ -166,6 +166,13 @@ class _ProxyApi {
     return FinishMfaResponse.fromJson(response.data);
   }
 
+  Future<void> finishRemoteMfa(Uri url, FinishMfaRequest data) async {
+    final endpoint = url.replace(
+      pathSegments: [...url.pathSegments, ...mfaPathSegments, 'finish-remote'],
+    );
+    await _dio.postUri(endpoint, data: data.toJson());
+  }
+
   Future<NetworkInfoResponse> networkInfo(Uri url, String pubKey) async {
     final endpoint = url.replace(
       pathSegments: [

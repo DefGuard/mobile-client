@@ -66,7 +66,7 @@ class ScanQrScreen extends HookConsumerWidget {
           code: signature,
           authPubKey: secureStorage.publicKey,
         );
-        await proxyApi.finishMfa(
+        await proxyApi.finishRemoteMfa(
           Uri.parse(screenData.instance!.proxyUrl),
           requestData,
         );
