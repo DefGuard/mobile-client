@@ -38,8 +38,9 @@ class StartMfaResponse {
 class FinishMfaRequest {
   final String token;
   final String? code;
+  final String? authPubKey;
 
-  const FinishMfaRequest({required this.token, this.code});
+  const FinishMfaRequest({required this.token, this.code, this.authPubKey});
 
   factory FinishMfaRequest.fromJson(Map<String, dynamic> json) =>
       _$FinishMfaRequestFromJson(json);
@@ -49,14 +50,14 @@ class FinishMfaRequest {
 
 @JsonSerializable()
 class FinishMfaResponse {
-  final String presharedKey;
+  final String? presharedKey;
 
   factory FinishMfaResponse.fromJson(Map<String, dynamic> json) =>
       _$FinishMfaResponseFromJson(json);
 
   Map<String, dynamic> toJson() => _$FinishMfaResponseToJson(this);
 
-  const FinishMfaResponse({required this.presharedKey});
+  const FinishMfaResponse({this.presharedKey});
 }
 
 @JsonSerializable()
@@ -72,5 +73,23 @@ class SecureInstanceStorage {
   const SecureInstanceStorage({
     required this.privateKey,
     required this.publicKey,
+  });
+}
+
+@JsonSerializable()
+class RemoteMfaQr {
+  final String instanceId;
+  final String token;
+  final String challenge;
+
+  factory RemoteMfaQr.fromJson(Map<String, dynamic> json) =>
+      _$RemoteMfaQrFromJson(json);
+
+  Map<String, dynamic> toJson() => _$RemoteMfaQrToJson(this);
+
+  const RemoteMfaQr({
+    required this.instanceId,
+    required this.token,
+    required this.challenge,
   });
 }
