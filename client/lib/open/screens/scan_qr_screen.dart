@@ -6,6 +6,7 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mobile/data/db/database.dart';
 import 'package:mobile/open/api.dart';
+import 'package:mobile/open/widgets/dg_message_box.dart';
 import 'package:mobile/open/widgets/dg_snackbar.dart';
 import 'package:mobile/open/widgets/loading_screen.dart';
 import 'package:mobile/theme/color.dart';
@@ -152,6 +153,27 @@ class ScanQrScreen extends HookConsumerWidget {
                 }
               },
             ),
+            if (screenData.intent == ScanQrScreenDataIntent.remoteMfa)
+              Positioned(
+                top: DgSpacing.xs,
+                left: 0,
+                right: 0,
+                child: Padding(
+                  padding: EdgeInsetsGeometry.only(
+                    left: DgSpacing.s,
+                    right: DgSpacing.s,
+                  ),
+                  child: Material(
+                    elevation: 5,
+                    color: Colors.transparent,
+                    borderRadius: BorderRadius.circular(10),
+                    child: DgMessageBox(
+                      text:
+                          "Please open the desktop app, select this instance, connect to a chosen location using Biometry authentication, and scan the QR code shown here.",
+                    ),
+                  ),
+                ),
+              ),
             Positioned(
               bottom: DgSpacing.s,
               left: 0,
