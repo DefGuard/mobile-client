@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'package:biometric_storage/biometric_storage.dart';
 import 'package:ed25519_edwards/ed25519_edwards.dart' as ed;
 import 'package:mobile/data/proxy/mfa.dart';
-import 'package:mobile/logging.dart';
 import 'package:mobile/utils/biometrics.dart';
 
 class SecureStorageError implements Exception {
