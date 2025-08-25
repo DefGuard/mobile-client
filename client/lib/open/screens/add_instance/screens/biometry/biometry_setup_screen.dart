@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:local_auth/local_auth.dart';
+import 'package:mobile/open/riverpod/biometrics_state.dart';
 import 'package:mobile/open/screens/add_instance/screens/biometry/widgets/biometry_setup_banner.dart';
 import 'package:mobile/open/widgets/dg_single_child_scroll_view.dart';
 import 'package:mobile/open/widgets/navigation/dg_scaffold.dart';
 import 'package:mobile/theme/spacing.dart';
-import 'package:mobile/utils/biometrics.dart';
 import 'package:mobile/utils/screen_padding.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -70,10 +69,8 @@ class _ScreenContent extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final db = ref.read(databaseProvider);
     final instanceFuture = ref.watch(_screenDataProvider(instanceId));
+    final biometryStatus = ref.watch(biometricsCapabilityProvider);
     final isLoading = useState(false);
-    final canRegisterBiometry = useState(false);
-    final deviceIsSecure = useState(true);
-    final lifecycle = useAppLifecycleState();
 
     final handleRegister = useCallback((DefguardInstance instance) async {
       isLoading.value = true;
@@ -109,35 +106,7 @@ class _ScreenContent extends HookConsumerWidget {
       } finally {
         isLoading.value = false;
       }
-    }, [context, isLoading, db]);
-
-    final handleBiometryCheck = useCallback(() async {
-      try {
-        final result = await canAuthWithBiometrics();
-        final canAuth = result.item1;
-        final detectedMethods = result.item2;
-        canRegisterBiometry.value = canAuth;
-        if (detectedMethods.contains(BiometricType.weak)) {
-          deviceIsSecure.value = false;
-        } else {
-          deviceIsSecure.value = true;
-        }
-      } on BiometricsCheckError catch (e) {
-        talker.error("Biometry MFA unavailable on the device. Reason: $e");
-        canRegisterBiometry.value = false;
-      } catch (e) {
-        talker.error(
-          "Failed to check if biometry is available on the device!",
-          e,
-        );
-        canRegisterBiometry.value = false;
-      }
-    }, []);
-
-    useEffect(() {
-      handleBiometryCheck();
-      return null;
-    }, [lifecycle]);
+    }, [context]);
 
     return instanceFuture.when(
       loading: () => LoadingView(),
@@ -191,7 +160,7 @@ class _ScreenContent extends HookConsumerWidget {
                 ],
               ),
             ),
-            if (!canRegisterBiometry.value && deviceIsSecure.value)
+            if (biometryStatus.isSupported && biometryStatus.enrolledOptions.isEmpty)
               Text(
                 biometryNotEnabledMessage,
                 style: DgText.body2.copyWith(
@@ -199,7 +168,7 @@ class _ScreenContent extends HookConsumerWidget {
                   color: DgColor.textAlert,
                 ),
               ),
-            if (!canRegisterBiometry.value && !deviceIsSecure.value)
+            if (biometryStatus.isSupported && biometryStatus.isWeak)
               Text(
                 biometryWeakMessage,
                 style: DgText.body2.copyWith(
@@ -231,7 +200,7 @@ class _ScreenContent extends HookConsumerWidget {
                   fit: FlexFit.tight,
                   child: DgButton(
                     text: "Yes",
-                    disabled: !canRegisterBiometry.value,
+                    disabled: !biometryStatus.isStrong,
                     loading: isLoading.value,
                     size: DgButtonSize.big,
                     variant: DgButtonVariant.primary,

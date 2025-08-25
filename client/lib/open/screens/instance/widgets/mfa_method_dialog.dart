@@ -4,6 +4,7 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mobile/data/db/database.dart';
 import 'package:mobile/data/db/enums.dart';
+import 'package:mobile/open/riverpod/biometrics_state.dart';
 import 'package:mobile/open/widgets/buttons/dg_button.dart';
 import 'package:mobile/open/widgets/dg_checkbox.dart';
 import 'package:mobile/open/widgets/dg_dialog.dart';
@@ -12,7 +13,6 @@ import 'package:mobile/open/widgets/dg_radio_box.dart';
 import 'package:mobile/open/widgets/dg_separator.dart';
 import 'package:mobile/theme/spacing.dart';
 import 'package:mobile/theme/text.dart';
-import 'package:mobile/utils/biometrics.dart';
 
 import '../../../../../logging.dart';
 
@@ -42,25 +42,13 @@ class MfaMethodDialog extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final db = ref.read(databaseProvider);
-    final selectedMethod = useState(location.mfaMethod ?? MfaMethod.biometric);
+    final biometricsStatus = ref.watch(biometricsCapabilityProvider);
+    final selectedMethod = useState(
+      location.mfaMethod ??
+          (biometricsStatus.isStrong ? MfaMethod.biometric : MfaMethod.totp),
+    );
     final shouldRemember = useState(true);
     final isLoading = useState(false);
-    final biometryEnabled = useState(false);
-    final lifecycle = useAppLifecycleState();
-
-    final checkBiometry = useCallback(() async {
-      try {
-        final result = await canAuthWithBiometrics();
-        if (selectedMethod.value == MfaMethod.biometric && !result.item1) {
-          selectedMethod.value = MfaMethod.totp;
-        }
-        biometryEnabled.value = result.item1;
-      } catch (e) {
-        talker.error("Failed to check device  biometry.", e);
-        selectedMethod.value = MfaMethod.totp;
-        biometryEnabled.value = false;
-      }
-    }, []);
 
     final remember = useCallback((MfaMethod method) async {
       try {
@@ -77,11 +65,6 @@ class MfaMethodDialog extends HookConsumerWidget {
         );
       }
     }, []);
-
-    useEffect(() {
-      checkBiometry();
-      return null;
-    }, [lifecycle]);
 
     return DgDialog(
       child: Column(
@@ -105,7 +88,7 @@ class MfaMethodDialog extends HookConsumerWidget {
             mainAxisSize: MainAxisSize.min,
             spacing: DgSpacing.s,
             children: [
-              if (instance.mfaKeysStored && biometryEnabled.value)
+              if (instance.mfaKeysStored && biometricsStatus.isStrong)
                 DgRadioBox(
                   text: "Biometric",
                   active: selectedMethod.value == MfaMethod.biometric,
