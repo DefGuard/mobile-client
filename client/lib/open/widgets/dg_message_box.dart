@@ -39,13 +39,19 @@ class DgMessageBox extends StatelessWidget {
 
     switch (variant) {
       case DgMessageBoxVariant.info:
-        textStyle = DgText.modal1.copyWith(color: DgColor.textBodySecondary);
+        textStyle = DgText.modal1.copyWith(
+          color: DgColor.textBodySecondary,
+          decoration: TextDecoration.none,
+        );
         borderColor = DgColor.iconPrimary;
         borderWidth = 1;
         backgroundColor = DgColor.frameBg;
         break;
       case DgMessageBoxVariant.infoOutlined:
-        textStyle = DgText.modal1.copyWith(color: DgColor.textBodySecondary);
+        textStyle = DgText.modal1.copyWith(
+          color: DgColor.textBodySecondary,
+          decoration: TextDecoration.none,
+        );
         borderColor = Color.fromRGBO(0, 0, 0, 0);
         borderWidth = 0;
         backgroundColor = DgColor.infoModal;
