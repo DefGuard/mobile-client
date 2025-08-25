@@ -1,4 +1,5 @@
 import 'package:local_auth/local_auth.dart';
+import 'package:mobile/logging.dart';
 import 'package:tuple/tuple.dart';
 
 enum BiometricsCheckErrorType { unsupported, cannotCheck }
@@ -32,6 +33,7 @@ Future<Tuple2<bool, List<BiometricType>>> canAuthWithBiometrics() async {
     throw BiometricsCheckError(BiometricsCheckErrorType.cannotCheck);
   }
   final availableBiometrics = await _auth.getAvailableBiometrics();
+  talker.debug("Detected device biometrics options", availableBiometrics.map((item) => item.toString()).toList());
   //ios
   final hasFace = availableBiometrics.contains(BiometricType.face);
   final hasFinger = availableBiometrics.contains(BiometricType.fingerprint);
