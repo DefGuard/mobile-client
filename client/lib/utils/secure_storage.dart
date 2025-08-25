@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'package:biometric_storage/biometric_storage.dart';
 import 'package:ed25519_edwards/ed25519_edwards.dart' as ed;
 import 'package:mobile/data/proxy/mfa.dart';
-import 'package:mobile/utils/biometrics.dart';
 
 class SecureStorageError implements Exception {
   final CanAuthenticateResponse storageResponse;
@@ -50,10 +49,6 @@ Future<SecureInstanceStorage> getBiometricInstanceStorage(
       ? _makePrompt(prompt)
       : PromptInfo.defaultValues;
   final capabilityCheck = await BiometricStorage().canAuthenticate();
-  final biometricsRequirementResult = await canAuthWithBiometrics();
-  if (!biometricsRequirementResult.item1) {
-    throw Exception("Device cannot auth with biometrics!");
-  }
   if (capabilityCheck != CanAuthenticateResponse.success) {
     throw SecureStorageError(capabilityCheck);
   }

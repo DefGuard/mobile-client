@@ -6,6 +6,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mobile/data/db/database.dart';
 import 'package:mobile/data/plugin/plugin.dart';
 import 'package:mobile/open/api.dart';
+import 'package:mobile/open/riverpod/biometrics_state.dart';
 import 'package:mobile/open/riverpod/plugin/plugin.dart';
 import 'package:mobile/open/screens/instance/widgets/connection_conflict_dialog.dart';
 import 'package:mobile/open/screens/instance/widgets/delete_instance_dialog.dart';
@@ -397,6 +398,7 @@ class _LocationItem extends HookConsumerWidget {
     final isConnected = useState<bool>(checkConnected(activeTunnel));
     final isLoading = useState(false);
     final trafficLabel = useState<String?>(null);
+    final biometricStatus = ref.watch(biometricsCapabilityProvider);
 
     final mfaEnabled = TunnelService.checkMfaEnabled(location);
 
@@ -589,6 +591,7 @@ class _LocationItem extends HookConsumerWidget {
                             instance: instance,
                             location: location,
                             wireguardPlugin: wireguardPlugin,
+                            biometricsStatus: biometricStatus,
                           );
                           talker.debug(
                             "Location ${location.name} (${location.id}) connected",

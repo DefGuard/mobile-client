@@ -6,12 +6,12 @@ import 'package:mobile/data/proxy/mfa.dart';
 import 'package:mobile/enterprise/screens/mfa/openid_mfa_screen.dart';
 import 'package:mobile/open/api.dart';
 import 'package:mobile/data/plugin/plugin.dart';
+import 'package:mobile/open/riverpod/biometrics_state.dart';
 import 'package:mobile/open/screens/mfa/mfa_code_screen.dart';
 import 'package:mobile/open/screens/instance/widgets/mfa_method_dialog.dart';
 import 'package:mobile/open/screens/instance/widgets/routing_method_dialog.dart';
 import 'package:mobile/open/widgets/dg_snackbar.dart';
 import 'package:mobile/theme/color.dart';
-import 'package:mobile/utils/biometrics.dart';
 import 'package:mobile/utils/secure_storage.dart';
 import 'dart:convert';
 
@@ -28,6 +28,7 @@ class TunnelService {
     required DefguardInstance instance,
     required Location location,
     required dynamic wireguardPlugin,
+    required BiometricsState biometricsStatus,
   }) async {
     // prepare navigator to avoid "context use across async gaps"
     final navigator = Navigator.of(context);
@@ -77,16 +78,10 @@ class TunnelService {
         // location setup for openid mfa login
         mfaMethod = MfaMethod.openid;
       } else {
-        var canUseBiometry = false;
-        try {
-          final result = await canAuthWithBiometrics();
-          canUseBiometry = result.item1;
-        } catch (e) {
-          talker.error("Failed to check device biometry.", e);
-        }
         // non-openid mfa setup, use stored method or show method choice dialog
         if (location.mfaMethod == null ||
-            (location.mfaMethod == MfaMethod.biometric && !canUseBiometry)) {
+            (location.mfaMethod == MfaMethod.biometric &&
+                !biometricsStatus.isStrong)) {
           final userSelection = await _showDialog<MfaMethod?>(
             navigator: navigator,
             builder: (_) => MfaMethodDialog(
