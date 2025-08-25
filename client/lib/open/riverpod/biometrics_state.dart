@@ -34,7 +34,7 @@ class BiometricsState {
   bool get isWeak {
     if (Platform.isAndroid) {
       return enrolledOptions.isNotEmpty &&
-          enrolledOptions.contains(BiometricType.weak);
+          enrolledOptions.contains(BiometricType.weak) && !enrolledOptions.contains(BiometricType.strong);
     }
     return false;
   }
@@ -92,6 +92,13 @@ class BiometricsController extends HookConsumerWidget {
       }
       return null;
     }, [lifecycle]);
+
+    useEffect(() {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        updateProvider();
+      });
+      return null;
+    }, []);
 
     return child;
   }
