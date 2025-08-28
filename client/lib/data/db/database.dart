@@ -19,6 +19,8 @@ class DefguardInstances extends Table with AutoIncrementingPrimaryKey {
 
   TextColumn get url => text()();
 
+  IntColumn get deviceId => integer()();
+
   @JsonKey('proxy_url')
   TextColumn get proxyUrl => text()();
 
@@ -126,7 +128,7 @@ extension DefguardInstanceLogName on DefguardInstance {
 }
 
 extension DefguardInstanceStorageKey on DefguardInstance {
-  String get secureStorageKey => 'mfa-$uuid';
+  String get secureStorageKey => 'mfa-$uuid-$deviceId';
 }
 
 extension LocationLogName on Location {

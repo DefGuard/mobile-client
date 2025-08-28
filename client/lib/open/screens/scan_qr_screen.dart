@@ -46,7 +46,6 @@ class ScanQrScreen extends HookConsumerWidget {
       [],
     );
 
-    // TODO: Catch errors, handle edge cases
     final handleRemoteMfaScan = useCallback((RemoteMfaQr data) async {
       final msg = ScaffoldMessenger.of(context);
       await scannerController.stop();

@@ -224,21 +224,21 @@ class CreateDeviceRequest {
 }
 
 @JsonSerializable()
-class CreateDeviceResponse {
+  class CreateDeviceResponse {
   final Device device;
   final List<DeviceConfig> configs;
   final InstanceInfo instance;
   final String token;
 
   const CreateDeviceResponse({
-    required this.device,
-    required this.configs,
-    required this.instance,
-    required this.token,
+  required this.device,
+  required this.configs,
+  required this.instance,
+  required this.token,
   });
 
   factory CreateDeviceResponse.fromJson(Map<String, dynamic> json) =>
-      _$CreateDeviceResponseFromJson(json);
+  _$CreateDeviceResponseFromJson(json);
 
   Map<String, dynamic> toJson() => _$CreateDeviceResponseToJson(this);
 }

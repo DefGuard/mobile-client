@@ -7,7 +7,7 @@ part of 'biometrics_state.dart';
 // **************************************************************************
 
 String _$biometricsCapabilityHash() =>
-    r'443b39915554d21ebbb63f65697aa62e8f6673d0';
+    r'703f6f8b0b4525b923f9d7eadf752901bf05f30e';
 
 /// See also [BiometricsCapability].
 @ProviderFor(BiometricsCapability)
