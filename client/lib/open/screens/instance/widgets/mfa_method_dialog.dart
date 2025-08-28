@@ -88,7 +88,7 @@ class MfaMethodDialog extends HookConsumerWidget {
             mainAxisSize: MainAxisSize.min,
             spacing: DgSpacing.s,
             children: [
-              if (instance.mfaKeysStored && biometricsStatus.isStrong)
+              if (instance.mfaKeysStored && biometricsStatus.canOpenStorage)
                 DgRadioBox(
                   text: "Biometric",
                   active: selectedMethod.value == MfaMethod.biometric,

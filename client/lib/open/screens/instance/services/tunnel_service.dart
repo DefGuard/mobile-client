@@ -81,7 +81,7 @@ class TunnelService {
         // non-openid mfa setup, use stored method or show method choice dialog
         if (location.mfaMethod == null ||
             (location.mfaMethod == MfaMethod.biometric &&
-                !biometricsStatus.isStrong)) {
+                !biometricsStatus.canOpenStorage)) {
           final userSelection = await _showDialog<MfaMethod?>(
             navigator: navigator,
             builder: (_) => MfaMethodDialog(
