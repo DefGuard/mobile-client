@@ -49,6 +49,17 @@ class $DefguardInstancesTable extends DefguardInstances
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _deviceIdMeta = const VerificationMeta(
+    'deviceId',
+  );
+  @override
+  late final GeneratedColumn<int> deviceId = GeneratedColumn<int>(
+    'device_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
   static const VerificationMeta _proxyUrlMeta = const VerificationMeta(
     'proxyUrl',
   );
@@ -150,6 +161,7 @@ class $DefguardInstancesTable extends DefguardInstances
     name,
     uuid,
     url,
+    deviceId,
     proxyUrl,
     username,
     poolingToken,
@@ -197,6 +209,14 @@ class $DefguardInstancesTable extends DefguardInstances
       );
     } else if (isInserting) {
       context.missing(_urlMeta);
+    }
+    if (data.containsKey('device_id')) {
+      context.handle(
+        _deviceIdMeta,
+        deviceId.isAcceptableOrUnknown(data['device_id']!, _deviceIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_deviceIdMeta);
     }
     if (data.containsKey('proxy_url')) {
       context.handle(
@@ -299,6 +319,10 @@ class $DefguardInstancesTable extends DefguardInstances
         DriftSqlType.string,
         data['${effectivePrefix}url'],
       )!,
+      deviceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}device_id'],
+      )!,
       proxyUrl: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}proxy_url'],
@@ -346,6 +370,7 @@ class DefguardInstance extends DataClass
   final String name;
   final String uuid;
   final String url;
+  final int deviceId;
   final String proxyUrl;
   final String username;
   final String poolingToken;
@@ -359,6 +384,7 @@ class DefguardInstance extends DataClass
     required this.name,
     required this.uuid,
     required this.url,
+    required this.deviceId,
     required this.proxyUrl,
     required this.username,
     required this.poolingToken,
@@ -375,6 +401,7 @@ class DefguardInstance extends DataClass
     map['name'] = Variable<String>(name);
     map['uuid'] = Variable<String>(uuid);
     map['url'] = Variable<String>(url);
+    map['device_id'] = Variable<int>(deviceId);
     map['proxy_url'] = Variable<String>(proxyUrl);
     map['username'] = Variable<String>(username);
     map['pooling_token'] = Variable<String>(poolingToken);
@@ -392,6 +419,7 @@ class DefguardInstance extends DataClass
       name: Value(name),
       uuid: Value(uuid),
       url: Value(url),
+      deviceId: Value(deviceId),
       proxyUrl: Value(proxyUrl),
       username: Value(username),
       poolingToken: Value(poolingToken),
@@ -413,6 +441,7 @@ class DefguardInstance extends DataClass
       name: serializer.fromJson<String>(json['name']),
       uuid: serializer.fromJson<String>(json['uuid']),
       url: serializer.fromJson<String>(json['url']),
+      deviceId: serializer.fromJson<int>(json['deviceId']),
       proxyUrl: serializer.fromJson<String>(json['proxy_url']),
       username: serializer.fromJson<String>(json['username']),
       poolingToken: serializer.fromJson<String>(json['poolingToken']),
@@ -431,6 +460,7 @@ class DefguardInstance extends DataClass
       'name': serializer.toJson<String>(name),
       'uuid': serializer.toJson<String>(uuid),
       'url': serializer.toJson<String>(url),
+      'deviceId': serializer.toJson<int>(deviceId),
       'proxy_url': serializer.toJson<String>(proxyUrl),
       'username': serializer.toJson<String>(username),
       'poolingToken': serializer.toJson<String>(poolingToken),
@@ -447,6 +477,7 @@ class DefguardInstance extends DataClass
     String? name,
     String? uuid,
     String? url,
+    int? deviceId,
     String? proxyUrl,
     String? username,
     String? poolingToken,
@@ -460,6 +491,7 @@ class DefguardInstance extends DataClass
     name: name ?? this.name,
     uuid: uuid ?? this.uuid,
     url: url ?? this.url,
+    deviceId: deviceId ?? this.deviceId,
     proxyUrl: proxyUrl ?? this.proxyUrl,
     username: username ?? this.username,
     poolingToken: poolingToken ?? this.poolingToken,
@@ -475,6 +507,7 @@ class DefguardInstance extends DataClass
       name: data.name.present ? data.name.value : this.name,
       uuid: data.uuid.present ? data.uuid.value : this.uuid,
       url: data.url.present ? data.url.value : this.url,
+      deviceId: data.deviceId.present ? data.deviceId.value : this.deviceId,
       proxyUrl: data.proxyUrl.present ? data.proxyUrl.value : this.proxyUrl,
       username: data.username.present ? data.username.value : this.username,
       poolingToken: data.poolingToken.present
@@ -503,6 +536,7 @@ class DefguardInstance extends DataClass
           ..write('name: $name, ')
           ..write('uuid: $uuid, ')
           ..write('url: $url, ')
+          ..write('deviceId: $deviceId, ')
           ..write('proxyUrl: $proxyUrl, ')
           ..write('username: $username, ')
           ..write('poolingToken: $poolingToken, ')
@@ -521,6 +555,7 @@ class DefguardInstance extends DataClass
     name,
     uuid,
     url,
+    deviceId,
     proxyUrl,
     username,
     poolingToken,
@@ -538,6 +573,7 @@ class DefguardInstance extends DataClass
           other.name == this.name &&
           other.uuid == this.uuid &&
           other.url == this.url &&
+          other.deviceId == this.deviceId &&
           other.proxyUrl == this.proxyUrl &&
           other.username == this.username &&
           other.poolingToken == this.poolingToken &&
@@ -553,6 +589,7 @@ class DefguardInstancesCompanion extends UpdateCompanion<DefguardInstance> {
   final Value<String> name;
   final Value<String> uuid;
   final Value<String> url;
+  final Value<int> deviceId;
   final Value<String> proxyUrl;
   final Value<String> username;
   final Value<String> poolingToken;
@@ -566,6 +603,7 @@ class DefguardInstancesCompanion extends UpdateCompanion<DefguardInstance> {
     this.name = const Value.absent(),
     this.uuid = const Value.absent(),
     this.url = const Value.absent(),
+    this.deviceId = const Value.absent(),
     this.proxyUrl = const Value.absent(),
     this.username = const Value.absent(),
     this.poolingToken = const Value.absent(),
@@ -580,6 +618,7 @@ class DefguardInstancesCompanion extends UpdateCompanion<DefguardInstance> {
     required String name,
     required String uuid,
     required String url,
+    required int deviceId,
     required String proxyUrl,
     required String username,
     required String poolingToken,
@@ -591,6 +630,7 @@ class DefguardInstancesCompanion extends UpdateCompanion<DefguardInstance> {
   }) : name = Value(name),
        uuid = Value(uuid),
        url = Value(url),
+       deviceId = Value(deviceId),
        proxyUrl = Value(proxyUrl),
        username = Value(username),
        poolingToken = Value(poolingToken),
@@ -604,6 +644,7 @@ class DefguardInstancesCompanion extends UpdateCompanion<DefguardInstance> {
     Expression<String>? name,
     Expression<String>? uuid,
     Expression<String>? url,
+    Expression<int>? deviceId,
     Expression<String>? proxyUrl,
     Expression<String>? username,
     Expression<String>? poolingToken,
@@ -618,6 +659,7 @@ class DefguardInstancesCompanion extends UpdateCompanion<DefguardInstance> {
       if (name != null) 'name': name,
       if (uuid != null) 'uuid': uuid,
       if (url != null) 'url': url,
+      if (deviceId != null) 'device_id': deviceId,
       if (proxyUrl != null) 'proxy_url': proxyUrl,
       if (username != null) 'username': username,
       if (poolingToken != null) 'pooling_token': poolingToken,
@@ -634,6 +676,7 @@ class DefguardInstancesCompanion extends UpdateCompanion<DefguardInstance> {
     Value<String>? name,
     Value<String>? uuid,
     Value<String>? url,
+    Value<int>? deviceId,
     Value<String>? proxyUrl,
     Value<String>? username,
     Value<String>? poolingToken,
@@ -648,6 +691,7 @@ class DefguardInstancesCompanion extends UpdateCompanion<DefguardInstance> {
       name: name ?? this.name,
       uuid: uuid ?? this.uuid,
       url: url ?? this.url,
+      deviceId: deviceId ?? this.deviceId,
       proxyUrl: proxyUrl ?? this.proxyUrl,
       username: username ?? this.username,
       poolingToken: poolingToken ?? this.poolingToken,
@@ -673,6 +717,9 @@ class DefguardInstancesCompanion extends UpdateCompanion<DefguardInstance> {
     }
     if (url.present) {
       map['url'] = Variable<String>(url.value);
+    }
+    if (deviceId.present) {
+      map['device_id'] = Variable<int>(deviceId.value);
     }
     if (proxyUrl.present) {
       map['proxy_url'] = Variable<String>(proxyUrl.value);
@@ -708,6 +755,7 @@ class DefguardInstancesCompanion extends UpdateCompanion<DefguardInstance> {
           ..write('name: $name, ')
           ..write('uuid: $uuid, ')
           ..write('url: $url, ')
+          ..write('deviceId: $deviceId, ')
           ..write('proxyUrl: $proxyUrl, ')
           ..write('username: $username, ')
           ..write('poolingToken: $poolingToken, ')
@@ -1580,6 +1628,7 @@ typedef $$DefguardInstancesTableCreateCompanionBuilder =
       required String name,
       required String uuid,
       required String url,
+      required int deviceId,
       required String proxyUrl,
       required String username,
       required String poolingToken,
@@ -1595,6 +1644,7 @@ typedef $$DefguardInstancesTableUpdateCompanionBuilder =
       Value<String> name,
       Value<String> uuid,
       Value<String> url,
+      Value<int> deviceId,
       Value<String> proxyUrl,
       Value<String> username,
       Value<String> poolingToken,
@@ -1666,6 +1716,11 @@ class $$DefguardInstancesTableFilterComposer
 
   ColumnFilters<String> get url => $composableBuilder(
     column: $table.url,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get deviceId => $composableBuilder(
+    column: $table.deviceId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -1764,6 +1819,11 @@ class $$DefguardInstancesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get proxyUrl => $composableBuilder(
     column: $table.proxyUrl,
     builder: (column) => ColumnOrderings(column),
@@ -1825,6 +1885,9 @@ class $$DefguardInstancesTableAnnotationComposer
 
   GeneratedColumn<String> get url =>
       $composableBuilder(column: $table.url, builder: (column) => column);
+
+  GeneratedColumn<int> get deviceId =>
+      $composableBuilder(column: $table.deviceId, builder: (column) => column);
 
   GeneratedColumn<String> get proxyUrl =>
       $composableBuilder(column: $table.proxyUrl, builder: (column) => column);
@@ -1923,6 +1986,7 @@ class $$DefguardInstancesTableTableManager
                 Value<String> name = const Value.absent(),
                 Value<String> uuid = const Value.absent(),
                 Value<String> url = const Value.absent(),
+                Value<int> deviceId = const Value.absent(),
                 Value<String> proxyUrl = const Value.absent(),
                 Value<String> username = const Value.absent(),
                 Value<String> poolingToken = const Value.absent(),
@@ -1936,6 +2000,7 @@ class $$DefguardInstancesTableTableManager
                 name: name,
                 uuid: uuid,
                 url: url,
+                deviceId: deviceId,
                 proxyUrl: proxyUrl,
                 username: username,
                 poolingToken: poolingToken,
@@ -1951,6 +2016,7 @@ class $$DefguardInstancesTableTableManager
                 required String name,
                 required String uuid,
                 required String url,
+                required int deviceId,
                 required String proxyUrl,
                 required String username,
                 required String poolingToken,
@@ -1964,6 +2030,7 @@ class $$DefguardInstancesTableTableManager
                 name: name,
                 uuid: uuid,
                 url: url,
+                deviceId: deviceId,
                 proxyUrl: proxyUrl,
                 username: username,
                 poolingToken: poolingToken,

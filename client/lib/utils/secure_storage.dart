@@ -4,6 +4,8 @@ import 'package:biometric_storage/biometric_storage.dart';
 import 'package:ed25519_edwards/ed25519_edwards.dart' as ed;
 import 'package:mobile/data/proxy/mfa.dart';
 
+final biometricSecureStorage = BiometricStorage();
+
 class SecureStorageError implements Exception {
   final CanAuthenticateResponse storageResponse;
 
@@ -41,6 +43,19 @@ PromptInfo _makePrompt(String text) {
   );
 }
 
+Future<void> removeInstanceStorage(String storageKey) async {
+  final storage = await biometricSecureStorage.getStorage(
+    storageKey,
+    forceInit: false,
+    options: StorageFileInitOptions(
+      androidBiometricOnly: false,
+      darwinBiometricOnly: false,
+      authenticationRequired: false,
+    ),
+  );
+  await storage.delete();
+}
+
 Future<SecureInstanceStorage> getBiometricInstanceStorage(
   String storageKey, {
   String? prompt,
@@ -48,14 +63,15 @@ Future<SecureInstanceStorage> getBiometricInstanceStorage(
   final promptInfo = prompt != null
       ? _makePrompt(prompt)
       : PromptInfo.defaultValues;
-  final capabilityCheck = await BiometricStorage().canAuthenticate();
-  if (capabilityCheck != CanAuthenticateResponse.success) {
-    throw SecureStorageError(capabilityCheck);
-  }
-  // First creation of the storage doesn't require user interaction since we only write fresh data into the new storage it should be fine.
-  final storage = await BiometricStorage().getStorage(
+  final storage = await biometricSecureStorage.getStorage(
     storageKey,
     promptInfo: promptInfo,
+    forceInit: false,
+    options: StorageFileInitOptions(
+      authenticationRequired: true,
+      androidBiometricOnly: true,
+      darwinBiometricOnly: true,
+    ),
   );
   final storeRawData = await storage.read();
   if (storeRawData != null) {
