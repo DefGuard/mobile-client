@@ -97,12 +97,13 @@ class InstanceScreen extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final screenData = ref.watch(_screenDataProvider(id));
+    final biometricState = ref.watch(biometricsCapabilityProvider);
 
     return DgScaffold(
       title: "Locations",
       floatingActionButton: screenData.when(
         data: (screenData) {
-          if (screenData != null && screenData.instance.mfaKeysStored) {
+          if (screenData != null && screenData.instance.mfaKeysStored && biometricState.canOpenStorage) {
             return SizedBox(
               height: 60,
               width: 60,
