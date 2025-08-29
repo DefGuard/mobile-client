@@ -38,24 +38,3 @@ final class Peer: Codable {
         case allowedIPs
     }
 }
-
-//extension Peer: Equatable {
-//    public static func == (lhs: Peer, rhs: Peer) -> Bool {
-//        return lhs.publicKey == rhs.publicKey &&
-//            lhs.preSharedKey == rhs.preSharedKey &&
-//            Set(lhs.allowedIPs) == Set(rhs.allowedIPs) &&
-//            lhs.endpoint == rhs.endpoint &&
-//            lhs.persistentKeepAlive == rhs.persistentKeepAlive
-//    }
-//}
-
-//extension Peer: Hashable {
-//    public func hash(into hasher: inout Hasher) {
-//        hasher.combine(publicKey)
-//        hasher.combine(preSharedKey)
-//        hasher.combine(Set(allowedIPs))
-//        hasher.combine(endpoint)
-//        hasher.combine(persistentKeepAlive)
-//
-//    }
-//}
