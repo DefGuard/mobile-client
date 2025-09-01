@@ -1,18 +1,19 @@
-# Defguard Mobile App
+# Defguard Mobile - WireGuard VPN mobile client
 
-The **Defguard Mobile App** allows you to manage your [WireGuard®](https://www.wireguard.com/) VPN tunnels on the go and secure access with multi-factor authentication (MFA).
+The **DefGuard Mobile Client** is a secure, self-hosted **WireGuard VPN mobile client** designed for enterprise and personal use. It enables seamless management of WireGuard® VPN tunnels on the go with enhanced security through **multi-factor authentication (MFA)**, including biometrics, TOTP, and external SSO providers like Google, Okta, and Microsoft EntraID.
 
-This mobile app is part of the [Defguard](https://defguard.net) ecosystem – a self-hosted, open-source platform for secure remote access, identity management, and VPN orchestration.
+This open-source, cross-platform VPN app supports easy QR code onboarding and flexible traffic routing to meet diverse secure remote access needs. DefGuard is part of a modular ecosystem built for VPN orchestration and identity management . Defguard provides a mobile VPN client with biometrics and TOTP.
 
-> 🔐 Secure. 🧩 Modular. 🧑‍💻 Self-hosted.
-
-## Features
-
-- Multi-Factor Authentication with Internal SSO/OIDC (Biometrics, TOTP, Email) or External SSO (Google, Okta, Microsoft EntraID, JumpCloud, ...)
-- Easy QR-based onboarding (or via url and tokens)
-- Traffic Routing (All Traffic via VPN or just predefined routing)
-- Real-time synchronization of configuration with Defguard server
-- Cross-platform support (iOS & Android)
+## Key Features
+- Secure **WireGuard VPN mobile client** with **Multi-Factor Authentication (MFA)**  
+- Internal SSO/OIDC support with biometrics, TOTP, email verification  
+- External SSO support: Google, Okta, Microsoft EntraID, JumpCloud, and more  
+- Quick and easy onboarding via secure **QR code VPN onboarding** or URL/token  
+- Flexible traffic routing: all traffic via VPN or selective routing  
+- Real-time synchronization of VPN configurations with the DefGuard server  
+- Native **cross-platform VPN app** support for **Android VPN client** and iOS VPN client  
+- Fully **self-hosted VPN solution** for ultimate privacy and control  
+- Open-source codebase for transparency and customization  
 
 ## Screenshots
 
@@ -39,3 +40,8 @@ Join closed beta for iOS or Android.
 - Available soon on the [App Store](https://testflight.apple.com/join/Jvdhkt7h)
 
 Documentation available at : [https://docs.defguard.net/help/mobile-client](https://docs.defguard.net/help/mobile-client)
+
+## About DefGuard
+DefGuard is a comprehensive platform offering **secure remote access**, **identity management**, and VPN orchestration with a focus on security using **multi-factor authentication for VPN**.  
+
+Visit defguard.net for more information.
