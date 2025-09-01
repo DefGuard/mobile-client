@@ -5,10 +5,14 @@ import 'package:mobile/data/db/database.dart';
 import 'package:mobile/open/api.dart';
 import 'package:mobile/open/widgets/toaster/toast_manager.dart';
 import 'package:mobile/utils/update_instance.dart';
+import 'package:pub_semver/pub_semver.dart';
 
 import '../logging.dart';
 
 class ConfigurationUpdater extends HookConsumerWidget {
+  static final Version supportedCoreVersion = Version(1, 5, 0);
+  static final Version supportedProxyVersion = Version(1, 5, 0);
+
   final Widget child;
 
   const ConfigurationUpdater({super.key, required this.child});
@@ -19,11 +23,13 @@ class ConfigurationUpdater extends HookConsumerWidget {
     final updatePending = useState(false);
     final db = ref.read(databaseProvider);
     final lifecycle = useAppLifecycleState();
+    final hasShown = useState(false);
 
     final updateConfiguration = useCallback(() async {
       // cancel if update is already pending
       if (updatePending.value) return;
       updatePending.value = true;
+      List<Map<String, dynamic>> versionUnsupportedInstances = [];
       try {
         final instances = await db.managers.defguardInstances.get();
         if (instances.isEmpty) {
@@ -38,8 +44,42 @@ class ConfigurationUpdater extends HookConsumerWidget {
           talker.debug(
             "Auto configuration update started for ${instance.name} (${instance.id})",
           );
-          final (responseData, responseStatus) = await proxyApi
+          final (responseData, responseStatus, headers) = await proxyApi
               .pollConfiguration(instance.proxyUrl, instance.poolingToken);
+          talker.debug("Headers: $headers");
+          // Check versions
+          try {
+            if (headers == null) {
+              talker.error("Headers are null for ${instance.logName}");
+              continue;
+            }
+            final coreVersionStr = headers['defguard-core-version']?.first;
+            final proxyVersionStr =
+                headers['defguard-component-version']?.first;
+            if (coreVersionStr == null || proxyVersionStr == null) {
+              talker.error(
+                "Version headers missing for ${instance.logName}, treating as unsupported",
+              );
+              versionUnsupportedInstances.add({
+                'name': instance.name,
+                'coreVersion': coreVersionStr ?? 'unknown',
+                'proxyVersion': proxyVersionStr ?? 'unknown',
+              });
+              continue;
+            }
+            final coreVersion = Version.parse(coreVersionStr);
+            final proxyVersion = Version.parse(proxyVersionStr);
+            if (coreVersion < supportedCoreVersion ||
+                proxyVersion < supportedProxyVersion) {
+              versionUnsupportedInstances.add({
+                'name': instance.name,
+                'coreVersion': coreVersionStr,
+                'proxyVersion': proxyVersionStr,
+              });
+            }
+          } catch (e) {
+            talker.error("Failed to parse versions for ${instance.logName}", e);
+          }
           // instance lost it's enterprise status
           if (responseStatus == 402) {
             instance.copyWith(
@@ -55,6 +95,7 @@ class ConfigurationUpdater extends HookConsumerWidget {
             );
             continue;
           }
+
           try {
             final updateResult = await updateInstance(
               db: db,
@@ -83,6 +124,23 @@ class ConfigurationUpdater extends HookConsumerWidget {
               "Failed to process update for ${instance.logName} ",
               e,
             );
+          }
+        }
+        // After processing all instances, check for version warning
+        if (versionUnsupportedInstances.isNotEmpty) {
+          if (!hasShown.value) {
+            String message =
+                "The following instances have versions that are incompatible with your Defguard Mobile Client and may not work correctly:\n\n";
+            for (final instance in versionUnsupportedInstances) {
+              message +=
+                  "- ${instance['name']}: Defguard Core ${instance['coreVersion']} (expected >=$supportedCoreVersion), Defguard Proxy ${instance['proxyVersion']} (expected >=$supportedProxyVersion)\n";
+            }
+            message += "\nPlease contact your administrator.";
+            toaster.showInfo(
+              title: "Version mismatch detected",
+              message: message.trim(),
+            );
+            hasShown.value = true;
           }
         }
       } catch (e) {

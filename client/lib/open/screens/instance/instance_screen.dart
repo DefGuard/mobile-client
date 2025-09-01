@@ -103,7 +103,9 @@ class InstanceScreen extends HookConsumerWidget {
       title: "Locations",
       floatingActionButton: screenData.when(
         data: (screenData) {
-          if (screenData != null && screenData.instance.mfaKeysStored && biometricState.canOpenStorage) {
+          if (screenData != null &&
+              screenData.instance.mfaKeysStored &&
+              biometricState.canOpenStorage) {
             return SizedBox(
               height: 60,
               width: 60,
@@ -180,7 +182,7 @@ class _PullWrapper extends HookConsumerWidget {
         final msg = ScaffoldMessenger.of(context);
         try {
           final instance = screenData.instance;
-          final (responseData, responseStatus) = await proxyApi
+          final (responseData, responseStatus, responseHeaders) = await proxyApi
               .pollConfiguration(instance.proxyUrl, instance.poolingToken);
           if (responseData == null) {
             msg.showSnackBar(

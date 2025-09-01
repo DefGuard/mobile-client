@@ -46,7 +46,7 @@ class _ProxyApi {
     _dio.interceptors.add(TalkerDioLogger(talker: talker));
   }
 
-  Future<(ConfigurationPollResponse?, int?)> pollConfiguration(
+  Future<(ConfigurationPollResponse?, int?, Headers?)> pollConfiguration(
     String proxyUrl,
     String authToken,
   ) async {
@@ -57,18 +57,25 @@ class _ProxyApi {
         pathSegments: [...proxyUri.pathSegments, ..._apiV1Segments, 'poll'],
       );
       final Map<String, dynamic> data = {'token': authToken};
-      final response = await _dio.postUri(endpoint, data: data);
+      final response = await _dio.postUri(
+        endpoint,
+        data: data,
+        options: Options(
+          validateStatus: (status) =>
+              status! < 500, // Don't throw for 4xx errors
+        ),
+      );
       final status = response.statusCode;
       // return early, instance lost it's enterprise status
       if (status == 402) {
-        return (null, 402);
+        return (null, 402, response.headers);
       }
       final responseData = InstanceInfoResponse.fromJson(response.data);
-      return (responseData.deviceConfig, status);
+      return (responseData.deviceConfig, status, response.headers);
     } catch (e) {
       talker.error("Failed to poll configuration!", e);
     }
-    return (null, null);
+    return (null, null, null);
   }
 
   Future<EnrollmentStartResponse> startEnrollment(
