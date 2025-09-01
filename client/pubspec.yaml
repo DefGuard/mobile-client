@@ -73,6 +73,7 @@ dependencies:
   biometric_storage: ^5.0.1
   tuple: ^2.0.2
   local_auth: ^2.3.0
+  pub_semver: ^2.2.0
 
 dev_dependencies:
   flutter_test:

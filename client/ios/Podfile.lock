@@ -102,21 +102,21 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/wireguard_plugin/darwin"
 
 SPEC CHECKSUMS:
-  app_links: 585674be3c6661708e6cd794ab4f39fb9d8356f9
-  biometric_storage: 1400f1382af3a4cc2bf05340e13c3d8de873ceb9
-  Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
-  flutter_local_notifications: ff50f8405aaa0ccdc7dcfb9022ca192e8ad9688f
-  flutter_native_splash: df59bb2e1421aa0282cb2e95618af4dcb0c56c29
-  local_auth_darwin: fa4b06454df7df8e97c18d7ee55151c57e7af0de
-  mobile_scanner: 77265f3dc8d580810e91849d4a0811a90467ed5e
-  package_info_plus: c0502532a26c7662a62a356cebe2692ec5fe4ec4
-  path_provider_foundation: 2b6b4c569c0fb62ec74538f866245ac84301af46
-  permission_handler_apple: 9878588469a2b0d0fc1e048d9f43605f92e6cec2
-  share_plus: 8b6f8b3447e494cca5317c8c3073de39b3600d1f
+  app_links: 3dbc685f76b1693c66a6d9dd1e9ab6f73d97dc0a
+  biometric_storage: 662167ef947fba48891850f0b3042f892a839e9a
+  Flutter: e0871f40cf51350855a761d2e70bf5af5b9b5de7
+  flutter_local_notifications: a5a732f069baa862e728d839dd2ebb904737effb
+  flutter_native_splash: c32d145d68aeda5502d5f543ee38c192065986cf
+  local_auth_darwin: d2e8c53ef0c4f43c646462e3415432c4dab3ae19
+  mobile_scanner: 9157936403f5a0644ca3779a38ff8404c5434a93
+  package_info_plus: af8e2ca6888548050f16fa2f1938db7b5a5df499
+  path_provider_foundation: 080d55be775b7414fd5a5ef3ac137b97b097e564
+  permission_handler_apple: 4ed2196e43d0651e8ff7ca3483a069d469701f2d
+  share_plus: 50da8cb520a8f0f65671c6c6a99b3617ed10a58a
   sqlite3: 3e82a2daae39ba3b41ae6ee84a130494585460fc
-  sqlite3_flutter_libs: 7bea6d85399aebaeb54e4f9845dcac6f5033cf22
-  url_launcher_ios: 5334b05cef931de560670eeae103fd3e431ac3fe
-  wireguard_plugin: 4d2720563b180d23101f7162ecdbf57203e82e8e
+  sqlite3_flutter_libs: 52ecc4dfaae71f496da86159263dbce5d23a051a
+  url_launcher_ios: 694010445543906933d732453a59da0a173ae33d
+  wireguard_plugin: c2f4d5382eecd7bcd07c027642c75e0569f91ff8
 
 PODFILE CHECKSUM: ae9e65fc23486119b8e977fd41d9213f251e537a
 
