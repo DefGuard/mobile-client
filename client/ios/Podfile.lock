@@ -23,18 +23,18 @@ PODS:
     - Flutter
   - share_plus (0.0.1):
     - Flutter
-  - sqlite3 (3.50.2):
-    - sqlite3/common (= 3.50.2)
-  - sqlite3/common (3.50.2)
-  - sqlite3/dbstatvtab (3.50.2):
+  - sqlite3 (3.50.4):
+    - sqlite3/common (= 3.50.4)
+  - sqlite3/common (3.50.4)
+  - sqlite3/dbstatvtab (3.50.4):
     - sqlite3/common
-  - sqlite3/fts5 (3.50.2):
+  - sqlite3/fts5 (3.50.4):
     - sqlite3/common
-  - sqlite3/math (3.50.2):
+  - sqlite3/math (3.50.4):
     - sqlite3/common
-  - sqlite3/perf-threadsafe (3.50.2):
+  - sqlite3/perf-threadsafe (3.50.4):
     - sqlite3/common
-  - sqlite3/rtree (3.50.2):
+  - sqlite3/rtree (3.50.4):
     - sqlite3/common
   - sqlite3_flutter_libs (0.0.1):
     - Flutter
@@ -113,7 +113,7 @@ SPEC CHECKSUMS:
   path_provider_foundation: 080d55be775b7414fd5a5ef3ac137b97b097e564
   permission_handler_apple: 4ed2196e43d0651e8ff7ca3483a069d469701f2d
   share_plus: 50da8cb520a8f0f65671c6c6a99b3617ed10a58a
-  sqlite3: 3e82a2daae39ba3b41ae6ee84a130494585460fc
+  sqlite3: 73513155ec6979715d3904ef53a8d68892d4032b
   sqlite3_flutter_libs: 52ecc4dfaae71f496da86159263dbce5d23a051a
   url_launcher_ios: 694010445543906933d732453a59da0a173ae33d
   wireguard_plugin: c2f4d5382eecd7bcd07c027642c75e0569f91ff8
