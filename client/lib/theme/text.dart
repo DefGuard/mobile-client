@@ -10,6 +10,12 @@ const Color _defaultTextColor = DgColor.textBodyPrimary;
 class DgText {
   DgText._();
 
+  static const TextStyle welcomeH2 = TextStyle(
+    fontFamily: _roboto,
+    fontSize: 15,
+    fontWeight: FontWeight.w400,
+    fontStyle: FontStyle.normal,
+  );
   static const TextStyle body1 = TextStyle(
     fontFamily: _poppins,
     fontWeight: FontWeight.w600,

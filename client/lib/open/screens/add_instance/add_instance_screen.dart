@@ -1,14 +1,33 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/open/widgets/buttons/dg_button.dart';
-import 'package:mobile/open/widgets/dg_message_box.dart';
 import 'package:mobile/open/widgets/dg_single_child_scroll_view.dart';
 import 'package:mobile/open/widgets/navigation/dg_scaffold.dart';
 import 'package:mobile/router/routes.dart';
+import 'package:mobile/theme/color.dart';
 import 'package:mobile/theme/spacing.dart';
 import 'package:mobile/theme/text.dart';
 import 'package:mobile/utils/screen_padding.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../widgets/icons/asset_icons_simple.dart';
+
+final messageBoxMessage1 =
+    """This app connects your device to your organisation’s private Defguard instance. Defguard (the app developer) does not collect or store your data - only your organisation controls it. Diagnostic logs stay on your device only. By continuing, you consent to this connection.""";
+final messageBoxMessage2 =
+    "To connect this device to your Defguard instance, you need to add it to your Defguard profile, or if you’re enrolling, the instance details should already be shown.";
+
+class _TopIcon extends StatelessWidget {
+  const _TopIcon();
+
+  @override
+  Widget build(BuildContext context) {
+    return SvgPicture.asset(
+      "assets/icons/add_instance_top.svg",
+      height: 66,
+      width: 104,
+    );
+  }
+}
 
 class AddInstanceScreen extends StatelessWidget {
   const AddInstanceScreen({super.key});
@@ -26,20 +45,23 @@ class AddInstanceScreen extends StatelessWidget {
         ),
         child: Column(
           children: [
-            SizedBox(height: 120),
+            SizedBox(height: 64),
+            const _TopIcon(),
+            SizedBox(height: DgSpacing.m),
             Text(
               "Please, scan QR Code to add instance",
               style: DgText.body1,
               textAlign: TextAlign.center,
             ),
-            SizedBox(height: DgSpacing.l),
-            DgMessageBox(
-              variant: DgMessageBoxVariant.info,
-              width: double.infinity,
-              text:
-                  "To activate this device, you need to add your Defguard instance. You can Add a new device  in your Defguard profile, or, if you are completing the enrollment process, the instance details should already be displayed.",
+            SizedBox(height: DgSpacing.xs,),
+            Text(
+              "To connect this device to your Defguard instance, you need to add it to your Defguard profile, or if you’re enrolling, the instance details should already be shown.",
+              style: DgText.welcomeH2.copyWith(
+                color: DgColor.textBodySecondary,
+              ),
+              textAlign: TextAlign.center,
             ),
-            SizedBox(height: DgSpacing.l),
+            SizedBox(height: DgSpacing.xl),
             DgButton(
               text: "Scan QR Code",
               variant: DgButtonVariant.primary,
@@ -61,6 +83,12 @@ class AddInstanceScreen extends StatelessWidget {
               onTap: () {
                 AddInstanceFormScreenRoute().push(context);
               },
+            ),
+            SizedBox(height: DgSpacing.m),
+            Text(
+              messageBoxMessage1,
+              style: DgText.modal2.copyWith(color: DgColor.textBodySecondary),
+              textAlign: TextAlign.center,
             ),
           ],
         ),
