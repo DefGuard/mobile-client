@@ -22,10 +22,12 @@ class LoadingView extends StatelessWidget {
           return ConstrainedBox(
             constraints: BoxConstraints(
               minHeight: constrains.maxHeight - padding.vertical,
+              minWidth: constrains.maxWidth - padding.horizontal,
             ),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               mainAxisSize: MainAxisSize.max,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                   DgCircularProgress(color: DgColor.iconSecondary, size: 92),
               ],
