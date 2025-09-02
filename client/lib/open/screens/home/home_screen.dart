@@ -7,7 +7,6 @@ import 'package:mobile/open/riverpod/plugin/plugin.dart';
 import 'package:mobile/open/widgets/circular_progress.dart';
 import 'package:mobile/open/widgets/icons/arrow_single.dart';
 import 'package:mobile/open/widgets/icons/connection.dart';
-import 'package:mobile/open/widgets/limited_text.dart';
 import 'package:mobile/open/widgets/navigation/dg_scaffold.dart';
 import 'package:mobile/router/routes.dart';
 import 'package:mobile/theme/color.dart';
@@ -127,7 +126,7 @@ class _InstanceItem extends HookConsumerWidget {
       child: Container(
         constraints: BoxConstraints(minHeight: 64, maxHeight: 100),
         padding: EdgeInsetsDirectional.symmetric(
-          vertical: 0,
+          vertical: DgSpacing.s,
           horizontal: DgSpacing.m,
         ),
         decoration: BoxDecoration(
@@ -142,9 +141,8 @@ class _InstanceItem extends HookConsumerWidget {
                   : DgIconConnectionVariant.disconnected,
             ),
             SizedBox(width: 18),
-            LimitedText(text: instance.name, style: DgText.sideBar),
+            Expanded(child: Text(instance.name, style: DgText.sideBar)),
             SizedBox(width: 10),
-            Spacer(),
             DgIconArrowSingle(),
           ],
         ),

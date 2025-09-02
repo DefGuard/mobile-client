@@ -36,7 +36,7 @@ class _ProxyApi {
     BaseOptions(
       responseType: ResponseType.json,
       connectTimeout: Duration(seconds: 20),
-      receiveTimeout: Duration(seconds: 30),
+      receiveTimeout: Duration(seconds: 60),
     ),
   );
 
