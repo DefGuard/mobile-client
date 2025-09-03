@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:mobile/open/screens/add_instance/data_gathering_dialog.dart';
 import 'package:mobile/open/widgets/buttons/dg_button.dart';
 import 'package:mobile/open/widgets/dg_single_child_scroll_view.dart';
 import 'package:mobile/open/widgets/navigation/dg_scaffold.dart';
@@ -8,6 +11,7 @@ import 'package:mobile/theme/spacing.dart';
 import 'package:mobile/theme/text.dart';
 import 'package:mobile/utils/screen_padding.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../widgets/icons/asset_icons_simple.dart';
 
@@ -15,6 +19,8 @@ final messageBoxMessage1 =
     """This app connects your device to your organisation’s private Defguard instance. Defguard (the app developer) does not collect or store your data - only your organisation controls it. Diagnostic logs stay on your device only. By continuing, you consent to this connection.""";
 final messageBoxMessage2 =
     "To connect this device to your Defguard instance, you need to add it to your Defguard profile, or if you’re enrolling, the instance details should already be shown.";
+
+final agreementPrefsKey = "DATA_GATHERING_AGREEMENT";
 
 class _TopIcon extends StatelessWidget {
   const _TopIcon();
@@ -29,11 +35,13 @@ class _TopIcon extends StatelessWidget {
   }
 }
 
-class AddInstanceScreen extends StatelessWidget {
+class AddInstanceScreen extends HookConsumerWidget {
   const AddInstanceScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final asyncPrefs = useMemoized(() => SharedPreferencesAsync(), []);
+
     return DgScaffold(
       title: "Add Instance",
       child: DgSingleChildScrollView(
@@ -53,7 +61,7 @@ class AddInstanceScreen extends StatelessWidget {
               style: DgText.body1,
               textAlign: TextAlign.center,
             ),
-            SizedBox(height: DgSpacing.xs,),
+            SizedBox(height: DgSpacing.xs),
             Text(
               "To connect this device to your Defguard instance, you need to add it to your Defguard profile, or if you’re enrolling, the instance details should already be shown.",
               style: DgText.welcomeH2.copyWith(
@@ -68,8 +76,23 @@ class AddInstanceScreen extends StatelessWidget {
               size: DgButtonSize.big,
               width: double.infinity,
               icon: DgIconQr(),
-              onTap: () {
-                ScanInstanceQrRoute().push(context);
+              onTap: () async {
+                final isAgreed = await asyncPrefs.getBool(agreementPrefsKey);
+                if(isAgreed ?? false) {
+                  if(context.mounted) {
+                    ScanInstanceQrRoute().push(context);
+                  }
+                } else {
+                  if(context.mounted) {
+                    final dialogResult = await showDialog<bool>(context: context, builder: (_) => DataGatheringDialog());
+                    if(dialogResult ?? false) {
+                      await asyncPrefs.setBool(agreementPrefsKey, true);
+                      if(context.mounted) {
+                        ScanInstanceQrRoute().push(context);
+                      }
+                    }
+                  }
+                }
               },
             ),
             SizedBox(height: DgSpacing.m),
@@ -80,8 +103,24 @@ class AddInstanceScreen extends StatelessWidget {
               variant: DgButtonVariant.secondary,
               size: DgButtonSize.big,
               width: double.infinity,
-              onTap: () {
-                AddInstanceFormScreenRoute().push(context);
+              onTap: () async {
+                final isAgreed = await asyncPrefs.getBool(agreementPrefsKey);
+                if(isAgreed ?? false) {
+                  if(context.mounted) {
+                    AddInstanceFormScreenRoute().push(context);
+                  }
+                } else {
+                  if(context.mounted) {
+                    final dialogResult = await showDialog<bool>(context: context, builder: (_) => DataGatheringDialog());
+                    if(dialogResult ?? false) {
+                      await asyncPrefs.setBool(agreementPrefsKey, true);
+                      if(context.mounted) {
+                        AddInstanceFormScreenRoute().push(context);
+                      }
+                    }
+                  }
+
+                }
               },
             ),
             SizedBox(height: DgSpacing.m),

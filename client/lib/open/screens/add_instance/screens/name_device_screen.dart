@@ -134,12 +134,6 @@ class NameDeviceScreen extends HookConsumerWidget {
                     onTap: () async {
                       final messenger = ScaffoldMessenger.of(context);
                       if (!formKey.currentState!.validate()) {
-                        messenger.showSnackBar(
-                          dgSnackBar(
-                            text: "Correct form errors!",
-                            customDuration: Duration(seconds: 10),
-                          ),
-                        );
                         return;
                       }
                       isLoading.value = true;
