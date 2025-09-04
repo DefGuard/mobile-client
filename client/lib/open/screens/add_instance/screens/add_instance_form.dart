@@ -4,7 +4,6 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mobile/data/db/database.dart';
 import 'package:mobile/data/proxy/enrollment.dart';
 import 'package:mobile/open/api.dart';
-import 'package:mobile/open/constants.dart';
 import 'package:mobile/open/screens/add_instance/screens/name_device_screen.dart';
 import 'package:mobile/open/widgets/buttons/dg_button.dart';
 import 'package:mobile/open/widgets/dg_message_box.dart';
@@ -18,7 +17,6 @@ import 'package:mobile/open/widgets/navigation/dg_scaffold.dart';
 import 'package:mobile/router/routes.dart';
 import 'package:mobile/theme/spacing.dart';
 import 'package:mobile/theme/text.dart';
-import 'package:flutter/foundation.dart';
 import 'package:mobile/utils/screen_padding.dart';
 
 class AddInstanceFormScreen extends HookConsumerWidget {
@@ -110,9 +108,7 @@ class _AddInstanceForm extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final db = ref.read(databaseProvider);
     final formKey = useMemoized(() => GlobalKey<FormState>());
-    final urlController = useTextEditingController(
-      text: kDebugMode ? localDebugProxyUrl : null,
-    );
+    final urlController = useTextEditingController();
     final tokenController = useTextEditingController();
     final isLoading = useState(false);
 

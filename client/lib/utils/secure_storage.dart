@@ -51,6 +51,7 @@ Future<void> removeInstanceStorage(String storageKey) async {
       androidBiometricOnly: false,
       darwinBiometricOnly: false,
       authenticationRequired: false,
+      authenticationValidityDurationSeconds: 5,
     ),
   );
   await storage.delete();
