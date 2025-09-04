@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mobile/data/db/database.dart';
+import 'package:mobile/logging.dart';
 import 'package:mobile/open/widgets/buttons/dg_button.dart';
 import 'package:mobile/open/widgets/dg_dialog.dart';
 import 'package:mobile/open/widgets/dg_snackbar.dart';
@@ -23,13 +24,19 @@ class DeleteInstanceDialog extends HookConsumerWidget {
 
     Future<void> deleteInstance(BuildContext context) async {
       final messenger = ScaffoldMessenger.of(context);
-      await removeInstanceStorage(instance.secureStorageKey);
-      await db.managers.defguardInstances
-          .filter((row) => row.id.equals(instance.id))
-          .delete();
-      if (context.mounted) {
-        messenger.showSnackBar(dgSnackBar(text: "Instance deleted"));
-        Navigator.of(context).pop();
+      try {
+        if(instance.mfaKeysStored) {
+          await removeInstanceStorage(instance.secureStorageKey);
+        }
+        await db.managers.defguardInstances
+            .filter((row) => row.id.equals(instance.id))
+            .delete();
+        if (context.mounted) {
+          messenger.showSnackBar(dgSnackBar(text: "Instance deleted"));
+          Navigator.of(context).pop();
+        }
+      } catch(e) {
+        talker.error("Failed to delete instance ${instance.logName}! Reason: \n $e");
       }
     }
 

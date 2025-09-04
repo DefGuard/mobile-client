@@ -85,12 +85,11 @@ class _ScreenContent extends HookConsumerWidget {
           instance.pubKey,
         );
         // update instance information
-        final instanceDb = await db.managers.defguardInstances
+        var instanceDb = await db.managers.defguardInstances
             .filter((row) => row.id.equals(instanceId))
             .getSingle();
-        await db.managers.defguardInstances.update(
-          (_) => instanceDb.copyWith(mfaKeysStored: true),
-        );
+        instanceDb = instanceDb.copyWith(mfaKeysStored: true);
+        await db.managers.defguardInstances.replace(instanceDb);
         isLoading.value = false;
         if (context.mounted) {
           BiometryFinishScreenRoute().go(context);
