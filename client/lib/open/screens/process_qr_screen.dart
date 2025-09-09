@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
@@ -40,6 +42,32 @@ class ProcessQrScreen extends HookConsumerWidget {
 
   const ProcessQrScreen({super.key, required this.screenData});
 
+  Future<void> abortScreen(BuildContext context) async {
+    switch (screenData.intent) {
+      case QrScreenIntent.addInstance:
+        await WidgetsBinding.instance.endOfFrame;
+        if (context.mounted) {
+          AddInstanceScreenRoute().go(context);
+        }
+        break;
+      case QrScreenIntent.remoteMfa:
+        if (screenData.instance != null) {
+          await WidgetsBinding.instance.endOfFrame;
+          if (context.mounted) {
+            InstanceScreenRoute(
+              id: screenData.instance!.id.toString(),
+            ).go(context);
+          }
+        } else {
+          await WidgetsBinding.instance.endOfFrame;
+          if (context.mounted) {
+            HomeScreenRoute().go(context);
+          }
+        }
+        break;
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final db = ref.read(databaseProvider);
@@ -59,41 +87,40 @@ class ProcessQrScreen extends HookConsumerWidget {
             .filter((row) => row.uuid.equals(instanceId))
             .getSingleOrNull();
         if (dbInstance != null) {
+          talker.error(
+            "Register Instance failed! Instance is already registered.",
+          );
           messenger.showSnackBar(
             dgSnackBar(
               text: "Instance is already registered!",
               textColor: DgColor.textAlert,
             ),
           );
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (context.mounted) {
-              Navigator.of(context).pop();
-            }
-          });
+          if (context.mounted) {
+            unawaited(abortScreen(context));
+          }
           return;
         }
         final NameDeviceScreenData routeData = NameDeviceScreenData(
           proxyUrl: url,
           startResponse: registrationResponse,
         );
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (context.mounted) {
-            NameDeviceScreenRoute(routeData).push(context);
-          }
-        });
+        await WidgetsBinding.instance.endOfFrame;
+        if (context.mounted) {
+          NameDeviceScreenRoute(routeData).push(context);
+        }
       } catch (e) {
         talker.error("Enrollment via QR start failed!", e);
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (context.mounted) {
-            messenger.showSnackBar(
-              dgSnackBar(
-                text: "Something went wrong. Try again.",
-                textColor: DgColor.textAlert,
-              ),
-            );
-            Navigator.of(context).pop();
-          }
-        });
+        await WidgetsBinding.instance.endOfFrame;
+        if (context.mounted) {
+          messenger.showSnackBar(
+            dgSnackBar(
+              text: "Something went wrong. Try again.",
+              textColor: DgColor.textAlert,
+            ),
+          );
+          unawaited(abortScreen(context));
+        }
       }
     }, []);
 
@@ -105,9 +132,8 @@ class ProcessQrScreen extends HookConsumerWidget {
       try {
         talker.debug("Waiting after camera usage");
         late SecureInstanceStorage storage;
-        await Future.delayed(Duration(seconds: 2));
+        await Future.delayed(Duration(seconds: 3));
         await WidgetsBinding.instance.endOfFrame;
-        talker.debug("Reading storage");
         try {
           storage = await getBiometricInstanceStorage(
             instance.secureStorageKey,
@@ -139,13 +165,11 @@ class ProcessQrScreen extends HookConsumerWidget {
           return;
         }
         final signature = signChallenge(data.challenge, storage.privateKey);
-        talker.debug("Challenge signed");
         final requestData = FinishMfaRequest(
           token: data.token,
           code: signature,
           authPubKey: storage.publicKey,
         );
-        talker.debug("Sending MFA finish");
         await proxyApi.finishRemoteMfa(
           Uri.parse(instance.proxyUrl),
           requestData,
@@ -163,11 +187,10 @@ class ProcessQrScreen extends HookConsumerWidget {
           ),
         );
       } finally {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (context.mounted) {
-            InstanceScreenRoute(id: instance.id.toString()).go(context);
-          }
-        });
+        await WidgetsBinding.instance.endOfFrame;
+        if (context.mounted) {
+          InstanceScreenRoute(id: instance.id.toString()).go(context);
+        }
       }
     }, []);
 
@@ -184,7 +207,9 @@ class ProcessQrScreen extends HookConsumerWidget {
             }
             break;
           case QrScreenIntent.remoteMfa:
-            talker.debug("Handle remote MFA  | ${screenData.remoteMfaQr} | ${screenData.instance}");
+            talker.debug(
+              "Handle remote MFA  | ${screenData.remoteMfaQr} | ${screenData.instance}",
+            );
             if (screenData.remoteMfaQr != null && screenData.instance != null) {
               authorizeDesktop();
             } else {
@@ -222,7 +247,8 @@ class ProcessQrScreen extends HookConsumerWidget {
                 color: DgColor.textButtonSecondary,
               ),
               onTap: () {
-                Navigator.of(context).pop();
+                // exit as if errored out.
+                unawaited(abortScreen(context));
               },
             ),
           ],
