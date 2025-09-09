@@ -62,6 +62,7 @@ class DgDrawer extends HookConsumerWidget {
 
     final items = useMemoized<List<_DrawerItemData>>(() {
       return [
+            _DrawerItemData(label: "Test Biometry", route: TestStorageScreenRoute()),
             if (instancesAsync.value != null &&
                 instancesAsync.value!.length > 1)
               _DrawerItemData(label: "Instances", route: HomeScreenRoute()),

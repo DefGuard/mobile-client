@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mobile/open/screens/add_instance/data_gathering_dialog.dart';
+import 'package:mobile/open/screens/scan_qr_screen.dart';
 import 'package:mobile/open/widgets/buttons/dg_button.dart';
 import 'package:mobile/open/widgets/dg_single_child_scroll_view.dart';
 import 'package:mobile/open/widgets/navigation/dg_scaffold.dart';
@@ -75,7 +76,11 @@ class AddInstanceScreen extends HookConsumerWidget {
                 final isAgreed = await asyncPrefs.getBool(agreementPrefsKey);
                 if (isAgreed ?? false) {
                   if (context.mounted) {
-                    ScanInstanceQrRoute().push(context);
+                    QRScreenRoute(
+                      QrScreenData(
+                        intent: QrScreenIntent.addInstance,
+                      ),
+                    ).push(context);
                   }
                 } else {
                   if (context.mounted) {
@@ -86,7 +91,11 @@ class AddInstanceScreen extends HookConsumerWidget {
                     if (dialogResult ?? false) {
                       await asyncPrefs.setBool(agreementPrefsKey, true);
                       if (context.mounted) {
-                        ScanInstanceQrRoute().push(context);
+                        QRScreenRoute(
+                          QrScreenData(
+                            intent: QrScreenIntent.addInstance,
+                          ),
+                        ).push(context);
                       }
                     }
                   }

@@ -7,14 +7,14 @@ part of 'routes.dart';
 // **************************************************************************
 
 List<RouteBase> get $appRoutes => [
+  $testStorageScreenRoute,
+  $processQrScreenRoute,
   $homeScreenRoute,
   $qRScreenRoute,
   $instanceScreenRoute,
   $nameDeviceScreenRoute,
-  $scanInstanceQrRoute,
   $addInstanceFormScreenRoute,
   $addInstanceScreenRoute,
-  $registerFromQrScreenRoute,
   $talkerScreenRoute,
   $openIdMfaScreenRoute,
   $openIdMfaWaitingScreenRoute,
@@ -23,6 +23,64 @@ List<RouteBase> get $appRoutes => [
   $biometrySetupFailedScreenRoute,
   $biometryFinishScreenRoute,
 ];
+
+RouteBase get $testStorageScreenRoute => GoRouteData.$route(
+  path: '/test_bio',
+
+  factory: _$TestStorageScreenRoute._fromState,
+);
+
+mixin _$TestStorageScreenRoute on GoRouteData {
+  static TestStorageScreenRoute _fromState(GoRouterState state) =>
+      const TestStorageScreenRoute();
+
+  @override
+  String get location => GoRouteData.$location('/test_bio');
+
+  @override
+  void go(BuildContext context) => context.go(location);
+
+  @override
+  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
+
+  @override
+  void pushReplacement(BuildContext context) =>
+      context.pushReplacement(location);
+
+  @override
+  void replace(BuildContext context) => context.replace(location);
+}
+
+RouteBase get $processQrScreenRoute => GoRouteData.$route(
+  path: '/process_qr',
+
+  factory: _$ProcessQrScreenRoute._fromState,
+);
+
+mixin _$ProcessQrScreenRoute on GoRouteData {
+  static ProcessQrScreenRoute _fromState(GoRouterState state) =>
+      ProcessQrScreenRoute(state.extra as ProcessQrScreenData);
+
+  ProcessQrScreenRoute get _self => this as ProcessQrScreenRoute;
+
+  @override
+  String get location => GoRouteData.$location('/process_qr');
+
+  @override
+  void go(BuildContext context) => context.go(location, extra: _self.$extra);
+
+  @override
+  Future<T?> push<T>(BuildContext context) =>
+      context.push<T>(location, extra: _self.$extra);
+
+  @override
+  void pushReplacement(BuildContext context) =>
+      context.pushReplacement(location, extra: _self.$extra);
+
+  @override
+  void replace(BuildContext context) =>
+      context.replace(location, extra: _self.$extra);
+}
 
 RouteBase get $homeScreenRoute =>
     GoRouteData.$route(path: '/', factory: _$HomeScreenRoute._fromState);
@@ -53,7 +111,7 @@ RouteBase get $qRScreenRoute =>
 
 mixin _$QRScreenRoute on GoRouteData {
   static QRScreenRoute _fromState(GoRouterState state) =>
-      QRScreenRoute(state.extra as ScanQrScreenData);
+      QRScreenRoute(state.extra as QrScreenData);
 
   QRScreenRoute get _self => this as QRScreenRoute;
 
@@ -137,33 +195,6 @@ mixin _$NameDeviceScreenRoute on GoRouteData {
       context.replace(location, extra: _self.$extra);
 }
 
-RouteBase get $scanInstanceQrRoute => GoRouteData.$route(
-  path: '/add_instance/qr',
-
-  factory: _$ScanInstanceQrRoute._fromState,
-);
-
-mixin _$ScanInstanceQrRoute on GoRouteData {
-  static ScanInstanceQrRoute _fromState(GoRouterState state) =>
-      ScanInstanceQrRoute();
-
-  @override
-  String get location => GoRouteData.$location('/add_instance/qr');
-
-  @override
-  void go(BuildContext context) => context.go(location);
-
-  @override
-  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
-
-  @override
-  void pushReplacement(BuildContext context) =>
-      context.pushReplacement(location);
-
-  @override
-  void replace(BuildContext context) => context.replace(location);
-}
-
 RouteBase get $addInstanceFormScreenRoute => GoRouteData.$route(
   path: '/add_instance/form',
 
@@ -216,37 +247,6 @@ mixin _$AddInstanceScreenRoute on GoRouteData {
 
   @override
   void replace(BuildContext context) => context.replace(location);
-}
-
-RouteBase get $registerFromQrScreenRoute => GoRouteData.$route(
-  path: '/add_instance/from_qr_open',
-
-  factory: _$RegisterFromQrScreenRoute._fromState,
-);
-
-mixin _$RegisterFromQrScreenRoute on GoRouteData {
-  static RegisterFromQrScreenRoute _fromState(GoRouterState state) =>
-      RegisterFromQrScreenRoute(state.extra as QrInstanceRegistration);
-
-  RegisterFromQrScreenRoute get _self => this as RegisterFromQrScreenRoute;
-
-  @override
-  String get location => GoRouteData.$location('/add_instance/from_qr_open');
-
-  @override
-  void go(BuildContext context) => context.go(location, extra: _self.$extra);
-
-  @override
-  Future<T?> push<T>(BuildContext context) =>
-      context.push<T>(location, extra: _self.$extra);
-
-  @override
-  void pushReplacement(BuildContext context) =>
-      context.pushReplacement(location, extra: _self.$extra);
-
-  @override
-  void replace(BuildContext context) =>
-      context.replace(location, extra: _self.$extra);
 }
 
 RouteBase get $talkerScreenRoute => GoRouteData.$route(

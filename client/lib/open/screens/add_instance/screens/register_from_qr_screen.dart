@@ -28,9 +28,6 @@ class RegisterFromQrScreen extends HookConsumerWidget {
     final requestData = EnrollmentStartRequest(
       token: instanceRegistration.token,
     );
-    talker.debug(
-      "Start Enrollment request data:\ntoken:${instanceRegistration.token}\nurl:${instanceRegistration.url.toString()}",
-    );
     try {
       final registrationResponse = await proxyApi.startEnrollment(
         url,

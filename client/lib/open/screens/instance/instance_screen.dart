@@ -111,8 +111,8 @@ class InstanceScreen extends HookConsumerWidget {
               width: 60,
               child: FloatingActionButton(
                 onPressed: () {
-                  final data = ScanQrScreenData(
-                    intent: ScanQrScreenDataIntent.remoteMfa,
+                  final data = QrScreenData(
+                    intent: QrScreenIntent.remoteMfa,
                     instance: screenData.instance,
                   );
                   QRScreenRoute(data).push(context);
