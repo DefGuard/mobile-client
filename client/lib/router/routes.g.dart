@@ -7,7 +7,6 @@ part of 'routes.dart';
 // **************************************************************************
 
 List<RouteBase> get $appRoutes => [
-  $testStorageScreenRoute,
   $processQrScreenRoute,
   $homeScreenRoute,
   $qRScreenRoute,
@@ -23,33 +22,6 @@ List<RouteBase> get $appRoutes => [
   $biometrySetupFailedScreenRoute,
   $biometryFinishScreenRoute,
 ];
-
-RouteBase get $testStorageScreenRoute => GoRouteData.$route(
-  path: '/test_bio',
-
-  factory: _$TestStorageScreenRoute._fromState,
-);
-
-mixin _$TestStorageScreenRoute on GoRouteData {
-  static TestStorageScreenRoute _fromState(GoRouterState state) =>
-      const TestStorageScreenRoute();
-
-  @override
-  String get location => GoRouteData.$location('/test_bio');
-
-  @override
-  void go(BuildContext context) => context.go(location);
-
-  @override
-  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
-
-  @override
-  void pushReplacement(BuildContext context) =>
-      context.pushReplacement(location);
-
-  @override
-  void replace(BuildContext context) => context.replace(location);
-}
 
 RouteBase get $processQrScreenRoute => GoRouteData.$route(
   path: '/process_qr',
