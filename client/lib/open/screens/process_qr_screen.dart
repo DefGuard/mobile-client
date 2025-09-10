@@ -75,6 +75,8 @@ class ProcessQrScreen extends HookConsumerWidget {
     final registerInstance = useCallback(() async {
       final data = screenData.registerInstanceData!;
       final url = Uri.parse(data.url);
+      // give router some time after last redirect
+      await Future.delayed(Duration(seconds: 1));
       final requestData = EnrollmentStartRequest(token: data.token);
       try {
         final registrationResponse = await proxyApi.startEnrollment(
@@ -101,7 +103,7 @@ class ProcessQrScreen extends HookConsumerWidget {
         );
         await WidgetsBinding.instance.endOfFrame;
         if (context.mounted) {
-          NameDeviceScreenRoute(routeData).push(context);
+          NameDeviceScreenRoute(routeData).go(context);
         }
       } catch (e) {
         talker.error("Enrollment via QR start failed!", e);
