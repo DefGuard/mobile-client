@@ -12,7 +12,10 @@ import 'package:mobile/open/widgets/dg_text_form_field.dart';
 import 'package:mobile/router/routes.dart';
 import 'package:mobile/theme/spacing.dart';
 import 'package:mobile/utils/screen_padding.dart';
+import 'dart:io';
+import 'package:device_info_plus/device_info_plus.dart';
 
+import '../../../../logging.dart';
 import '../../../api.dart';
 import '../../../services/snackbar_service.dart';
 import '../../../widgets/navigation/dg_scaffold.dart';
@@ -78,6 +81,34 @@ class NameDeviceScreen extends HookConsumerWidget {
     final formKey = useMemoized(() => GlobalKey<FormState>());
     final nameController = useTextEditingController();
     final isLoading = useState(false);
+
+    useEffect(() {
+      Future<void> startup() async {
+        try {
+          final deviceInfo = DeviceInfoPlugin();
+          late String suggestedName;
+
+          if (Platform.isAndroid) {
+            final android = await deviceInfo.androidInfo;
+            // Combine manufacturer + model for readability
+            suggestedName = "${android.manufacturer} ${android.model}";
+            // e.g. "Samsung Galaxy S22"
+          } else if (Platform.isIOS) {
+            final ios = await deviceInfo.iosInfo;
+            suggestedName = ios.name;
+            // e.g. "John’s iPhone"
+          } else {
+            suggestedName = "";
+          }
+          nameController.text = suggestedName;
+        } catch(e) {
+          talker.error("Failed to get suggested device name! Reason: $e");
+        }
+      }
+
+      startup();
+      return null;
+    }, const []);
 
     return DgScaffold(
       title: "Add Instance",
