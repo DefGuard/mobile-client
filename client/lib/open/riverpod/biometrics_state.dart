@@ -1,28 +1,22 @@
 import 'dart:io' show Platform;
-import 'package:biometric_storage/biometric_storage.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:mobile/logging.dart';
-import 'package:mobile/utils/secure_storage.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'biometrics_state.g.dart';
 
-final LocalAuthentication _auth = LocalAuthentication();
 
 class BiometricsState {
   bool isSupported;
   bool canCheck;
-  bool storageCapabilityCheck;
   List<BiometricType> enrolledOptions;
 
   BiometricsState({
     required this.isSupported,
     required this.canCheck,
     required this.enrolledOptions,
-    required this.storageCapabilityCheck,
   });
 
   bool get isStrong {
@@ -46,8 +40,13 @@ class BiometricsState {
   }
 
   bool get canOpenStorage {
-    if (!isSupported || !canCheck || !storageCapabilityCheck) return false;
+    if (!isSupported || !canCheck) return false;
     return isStrong;
+  }
+
+  @override
+  String toString() {
+    return "Can Check: $canCheck | isStrong $isStrong | canOpenStorage $canOpenStorage";
   }
 }
 
@@ -58,7 +57,6 @@ class BiometricsCapability extends _$BiometricsCapability {
     final result = BiometricsState(
       isSupported: false,
       canCheck: false,
-      storageCapabilityCheck: false,
       enrolledOptions: [],
     );
     return result;
@@ -80,26 +78,17 @@ class BiometricsController extends HookConsumerWidget {
     final stateProvider = ref.read(biometricsCapabilityProvider.notifier);
 
     final updateProvider = useCallback(() async {
+      final auth = LocalAuthentication();
       final result = BiometricsState(
         isSupported: false,
         canCheck: false,
-        storageCapabilityCheck: false,
         enrolledOptions: [],
       );
-      try {
-        final storageCheck = await biometricSecureStorage.canAuthenticate();
-        result.storageCapabilityCheck =
-            storageCheck == CanAuthenticateResponse.success;
-      } catch (e) {
-        talker.error(
-          "Failed to check capability flag for biometric storage.\nReason: ${e.toString()}",
-        );
-      }
-      if (await _auth.canCheckBiometrics) {
+      if (await auth.canCheckBiometrics) {
         result.canCheck = true;
-        if (await _auth.isDeviceSupported()) {
+        if (await auth.isDeviceSupported()) {
           result.isSupported = true;
-          final list = await _auth.getAvailableBiometrics();
+          final list = await auth.getAvailableBiometrics();
           result.enrolledOptions = list;
         }
       }

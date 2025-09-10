@@ -5,7 +5,6 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mobile/data/proxy/mfa.dart';
 import 'package:mobile/open/api.dart';
 import 'package:mobile/open/widgets/buttons/dg_button.dart';
-import 'package:mobile/open/widgets/dg_snackbar.dart';
 import 'package:mobile/open/widgets/icons/openid_wait.dart';
 import 'package:mobile/open/widgets/navigation/dg_scaffold.dart';
 import 'package:mobile/theme/color.dart';
@@ -13,6 +12,7 @@ import 'package:mobile/theme/spacing.dart';
 import 'package:mobile/theme/text.dart';
 
 import '../../../../../logging.dart';
+import '../../../open/services/snackbar_service.dart';
 
 class OpenIdMfaWaitingScreenData {
   final String proxyUrl;
@@ -64,22 +64,16 @@ class OpenIdMfaWaitingScreen extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final navigator = Navigator.of(context);
-    final messenger = ScaffoldMessenger.of(context);
-
     // Start polling automatically when screen opens
     useEffect(() {
       _pollOpenidMfa()
           .then((finishMfaResponse) {
             if (finishMfaResponse == null) {
               // Timeout occurred
-              messenger.showSnackBar(
-                dgSnackBar(
-                  text: "Authentication timed out. Please try again.",
-                  textColor: DgColor.textAlert,
-                  onDismiss: () {
-                    messenger.hideCurrentSnackBar();
-                  },
-                ),
+              SnackbarService.show(
+                "Authentication timed out. Please try again.",
+                textColor: DgColor.textAlert,
+                dismissable: true,
               );
               navigator.pop();
             } else {
@@ -89,7 +83,11 @@ class OpenIdMfaWaitingScreen extends HookConsumerWidget {
           })
           .catchError((error) {
             talker.error("OpenID MFA polling error: $error");
-            messenger.showSnackBar(SnackBar(content: Text("Error: $error")));
+            SnackbarService.show(
+              "Error: $error",
+              textColor: DgColor.textAlert,
+              dismissable: true,
+            );
             navigator.pop();
           });
       return null;

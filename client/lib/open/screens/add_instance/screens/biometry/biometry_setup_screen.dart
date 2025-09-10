@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mobile/open/riverpod/biometrics_state.dart';
@@ -72,12 +73,15 @@ class _ScreenContent extends HookConsumerWidget {
     final biometryStatus = ref.watch(biometricsCapabilityProvider);
     final isLoading = useState(false);
 
-    final handleRegister = useCallback((DefguardInstance instance) async {
+    final handleRegister = useCallback((
+      DefguardInstance instance,
+      BuildContext context,
+    ) async {
       isLoading.value = true;
       try {
-        final authSecret = await getBiometricInstanceStorage(
+        final authSecret = await createBiometricStorage(
           instance.secureStorageKey,
-          prompt: "Confirm to setup",
+          prompt: "Confirm to complete setup",
         );
         await proxyApi.registerMobileAuth(
           Uri.parse(instance.proxyUrl),
@@ -95,6 +99,14 @@ class _ScreenContent extends HookConsumerWidget {
           BiometryFinishScreenRoute().go(context);
           return;
         }
+      } on PlatformException catch (e) {
+        final message = getErrorMessageFromBiometricsException(e);
+        talker.error("Register biometry failed: $message");
+        if (context.mounted) {
+          isLoading.value = false;
+          BiometrySetupFailedScreenRoute().push(context);
+          return;
+        }
       } catch (e) {
         talker.error("Failed mobile auth registration!", e);
         if (context.mounted) {
@@ -105,7 +117,7 @@ class _ScreenContent extends HookConsumerWidget {
       } finally {
         isLoading.value = false;
       }
-    }, [context]);
+    }, []);
 
     return instanceFuture.when(
       loading: () => LoadingView(),
@@ -159,7 +171,8 @@ class _ScreenContent extends HookConsumerWidget {
                 ],
               ),
             ),
-            if (biometryStatus.isSupported && biometryStatus.enrolledOptions.isEmpty)
+            if (biometryStatus.isSupported &&
+                biometryStatus.enrolledOptions.isEmpty)
               Text(
                 biometryNotEnabledMessage,
                 style: DgText.body2.copyWith(
@@ -203,7 +216,7 @@ class _ScreenContent extends HookConsumerWidget {
                     loading: isLoading.value,
                     size: DgButtonSize.big,
                     variant: DgButtonVariant.primary,
-                    onTap: () => handleRegister(instance),
+                    onTap: () => handleRegister(instance, context),
                   ),
                 ),
               ],

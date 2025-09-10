@@ -11,11 +11,12 @@ import 'package:mobile/open/api.dart';
 import 'package:mobile/open/screens/add_instance/screens/name_device_screen.dart';
 import 'package:mobile/open/widgets/buttons/dg_text_button.dart';
 import 'package:mobile/open/widgets/circular_progress.dart';
-import 'package:mobile/open/widgets/dg_snackbar.dart';
 import 'package:mobile/router/routes.dart';
 import 'package:mobile/theme/color.dart';
 import 'package:mobile/theme/spacing.dart';
 import 'package:mobile/theme/text.dart';
+
+import '../../../services/snackbar_service.dart';
 
 class RegisterFromQrScreen extends HookConsumerWidget {
   final QrInstanceRegistration instanceRegistration;
@@ -23,13 +24,9 @@ class RegisterFromQrScreen extends HookConsumerWidget {
   const RegisterFromQrScreen({super.key, required this.instanceRegistration});
 
   Future<void> _handleRegistration(BuildContext context, AppDatabase db) async {
-    final messenger = ScaffoldMessenger.of(context);
     final url = Uri.parse(instanceRegistration.url);
     final requestData = EnrollmentStartRequest(
       token: instanceRegistration.token,
-    );
-    talker.debug(
-      "Start Enrollment request data:\ntoken:${instanceRegistration.token}\nurl:${instanceRegistration.url.toString()}",
     );
     try {
       final registrationResponse = await proxyApi.startEnrollment(
@@ -41,12 +38,7 @@ class RegisterFromQrScreen extends HookConsumerWidget {
           .filter((row) => row.uuid.equals(instanceId))
           .getSingleOrNull();
       if (dbInstance != null) {
-        messenger.showSnackBar(
-          dgSnackBar(
-            text: "Instance is already registered!",
-            textColor: DgColor.textAlert,
-          ),
-        );
+        SnackbarService.showError("Instance is already registered!");
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (context.mounted) {
             HomeScreenRoute().go(context);
@@ -67,12 +59,7 @@ class RegisterFromQrScreen extends HookConsumerWidget {
       talker.error("Enrollment via QR start failed!", e);
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (context.mounted) {
-          messenger.showSnackBar(
-            dgSnackBar(
-              text: "Something went wrong. Try again.",
-              textColor: DgColor.textAlert,
-            ),
-          );
+          SnackbarService.showError("Something went wrong. Try again.");
           AddInstanceScreenRoute().go(context);
         }
       });

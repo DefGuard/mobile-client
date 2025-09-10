@@ -70,11 +70,11 @@ dependencies:
   sqlite3_flutter_libs: 0.5.36
   x25519: ^0.1.1
   ed25519_edwards: ^0.3.1
-  biometric_storage: ^5.0.1
   tuple: ^2.0.2
   local_auth: ^2.3.0
   pub_semver: ^2.2.0
   shared_preferences: ^2.5.3
+  flutter_secure_storage: ^9.2.4
 
 dev_dependencies:
   flutter_test:

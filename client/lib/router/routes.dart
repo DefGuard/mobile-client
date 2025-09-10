@@ -1,25 +1,48 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:mobile/data/proxy/qr_register.dart';
 import 'package:mobile/open/screens/add_instance/add_instance_screen.dart';
 import 'package:mobile/open/screens/add_instance/screens/add_instance_form.dart';
 import 'package:mobile/open/screens/add_instance/screens/biometry/biometry_finish_screen.dart';
 import 'package:mobile/open/screens/add_instance/screens/biometry/biometry_setup_failed_screen.dart';
 import 'package:mobile/open/screens/add_instance/screens/biometry/biometry_setup_screen.dart';
 import 'package:mobile/open/screens/add_instance/screens/name_device_screen.dart';
-import 'package:mobile/open/screens/add_instance/screens/register_from_qr_screen.dart';
-import 'package:mobile/open/screens/add_instance/screens/scan_qr_screen.dart';
 import 'package:mobile/open/screens/home/home_screen.dart';
 import 'package:mobile/open/screens/instance/instance_screen.dart';
 import 'package:mobile/open/screens/mfa/mfa_code_screen.dart';
 import 'package:mobile/enterprise/screens/mfa/openid_mfa_screen.dart';
 import 'package:mobile/enterprise/screens/mfa/openid_mfa_waiting_screen.dart';
+import 'package:mobile/open/screens/process_qr_screen.dart';
 import 'package:mobile/open/screens/scan_qr_screen.dart';
+import 'package:mobile/open/screens/test_screen_storage.dart';
 import 'package:talker_flutter/talker_flutter.dart';
 
 import '../logging.dart';
 
 part 'routes.g.dart';
+
+@TypedGoRoute<TestStorageScreenRoute>(path: "/test_bio")
+@immutable
+class TestStorageScreenRoute extends GoRouteData with _$TestStorageScreenRoute {
+  const TestStorageScreenRoute();
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) {
+    return TestStorageScreen();
+  }
+}
+
+@TypedGoRoute<ProcessQrScreenRoute>(path: "/process_qr")
+@immutable
+class ProcessQrScreenRoute extends GoRouteData with _$ProcessQrScreenRoute {
+  const ProcessQrScreenRoute(this.$extra);
+
+  final ProcessQrScreenData $extra;
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) {
+    return ProcessQrScreen(screenData: $extra);
+  }
+}
 
 @TypedGoRoute<HomeScreenRoute>(path: '/')
 @immutable
@@ -37,7 +60,7 @@ class HomeScreenRoute extends GoRouteData with _$HomeScreenRoute {
 class QRScreenRoute extends GoRouteData with _$QRScreenRoute {
   const QRScreenRoute(this.$extra);
 
-  final ScanQrScreenData $extra;
+  final QrScreenData $extra;
 
   @override
   Widget build(BuildContext context, GoRouterState state) {
@@ -71,15 +94,6 @@ class NameDeviceScreenRoute extends GoRouteData with _$NameDeviceScreenRoute {
   }
 }
 
-@TypedGoRoute<ScanInstanceQrRoute>(path: "/add_instance/qr")
-@immutable
-class ScanInstanceQrRoute extends GoRouteData with _$ScanInstanceQrRoute {
-  @override
-  Widget build(BuildContext context, GoRouterState state) {
-    return ScanInstanceQrScreen();
-  }
-}
-
 @TypedGoRoute<AddInstanceFormScreenRoute>(path: "/add_instance/form")
 @immutable
 class AddInstanceFormScreenRoute extends GoRouteData
@@ -98,20 +112,6 @@ class AddInstanceScreenRoute extends GoRouteData with _$AddInstanceScreenRoute {
   @override
   Widget build(BuildContext context, GoRouterState state) {
     return const AddInstanceScreen();
-  }
-}
-
-@TypedGoRoute<RegisterFromQrScreenRoute>(path: "/add_instance/from_qr_open")
-@immutable
-class RegisterFromQrScreenRoute extends GoRouteData
-    with _$RegisterFromQrScreenRoute {
-  const RegisterFromQrScreenRoute(this.$extra);
-
-  final QrInstanceRegistration $extra;
-
-  @override
-  Widget build(BuildContext context, GoRouterState state) {
-    return RegisterFromQrScreen(instanceRegistration: $extra);
   }
 }
 

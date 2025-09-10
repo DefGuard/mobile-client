@@ -14,8 +14,8 @@ import 'package:mobile/theme/spacing.dart';
 import 'package:mobile/utils/screen_padding.dart';
 
 import '../../../api.dart';
+import '../../../services/snackbar_service.dart';
 import '../../../widgets/navigation/dg_scaffold.dart';
-import '../../../widgets/dg_snackbar.dart';
 
 class NameDeviceScreenData {
   final EnrollmentStartResponse startResponse;
@@ -132,7 +132,6 @@ class NameDeviceScreen extends HookConsumerWidget {
                     loading: isLoading.value,
                     text: "Submit",
                     onTap: () async {
-                      final messenger = ScaffoldMessenger.of(context);
                       if (!formKey.currentState!.validate()) {
                         return;
                       }
@@ -149,10 +148,8 @@ class NameDeviceScreen extends HookConsumerWidget {
                           ).go(context);
                         }
                       } catch (e) {
-                        messenger.showSnackBar(
-                          dgSnackBar(
-                            text: "Something went wrong. Please try again.",
-                          ),
+                        SnackbarService.showError(
+                          "Something went wrong. Please try again.",
                         );
                       } finally {
                         isLoading.value = false;

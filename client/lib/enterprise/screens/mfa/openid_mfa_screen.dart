@@ -3,7 +3,6 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mobile/enterprise/screens/mfa/openid_mfa_waiting_screen.dart';
 import 'package:mobile/open/widgets/buttons/dg_button.dart';
 import 'package:mobile/open/widgets/dg_single_child_scroll_view.dart';
-import 'package:mobile/open/widgets/dg_snackbar.dart';
 import 'package:mobile/open/widgets/icons/openid_open.dart';
 import 'package:mobile/open/widgets/navigation/dg_scaffold.dart';
 import 'package:mobile/theme/color.dart';
@@ -11,6 +10,9 @@ import 'package:mobile/theme/spacing.dart';
 import 'package:mobile/theme/text.dart';
 import 'package:mobile/utils/screen_padding.dart';
 import 'package:url_launcher/url_launcher.dart';
+
+import '../../../logging.dart';
+import '../../../open/services/snackbar_service.dart';
 
 class OpenIdMfaScreenData {
   final String proxyUrl;
@@ -81,16 +83,10 @@ class OpenIdMfaScreen extends HookConsumerWidget {
               width: double.infinity,
               onTap: () async {
                 final navigator = Navigator.of(context);
-                final messenger = ScaffoldMessenger.of(context);
-                final errorSnack = dgSnackBar(
-                  text: "Failed to open the browser.",
-                  textColor: DgColor.textAlert,
-                  customDuration: Duration(seconds: 5),
-                );
                 try {
                   final launched = await _launchUrl();
                   if (!launched) {
-                    messenger.showSnackBar(errorSnack);
+                    SnackbarService.showError("Failed to open the browser.");
                   } else {
                     // Navigate to waiting screen and await result
                     final result = await navigator.push<String?>(
@@ -107,8 +103,9 @@ class OpenIdMfaScreen extends HookConsumerWidget {
                     // Return the result to the tunnel service
                     navigator.pop(result);
                   }
-                } catch (_) {
-                  messenger.showSnackBar(errorSnack);
+                } catch (e) {
+                  talker.error("Failed to open browser! Reason: $e");
+                  SnackbarService.showError("Failed to open the browser.");
                 }
               },
             ),
