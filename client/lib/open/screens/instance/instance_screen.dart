@@ -18,7 +18,6 @@ import 'package:mobile/open/screens/scan_qr_screen.dart';
 import 'package:mobile/open/widgets/buttons/dg_button.dart';
 import 'package:mobile/open/widgets/dg_menu.dart';
 import 'package:mobile/open/widgets/dg_pill.dart';
-import 'package:mobile/open/widgets/dg_snackbar.dart';
 import 'package:mobile/open/widgets/icons/arrow_single.dart';
 import 'package:mobile/open/widgets/icons/asset_icons_simple.dart';
 import 'package:mobile/open/widgets/icons/connection.dart';
@@ -37,6 +36,7 @@ import 'package:tuple/tuple.dart';
 
 import '../../../data/db/enums.dart';
 import '../../../logging.dart';
+import '../../services/snackbar_service.dart';
 
 part 'instance_screen.g.dart';
 
@@ -179,14 +179,13 @@ class _PullWrapper extends HookConsumerWidget {
     return RefreshIndicator(
       color: DgColor.mainPrimary,
       onRefresh: () async {
-        final msg = ScaffoldMessenger.of(context);
         try {
           final instance = screenData.instance;
           final (responseData, responseStatus, responseHeaders) = await proxyApi
               .pollConfiguration(instance.proxyUrl, instance.poolingToken);
           if (responseData == null) {
-            msg.showSnackBar(
-              dgSnackBar(text: "Failed to get new information for instance."),
+            SnackbarService.showError(
+              "Failed to get new information for instance.",
             );
             talker.error(
               "Failed to pull refresh instance data. Proxy response status: $responseStatus",
@@ -200,18 +199,10 @@ class _PullWrapper extends HookConsumerWidget {
             info: responseData.instance,
             token: responseData.token,
           );
-          msg.showSnackBar(
-            dgSnackBar(
-              text: "Instance information updated",
-              customDuration: Duration(seconds: 5),
-            ),
-          );
+          SnackbarService.show("Instance information updated");
         } catch (e) {
-          msg.showSnackBar(
-            dgSnackBar(
-              text: "Failed to get new information for instance.",
-              customDuration: Duration(seconds: 5),
-            ),
+          SnackbarService.showError(
+            "Failed to get new information for instance.",
           );
           talker.error("Failed pull refresh instance data.", e);
         }
@@ -549,7 +540,6 @@ class _LocationItem extends HookConsumerWidget {
                   text: isConnected.value ? "Disconnect" : "Connect",
                   loading: isLoading.value,
                   onTap: () async {
-                    final msg = ScaffoldMessenger.of(context);
                     print("Location traffic pref: ${location.trafficMethod}");
                     isLoading.value = true;
                     // check if there is active tunnel if so ask user if he want to change the active connection
@@ -605,12 +595,7 @@ class _LocationItem extends HookConsumerWidget {
                       talker.error(
                         "Failed to connect into ${instance.name}-${location.name} ! Reason: $e",
                       );
-                      msg.showSnackBar(
-                        dgSnackBar(
-                          text: "Failed to connect.",
-                          textColor: DgColor.textAlert,
-                        ),
-                      );
+                      SnackbarService.showError("Failed to connect.");
                     } finally {
                       isLoading.value = false;
                     }

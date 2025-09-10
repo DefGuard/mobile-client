@@ -4,10 +4,11 @@ import 'package:mobile/data/db/database.dart';
 import 'package:mobile/logging.dart';
 import 'package:mobile/open/widgets/buttons/dg_button.dart';
 import 'package:mobile/open/widgets/dg_dialog.dart';
-import 'package:mobile/open/widgets/dg_snackbar.dart';
 import 'package:mobile/open/widgets/icons/asset_icons_simple.dart';
 import 'package:mobile/theme/text.dart';
 import 'package:mobile/utils/secure_storage.dart';
+
+import '../../../services/snackbar_service.dart';
 
 
 class DeleteInstanceDialog extends HookConsumerWidget {
@@ -23,7 +24,6 @@ class DeleteInstanceDialog extends HookConsumerWidget {
     final db = ref.watch(databaseProvider);
 
     Future<void> deleteInstance(BuildContext context) async {
-      final messenger = ScaffoldMessenger.of(context);
       try {
         if(instance.mfaKeysStored) {
           await removeInstanceStorage(instance.secureStorageKey);
@@ -32,7 +32,7 @@ class DeleteInstanceDialog extends HookConsumerWidget {
             .filter((row) => row.id.equals(instance.id))
             .delete();
         if (context.mounted) {
-          messenger.showSnackBar(dgSnackBar(text: "Instance deleted"));
+          SnackbarService.show("Instance deleted");
           Navigator.of(context).pop();
         }
       } catch(e) {

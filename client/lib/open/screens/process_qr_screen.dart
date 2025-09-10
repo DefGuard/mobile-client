@@ -9,7 +9,6 @@ import 'package:mobile/data/proxy/mfa.dart';
 import 'package:mobile/data/proxy/qr_register.dart';
 import 'package:mobile/open/screens/scan_qr_screen.dart';
 import 'package:mobile/open/widgets/dg_single_child_scroll_view.dart';
-import 'package:mobile/open/widgets/dg_snackbar.dart';
 import 'package:mobile/router/routes.dart';
 import 'package:mobile/theme/color.dart';
 import 'package:mobile/theme/spacing.dart';
@@ -19,6 +18,7 @@ import '../../logging.dart';
 import '../../theme/text.dart';
 import '../../utils/secure_storage.dart';
 import '../api.dart';
+import '../services/snackbar_service.dart';
 import '../widgets/buttons/dg_text_button.dart';
 import '../widgets/circular_progress.dart';
 import 'add_instance/screens/name_device_screen.dart';
@@ -74,7 +74,6 @@ class ProcessQrScreen extends HookConsumerWidget {
 
     final registerInstance = useCallback(() async {
       final data = screenData.registerInstanceData!;
-      final messenger = ScaffoldMessenger.of(context);
       final url = Uri.parse(data.url);
       final requestData = EnrollmentStartRequest(token: data.token);
       try {
@@ -90,12 +89,7 @@ class ProcessQrScreen extends HookConsumerWidget {
           talker.error(
             "Register Instance failed! Instance is already registered.",
           );
-          messenger.showSnackBar(
-            dgSnackBar(
-              text: "Instance is already registered!",
-              textColor: DgColor.textAlert,
-            ),
-          );
+          SnackbarService.showError("Instance is already registered!");
           if (context.mounted) {
             unawaited(abortScreen(context));
           }
@@ -113,12 +107,7 @@ class ProcessQrScreen extends HookConsumerWidget {
         talker.error("Enrollment via QR start failed!", e);
         await WidgetsBinding.instance.endOfFrame;
         if (context.mounted) {
-          messenger.showSnackBar(
-            dgSnackBar(
-              text: "Something went wrong. Try again.",
-              textColor: DgColor.textAlert,
-            ),
-          );
+          SnackbarService.showError("Something went wrong. Try again.");
           unawaited(abortScreen(context));
         }
       }
@@ -128,7 +117,6 @@ class ProcessQrScreen extends HookConsumerWidget {
     final authorizeDesktop = useCallback(() async {
       final data = screenData.remoteMfaQr!;
       final instance = screenData.instance!;
-      final msg = ScaffoldMessenger.of(context);
       try {
         talker.debug("Waiting after camera usage");
         late SecureInstanceStorage storage;
@@ -143,13 +131,8 @@ class ProcessQrScreen extends HookConsumerWidget {
           talker.error("Failed biometric auth! Reason: $message");
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (context.mounted) {
-              final msg = ScaffoldMessenger.of(context);
-              msg.showSnackBar(
-                dgSnackBar(
-                  text: "Biometric authentication failed! Reason: $message",
-                  textColor: DgColor.textAlert,
-                  customDuration: Duration(seconds: 10),
-                ),
+              SnackbarService.showError(
+                "Biometric authentication failed! Reason: $message",
               );
               InstanceScreenRoute(id: instance.id.toString()).go(context);
             }
@@ -175,17 +158,10 @@ class ProcessQrScreen extends HookConsumerWidget {
           requestData,
         );
         talker.info("Successfully authorized instance ${instance.logName}.");
-        msg.showSnackBar(
-          dgSnackBar(text: "Desktop client authorized successfully."),
-        );
+        SnackbarService.show("Desktop client authorized successfully.");
       } catch (e) {
         talker.error(e);
-        msg.showSnackBar(
-          dgSnackBar(
-            text: "Failed to authenticate desktop client.",
-            textColor: DgColor.textAlert,
-          ),
-        );
+        SnackbarService.showError("Failed to authenticate desktop client.");
       } finally {
         await WidgetsBinding.instance.endOfFrame;
         if (context.mounted) {

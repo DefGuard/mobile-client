@@ -8,7 +8,6 @@ import 'package:mobile/data/db/database.dart';
 import 'package:mobile/data/proxy/qr_register.dart';
 import 'package:mobile/open/screens/process_qr_screen.dart';
 import 'package:mobile/open/widgets/dg_message_box.dart';
-import 'package:mobile/open/widgets/dg_snackbar.dart';
 import 'package:mobile/router/routes.dart';
 import 'package:mobile/theme/color.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
@@ -16,6 +15,7 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 import '../../data/proxy/mfa.dart';
 import '../../logging.dart';
 import '../../theme/spacing.dart';
+import '../services/snackbar_service.dart';
 import '../widgets/buttons/dg_button.dart';
 
 enum QrScreenIntent { remoteMfa, addInstance }
@@ -35,23 +35,18 @@ class ScanQrScreen extends HookConsumerWidget {
   Future<void> handleRemoteMfaScan(
     RemoteMfaQr data,
     BuildContext context,
+    MobileScannerController scanner,
   ) async {
     final instance = screenData.instance!;
     if (instance.uuid != data.instanceId) {
       talker.error("Remote MFA failed! Instance mismatch");
       if (context.mounted) {
-        final msg = ScaffoldMessenger.of(context);
-        msg.showSnackBar(
-          dgSnackBar(
-            text: "Scanned QR belongs to an different instance.",
-            customDuration: Duration(seconds: 10),
-            onDismiss: () {
-              msg.hideCurrentSnackBar();
-            },
-          ),
+        SnackbarService.showError(
+          "Scanned QR belongs to an different instance.",
         );
       }
     }
+    await scanner.stop();
     await WidgetsBinding.instance.endOfFrame;
     if (context.mounted) {
       final screenData = ProcessQrScreenData(
@@ -66,6 +61,7 @@ class ScanQrScreen extends HookConsumerWidget {
   Future<void> handleDetect(
     BarcodeCapture capture,
     BuildContext context,
+    MobileScannerController scanner,
   ) async {
     final readResult = capture.barcodes.first.rawValue;
     if (readResult != null) {
@@ -74,10 +70,11 @@ class ScanQrScreen extends HookConsumerWidget {
         switch (screenData.intent) {
           case QrScreenIntent.remoteMfa:
             final parsedData = RemoteMfaQr.fromJson(decodedString);
-            await handleRemoteMfaScan(parsedData, context);
+            await handleRemoteMfaScan(parsedData, context, scanner);
             break;
           case QrScreenIntent.addInstance:
             final parsedData = QrInstanceRegistration.fromJson(decodedString);
+            await scanner.stop();
             await WidgetsBinding.instance.endOfFrame;
             if (context.mounted) {
               ProcessQrScreenRoute(
@@ -90,13 +87,16 @@ class ScanQrScreen extends HookConsumerWidget {
             break;
         }
       } catch (e) {
-        debugPrint("Barcode capture error: $e");
+        // todo: show snackbar
+        talker.error("Failed to decode captured barcode.");
+        scanner.start(cameraDirection: CameraFacing.back);
       }
     }
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final detectionHandlingInProgress = useRef(false);
     final lifecycle = useAppLifecycleState();
 
     final scannerController = useMemoized(
@@ -104,10 +104,11 @@ class ScanQrScreen extends HookConsumerWidget {
         facing: CameraFacing.back,
         autoStart: false,
         detectionSpeed: DetectionSpeed.noDuplicates,
-        detectionTimeoutMs: 250,
+        detectionTimeoutMs: 650,
         formats: [BarcodeFormat.qrCode],
+        returnImage: false,
       ),
-      [],
+      const [],
     );
 
     useEffect(() {
@@ -136,11 +137,13 @@ class ScanQrScreen extends HookConsumerWidget {
 
     useEffect(() {
       final sub = scannerController.barcodes.listen((capture) async {
+        if (detectionHandlingInProgress.value) return;
+        detectionHandlingInProgress.value = true;
         await scannerController.stop();
         if (context.mounted) {
-          await handleDetect(capture, context);
+          await handleDetect(capture, context, scannerController);
         }
-        await scannerController.start();
+        detectionHandlingInProgress.value = false;
       });
       return () {
         unawaited(sub.cancel());
@@ -183,7 +186,8 @@ class ScanQrScreen extends HookConsumerWidget {
                 child: DgButton(
                   text: "Cancel",
                   minWidth: 100,
-                  onTap: () {
+                  onTap: () async {
+                    await scannerController.stop();
                     if (context.mounted) {
                       Navigator.of(context).pop();
                     }

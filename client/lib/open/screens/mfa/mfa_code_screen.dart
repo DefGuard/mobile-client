@@ -6,7 +6,6 @@ import 'package:mobile/data/proxy/mfa.dart';
 import 'package:mobile/open/api.dart';
 import 'package:mobile/open/widgets/buttons/dg_button.dart';
 import 'package:mobile/open/widgets/dg_single_child_scroll_view.dart';
-import 'package:mobile/open/widgets/dg_snackbar.dart';
 import 'package:mobile/open/widgets/dg_text_form_field.dart';
 import 'package:mobile/open/widgets/navigation/dg_scaffold.dart';
 import 'package:mobile/theme/color.dart';
@@ -15,6 +14,7 @@ import 'package:mobile/theme/text.dart';
 import 'package:mobile/utils/screen_padding.dart';
 
 import '../../../../../data/db/enums.dart';
+import '../../services/snackbar_service.dart';
 
 class MfaCodeScreenData {
   final String token;
@@ -137,7 +137,6 @@ class _CodeForm extends HookConsumerWidget {
                 loading: isLoading.value,
                 onTap: () async {
                   codeInvalid.value = false;
-                  final messenger = ScaffoldMessenger.of(context);
                   final navigator = Navigator.of(context);
                   if (formKey.currentState?.validate() ?? false) {
                     isLoading.value = true;
@@ -154,15 +153,7 @@ class _CodeForm extends HookConsumerWidget {
                         formKey.currentState?.validate();
                       }
                     } catch (e) {
-                      messenger.showSnackBar(
-                        dgSnackBar(
-                          text: "Error: $e",
-                          textColor: DgColor.textAlert,
-                          onDismiss: () {
-                            messenger.hideCurrentSnackBar();
-                          },
-                        ),
-                      );
+                      SnackbarService.showError("Error: $e");
                     } finally {
                       isLoading.value = false;
                     }

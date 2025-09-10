@@ -4,11 +4,11 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mobile/data/db/database.dart';
 import 'package:mobile/open/widgets/buttons/dg_button.dart';
 import 'package:mobile/open/widgets/dg_single_child_scroll_view.dart';
-import 'package:mobile/open/widgets/dg_snackbar.dart';
 import 'package:mobile/open/widgets/navigation/dg_scaffold.dart';
 import 'package:mobile/utils/secure_storage.dart';
 
 import '../../logging.dart';
+import '../services/snackbar_service.dart';
 
 class TestStorageScreen extends HookConsumerWidget {
   const TestStorageScreen({super.key});
@@ -26,7 +26,6 @@ class TestStorageScreen extends HookConsumerWidget {
                 text: "Test it",
                 minWidth: 100,
                 onTap: () async {
-                  final msg = ScaffoldMessenger.of(context);
                   try {
                     final instance = await db.managers.defguardInstances
                         .getSingle();
@@ -35,28 +34,19 @@ class TestStorageScreen extends HookConsumerWidget {
                     );
                     final message =
                         "Pub: ${storageData.publicKey}\n\nPrivate: ${storageData.privateKey}";
-                    msg.showSnackBar(
-                      dgSnackBar(
-                        text: message,
-                        customDuration: Duration(seconds: 2),
-                      ),
+                    SnackbarService.show(
+                      message,
+                      duration: Duration(seconds: 2),
                     );
                     talker.debug(message);
                   } on PlatformException catch (e) {
                     final message = getErrorMessageFromBiometricsException(e);
                     talker.error(message);
-                    msg.showSnackBar(
-                      dgSnackBar(
-                        text: message,
-                        customDuration: Duration(seconds: 5),
-                      ),
-                    );
+                    SnackbarService.showError(message);
                   } on UserCanceledAuth {
-                    msg.showSnackBar(
-                      dgSnackBar(
-                        text: "Canceled",
-                        customDuration: Duration(seconds: 5),
-                      ),
+                    SnackbarService.show(
+                      "Canceled",
+                      duration: Duration(seconds: 2),
                     );
                   } catch (e) {
                     debugPrint(e.toString());
