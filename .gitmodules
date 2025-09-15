@@ -3,4 +3,4 @@
 	url = ../boringtun.git
 [submodule "client/android/wireguard-android"]
 	path = client/android/wireguard-android
-	url = ../wireguard-android.git
+	url = git@github.com:DefGuard/wireguard-android.git
