@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - main
+      - support-16kb-pages
 
 jobs:
   build-ios:
@@ -55,13 +56,13 @@ jobs:
       #     retention-days: 3
       #     path: client/build/ios/ipa/*.ipa
 
-      - name: Upload app to TestFlight
-        uses: apple-actions/upload-testflight-build@v3
-        with:
-          app-path: "client/build/ios/ipa/Defguard.ipa"
-          issuer-id: ${{ secrets.API_ISSUER_ID }}
-          api-key-id: ${{ secrets.ASC_API_KEY_ID }}
-          api-private-key: ${{ secrets.PRIVATE_KEY_CONTENTS }}
+      # - name: Upload app to TestFlight
+      #   uses: apple-actions/upload-testflight-build@v3
+      #   with:
+      #     app-path: "client/build/ios/ipa/Defguard.ipa"
+      #     issuer-id: ${{ secrets.API_ISSUER_ID }}
+      #     api-key-id: ${{ secrets.ASC_API_KEY_ID }}
+      #     api-private-key: ${{ secrets.PRIVATE_KEY_CONTENTS }}
 
   build-android:
     runs-on: [self-hosted, macOS]
@@ -116,10 +117,10 @@ jobs:
       #     retention-days: 3
       #     path: client/build/app/outputs/bundle/release/app-release.aab
 
-      - name: Publish to Play Store
-        uses: r0adkll/upload-google-play@v1
-        with:
-          serviceAccountJsonPlainText: "${{ secrets.ANDROID_SERVICE_ACCOUNT_JSON }}"
-          packageName: net.defguard.mobile
-          releaseFiles: client/build/app/outputs/bundle/release/app-release.aab
-          track: internal
+      # - name: Publish to Play Store
+      #   uses: r0adkll/upload-google-play@v1
+      #   with:
+      #     serviceAccountJsonPlainText: "${{ secrets.ANDROID_SERVICE_ACCOUNT_JSON }}"
+      #     packageName: net.defguard.mobile
+      #     releaseFiles: client/build/app/outputs/bundle/release/app-release.aab
+      #     track: internal
