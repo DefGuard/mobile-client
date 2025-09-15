@@ -22,7 +22,7 @@ plugins {
     id("org.jetbrains.kotlin.android") version "2.2.0" apply false
 }
 
-includeBuild("../../wireguard-android") {
+includeBuild("wireguard-android") {
     dependencySubstitution {
         substitute(module("com.wireguard.android:tunnel"))
             .using(project(":tunnel"))

@@ -1,3 +1,6 @@
 [submodule "client/ios/boringtun"]
 	path = client/ios/boringtun
 	url = ../boringtun.git
+[submodule "client/android/wireguard-android"]
+	path = client/android/wireguard-android
+	url = https://git.zx2c4.com/wireguard-android
