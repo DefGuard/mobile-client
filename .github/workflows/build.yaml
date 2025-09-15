@@ -74,6 +74,8 @@ jobs:
         working-directory: ./client
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: "recursive"
 
       - name: Set up Java
         uses: actions/setup-java@v3
