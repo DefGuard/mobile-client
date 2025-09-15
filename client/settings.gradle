@@ -1,8 +1,2 @@
 include ':wireguard_plugin_android'
 project(':wireguard_plugin_android').projectDir = new File(rootDir, 'plugins/wireguard_plugin/android/build.gradle')
-
-sourceControl {
-    gitRepository('https://git.zx2c4.com/wireguard-android') {
-        producesModule('com.wireguard.android:tunnel')
-    }
-}

@@ -1,7 +1,1 @@
 rootProject.name = 'wireguard_plugin'
-
-sourceControl {
-    gitRepository('https://git.zx2c4.com/wireguard-android') {
-        producesModule('com.wireguard.android:tunnel')
-    }
-}
