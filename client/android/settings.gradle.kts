@@ -22,10 +22,14 @@ plugins {
     id("org.jetbrains.kotlin.android") version "2.2.0" apply false
 }
 
-includeBuild("wireguard-android") {
-    dependencySubstitution {
-        substitute(module("com.wireguard.android:tunnel"))
-            .using(project(":tunnel"))
+// Only do composite build on non-Windows systems to avoid windows compilation issues
+val isWindows = System.getProperty("os.name").lowercase().contains("windows")
+if (!isWindows) {
+    includeBuild("wireguard-android") {
+        dependencySubstitution {
+            substitute(module("com.wireguard.android:tunnel"))
+                .using(project(":tunnel"))
+        }
     }
 }
 
