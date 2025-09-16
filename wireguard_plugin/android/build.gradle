@@ -71,6 +71,6 @@ android {
     }
 }
 dependencies {
-    implementation 'com.wireguard.android:tunnel:1.0.20230706'
+    compileOnly files('../../lib/tunnel.aar')
     implementation 'org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0'
 }

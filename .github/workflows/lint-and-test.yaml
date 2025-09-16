@@ -5,10 +5,19 @@ on:
     branches:
       - main
       - dev
+      - 'release/**'
+      - 'hotfix/**'
+    paths-ignore: &ignored_paths
+      - "*.md"
+      - "LICENSE"
+      - "flake.*"
   pull_request:
     branches:
       - main
       - dev
+      - 'release/**'
+      - 'hotfix/**'
+    paths-ignore: *ignored_paths
 
 jobs:
   lint:
