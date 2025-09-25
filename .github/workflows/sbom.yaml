@@ -1,0 +1,56 @@
+name: "Create SBOM files"
+
+on:
+  push:
+    tags:
+      - v*.*.*
+
+jobs:
+  create-release:
+    name: create-release
+    runs-on: self-hosted
+    outputs:
+      upload_url: ${{ steps.release.outputs.upload_url }}
+    steps:
+      - name: Create GitHub release
+        id: release
+        uses: softprops/action-gh-release@v2
+        with:
+          draft: true
+
+  create-sbom:
+    needs: [create-release]
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      # Store the version, stripping any v-prefix
+      - name: Write release version
+        run: |
+          VERSION=${GITHUB_REF_NAME#v}
+          echo Version: $VERSION
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+
+      - name: Create SBOM with Trivy
+        uses: aquasecurity/trivy-action@0.33.1
+        with:
+          scan-type: 'fs'
+          format: 'spdx-json'
+          output: "defguard-mobile-${{ env.VERSION }}.sbom.json"
+          scan-ref: '.'
+          severity: "CRITICAL,HIGH,MEDIUM"
+
+      - name: Upload SBOM
+        uses: actions/upload-release-asset@v1.0.2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          asset_path: "defguard-mobile-${{ env.VERSION }}.sbom.json" 
+          asset_name: "defguard-mobile-${{ env.VERSION }}.sbom.json"
+          asset_content_type: application/octet-stream
+          scanners: "vuln"
