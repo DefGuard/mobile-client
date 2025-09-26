@@ -155,4 +155,4 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/')
     uses: ./.github/workflows/release.yaml
     with:
-      token: ${{ secrets.PRIVATE_REPO_CLONING_TOKEN }}
+      token: "${{ secrets.PRIVATE_REPO_CLONING_TOKEN }}"
