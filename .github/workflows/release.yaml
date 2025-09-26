@@ -2,11 +2,10 @@ name: "Release"
 
 on:
   workflow_call:
-    inputs:
-      token:
+    secrets:
+      PRIVATE_REPO_CLONING_TOKEN:
         description: "Cloning token"
         required: true
-        type: string
 
 jobs:
   create-release:
@@ -40,7 +39,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           submodules: recursive
-          token: ${{ inputs.token }}
+          token: ${{ secrets.PRIVATE_REPO_CLONING_TOKEN }}
 
       # Store the version, stripping any v-prefix
       - name: Write release version
