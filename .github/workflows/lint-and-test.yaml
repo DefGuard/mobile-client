@@ -21,8 +21,8 @@ on:
 
 jobs:
   lint:
-    name: Lint project
-    runs-on: [self-hosted, macOS]
+    name: Lint and test
+    runs-on: [self-hosted, Linux]
     defaults:
       run:
         working-directory: ./client
