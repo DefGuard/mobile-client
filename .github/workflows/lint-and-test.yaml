@@ -22,7 +22,7 @@ on:
 jobs:
   lint:
     name: Lint and test
-    runs-on: [self-hosted, Linux]
+    runs-on: [self-hosted, Linux, X64]
     defaults:
       run:
         working-directory: ./client
