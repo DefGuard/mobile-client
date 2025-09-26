@@ -42,7 +42,8 @@ jobs:
           format: 'spdx-json'
           output: "defguard-mobile-${{ env.VERSION }}.sbom.json"
           scan-ref: '.'
-          severity: "CRITICAL,HIGH,MEDIUM"
+          severity: "CRITICAL,HIGH,MEDIUM,LOW"
+          scanners: "vuln"
 
       - name: Upload SBOM
         uses: actions/upload-release-asset@v1.0.2
@@ -53,4 +54,3 @@ jobs:
           asset_path: "defguard-mobile-${{ env.VERSION }}.sbom.json" 
           asset_name: "defguard-mobile-${{ env.VERSION }}.sbom.json"
           asset_content_type: application/octet-stream
-          scanners: "vuln"
