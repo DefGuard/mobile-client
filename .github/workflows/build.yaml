@@ -6,6 +6,7 @@ on:
       - dev
       - 'release/**'
       - 'hotfix/**'
+      - sbom
     paths-ignore:
       - "*.md"
       - "LICENSE"
