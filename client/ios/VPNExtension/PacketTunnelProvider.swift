@@ -41,9 +41,6 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
 
         let tunnelConfiguration = TunnelConfiguration(fromStartData: tunnelConfig)
         let networkSettings = tunnelConfiguration.asNetworkSettings()
-        for server in networkSettings.dnsSettings!.servers {
-            logger.debug("==> DNS: \(server, privacy: .public)")
-        }
 
         setTunnelNetworkSettings(networkSettings) { [weak self] error in
             guard let self = self else { return }
