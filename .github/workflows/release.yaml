@@ -1,9 +1,7 @@
-name: "Create SBOM files"
+name: "Release"
 
 on:
-  push:
-    tags:
-      - v*.*.*
+  workflow_call:
 
 jobs:
   create-release:
@@ -12,11 +10,21 @@ jobs:
     outputs:
       upload_url: ${{ steps.release.outputs.upload_url }}
     steps:
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v5
+        with:
+          path: ./artifacts
+          merge-multiple: true
+
       - name: Create GitHub release
         id: release
         uses: softprops/action-gh-release@v2
         with:
           draft: true
+          files: |
+            ./artifacts/Defguard.ipa
+            ./artifacts/app-release.aab
 
   create-sbom:
     needs: [create-release]
@@ -46,11 +54,10 @@ jobs:
           scanners: "vuln"
 
       - name: Upload SBOM
-        uses: actions/upload-release-asset@v1.0.2
+        uses: shogo82148/actions-upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ needs.create-release.outputs.upload_url }}
-          asset_path: "defguard-mobile-${{ env.VERSION }}.sbom.json" 
-          asset_name: "defguard-mobile-${{ env.VERSION }}.sbom.json"
+          asset_path: "defguard-*.sbom.json"
           asset_content_type: application/octet-stream
