@@ -65,7 +65,7 @@ jobs:
       #     api-private-key: ${{ secrets.PRIVATE_KEY_CONTENTS }}
           
       - name: Upload iOS Artifact
-        if: startsWith(github.ref, 'refs/tags/')
+        if: "!startsWith(github.ref, 'refs/tags/')"
         uses: actions/upload-artifact@v4
         with:
           name: ios-app
