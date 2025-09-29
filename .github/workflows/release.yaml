@@ -13,8 +13,8 @@ jobs:
     runs-on: self-hosted
     outputs:
       upload_url: ${{ steps.release.outputs.upload_url }}
-    steps:
 
+    steps:
       - name: Download build artifacts
         uses: actions/download-artifact@v5
         with:
