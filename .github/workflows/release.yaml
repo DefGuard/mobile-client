@@ -30,5 +30,6 @@ jobs:
     uses: ./.github/workflows/sbom.yaml
     with:
       upload_url: ${{ needs.create-release.outputs.upload_url }}
-    secrets: inherit
+    secrets:
+      PRIVATE_REPO_CLONING_TOKEN: ${{ secrets.PRIVATE_REPO_CLONING_TOKEN }}
 

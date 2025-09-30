@@ -11,6 +11,10 @@ on:
         description: "The git tag to generate SBOM for - used in scheduled runs"
         required: false
         type: string
+    secrets:
+      PRIVATE_REPO_CLONING_TOKEN:
+        description: "Cloning token"
+        required: true
 
 jobs:
   create-sbom:
