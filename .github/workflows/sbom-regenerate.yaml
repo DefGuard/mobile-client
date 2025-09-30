@@ -31,7 +31,7 @@ jobs:
       fail-fast: false
       matrix:
         release: ${{ fromJson(needs.list-releases.outputs.releases) }}
-    uses: ./.github/workflows/sbom.yml
+    uses: ./.github/workflows/sbom.yaml
     with:
       upload_url: ${{ matrix.release.uploadUrl }}
       tag: ${{ matrix.release.tagName }}
