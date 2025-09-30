@@ -22,6 +22,7 @@ jobs:
           RELEASES_JSON=$(gh api repos/${{ github.repository }}/releases \
             --jq '[.[] | {tagName: .tag_name, uploadUrl: .upload_url}][:1]')
           echo "releases=$RELEASES_JSON" >> $GITHUB_OUTPUT
+
   regenerate-for-release:
     name: Regenerate SBOM for release
     needs: list-releases
