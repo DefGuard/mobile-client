@@ -1,9 +1,6 @@
 name: Periodic SBOM Regeneration
 
 on:
-  push:
-    branches:
-      - sbom-schedule
   schedule:
     - cron: '30 2 * * *' # 2:30 AM UTC
 
@@ -20,7 +17,9 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           RELEASES_JSON=$(gh api repos/${{ github.repository }}/releases \
-            --jq '[.[] | {tagName: .tag_name, uploadUrl: .upload_url}][:1]')
+            --jq '[.[]
+                   | select(.draft == false and (.tag_name | test("^v[0-9]+\\.[0-9]+\\.[0-9]+$")))
+                   | {tagName: .tag_name, uploadUrl: .upload_url}][:1]')
           echo "releases=$RELEASES_JSON" >> $GITHUB_OUTPUT
 
   regenerate-for-release:
