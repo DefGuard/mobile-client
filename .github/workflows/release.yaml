@@ -30,4 +30,5 @@ jobs:
     uses: ./.github/workflows/sbom.yaml
     with:
       upload_url: ${{ needs.create-release.outputs.upload_url }}
+    secrets: inherit
 
