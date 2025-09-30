@@ -2,6 +2,10 @@ name: "Release"
 
 on:
   workflow_call:
+    secrets:
+      PRIVATE_REPO_CLONING_TOKEN:
+        description: "Cloning token"
+        required: true
 
 jobs:
   create-release:
