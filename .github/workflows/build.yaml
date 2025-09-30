@@ -141,6 +141,7 @@ jobs:
 
   release:
     needs: [build-ios, build-android]
+    # Create release only if CI was triggered by a tag.
     if: startsWith(github.ref, 'refs/tags/')
     uses: ./.github/workflows/release.yaml
     secrets:

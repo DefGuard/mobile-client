@@ -9,7 +9,6 @@ on:
 
 jobs:
   create-release:
-    name: create-release
     runs-on: self-hosted
     outputs:
       upload_url: ${{ steps.release.outputs.upload_url }}
@@ -32,37 +31,9 @@ jobs:
 
   create-sbom:
     needs: [create-release]
-    runs-on: [self-hosted, Linux, X64]
+    uses: ./.github/workflows/sbom.yaml
+    with:
+      upload_url: ${{ needs.create-release.outputs.upload_url }}
+    secrets:
+      PRIVATE_REPO_CLONING_TOKEN: ${{ secrets.PRIVATE_REPO_CLONING_TOKEN }}
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          submodules: recursive
-          token: ${{ secrets.PRIVATE_REPO_CLONING_TOKEN }}
-
-      # Store the version, stripping any v-prefix
-      - name: Write release version
-        run: |
-          VERSION=${GITHUB_REF_NAME#v}
-          echo Version: $VERSION
-          echo "VERSION=$VERSION" >> $GITHUB_ENV
-
-      - name: Create SBOM with Trivy
-        uses: aquasecurity/trivy-action@0.33.1
-        with:
-          scan-type: 'fs'
-          format: 'spdx-json'
-          output: "defguard-mobile-${{ env.VERSION }}.sbom.json"
-          scan-ref: '.'
-          severity: "CRITICAL,HIGH,MEDIUM,LOW"
-          scanners: "vuln"
-
-      - name: Upload SBOM
-        uses: shogo82148/actions-upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ needs.create-release.outputs.upload_url }}
-          asset_path: "defguard-*.sbom.json"
-          asset_content_type: application/octet-stream
