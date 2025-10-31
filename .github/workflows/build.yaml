@@ -4,8 +4,8 @@ on:
     branches:
       - main
       - dev
-      - 'release/**'
-      - 'hotfix/**'
+      - "release/**"
+      - "hotfix/**"
     tags:
       - v*.*.*
     paths-ignore:
@@ -24,13 +24,12 @@ jobs:
         uses: actions/checkout@v4
         with:
           submodules: "recursive"
-          token: ${{ secrets.PRIVATE_REPO_CLONING_TOKEN }}
 
       - name: Setup flutter
         uses: subosito/flutter-action@v2
         with:
           channel: stable
-          flutter-version: 3.32.7
+          flutter-version: 3.35.7
 
       - name: Use homebrew ruby
         run: |
@@ -66,7 +65,7 @@ jobs:
           issuer-id: ${{ secrets.API_ISSUER_ID }}
           api-key-id: ${{ secrets.ASC_API_KEY_ID }}
           api-private-key: ${{ secrets.PRIVATE_KEY_CONTENTS }}
-          
+
       - name: Upload iOS Artifact
         uses: actions/upload-artifact@v4
         if: startsWith(github.ref, 'refs/tags/')
