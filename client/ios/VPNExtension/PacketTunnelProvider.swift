@@ -32,7 +32,7 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
 
         logger.log("Starting tunnel with configuration: \(String(describing: tunnelConfig), privacy: .public)")
 
-        guard let endpoint = Endpoint(from: tunnelConfig.endpoint) else {
+        guard Endpoint(from: tunnelConfig.endpoint) != nil else {
             let error = NSError(domain: "VPNExtension", code: -1, userInfo: [NSLocalizedDescriptionKey: "Invalid endpoint format: \(tunnelConfig.endpoint)"])
             logger.error("Invalid endpoint format: \(tunnelConfig.endpoint, privacy: .public)")
             completionHandler(error)

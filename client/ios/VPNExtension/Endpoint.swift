@@ -1,6 +1,6 @@
 import Network
 
-struct Endpoint: CustomStringConvertible, Codable {
+struct Endpoint: Codable, CustomStringConvertible {
     let host: NWEndpoint.Host
     let port: NWEndpoint.Port
 
