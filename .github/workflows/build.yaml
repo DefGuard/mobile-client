@@ -162,7 +162,9 @@ jobs:
         with:
           channel: stable
           flutter-version: 3.32.7
-
+      - name: Install Android SDK components
+        run: |
+          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install 'build-tools;29.0.3'
       - name: Accept licenses
         run: yes | flutter doctor --android-licenses
 
