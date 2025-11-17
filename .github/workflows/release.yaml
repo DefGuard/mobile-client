@@ -28,6 +28,7 @@ jobs:
           files: |
             ./artifacts/Defguard.ipa
             ./artifacts/app-release.aab
+            ./artifacts/app-release.apk
 
   create-sbom:
     needs: [create-release]
