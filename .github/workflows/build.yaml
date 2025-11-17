@@ -191,7 +191,7 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         with:
           name: android-app-apk
-          path: "client/build/app/outputs/flutter-apk/app-release-signed.apk"
+          path: "client/build/app/outputs/flutter-apk/app-release.apk"
           retention-days: 2
 
   release:
