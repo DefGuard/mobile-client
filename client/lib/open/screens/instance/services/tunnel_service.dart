@@ -35,9 +35,12 @@ class TunnelService {
 
     // handle traffic type selection if necessary
     late RoutingMethod trafficMethod;
-    if (instance.disableAllTraffic) {
+    if (instance.clientTrafficPolicy == ClientTrafficPolicy.disableAllTraffic) {
       // instance enforces predefined traffic
       trafficMethod = RoutingMethod.predefined;
+    } else if (instance.clientTrafficPolicy == ClientTrafficPolicy.forceAllTraffic) {
+      // instance enforces all traffic
+      trafficMethod = RoutingMethod.all;
     } else {
       // instance allows traffic type selection - use stored method or display selection dialog
       if (location.trafficMethod != null) {
@@ -52,6 +55,7 @@ class TunnelService {
           builder: (_) => RoutingMethodDialog(
             location: location,
             intention: dialogIntention,
+            clientTrafficPolicy: instance.clientTrafficPolicy,
           ),
         );
         // smth went wrong or user canceled the operation

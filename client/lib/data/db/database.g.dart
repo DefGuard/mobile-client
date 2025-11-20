@@ -93,20 +93,18 @@ class $DefguardInstancesTable extends DefguardInstances
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _disableAllTrafficMeta = const VerificationMeta(
-    'disableAllTraffic',
-  );
   @override
-  late final GeneratedColumn<bool> disableAllTraffic = GeneratedColumn<bool>(
-    'disable_all_traffic',
-    aliasedName,
-    false,
-    type: DriftSqlType.bool,
-    requiredDuringInsert: true,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'CHECK ("disable_all_traffic" IN (0, 1))',
-    ),
-  );
+  late final GeneratedColumnWithTypeConverter<ClientTrafficPolicy, int>
+  clientTrafficPolicy =
+      GeneratedColumn<int>(
+        'client_traffic_policy',
+        aliasedName,
+        false,
+        type: DriftSqlType.int,
+        requiredDuringInsert: true,
+      ).withConverter<ClientTrafficPolicy>(
+        $DefguardInstancesTable.$converterclientTrafficPolicy,
+      );
   static const VerificationMeta _enterpriseEnabledMeta = const VerificationMeta(
     'enterpriseEnabled',
   );
@@ -165,7 +163,7 @@ class $DefguardInstancesTable extends DefguardInstances
     proxyUrl,
     username,
     poolingToken,
-    disableAllTraffic,
+    clientTrafficPolicy,
     enterpriseEnabled,
     pubKey,
     privateKey,
@@ -244,17 +242,6 @@ class $DefguardInstancesTable extends DefguardInstances
       );
     } else if (isInserting) {
       context.missing(_poolingTokenMeta);
-    }
-    if (data.containsKey('disable_all_traffic')) {
-      context.handle(
-        _disableAllTrafficMeta,
-        disableAllTraffic.isAcceptableOrUnknown(
-          data['disable_all_traffic']!,
-          _disableAllTrafficMeta,
-        ),
-      );
-    } else if (isInserting) {
-      context.missing(_disableAllTrafficMeta);
     }
     if (data.containsKey('enterprise_enabled')) {
       context.handle(
@@ -335,10 +322,13 @@ class $DefguardInstancesTable extends DefguardInstances
         DriftSqlType.string,
         data['${effectivePrefix}pooling_token'],
       )!,
-      disableAllTraffic: attachedDatabase.typeMapping.read(
-        DriftSqlType.bool,
-        data['${effectivePrefix}disable_all_traffic'],
-      )!,
+      clientTrafficPolicy: $DefguardInstancesTable.$converterclientTrafficPolicy
+          .fromSql(
+            attachedDatabase.typeMapping.read(
+              DriftSqlType.int,
+              data['${effectivePrefix}client_traffic_policy'],
+            )!,
+          ),
       enterpriseEnabled: attachedDatabase.typeMapping.read(
         DriftSqlType.bool,
         data['${effectivePrefix}enterprise_enabled'],
@@ -362,6 +352,9 @@ class $DefguardInstancesTable extends DefguardInstances
   $DefguardInstancesTable createAlias(String alias) {
     return $DefguardInstancesTable(attachedDatabase, alias);
   }
+
+  static TypeConverter<ClientTrafficPolicy, int> $converterclientTrafficPolicy =
+      const ClientTrafficPolicyConverter();
 }
 
 class DefguardInstance extends DataClass
@@ -374,7 +367,7 @@ class DefguardInstance extends DataClass
   final String proxyUrl;
   final String username;
   final String poolingToken;
-  final bool disableAllTraffic;
+  final ClientTrafficPolicy clientTrafficPolicy;
   final bool enterpriseEnabled;
   final String pubKey;
   final String privateKey;
@@ -388,7 +381,7 @@ class DefguardInstance extends DataClass
     required this.proxyUrl,
     required this.username,
     required this.poolingToken,
-    required this.disableAllTraffic,
+    required this.clientTrafficPolicy,
     required this.enterpriseEnabled,
     required this.pubKey,
     required this.privateKey,
@@ -405,7 +398,13 @@ class DefguardInstance extends DataClass
     map['proxy_url'] = Variable<String>(proxyUrl);
     map['username'] = Variable<String>(username);
     map['pooling_token'] = Variable<String>(poolingToken);
-    map['disable_all_traffic'] = Variable<bool>(disableAllTraffic);
+    {
+      map['client_traffic_policy'] = Variable<int>(
+        $DefguardInstancesTable.$converterclientTrafficPolicy.toSql(
+          clientTrafficPolicy,
+        ),
+      );
+    }
     map['enterprise_enabled'] = Variable<bool>(enterpriseEnabled);
     map['pub_key'] = Variable<String>(pubKey);
     map['private_key'] = Variable<String>(privateKey);
@@ -423,7 +422,7 @@ class DefguardInstance extends DataClass
       proxyUrl: Value(proxyUrl),
       username: Value(username),
       poolingToken: Value(poolingToken),
-      disableAllTraffic: Value(disableAllTraffic),
+      clientTrafficPolicy: Value(clientTrafficPolicy),
       enterpriseEnabled: Value(enterpriseEnabled),
       pubKey: Value(pubKey),
       privateKey: Value(privateKey),
@@ -445,7 +444,9 @@ class DefguardInstance extends DataClass
       proxyUrl: serializer.fromJson<String>(json['proxy_url']),
       username: serializer.fromJson<String>(json['username']),
       poolingToken: serializer.fromJson<String>(json['poolingToken']),
-      disableAllTraffic: serializer.fromJson<bool>(json['disable_all_traffic']),
+      clientTrafficPolicy: serializer.fromJson<ClientTrafficPolicy>(
+        json['client_traffic_policy'],
+      ),
       enterpriseEnabled: serializer.fromJson<bool>(json['enterprise_enabled']),
       pubKey: serializer.fromJson<String>(json['pubKey']),
       privateKey: serializer.fromJson<String>(json['privateKey']),
@@ -464,7 +465,9 @@ class DefguardInstance extends DataClass
       'proxy_url': serializer.toJson<String>(proxyUrl),
       'username': serializer.toJson<String>(username),
       'poolingToken': serializer.toJson<String>(poolingToken),
-      'disable_all_traffic': serializer.toJson<bool>(disableAllTraffic),
+      'client_traffic_policy': serializer.toJson<ClientTrafficPolicy>(
+        clientTrafficPolicy,
+      ),
       'enterprise_enabled': serializer.toJson<bool>(enterpriseEnabled),
       'pubKey': serializer.toJson<String>(pubKey),
       'privateKey': serializer.toJson<String>(privateKey),
@@ -481,7 +484,7 @@ class DefguardInstance extends DataClass
     String? proxyUrl,
     String? username,
     String? poolingToken,
-    bool? disableAllTraffic,
+    ClientTrafficPolicy? clientTrafficPolicy,
     bool? enterpriseEnabled,
     String? pubKey,
     String? privateKey,
@@ -495,7 +498,7 @@ class DefguardInstance extends DataClass
     proxyUrl: proxyUrl ?? this.proxyUrl,
     username: username ?? this.username,
     poolingToken: poolingToken ?? this.poolingToken,
-    disableAllTraffic: disableAllTraffic ?? this.disableAllTraffic,
+    clientTrafficPolicy: clientTrafficPolicy ?? this.clientTrafficPolicy,
     enterpriseEnabled: enterpriseEnabled ?? this.enterpriseEnabled,
     pubKey: pubKey ?? this.pubKey,
     privateKey: privateKey ?? this.privateKey,
@@ -513,9 +516,9 @@ class DefguardInstance extends DataClass
       poolingToken: data.poolingToken.present
           ? data.poolingToken.value
           : this.poolingToken,
-      disableAllTraffic: data.disableAllTraffic.present
-          ? data.disableAllTraffic.value
-          : this.disableAllTraffic,
+      clientTrafficPolicy: data.clientTrafficPolicy.present
+          ? data.clientTrafficPolicy.value
+          : this.clientTrafficPolicy,
       enterpriseEnabled: data.enterpriseEnabled.present
           ? data.enterpriseEnabled.value
           : this.enterpriseEnabled,
@@ -540,7 +543,7 @@ class DefguardInstance extends DataClass
           ..write('proxyUrl: $proxyUrl, ')
           ..write('username: $username, ')
           ..write('poolingToken: $poolingToken, ')
-          ..write('disableAllTraffic: $disableAllTraffic, ')
+          ..write('clientTrafficPolicy: $clientTrafficPolicy, ')
           ..write('enterpriseEnabled: $enterpriseEnabled, ')
           ..write('pubKey: $pubKey, ')
           ..write('privateKey: $privateKey, ')
@@ -559,7 +562,7 @@ class DefguardInstance extends DataClass
     proxyUrl,
     username,
     poolingToken,
-    disableAllTraffic,
+    clientTrafficPolicy,
     enterpriseEnabled,
     pubKey,
     privateKey,
@@ -577,7 +580,7 @@ class DefguardInstance extends DataClass
           other.proxyUrl == this.proxyUrl &&
           other.username == this.username &&
           other.poolingToken == this.poolingToken &&
-          other.disableAllTraffic == this.disableAllTraffic &&
+          other.clientTrafficPolicy == this.clientTrafficPolicy &&
           other.enterpriseEnabled == this.enterpriseEnabled &&
           other.pubKey == this.pubKey &&
           other.privateKey == this.privateKey &&
@@ -593,7 +596,7 @@ class DefguardInstancesCompanion extends UpdateCompanion<DefguardInstance> {
   final Value<String> proxyUrl;
   final Value<String> username;
   final Value<String> poolingToken;
-  final Value<bool> disableAllTraffic;
+  final Value<ClientTrafficPolicy> clientTrafficPolicy;
   final Value<bool> enterpriseEnabled;
   final Value<String> pubKey;
   final Value<String> privateKey;
@@ -607,7 +610,7 @@ class DefguardInstancesCompanion extends UpdateCompanion<DefguardInstance> {
     this.proxyUrl = const Value.absent(),
     this.username = const Value.absent(),
     this.poolingToken = const Value.absent(),
-    this.disableAllTraffic = const Value.absent(),
+    this.clientTrafficPolicy = const Value.absent(),
     this.enterpriseEnabled = const Value.absent(),
     this.pubKey = const Value.absent(),
     this.privateKey = const Value.absent(),
@@ -622,7 +625,7 @@ class DefguardInstancesCompanion extends UpdateCompanion<DefguardInstance> {
     required String proxyUrl,
     required String username,
     required String poolingToken,
-    required bool disableAllTraffic,
+    required ClientTrafficPolicy clientTrafficPolicy,
     required bool enterpriseEnabled,
     required String pubKey,
     required String privateKey,
@@ -634,7 +637,7 @@ class DefguardInstancesCompanion extends UpdateCompanion<DefguardInstance> {
        proxyUrl = Value(proxyUrl),
        username = Value(username),
        poolingToken = Value(poolingToken),
-       disableAllTraffic = Value(disableAllTraffic),
+       clientTrafficPolicy = Value(clientTrafficPolicy),
        enterpriseEnabled = Value(enterpriseEnabled),
        pubKey = Value(pubKey),
        privateKey = Value(privateKey),
@@ -648,7 +651,7 @@ class DefguardInstancesCompanion extends UpdateCompanion<DefguardInstance> {
     Expression<String>? proxyUrl,
     Expression<String>? username,
     Expression<String>? poolingToken,
-    Expression<bool>? disableAllTraffic,
+    Expression<int>? clientTrafficPolicy,
     Expression<bool>? enterpriseEnabled,
     Expression<String>? pubKey,
     Expression<String>? privateKey,
@@ -663,7 +666,8 @@ class DefguardInstancesCompanion extends UpdateCompanion<DefguardInstance> {
       if (proxyUrl != null) 'proxy_url': proxyUrl,
       if (username != null) 'username': username,
       if (poolingToken != null) 'pooling_token': poolingToken,
-      if (disableAllTraffic != null) 'disable_all_traffic': disableAllTraffic,
+      if (clientTrafficPolicy != null)
+        'client_traffic_policy': clientTrafficPolicy,
       if (enterpriseEnabled != null) 'enterprise_enabled': enterpriseEnabled,
       if (pubKey != null) 'pub_key': pubKey,
       if (privateKey != null) 'private_key': privateKey,
@@ -680,7 +684,7 @@ class DefguardInstancesCompanion extends UpdateCompanion<DefguardInstance> {
     Value<String>? proxyUrl,
     Value<String>? username,
     Value<String>? poolingToken,
-    Value<bool>? disableAllTraffic,
+    Value<ClientTrafficPolicy>? clientTrafficPolicy,
     Value<bool>? enterpriseEnabled,
     Value<String>? pubKey,
     Value<String>? privateKey,
@@ -695,7 +699,7 @@ class DefguardInstancesCompanion extends UpdateCompanion<DefguardInstance> {
       proxyUrl: proxyUrl ?? this.proxyUrl,
       username: username ?? this.username,
       poolingToken: poolingToken ?? this.poolingToken,
-      disableAllTraffic: disableAllTraffic ?? this.disableAllTraffic,
+      clientTrafficPolicy: clientTrafficPolicy ?? this.clientTrafficPolicy,
       enterpriseEnabled: enterpriseEnabled ?? this.enterpriseEnabled,
       pubKey: pubKey ?? this.pubKey,
       privateKey: privateKey ?? this.privateKey,
@@ -730,8 +734,12 @@ class DefguardInstancesCompanion extends UpdateCompanion<DefguardInstance> {
     if (poolingToken.present) {
       map['pooling_token'] = Variable<String>(poolingToken.value);
     }
-    if (disableAllTraffic.present) {
-      map['disable_all_traffic'] = Variable<bool>(disableAllTraffic.value);
+    if (clientTrafficPolicy.present) {
+      map['client_traffic_policy'] = Variable<int>(
+        $DefguardInstancesTable.$converterclientTrafficPolicy.toSql(
+          clientTrafficPolicy.value,
+        ),
+      );
     }
     if (enterpriseEnabled.present) {
       map['enterprise_enabled'] = Variable<bool>(enterpriseEnabled.value);
@@ -759,7 +767,7 @@ class DefguardInstancesCompanion extends UpdateCompanion<DefguardInstance> {
           ..write('proxyUrl: $proxyUrl, ')
           ..write('username: $username, ')
           ..write('poolingToken: $poolingToken, ')
-          ..write('disableAllTraffic: $disableAllTraffic, ')
+          ..write('clientTrafficPolicy: $clientTrafficPolicy, ')
           ..write('enterpriseEnabled: $enterpriseEnabled, ')
           ..write('pubKey: $pubKey, ')
           ..write('privateKey: $privateKey, ')
@@ -1632,7 +1640,7 @@ typedef $$DefguardInstancesTableCreateCompanionBuilder =
       required String proxyUrl,
       required String username,
       required String poolingToken,
-      required bool disableAllTraffic,
+      required ClientTrafficPolicy clientTrafficPolicy,
       required bool enterpriseEnabled,
       required String pubKey,
       required String privateKey,
@@ -1648,7 +1656,7 @@ typedef $$DefguardInstancesTableUpdateCompanionBuilder =
       Value<String> proxyUrl,
       Value<String> username,
       Value<String> poolingToken,
-      Value<bool> disableAllTraffic,
+      Value<ClientTrafficPolicy> clientTrafficPolicy,
       Value<bool> enterpriseEnabled,
       Value<String> pubKey,
       Value<String> privateKey,
@@ -1739,9 +1747,10 @@ class $$DefguardInstancesTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<bool> get disableAllTraffic => $composableBuilder(
-    column: $table.disableAllTraffic,
-    builder: (column) => ColumnFilters(column),
+  ColumnWithTypeConverterFilters<ClientTrafficPolicy, ClientTrafficPolicy, int>
+  get clientTrafficPolicy => $composableBuilder(
+    column: $table.clientTrafficPolicy,
+    builder: (column) => ColumnWithTypeConverterFilters(column),
   );
 
   ColumnFilters<bool> get enterpriseEnabled => $composableBuilder(
@@ -1839,8 +1848,8 @@ class $$DefguardInstancesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<bool> get disableAllTraffic => $composableBuilder(
-    column: $table.disableAllTraffic,
+  ColumnOrderings<int> get clientTrafficPolicy => $composableBuilder(
+    column: $table.clientTrafficPolicy,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -1900,8 +1909,9 @@ class $$DefguardInstancesTableAnnotationComposer
     builder: (column) => column,
   );
 
-  GeneratedColumn<bool> get disableAllTraffic => $composableBuilder(
-    column: $table.disableAllTraffic,
+  GeneratedColumnWithTypeConverter<ClientTrafficPolicy, int>
+  get clientTrafficPolicy => $composableBuilder(
+    column: $table.clientTrafficPolicy,
     builder: (column) => column,
   );
 
@@ -1990,7 +2000,8 @@ class $$DefguardInstancesTableTableManager
                 Value<String> proxyUrl = const Value.absent(),
                 Value<String> username = const Value.absent(),
                 Value<String> poolingToken = const Value.absent(),
-                Value<bool> disableAllTraffic = const Value.absent(),
+                Value<ClientTrafficPolicy> clientTrafficPolicy =
+                    const Value.absent(),
                 Value<bool> enterpriseEnabled = const Value.absent(),
                 Value<String> pubKey = const Value.absent(),
                 Value<String> privateKey = const Value.absent(),
@@ -2004,7 +2015,7 @@ class $$DefguardInstancesTableTableManager
                 proxyUrl: proxyUrl,
                 username: username,
                 poolingToken: poolingToken,
-                disableAllTraffic: disableAllTraffic,
+                clientTrafficPolicy: clientTrafficPolicy,
                 enterpriseEnabled: enterpriseEnabled,
                 pubKey: pubKey,
                 privateKey: privateKey,
@@ -2020,7 +2031,7 @@ class $$DefguardInstancesTableTableManager
                 required String proxyUrl,
                 required String username,
                 required String poolingToken,
-                required bool disableAllTraffic,
+                required ClientTrafficPolicy clientTrafficPolicy,
                 required bool enterpriseEnabled,
                 required String pubKey,
                 required String privateKey,
@@ -2034,7 +2045,7 @@ class $$DefguardInstancesTableTableManager
                 proxyUrl: proxyUrl,
                 username: username,
                 poolingToken: poolingToken,
-                disableAllTraffic: disableAllTraffic,
+                clientTrafficPolicy: clientTrafficPolicy,
                 enterpriseEnabled: enterpriseEnabled,
                 pubKey: pubKey,
                 privateKey: privateKey,

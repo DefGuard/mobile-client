@@ -28,8 +28,9 @@ class DefguardInstances extends Table with AutoIncrementingPrimaryKey {
 
   TextColumn get poolingToken => text()();
 
-  @JsonKey('disable_all_traffic')
-  BoolColumn get disableAllTraffic => boolean()();
+  @JsonKey('client_traffic_policy')
+  IntColumn get clientTrafficPolicy =>
+    integer().map(const ClientTrafficPolicyConverter())();
 
   @JsonKey('enterprise_enabled')
   BoolColumn get enterpriseEnabled => boolean()();

@@ -415,7 +415,6 @@ class _LocationItem extends HookConsumerWidget {
               );
             },
           ),
-        if (!instance.disableAllTraffic)
           DgMenuItem(
             text: "Select Traffic Routing",
             onTap: () {
@@ -424,6 +423,7 @@ class _LocationItem extends HookConsumerWidget {
                 builder: (_) => RoutingMethodDialog(
                   location: location,
                   intention: RoutingMethodDialogIntention.save,
+                  clientTrafficPolicy: instance.clientTrafficPolicy,
                 ),
               );
             },

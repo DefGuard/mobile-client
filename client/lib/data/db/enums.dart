@@ -83,3 +83,43 @@ class LocationMfaModeConverter extends TypeConverter<LocationMfaMode, int> {
     return value.value;
   }
 }
+
+@j.JsonEnum()
+enum ClientTrafficPolicy {
+  @j.JsonValue(0)
+  none(0),
+  @j.JsonValue(1)
+  disableAllTraffic(1),
+  @j.JsonValue(2)
+  forceAllTraffic(2);
+
+  final int value;
+
+  const ClientTrafficPolicy(this.value);
+
+  static ClientTrafficPolicy fromValue(int value) =>
+      ClientTrafficPolicy.values.firstWhere((e) => e.value == value);
+
+  // TODO(jck)
+  // String toReadableString() => _readableNames[this] ?? 'Unknown';
+
+  // static const Map<ClientTrafficPolicy, String> _readableNames = {
+  //   ClientTrafficPolicy.none: 'None',
+  //   ClientTrafficPolicy.disableAllTraffic: 'DisableAllTraffic',
+  //   ClientTrafficPolicy.forceAllTraffic: 'ForceAllTraffic',
+  // };
+}
+
+class ClientTrafficPolicyConverter extends TypeConverter<ClientTrafficPolicy, int> {
+  const ClientTrafficPolicyConverter();
+
+  @override
+  ClientTrafficPolicy fromSql(int fromDb) {
+    return ClientTrafficPolicy.fromValue(fromDb);
+  }
+
+  @override
+  int toSql(ClientTrafficPolicy value) {
+    return value.value;
+  }
+}

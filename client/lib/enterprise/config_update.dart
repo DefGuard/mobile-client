@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mobile/data/db/database.dart';
+import 'package:mobile/data/db/enums.dart';
 import 'package:mobile/open/api.dart';
 import 'package:mobile/open/widgets/toaster/toast_manager.dart';
 import 'package:mobile/utils/update_instance.dart';
@@ -86,7 +87,7 @@ class ConfigurationUpdater extends HookConsumerWidget {
           // instance lost it's enterprise status
           if (responseStatus == 402) {
             final instanceUpdate = instance.copyWith(
-              disableAllTraffic: false,
+              clientTrafficPolicy: ClientTrafficPolicy.none,
               enterpriseEnabled: false,
             );
             await db.managers.defguardInstances.replace(instanceUpdate);

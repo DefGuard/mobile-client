@@ -58,7 +58,7 @@ class NameDeviceScreen extends HookConsumerWidget {
         uuid: createResponse.instance.id,
         deviceId: createResponse.device.id,
         enterpriseEnabled: createResponse.instance.enterpriseEnabled,
-        disableAllTraffic: createResponse.instance.disableAllTraffic,
+        clientTrafficPolicy: createResponse.instance.clientTrafficPolicy,
         proxyUrl: createResponse.instance.proxyUrl,
         url: screenData.startResponse.instance.url,
         username: createResponse.instance.username,
