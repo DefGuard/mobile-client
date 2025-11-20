@@ -31,8 +31,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          submodules: recursive
           ref: ${{ steps.vars.outputs.TAG_NAME }}
+          submodules: recursive
 
       - name: Create SBOM with Trivy
         uses: aquasecurity/trivy-action@0.33.1
