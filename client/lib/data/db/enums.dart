@@ -99,15 +99,6 @@ enum ClientTrafficPolicy {
 
   static ClientTrafficPolicy fromValue(int value) =>
       ClientTrafficPolicy.values.firstWhere((e) => e.value == value);
-
-  // TODO(jck)
-  // String toReadableString() => _readableNames[this] ?? 'Unknown';
-
-  // static const Map<ClientTrafficPolicy, String> _readableNames = {
-  //   ClientTrafficPolicy.none: 'None',
-  //   ClientTrafficPolicy.disableAllTraffic: 'DisableAllTraffic',
-  //   ClientTrafficPolicy.forceAllTraffic: 'ForceAllTraffic',
-  // };
 }
 
 class ClientTrafficPolicyConverter extends TypeConverter<ClientTrafficPolicy, int> {

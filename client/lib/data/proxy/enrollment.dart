@@ -297,6 +297,7 @@ class InstanceInfo {
     );
   }
 
+  /// Retrieves `ClientTrafficPolicy` while ensuring backwards compatibility
   ClientTrafficPolicy getPolicy() {
     return clientTrafficPolicy ?? (disableAllTraffic
       ? ClientTrafficPolicy.disableAllTraffic

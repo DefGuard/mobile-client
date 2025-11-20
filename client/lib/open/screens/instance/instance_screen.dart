@@ -415,19 +415,20 @@ class _LocationItem extends HookConsumerWidget {
               );
             },
           ),
-          DgMenuItem(
-            text: "Select Traffic Routing",
-            onTap: () {
-              showDialog(
-                context: context,
-                builder: (_) => RoutingMethodDialog(
-                  location: location,
-                  intention: RoutingMethodDialogIntention.save,
-                  clientTrafficPolicy: instance.clientTrafficPolicy,
-                ),
-              );
-            },
-          ),
+          if (instance.clientTrafficPolicy != ClientTrafficPolicy.none)
+            DgMenuItem(
+              text: "Select Traffic Routing",
+              onTap: () {
+                showDialog(
+                  context: context,
+                  builder: (_) => RoutingMethodDialog(
+                    location: location,
+                    intention: RoutingMethodDialogIntention.save,
+                    clientTrafficPolicy: instance.clientTrafficPolicy,
+                  ),
+                );
+              },
+            ),
       ];
     }, [location, instance]);
 
