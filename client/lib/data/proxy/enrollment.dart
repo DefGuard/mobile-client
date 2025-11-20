@@ -252,7 +252,7 @@ class InstanceInfo {
   final String username;
   final bool enterpriseEnabled;
   final bool disableAllTraffic;
-  final ClientTrafficPolicy clientTrafficPolicy;
+  final ClientTrafficPolicy? clientTrafficPolicy;
 
   const InstanceInfo({
     required this.id,
@@ -271,14 +271,13 @@ class InstanceInfo {
   Map<String, dynamic> toJson() => _$InstanceInfoToJson(this);
 
   bool matchesDefguardInstance(DefguardInstance other) {
-    // TODO(jck) ensure backwards compatibility
     return id == other.uuid &&
         name == other.name &&
         url == other.url &&
         proxyUrl == other.proxyUrl &&
         username == other.username &&
         enterpriseEnabled == other.enterpriseEnabled &&
-        clientTrafficPolicy == other.clientTrafficPolicy;
+        getPolicy() == other.clientTrafficPolicy;
   }
 
   DefguardInstancesCompanion toCompanion({DefguardInstance? instance}) {
@@ -293,9 +292,15 @@ class InstanceInfo {
       proxyUrl: d.Value(proxyUrl),
       username: d.Value(username),
       enterpriseEnabled: d.Value(enterpriseEnabled),
-      clientTrafficPolicy: d.Value(clientTrafficPolicy),
+      clientTrafficPolicy: d.Value(getPolicy()),
       uuid: d.Value(id),
     );
+  }
+
+  ClientTrafficPolicy getPolicy() {
+    return clientTrafficPolicy ?? (disableAllTraffic
+      ? ClientTrafficPolicy.disableAllTraffic
+      : ClientTrafficPolicy.none);
   }
 }
 

@@ -391,7 +391,7 @@ InstanceInfo _$InstanceInfoFromJson(Map<String, dynamic> json) =>
           ),
           clientTrafficPolicy: $checkedConvert(
             'client_traffic_policy',
-            (v) => $enumDecode(_$ClientTrafficPolicyEnumMap, v),
+            (v) => $enumDecodeNullable(_$ClientTrafficPolicyEnumMap, v),
           ),
         );
         return val;
@@ -425,7 +425,7 @@ Map<String, dynamic> _$InstanceInfoToJson(InstanceInfo instance) =>
       'enterprise_enabled': instance.enterpriseEnabled,
       'disable_all_traffic': instance.disableAllTraffic,
       'client_traffic_policy':
-          _$ClientTrafficPolicyEnumMap[instance.clientTrafficPolicy]!,
+          _$ClientTrafficPolicyEnumMap[instance.clientTrafficPolicy],
     };
 
 const _$ClientTrafficPolicyEnumMap = {
