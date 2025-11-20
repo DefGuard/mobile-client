@@ -2,10 +2,6 @@ name: "Release"
 
 on:
   workflow_call:
-    secrets:
-      PRIVATE_REPO_CLONING_TOKEN:
-        description: "Cloning token"
-        required: true
 
 jobs:
   create-release:
@@ -35,6 +31,3 @@ jobs:
     uses: ./.github/workflows/sbom.yaml
     with:
       upload_url: ${{ needs.create-release.outputs.upload_url }}
-    secrets:
-      PRIVATE_REPO_CLONING_TOKEN: ${{ secrets.PRIVATE_REPO_CLONING_TOKEN }}
-
