@@ -415,7 +415,7 @@ class _LocationItem extends HookConsumerWidget {
               );
             },
           ),
-          if (instance.clientTrafficPolicy != ClientTrafficPolicy.none)
+          if (instance.clientTrafficPolicy == ClientTrafficPolicy.none)
             DgMenuItem(
               text: "Select Traffic Routing",
               onTap: () {
