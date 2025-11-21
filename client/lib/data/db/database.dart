@@ -96,7 +96,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
 
   @override
   MigrationStrategy get migration {
@@ -104,7 +104,17 @@ class AppDatabase extends _$AppDatabase {
       beforeOpen: (details) async {
         await customStatement('PRAGMA foreign_keys = ON');
       },
+      // onUpgrade: _schemaUpgrade,
     );
+
+    onUpgrade: (m, from, to) async {
+      if (from < 2) {
+        await m.alterTable(
+          TableMigration(defguardInstances, newColumns: [defguardInstances.clientTrafficPolicy]),
+        );
+      }
+    };
+
   }
 
   static QueryExecutor _openConnection() {
