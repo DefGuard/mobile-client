@@ -107,21 +107,18 @@ class AppDatabase extends _$AppDatabase {
       },
       onUpgrade: (m, from, to) async {
         if (from < 2) {
-          // 1. Add the new column with default policy = none
-          await m.alterTable(
-            TableMigration(
-              defguardInstances,
-              newColumns: [defguardInstances.clientTrafficPolicy],
-            ),
+          // 1. Add the new column manually.
+          // This ensures Drift doesn't trigger a "Recreate Table" that might 
+          // drop 'disable_all_traffic' before we are done with it.
+          await customStatement(
+            'ALTER TABLE defguard_instances ADD COLUMN client_traffic_policy INTEGER NOT NULL DEFAULT 0'
           );
-
           // 2. Update values derived from the old column
           await customStatement('''
             UPDATE defguard_instances
             SET client_traffic_policy =
               CASE WHEN disable_all_traffic = 1 THEN 1 ELSE 0 END;
           ''');
-
           // 3. Drop old "disable_all_traffic" column
           await m.dropColumn(defguardInstances, "disable_all_traffic");
         }
