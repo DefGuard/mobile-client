@@ -29,8 +29,9 @@ class DefguardInstances extends Table with AutoIncrementingPrimaryKey {
   TextColumn get poolingToken => text()();
 
   @JsonKey('client_traffic_policy')
-  IntColumn get clientTrafficPolicy =>
-    integer().map(const ClientTrafficPolicyConverter())();
+  IntColumn get clientTrafficPolicy => integer()
+      .withDefault(const Constant(0))
+      .map(const ClientTrafficPolicyConverter())();
 
   @JsonKey('enterprise_enabled')
   BoolColumn get enterpriseEnabled => boolean()();
@@ -96,13 +97,31 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
 
   @override
   MigrationStrategy get migration {
     return MigrationStrategy(
       beforeOpen: (details) async {
         await customStatement('PRAGMA foreign_keys = ON');
+      },
+      onUpgrade: (m, from, to) async {
+        if (from < 2) {
+          // 1. Add the new column manually.
+          // This ensures Drift doesn't trigger a "Recreate Table" that might 
+          // drop 'disable_all_traffic' before we are done with it.
+          await customStatement(
+            'ALTER TABLE defguard_instances ADD COLUMN client_traffic_policy INTEGER NOT NULL DEFAULT 0'
+          );
+          // 2. Update values derived from the old column
+          await customStatement('''
+            UPDATE defguard_instances
+            SET client_traffic_policy =
+              CASE WHEN disable_all_traffic = 1 THEN 1 ELSE 0 END;
+          ''');
+          // 3. Drop old "disable_all_traffic" column
+          await m.dropColumn(defguardInstances, "disable_all_traffic");
+        }
       },
     );
   }

@@ -261,6 +261,8 @@ class InstanceInfo {
     required this.proxyUrl,
     required this.username,
     required this.enterpriseEnabled,
+    // deprecated, use clientTrafficPolicy instead
+    @Deprecated('1.6')
     required this.disableAllTraffic,
     required this.clientTrafficPolicy,
   });
