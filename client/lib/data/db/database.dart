@@ -114,15 +114,17 @@ class AppDatabase extends _$AppDatabase {
               newColumns: [defguardInstances.clientTrafficPolicy],
             ),
           );
+
           // 2. Update values derived from the old column
           await customStatement('''
-          UPDATE defguard_instances
-          SET client_traffic_policy =
-            CASE WHEN disable_all_traffic = 1 THEN 1 ELSE 0 END;
-        ''');
+            UPDATE defguard_instances
+            SET client_traffic_policy =
+              CASE WHEN disable_all_traffic = 1 THEN 1 ELSE 0 END;
+          ''');
+
+          // 3. Drop old "disable_all_traffic" column
+          await m.dropColumn(defguardInstances, "disable_all_traffic");
         }
-        // 3. Drop old "disable_all_traffic" column
-        await m.dropColumn(defguardInstances, "disable_all_traffic");
       },
     );
   }
