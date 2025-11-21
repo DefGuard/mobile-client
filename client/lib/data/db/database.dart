@@ -29,8 +29,9 @@ class DefguardInstances extends Table with AutoIncrementingPrimaryKey {
   TextColumn get poolingToken => text()();
 
   @JsonKey('client_traffic_policy')
-  IntColumn get clientTrafficPolicy =>
-    integer().map(const ClientTrafficPolicyConverter())();
+  IntColumn get clientTrafficPolicy => integer()
+      .withDefault(const Constant(0))
+      .map(const ClientTrafficPolicyConverter())();
 
   @JsonKey('enterprise_enabled')
   BoolColumn get enterpriseEnabled => boolean()();
@@ -104,17 +105,26 @@ class AppDatabase extends _$AppDatabase {
       beforeOpen: (details) async {
         await customStatement('PRAGMA foreign_keys = ON');
       },
-      // onUpgrade: _schemaUpgrade,
+      onUpgrade: (m, from, to) async {
+        if (from < 2) {
+          // 1. Add the new column with default policy = none
+          await m.alterTable(
+            TableMigration(
+              defguardInstances,
+              newColumns: [defguardInstances.clientTrafficPolicy],
+            ),
+          );
+          // 2. Update values derived from the old column
+          await customStatement('''
+          UPDATE defguard_instances
+          SET client_traffic_policy =
+            CASE WHEN disable_all_traffic = 1 THEN 1 ELSE 0 END;
+        ''');
+        }
+        // 3. Drop old "disable_all_traffic" column
+        await m.dropColumn(defguardInstances, "disable_all_traffic");
+      },
     );
-
-    onUpgrade: (m, from, to) async {
-      if (from < 2) {
-        await m.alterTable(
-          TableMigration(defguardInstances, newColumns: [defguardInstances.clientTrafficPolicy]),
-        );
-      }
-    };
-
   }
 
   static QueryExecutor _openConnection() {
