@@ -389,6 +389,10 @@ InstanceInfo _$InstanceInfoFromJson(Map<String, dynamic> json) =>
             'disable_all_traffic',
             (v) => v as bool,
           ),
+          clientTrafficPolicy: $checkedConvert(
+            'client_traffic_policy',
+            (v) => $enumDecodeNullable(_$ClientTrafficPolicyEnumMap, v),
+          ),
         );
         return val;
       },
@@ -396,6 +400,7 @@ InstanceInfo _$InstanceInfoFromJson(Map<String, dynamic> json) =>
         'proxyUrl': 'proxy_url',
         'enterpriseEnabled': 'enterprise_enabled',
         'disableAllTraffic': 'disable_all_traffic',
+        'clientTrafficPolicy': 'client_traffic_policy',
       },
     );
 
@@ -407,6 +412,7 @@ const _$InstanceInfoFieldMap = <String, String>{
   'username': 'username',
   'enterpriseEnabled': 'enterprise_enabled',
   'disableAllTraffic': 'disable_all_traffic',
+  'clientTrafficPolicy': 'client_traffic_policy',
 };
 
 Map<String, dynamic> _$InstanceInfoToJson(InstanceInfo instance) =>
@@ -418,7 +424,15 @@ Map<String, dynamic> _$InstanceInfoToJson(InstanceInfo instance) =>
       'username': instance.username,
       'enterprise_enabled': instance.enterpriseEnabled,
       'disable_all_traffic': instance.disableAllTraffic,
+      'client_traffic_policy':
+          _$ClientTrafficPolicyEnumMap[instance.clientTrafficPolicy],
     };
+
+const _$ClientTrafficPolicyEnumMap = {
+  ClientTrafficPolicy.none: 0,
+  ClientTrafficPolicy.disableAllTraffic: 1,
+  ClientTrafficPolicy.forceAllTraffic: 2,
+};
 
 AppInfoResponse _$AppInfoResponseFromJson(Map<String, dynamic> json) =>
     $checkedCreate('AppInfoResponse', json, ($checkedConvert) {
