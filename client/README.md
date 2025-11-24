@@ -29,4 +29,8 @@ flutter pub run drift_dev make-migrations
 ```
 
 4. Add your migration step to `AppDatabase` `onUpgrade`.
-5. Test the migrations.
+5. Run the tests:
+
+```bash
+flutter test
+```
