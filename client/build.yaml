@@ -9,3 +9,7 @@ targets:
           create_factory: true
           create_to_json: true
           create_field_map: true
+      drift_dev:
+        options:
+          databases:
+            defguard: lib/data/db/database.dart
