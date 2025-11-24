@@ -1,6 +1,7 @@
 import "package:drift/drift.dart";
 import "package:drift_flutter/drift_flutter.dart";
 import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:mobile/data/db/database.steps.dart";
 import "package:mobile/data/db/enums.dart";
 import "package:path_provider/path_provider.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
@@ -105,13 +106,14 @@ class AppDatabase extends _$AppDatabase {
       beforeOpen: (details) async {
         await customStatement('PRAGMA foreign_keys = ON');
       },
-      onUpgrade: (m, from, to) async {
-        if (from < 2) {
+      onUpgrade: stepByStep(
+        from1To2: (m, schema) async {
+          // if (from < 2) {
           // 1. Add the new column manually.
-          // This ensures Drift doesn't trigger a "Recreate Table" that might 
+          // This ensures Drift doesn't trigger a "Recreate Table" that might
           // drop 'disable_all_traffic' before we are done with it.
           await customStatement(
-            'ALTER TABLE defguard_instances ADD COLUMN client_traffic_policy INTEGER NOT NULL DEFAULT 0'
+            'ALTER TABLE defguard_instances ADD COLUMN client_traffic_policy INTEGER NOT NULL DEFAULT 0',
           );
           // 2. Update values derived from the old column
           await customStatement('''
@@ -121,8 +123,9 @@ class AppDatabase extends _$AppDatabase {
           ''');
           // 3. Drop old "disable_all_traffic" column
           await m.dropColumn(defguardInstances, "disable_all_traffic");
-        }
-      },
+          // }
+        },
+      ),
     );
   }
 
