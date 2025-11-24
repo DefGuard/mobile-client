@@ -68,7 +68,7 @@
       '';
     in {
       devShell = with pkgs;
-        mkShell rec {
+        mkShell {
           ANDROID_SDK_ROOT = "${androidSdk}/libexec/android-sdk";
           buildInputs = [
             flutter
@@ -85,6 +85,7 @@
             export GDK_BACKEND=x11
             export LANG=en_US.UTF-8
             export QT_QPA_PLATFORM=xcb
+            export LD_LIBRARY_PATH="${pkgs.lib.makeLibraryPath (with pkgs; [ sqlite ])}:$LD_LIBRARY_PATH";
           '';
         };
     });
