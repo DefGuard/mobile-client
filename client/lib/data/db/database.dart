@@ -108,7 +108,6 @@ class AppDatabase extends _$AppDatabase {
       },
       onUpgrade: stepByStep(
         from1To2: (m, schema) async {
-          // if (from < 2) {
           // 1. Add the new column manually.
           // This ensures Drift doesn't trigger a "Recreate Table" that might
           // drop 'disable_all_traffic' before we are done with it.
@@ -123,7 +122,6 @@ class AppDatabase extends _$AppDatabase {
           ''');
           // 3. Drop old "disable_all_traffic" column
           await m.dropColumn(defguardInstances, "disable_all_traffic");
-          // }
         },
       ),
     );
