@@ -66,7 +66,6 @@ jobs:
   #       uses: actions/checkout@v4
   #       with:
   #         submodules: "recursive"
-  #         token: ${{ secrets.PRIVATE_REPO_CLONING_TOKEN }}
 
   #     - name: setup flutter
   #       uses: subosito/flutter-action@v2

@@ -35,5 +35,3 @@ jobs:
     with:
       upload_url: ${{ matrix.release.uploadUrl }}
       tag: ${{ matrix.release.tagName }}
-    secrets:
-      PRIVATE_REPO_CLONING_TOKEN: ${{ secrets.PRIVATE_REPO_CLONING_TOKEN }}
