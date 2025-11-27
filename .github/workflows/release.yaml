@@ -2,10 +2,6 @@ name: "Release"
 
 on:
   workflow_call:
-    secrets:
-      PRIVATE_REPO_CLONING_TOKEN:
-        description: "Cloning token"
-        required: true
 
 jobs:
   create-release:
@@ -28,12 +24,10 @@ jobs:
           files: |
             ./artifacts/Defguard.ipa
             ./artifacts/app-release.aab
+            ./artifacts/app-release.apk
 
   create-sbom:
     needs: [create-release]
     uses: ./.github/workflows/sbom.yaml
     with:
       upload_url: ${{ needs.create-release.outputs.upload_url }}
-    secrets:
-      PRIVATE_REPO_CLONING_TOKEN: ${{ secrets.PRIVATE_REPO_CLONING_TOKEN }}
-

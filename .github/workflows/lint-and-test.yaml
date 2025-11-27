@@ -5,8 +5,8 @@ on:
     branches:
       - main
       - dev
-      - 'release/**'
-      - 'hotfix/**'
+      - "release/**"
+      - "hotfix/**"
     paths-ignore: &ignored_paths
       - "*.md"
       - "LICENSE"
@@ -15,8 +15,8 @@ on:
     branches:
       - main
       - dev
-      - 'release/**'
-      - 'hotfix/**'
+      - "release/**"
+      - "hotfix/**"
     paths-ignore: *ignored_paths
 
 jobs:
@@ -34,8 +34,8 @@ jobs:
       - name: Scan code with Trivy
         uses: aquasecurity/trivy-action@0.33.1
         with:
-          scan-type: 'fs'
-          scan-ref: '.'
+          scan-type: "fs"
+          scan-ref: "."
           exit-code: "1"
           ignore-unfixed: true
           severity: "CRITICAL,HIGH,MEDIUM"
@@ -66,7 +66,6 @@ jobs:
   #       uses: actions/checkout@v4
   #       with:
   #         submodules: "recursive"
-  #         token: ${{ secrets.PRIVATE_REPO_CLONING_TOKEN }}
 
   #     - name: setup flutter
   #       uses: subosito/flutter-action@v2
