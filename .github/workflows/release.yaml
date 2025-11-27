@@ -10,20 +10,20 @@ jobs:
       upload_url: ${{ steps.release.outputs.upload_url }}
 
     steps:
-    #   - name: Download build artifacts
-    #     uses: actions/download-artifact@v5
-    #     with:
-    #       path: ./artifacts
-    #       merge-multiple: true
+      - name: Download build artifacts
+        uses: actions/download-artifact@v5
+        with:
+          path: ./artifacts
+          merge-multiple: true
 
       - name: Create GitHub release
         id: release
         uses: softprops/action-gh-release@v2
         with:
           draft: true
-          # files: |
-          #   ./artifacts/Defguard.ipa
-          #   ./artifacts/app-release.aab
+          files: |
+            ./artifacts/Defguard.ipa
+            ./artifacts/app-release.aab
 
   create-sbom:
     needs: [create-release]
