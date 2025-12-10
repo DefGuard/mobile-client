@@ -24,12 +24,14 @@ enum RoutingMethodDialogIntention { connect, save, next }
 
 class RoutingMethodDialog extends HookConsumerWidget {
   final Location location;
+  final ClientTrafficPolicy clientTrafficPolicy;
   final RoutingMethodDialogIntention intention;
 
   const RoutingMethodDialog({
     super.key,
     required this.location,
     required this.intention,
+    required this.clientTrafficPolicy,
   });
 
   String _getSubmitText() {
