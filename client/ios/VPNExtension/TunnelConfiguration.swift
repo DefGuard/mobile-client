@@ -29,31 +29,31 @@ final class TunnelConfiguration: Codable {
         // Keep 127.0.0.1 as remote address for WireGuard.
         let networkSettings = NEPacketTunnelNetworkSettings(tunnelRemoteAddress: "127.0.0.1")
 
+        let (ipv4IncludedRoutes, ipv6IncludedRoutes) = routes()
+
         // IPv4 addresses
         let addrs_v4 = interface.addresses.filter { $0.address is IPv4Address }
             .map { String(describing: $0.address) }
         let masks_v4 = interface.addresses.filter { $0.address is IPv4Address }
             .map { String(describing: $0.mask()) }
         let ipv4Settings = NEIPv4Settings(addresses: addrs_v4, subnetMasks: masks_v4)
-        ipv4Settings.includedRoutes = peers[0].allowedIPs.filter { $0.address is IPv4Address }.map {
-            NEIPv4Route(destinationAddress: "\($0.address)", subnetMask: "\($0.mask())")
-        }
+        ipv4Settings.includedRoutes = ipv4IncludedRoutes
         networkSettings.ipv4Settings = ipv4Settings
 
         // IPv6 addresses
         let addrs_v6 = interface.addresses.filter { $0.address is IPv6Address }
             .map { String(describing: $0.address) }
+        // IMPORTANT: macOS/iOS has limitations handling IPv6 prefix masks longer than /120 due to
+        // standards compliance and implementation choices in its network stack.
         let masks_v6 = interface.addresses.filter { $0.address is IPv6Address }
-            .map { NSNumber(value: $0.cidr) }
+            .map { NSNumber(value: min(120, $0.cidr)) }
         let ipv6Settings = NEIPv6Settings(addresses: addrs_v6, networkPrefixLengths: masks_v6)
-        ipv6Settings.includedRoutes = peers[0].allowedIPs.filter { $0.address is IPv6Address }.map {
-            NEIPv6Route(destinationAddress: "\($0.address)",
-                        networkPrefixLength: NSNumber(value: $0.cidr))
-        }
+        ipv6Settings.includedRoutes = ipv6IncludedRoutes
         networkSettings.ipv6Settings = ipv6Settings
 
         networkSettings.mtu = interface.mtu as NSNumber?
         networkSettings.tunnelOverheadBytes = 80
+
         let dnsSettings = NEDNSSettings(servers: interface.dns)
         dnsSettings.searchDomains = interface.dnsSearch
         if !interface.dns.isEmpty {
@@ -65,11 +65,56 @@ final class TunnelConfiguration: Codable {
         return networkSettings
     }
 
+    /// Return array of routes for IPv4 and IPv6.
+    private func routes() -> ([NEIPv4Route], [NEIPv6Route]) {
+        var ipv4IncludedRoutes = [NEIPv4Route]()
+        var ipv6IncludedRoutes = [NEIPv6Route]()
+
+        // Routes to interface addresses.
+        for addr_mask in interface.addresses {
+            if addr_mask.address is IPv4Address {
+                let route = NEIPv4Route(
+                    destinationAddress: "\(addr_mask.maskedAddress())",
+                    subnetMask: "\(addr_mask.mask())")
+                route.gatewayAddress = "\(addr_mask.address)"
+                ipv4IncludedRoutes.append(route)
+            } else if addr_mask.address is IPv6Address {
+                let route = NEIPv6Route(
+                    destinationAddress: "\(addr_mask.maskedAddress())",
+                    networkPrefixLength: NSNumber(value: addr_mask.cidr)
+                )
+                route.gatewayAddress = "\(addr_mask.address)"
+                ipv6IncludedRoutes.append(route)
+            }
+        }
+
+        // Routes to peer's allowed IPs.
+        for peer in peers {
+            for addr_mask in peer.allowedIPs {
+                if addr_mask.address is IPv4Address {
+                    ipv4IncludedRoutes.append(
+                        NEIPv4Route(
+                            destinationAddress: "\(addr_mask.address)",
+                            subnetMask: "\(addr_mask.mask())"))
+                } else if addr_mask.address is IPv6Address {
+                    ipv6IncludedRoutes.append(
+                        NEIPv6Route(
+                            destinationAddress: "\(addr_mask.address)",
+                            networkPrefixLength: NSNumber(value: addr_mask.cidr)))
+                }
+            }
+        }
+
+        return (ipv4IncludedRoutes, ipv6IncludedRoutes)
+    }
+
     /// Helper function allowing to parse comma-separated string of addresses.
     private func parseAddresses(fromString string: String) -> [IpAddrMask] {
         var addresses: [IpAddrMask] = []
 
-        for addr in string.split(separator: ",").map({ String($0.trimmingCharacters(in: .whitespaces)) }) {
+        for addr in string.split(separator: ",").map({
+            String($0.trimmingCharacters(in: .whitespaces))
+        }) {
             if let addr_mask = IpAddrMask(fromString: addr) {
                 addresses.append(addr_mask)
             }
@@ -87,9 +132,10 @@ final class TunnelConfiguration: Codable {
         interface.addresses = self.parseAddresses(fromString: startData.address)
 
         // DNS settings
-        let dnsRecords = startData.dns?.split(separator: ",").map {
-            $0.trimmingCharacters(in: .whitespaces)
-        } ?? []
+        let dnsRecords =
+            startData.dns?.split(separator: ",").map {
+                $0.trimmingCharacters(in: .whitespaces)
+            } ?? []
         if !dnsRecords.isEmpty {
             for record in dnsRecords {
                 if IPv4Address(record) != nil || IPv6Address(record) != nil {
@@ -104,15 +150,16 @@ final class TunnelConfiguration: Codable {
         peer.preSharedKey = startData.presharedKey
         peer.endpoint = Endpoint(from: startData.endpoint)
         peer.persistentKeepAlive = UInt16(startData.keepalive)
-        peer.allowedIPs = switch startData.traffic {
+        peer.allowedIPs =
+            switch startData.traffic {
             case .All:
                 [
                     IpAddrMask(address: IPv4Address.any, cidr: 0),
-                    IpAddrMask(address: IPv6Address.any, cidr: 0)
+                    IpAddrMask(address: IPv6Address.any, cidr: 0),
                 ]
             case .Predefined:
                 self.parseAddresses(fromString: startData.allowedIps)
-        }
+            }
     }
 }
 
