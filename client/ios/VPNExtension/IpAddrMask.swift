@@ -51,28 +51,34 @@ struct IpAddrMask: Codable, Equatable {
 
         let address_data = try values.decode(Data.self, forKey: .address)
         switch address_data.count {
-            case 4:
-                guard let ipv4 = IPv4Address(address_data) else {
-                    throw DecodingError
-                        .dataCorrupted(DecodingError.Context(
+        case 4:
+            guard let ipv4 = IPv4Address(address_data) else {
+                throw
+                    DecodingError
+                    .dataCorrupted(
+                        DecodingError.Context(
                             codingPath: decoder.codingPath,
                             debugDescription: "Unable to decode IP v4 address"
                         ))
 
-                }
-                address = ipv4
-            case 16:
-                guard let ipv6 = IPv6Address(address_data) else {
-                    throw DecodingError
-                        .dataCorrupted(DecodingError.Context(
+            }
+            address = ipv4
+        case 16:
+            guard let ipv6 = IPv6Address(address_data) else {
+                throw
+                    DecodingError
+                    .dataCorrupted(
+                        DecodingError.Context(
                             codingPath: decoder.codingPath,
                             debugDescription: "Unable to decode IP v6 address"
                         ))
 
-                }
-                address = ipv6
-            default:
-                throw DecodingError.typeMismatch(IpAddrMask.self, DecodingError.Context(
+            }
+            address = ipv6
+        default:
+            throw DecodingError.typeMismatch(
+                IpAddrMask.self,
+                DecodingError.Context(
                     codingPath: decoder.codingPath, debugDescription: "Invalid IP address length"
                 ))
         }
@@ -96,17 +102,18 @@ struct IpAddrMask: Codable, Equatable {
         // Note: UInt128 is available since iOS 18. Use UInt64 implementation.
         if address is IPv6Address {
             var bytes = Data(count: 16)
-            let (mask_upper, mask_lower) = if cidr < 64 {
-                (
-                    cidr == 0 ? UInt64.min : UInt64.max << (64 - cidr),
-                    UInt64.min
-                )
-            } else {
-                (
-                    UInt64.max,
-                    (cidr - 64) == 0 ? UInt64.min : UInt64.max << (128 - cidr)
-                )
-            }
+            let (mask_upper, mask_lower) =
+                if cidr < 64 {
+                    (
+                        cidr == 0 ? UInt64.min : UInt64.max << (64 - cidr),
+                        UInt64.min
+                    )
+                } else {
+                    (
+                        UInt64.max,
+                        (cidr - 64) == 0 ? UInt64.min : UInt64.max << (128 - cidr)
+                    )
+                }
             for i in 0...7 {
                 bytes[i] = UInt8(truncatingIfNeeded: mask_upper >> (56 - i * 8))
             }
@@ -114,6 +121,25 @@ struct IpAddrMask: Codable, Equatable {
                 bytes[i] = UInt8(truncatingIfNeeded: mask_lower >> (56 - (i - 8) * 8))
             }
             return IPv6Address(bytes)!
+        }
+        fatalError()
+    }
+
+    /// Return address with the mask applied.
+    func maskedAddress() -> IPAddress {
+        let subnet = mask().rawValue
+        var masked = Data(address.rawValue)
+        if subnet.count != masked.count {
+            fatalError()
+        }
+        for i in 0..<subnet.count {
+            masked[i] &= subnet[i]
+        }
+        if subnet.count == 4 {
+            return IPv4Address(masked)!
+        }
+        if subnet.count == 16 {
+            return IPv6Address(masked)!
         }
         fatalError()
     }
