@@ -32,7 +32,7 @@ jobs:
         uses: actions/checkout@v6
         with:
           ref: ${{ steps.vars.outputs.TAG_NAME }}
-          submodules: recursive
+          submodules: "recursive"
 
       - name: Create SBOM with Trivy
         uses: aquasecurity/trivy-action@0.33.1
