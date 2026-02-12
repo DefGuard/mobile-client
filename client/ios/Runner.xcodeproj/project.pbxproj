@@ -642,10 +642,9 @@
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/VPNExtension/BoringTun",
-					"$(PROJECT_DIR)/VPNExtension/BoringTun-old",
 				);
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.6.1;
 				MODULEMAP_FILE = "";
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
@@ -660,7 +659,7 @@
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_INCLUDE_PATHS = "$(PROJECT_DIR)/VPNExtension/BoringTun";
-				SWIFT_OBJC_BRIDGING_HEADER = "$(PROJECT_DIR)/VPNExtension/BoringTun/boringtunFFI.h";
+				SWIFT_OBJC_BRIDGING_HEADER = "$(PROJECT_DIR)/VPNExtension/BoringTun/defguard_boringtunFFI.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 				SYSTEM_HEADER_SEARCH_PATHS = "";
@@ -697,10 +696,9 @@
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/VPNExtension/BoringTun",
-					"$(PROJECT_DIR)/VPNExtension/BoringTun-old",
 				);
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.6.1;
 				MODULEMAP_FILE = "";
 				MTL_FAST_MATH = YES;
 				OTHER_LDFLAGS = "";
@@ -713,7 +711,7 @@
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_INCLUDE_PATHS = "$(PROJECT_DIR)/VPNExtension/BoringTun";
-				SWIFT_OBJC_BRIDGING_HEADER = "$(PROJECT_DIR)/VPNExtension/BoringTun/boringtunFFI.h";
+				SWIFT_OBJC_BRIDGING_HEADER = "$(PROJECT_DIR)/VPNExtension/BoringTun/defguard_boringtunFFI.h";
 				SWIFT_VERSION = 5.0;
 				SYSTEM_HEADER_SEARCH_PATHS = "";
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -749,10 +747,9 @@
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/VPNExtension/BoringTun",
-					"$(PROJECT_DIR)/VPNExtension/BoringTun-old",
 				);
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.6.1;
 				MODULEMAP_FILE = "";
 				MTL_FAST_MATH = YES;
 				OTHER_LDFLAGS = "";
@@ -765,7 +762,7 @@
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_INCLUDE_PATHS = "$(PROJECT_DIR)/VPNExtension/BoringTun";
-				SWIFT_OBJC_BRIDGING_HEADER = "$(PROJECT_DIR)/VPNExtension/BoringTun/boringtunFFI.h";
+				SWIFT_OBJC_BRIDGING_HEADER = "$(PROJECT_DIR)/VPNExtension/BoringTun/defguard_boringtunFFI.h";
 				SWIFT_VERSION = 5.0;
 				SYSTEM_HEADER_SEARCH_PATHS = "";
 				TARGETED_DEVICE_FAMILY = "1,2";
