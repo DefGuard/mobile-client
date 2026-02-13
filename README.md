@@ -27,7 +27,7 @@ This open-source, cross-platform VPN app supports easy QR code onboarding and fl
 
 ## Getting Started
 
-You need to have a running [Defguard Server](https://github.com/DefGuard/defguard) to use the mobile app.
+You need to have a running [Defguard Core](https://github.com/DefGuard/defguard) to use the mobile app.
 
 ### Install the App
 
@@ -41,7 +41,7 @@ Join closed beta for iOS or Android.
 
 - Available soon on the [App Store](https://apps.apple.com/us/app/defguard-vpn-client/id6748068630)
 
-Documentation available at : [https://docs.defguard.net/help/mobile-client](https://docs.defguard.net/help/mobile-client)
+Documentation available at : [https://docs.defguard.net/using-defguard-for-end-users/mobile-client](https://docs.defguard.net/using-defguard-for-end-users/mobile-client)
 
 ## About DefGuard
 
