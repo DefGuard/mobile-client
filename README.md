@@ -5,15 +5,16 @@ The **DefGuard Mobile Client** is a secure, self-hosted **WireGuard VPN mobile c
 This open-source, cross-platform VPN app supports easy QR code onboarding and flexible traffic routing to meet diverse secure remote access needs. DefGuard is part of a modular ecosystem built for VPN orchestration and identity management . Defguard provides a mobile VPN client with biometrics and TOTP.
 
 ## Key Features
-- Secure **WireGuard VPN mobile client** with **Multi-Factor Authentication (MFA)**  
-- Internal SSO/OIDC support with biometrics, TOTP, email verification  
-- External SSO support: Google, Okta, Microsoft EntraID, JumpCloud, and more  
-- Quick and easy onboarding via secure **QR code VPN onboarding** or URL/token  
-- Flexible traffic routing: all traffic via VPN or selective routing  
-- Real-time synchronization of VPN configurations with the DefGuard server  
-- Native **cross-platform VPN app** support for **Android VPN client** and iOS VPN client  
-- Fully **self-hosted VPN solution** for ultimate privacy and control  
-- Open-source codebase for transparency and customization  
+
+- Secure **WireGuard VPN mobile client** with **Multi-Factor Authentication (MFA)**
+- Internal SSO/OIDC support with biometrics, TOTP, email verification
+- External SSO support: Google, Okta, Microsoft EntraID, JumpCloud, and more
+- Quick and easy onboarding via secure **QR code VPN onboarding** or URL/token
+- Flexible traffic routing: all traffic via VPN or selective routing
+- Real-time synchronization of VPN configurations with the DefGuard server
+- Native **cross-platform VPN app** support for **Android VPN client** and iOS VPN client
+- Fully **self-hosted VPN solution** for ultimate privacy and control
+- Open-source codebase for transparency and customization
 
 ## Screenshots
 
@@ -24,7 +25,6 @@ This open-source, cross-platform VPN app supports easy QR code onboarding and fl
 <img width="250" alt="Instance list" src="https://github.com/user-attachments/assets/8fb7c5ba-4d11-4452-997a-b2bd17b468d0" />
 <img width="250" alt="MFA defguard IdP" src="https://github.com/user-attachments/assets/d08d008e-22f2-4f14-9b1b-db6eccb3c3dc" />
 
-
 ## Getting Started
 
 You need to have a running [Defguard Server](https://github.com/DefGuard/defguard) to use the mobile app.
@@ -34,14 +34,17 @@ You need to have a running [Defguard Server](https://github.com/DefGuard/defguar
 Join closed beta for iOS or Android.
 
 #### Android
+
 - Download from [Google Play](https://play.google.com/store/apps/details?id=net.defguard.mobile)
 
 #### iOS
-- Available soon on the [App Store](https://testflight.apple.com/join/Jvdhkt7h)
+
+- Available soon on the [App Store](https://apps.apple.com/us/app/defguard-vpn-client/id6748068630)
 
 Documentation available at : [https://docs.defguard.net/help/mobile-client](https://docs.defguard.net/help/mobile-client)
 
 ## About DefGuard
-DefGuard is a comprehensive platform offering **secure remote access**, **identity management**, and VPN orchestration with a focus on security using **multi-factor authentication for VPN**.  
+
+DefGuard is a comprehensive platform offering **secure remote access**, **identity management**, and VPN orchestration with a focus on security using **multi-factor authentication for VPN**.
 
 Visit defguard.net for more information.
