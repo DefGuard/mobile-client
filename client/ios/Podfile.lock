@@ -107,22 +107,22 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/wireguard_plugin/darwin"
 
 SPEC CHECKSUMS:
-  app_links: 585674be3c6661708e6cd794ab4f39fb9d8356f9
-  device_info_plus: bf2e3232933866d73fe290f2942f2156cdd10342
+  app_links: 3dbc685f76b1693c66a6d9dd1e9ab6f73d97dc0a
+  device_info_plus: 21fcca2080fbcd348be798aa36c3e5ed849eefbe
   Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
-  flutter_local_notifications: ff50f8405aaa0ccdc7dcfb9022ca192e8ad9688f
-  flutter_native_splash: df59bb2e1421aa0282cb2e95618af4dcb0c56c29
-  flutter_secure_storage: d33dac7ae2ea08509be337e775f6b59f1ff45f12
-  local_auth_darwin: 63c73d6d28cc3e239be2b6aa460ea6e317cd5100
-  mobile_scanner: 77265f3dc8d580810e91849d4a0811a90467ed5e
-  package_info_plus: c0502532a26c7662a62a356cebe2692ec5fe4ec4
-  permission_handler_apple: 9878588469a2b0d0fc1e048d9f43605f92e6cec2
-  share_plus: 8b6f8b3447e494cca5317c8c3073de39b3600d1f
-  shared_preferences_foundation: 5086985c1d43c5ba4d5e69a4e8083a389e2909e6
+  flutter_local_notifications: a5a732f069baa862e728d839dd2ebb904737effb
+  flutter_native_splash: c32d145d68aeda5502d5f543ee38c192065986cf
+  flutter_secure_storage: 1ed9476fba7e7a782b22888f956cce43e2c62f13
+  local_auth_darwin: c3ee6cce0a8d56be34c8ccb66ba31f7f180aaebb
+  mobile_scanner: 9157936403f5a0644ca3779a38ff8404c5434a93
+  package_info_plus: af8e2ca6888548050f16fa2f1938db7b5a5df499
+  permission_handler_apple: 4ed2196e43d0651e8ff7ca3483a069d469701f2d
+  share_plus: 50da8cb520a8f0f65671c6c6a99b3617ed10a58a
+  shared_preferences_foundation: 7036424c3d8ec98dfe75ff1667cb0cd531ec82bb
   sqlite3: 73513155ec6979715d3904ef53a8d68892d4032b
-  sqlite3_flutter_libs: 7bea6d85399aebaeb54e4f9845dcac6f5033cf22
-  url_launcher_ios: bb13df5870e8c4234ca12609d04010a21be43dfa
-  wireguard_plugin: 4d2720563b180d23101f7162ecdbf57203e82e8e
+  sqlite3_flutter_libs: 52ecc4dfaae71f496da86159263dbce5d23a051a
+  url_launcher_ios: 7a95fa5b60cc718a708b8f2966718e93db0cef1b
+  wireguard_plugin: c2f4d5382eecd7bcd07c027642c75e0569f91ff8
 
 PODFILE CHECKSUM: ae9e65fc23486119b8e977fd41d9213f251e537a
 
