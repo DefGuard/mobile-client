@@ -8,6 +8,7 @@ import 'package:dio_cookie_manager/dio_cookie_manager.dart';
 import 'package:mobile/data/db/enums.dart';
 import 'package:mobile/data/proto/client_platform_info.pb.dart';
 import 'package:mobile/data/proxy/config.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:mobile/data/proxy/enrollment.dart';
 import 'package:mobile/data/proxy/mfa.dart';
 
@@ -83,7 +84,8 @@ class _ProxyApi {
       final platformBytes = platformInfo.writeToBuffer();
       final platformBase64 = base64Encode(platformBytes);
 
-      _dio.options.headers['defguard-client-version'] = platformInfo.version;
+      final packageInfo = await PackageInfo.fromPlatform();
+      _dio.options.headers['defguard-client-version'] = packageInfo.version;
       _dio.options.headers['defguard-client-platform'] = platformBase64;
     } catch (e) {
       talker.error("Failed to set client headers", e);
