@@ -1,9 +1,12 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:cookie_jar/cookie_jar.dart';
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:dio/dio.dart';
 import 'package:dio_cookie_manager/dio_cookie_manager.dart';
 import 'package:mobile/data/db/enums.dart';
+import 'package:mobile/data/proto/client_platform_info.pb.dart';
 import 'package:mobile/data/proxy/config.dart';
 import 'package:mobile/data/proxy/enrollment.dart';
 import 'package:mobile/data/proxy/mfa.dart';
@@ -44,6 +47,47 @@ class _ProxyApi {
     final cookieJar = CookieJar();
     _dio.interceptors.add(CookieManager(cookieJar));
     _dio.interceptors.add(TalkerDioLogger(talker: talker));
+    _initHeaders();
+  }
+
+  Future<void> _initHeaders() async {
+    try {
+      final deviceInfo = DeviceInfoPlugin();
+      final ClientPlatformInfo platformInfo;
+
+      if (Platform.isAndroid) {
+        final android = await deviceInfo.androidInfo;
+        platformInfo = ClientPlatformInfo(
+          osType: 'Android',
+          version: android.version.release,
+          codename: android.version.codename,
+          architecture: android.supportedAbis.first,
+          bitness: '64',
+        );
+      } else if (Platform.isIOS) {
+        final ios = await deviceInfo.iosInfo;
+        platformInfo = ClientPlatformInfo(
+          osType: 'iOS',
+          version: ios.systemVersion,
+          architecture: 'arm64',
+          bitness: '64',
+        );
+      } else {
+        platformInfo = ClientPlatformInfo(
+          osFamily: Platform.operatingSystem,
+          osType: Platform.operatingSystem,
+          version: Platform.operatingSystemVersion,
+        );
+      }
+
+      final platformBytes = platformInfo.writeToBuffer();
+      final platformBase64 = base64Encode(platformBytes);
+
+      _dio.options.headers['defguard-client-version'] = platformInfo.version;
+      _dio.options.headers['defguard-client-platform'] = platformBase64;
+    } catch (e) {
+      talker.error("Failed to set client headers", e);
+    }
   }
 
   Future<(ConfigurationPollResponse?, int?, Headers?)> pollConfiguration(
