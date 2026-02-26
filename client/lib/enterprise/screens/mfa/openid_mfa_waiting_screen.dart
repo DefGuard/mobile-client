@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
@@ -51,6 +53,14 @@ class OpenIdMfaWaitingScreen extends HookConsumerWidget {
         final response = await proxyApi.finishMfa(uri, request);
         return response;
       } on DioException catch (e) {
+        final error = e.error;
+        if (error is SocketException) {
+          talker.warning(
+            "OpenID MFA polling DNS/network error, likely restricted by battery optimization policy, retrying: $error",
+          );
+          await Future.delayed(Duration(seconds: 2));
+          continue;
+        }
         if (e.response?.statusCode == 428) {
           talker.debug("User did not complete openid browser login, waiting");
           await Future.delayed(Duration(seconds: 2));
