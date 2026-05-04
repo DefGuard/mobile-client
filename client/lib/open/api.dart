@@ -5,6 +5,7 @@ import 'package:cookie_jar/cookie_jar.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:dio/dio.dart';
 import 'package:dio_cookie_manager/dio_cookie_manager.dart';
+import 'package:native_dio_adapter/native_dio_adapter.dart';
 import 'package:mobile/data/db/enums.dart';
 import 'package:mobile/data/proto/client_platform_info.pb.dart';
 import 'package:mobile/data/proxy/config.dart';
@@ -45,6 +46,7 @@ class _ProxyApi {
   );
 
   _ProxyApi._internal() {
+    _dio.httpClientAdapter = NativeAdapter();
     final cookieJar = CookieJar();
     _dio.interceptors.add(CookieManager(cookieJar));
     _dio.interceptors.add(TalkerDioLogger(talker: talker));
