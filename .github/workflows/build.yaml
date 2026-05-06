@@ -104,6 +104,7 @@ jobs:
         run: flutter build appbundle --release --build-number=${{ github.run_number }}
 
       - name: Sign AAB
+        id: sign_aab
         uses: r0adkll/sign-android-release@v1
         with:
           releaseDirectory: client/build/app/outputs/bundle/release
@@ -121,15 +122,18 @@ jobs:
         with:
           serviceAccountJsonPlainText: "${{ secrets.ANDROID_SERVICE_ACCOUNT_JSON }}"
           packageName: net.defguard.mobile
-          releaseFiles: client/build/app/outputs/bundle/release/app-release.aab
+          releaseFiles: ${{ steps.sign_aab.outputs.signedReleaseFile }}
           track: internal
+
+      - name: Rename AAB
+        run: cp "${{ steps.sign_aab.outputs.signedReleaseFile }}" Defguard.aab
 
       - name: Upload Android Artifact
         uses: actions/upload-artifact@v4
         if: startsWith(github.ref, 'refs/tags/')
         with:
           name: android-app
-          path: "client/build/app/outputs/bundle/release/app-release.aab"
+          path: "client/Defguard.aab"
           retention-days: 2
 
   build-android-apk:
@@ -173,6 +177,7 @@ jobs:
         run: flutter build apk --release --build-number=${{ github.run_number }}
 
       - name: Sign APK
+        id: sign_apk
         uses: r0adkll/sign-android-release@v1
         with:
           releaseDirectory: client/build/app/outputs/flutter-apk
@@ -181,12 +186,15 @@ jobs:
           keyStorePassword: "${{ secrets.ANDROID_KEYSTORE_PASSWORD }}"
           keyPassword: "${{ secrets.ANDROID_KEYSTORE_PASSWORD }}"
 
+      - name: Rename APK
+        run: cp "${{ steps.sign_apk.outputs.signedReleaseFile }}" Defguard.apk
+
       - name: Upload Android Artifact
         uses: actions/upload-artifact@v4
         if: startsWith(github.ref, 'refs/tags/')
         with:
           name: android-app-apk
-          path: "client/build/app/outputs/flutter-apk/app-release.apk"
+          path: "client/Defguard.apk"
           retention-days: 2
 
   release:
