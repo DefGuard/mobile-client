@@ -393,6 +393,10 @@ InstanceInfo _$InstanceInfoFromJson(Map<String, dynamic> json) =>
             'client_traffic_policy',
             (v) => $enumDecodeNullable(_$ClientTrafficPolicyEnumMap, v),
           ),
+          openidDisplayName: $checkedConvert(
+            'openid_display_name',
+            (v) => v as String?,
+          ),
         );
         return val;
       },
@@ -401,6 +405,7 @@ InstanceInfo _$InstanceInfoFromJson(Map<String, dynamic> json) =>
         'enterpriseEnabled': 'enterprise_enabled',
         'disableAllTraffic': 'disable_all_traffic',
         'clientTrafficPolicy': 'client_traffic_policy',
+        'openidDisplayName': 'openid_display_name',
       },
     );
 
@@ -413,6 +418,7 @@ const _$InstanceInfoFieldMap = <String, String>{
   'enterpriseEnabled': 'enterprise_enabled',
   'disableAllTraffic': 'disable_all_traffic',
   'clientTrafficPolicy': 'client_traffic_policy',
+  'openidDisplayName': 'openid_display_name',
 };
 
 Map<String, dynamic> _$InstanceInfoToJson(InstanceInfo instance) =>
@@ -426,6 +432,7 @@ Map<String, dynamic> _$InstanceInfoToJson(InstanceInfo instance) =>
       'disable_all_traffic': instance.disableAllTraffic,
       'client_traffic_policy':
           _$ClientTrafficPolicyEnumMap[instance.clientTrafficPolicy],
+      'openid_display_name': instance.openidDisplayName,
     };
 
 const _$ClientTrafficPolicyEnumMap = {

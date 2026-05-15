@@ -253,6 +253,7 @@ class InstanceInfo {
   final bool enterpriseEnabled;
   final bool disableAllTraffic;
   final ClientTrafficPolicy? clientTrafficPolicy;
+  final String? openidDisplayName;
 
   const InstanceInfo({
     required this.id,
@@ -262,9 +263,9 @@ class InstanceInfo {
     required this.username,
     required this.enterpriseEnabled,
     // deprecated, use clientTrafficPolicy instead
-    @Deprecated('1.6')
-    required this.disableAllTraffic,
+    @Deprecated('1.6') required this.disableAllTraffic,
     required this.clientTrafficPolicy,
+    this.openidDisplayName,
   });
 
   factory InstanceInfo.fromJson(Map<String, dynamic> json) =>
@@ -279,7 +280,8 @@ class InstanceInfo {
         proxyUrl == other.proxyUrl &&
         username == other.username &&
         enterpriseEnabled == other.enterpriseEnabled &&
-        getPolicy() == other.clientTrafficPolicy;
+        getPolicy() == other.clientTrafficPolicy &&
+        openidDisplayName == other.openidDisplayName;
   }
 
   DefguardInstancesCompanion toCompanion({DefguardInstance? instance}) {
@@ -296,14 +298,16 @@ class InstanceInfo {
       enterpriseEnabled: d.Value(enterpriseEnabled),
       clientTrafficPolicy: d.Value(getPolicy()),
       uuid: d.Value(id),
+      openidDisplayName: d.Value(openidDisplayName),
     );
   }
 
   /// Retrieves `ClientTrafficPolicy` while ensuring backwards compatibility
   ClientTrafficPolicy getPolicy() {
-    return clientTrafficPolicy ?? (disableAllTraffic
-      ? ClientTrafficPolicy.disableAllTraffic
-      : ClientTrafficPolicy.none);
+    return clientTrafficPolicy ??
+        (disableAllTraffic
+            ? ClientTrafficPolicy.disableAllTraffic
+            : ClientTrafficPolicy.none);
   }
 }
 

@@ -45,6 +45,9 @@ class DefguardInstances extends Table with AutoIncrementingPrimaryKey {
 
   // tells if the secure biometric storage exists for this instance
   BoolColumn get mfaKeysStored => boolean()();
+
+  // openid provider display name configured on the server side
+  TextColumn get openidDisplayName => text().nullable()();
 }
 
 @DataClassName('Location')
@@ -98,7 +101,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration {
@@ -122,6 +125,12 @@ class AppDatabase extends _$AppDatabase {
           ''');
           // 3. Drop old "disable_all_traffic" column
           await m.dropColumn(defguardInstances, "disable_all_traffic");
+        },
+        from2To3: (m, schema) async {
+          await m.addColumn(
+            schema.defguardInstances,
+            schema.defguardInstances.openidDisplayName,
+          );
         },
       ),
     );

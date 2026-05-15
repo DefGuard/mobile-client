@@ -126,7 +126,7 @@ jobs:
           track: internal
 
       - name: Rename AAB
-        run: cp "${{ steps.sign_aab.outputs.signedReleaseFile }}" Defguard.aab
+        run: cp "$GITHUB_WORKSPACE/${{ steps.sign_aab.outputs.signedReleaseFile }}" Defguard.aab
 
       - name: Upload Android Artifact
         uses: actions/upload-artifact@v4
@@ -187,7 +187,7 @@ jobs:
           keyPassword: "${{ secrets.ANDROID_KEYSTORE_PASSWORD }}"
 
       - name: Rename APK
-        run: cp "${{ steps.sign_apk.outputs.signedReleaseFile }}" Defguard.apk
+        run: cp "$GITHUB_WORKSPACE/${{ steps.sign_apk.outputs.signedReleaseFile }}" Defguard.apk
 
       - name: Upload Android Artifact
         uses: actions/upload-artifact@v4
