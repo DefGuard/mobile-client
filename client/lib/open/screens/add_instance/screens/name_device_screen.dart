@@ -64,6 +64,9 @@ class NameDeviceScreen extends HookConsumerWidget {
         username: createResponse.instance.username,
         poolingToken: createResponse.token,
         mfaKeysStored: false,
+        openidDisplayName: drift.Value(
+          createResponse.instance.openidDisplayName,
+        ),
       ),
       mode: drift.InsertMode.insertOrFail,
     );
@@ -101,7 +104,7 @@ class NameDeviceScreen extends HookConsumerWidget {
             suggestedName = "";
           }
           nameController.text = suggestedName;
-        } catch(e) {
+        } catch (e) {
           talker.error("Failed to get suggested device name! Reason: $e");
         }
       }

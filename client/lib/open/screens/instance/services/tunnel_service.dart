@@ -38,7 +38,8 @@ class TunnelService {
     if (instance.clientTrafficPolicy == ClientTrafficPolicy.disableAllTraffic) {
       // instance enforces predefined traffic
       trafficMethod = RoutingMethod.predefined;
-    } else if (instance.clientTrafficPolicy == ClientTrafficPolicy.forceAllTraffic) {
+    } else if (instance.clientTrafficPolicy ==
+        ClientTrafficPolicy.forceAllTraffic) {
       // instance enforces all traffic
       trafficMethod = RoutingMethod.all;
     } else {
@@ -111,6 +112,7 @@ class TunnelService {
         payload: payload,
         method: mfaMethod,
         secureStorageKey: instance.secureStorageKey,
+        openidDisplayName: instance.openidDisplayName,
       );
       if (presharedKey == null) {
         // user dismissed the dialog
@@ -139,6 +141,7 @@ class TunnelService {
     required PluginConnectPayload payload,
     required MfaMethod method,
     String? secureStorageKey,
+    String? openidDisplayName,
   }) async {
     // prepare messenger to avoid "context use across async gaps"
     final messenger = ScaffoldMessenger.of(navigator.context);
@@ -157,6 +160,7 @@ class TunnelService {
           token: startMfaResponse.token,
           proxyUrl: proxyUrl,
           method: method,
+          openidDisplayName: openidDisplayName,
         );
       }
       if (method == MfaMethod.biometric) {
@@ -227,11 +231,16 @@ class TunnelService {
     required String token,
     required String proxyUrl,
     required MfaMethod method,
+    String? openidDisplayName,
   }) async {
     final presharedKey = await Navigator.of(navigator.context).push<String?>(
       MaterialPageRoute(
         builder: (context) => OpenIdMfaScreen(
-          screenData: OpenIdMfaScreenData(proxyUrl: proxyUrl, token: token),
+          screenData: OpenIdMfaScreenData(
+            proxyUrl: proxyUrl,
+            token: token,
+            openidDisplayName: openidDisplayName,
+          ),
         ),
       ),
     );
