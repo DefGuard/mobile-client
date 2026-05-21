@@ -2,14 +2,23 @@ import Foundation
 import NetworkExtension
 
 final class TunnelConfiguration: Codable {
-    var name: String
-    var interface: InterfaceConfiguration
-    var peers: [Peer]
+    // One or the other.
+    var locationId: UInt64?
+    var tunnelId: UInt64?
 
-    init(name: String, interface: InterfaceConfiguration, peers: [Peer]) {
-        self.interface = interface
-        self.peers = peers
+    var name: String
+    var privateKey: String
+    var addresses: [IpAddrMask] = []
+    var listenPort: UInt16?
+    var peers: [Peer] = []
+    var mtu: UInt32?
+    var dns: [String] = []
+    var dnsSearch: [String] = []
+
+    init(name: String, privateKey: String, peers: [Peer]) {
         self.name = name
+        self.privateKey = privateKey
+        self.peers = peers
 
         let peerPublicKeysArray = peers.map { $0.publicKey }
         let peerPublicKeysSet = Set<String>(peerPublicKeysArray)
@@ -18,11 +27,18 @@ final class TunnelConfiguration: Codable {
         }
     }
 
-    // Only encode these properties.
+    /// Only encode these properties.
     enum CodingKeys: String, CodingKey {
+        case locationId
+        case tunnelId
         case name
-        case interface
+        case privateKey
+        case addresses
+        case listenPort
         case peers
+        case mtu
+        case dns
+        case dnsSearch
     }
 
     func asNetworkSettings() -> NEPacketTunnelNetworkSettings {
@@ -32,31 +48,31 @@ final class TunnelConfiguration: Codable {
         let (ipv4IncludedRoutes, ipv6IncludedRoutes) = routes()
 
         // IPv4 addresses
-        let addrs_v4 = interface.addresses.filter { $0.address is IPv4Address }
+        let addrs_v4 = addresses.filter { $0.address is IPv4Address }
             .map { String(describing: $0.address) }
-        let masks_v4 = interface.addresses.filter { $0.address is IPv4Address }
+        let masks_v4 = addresses.filter { $0.address is IPv4Address }
             .map { String(describing: $0.mask()) }
         let ipv4Settings = NEIPv4Settings(addresses: addrs_v4, subnetMasks: masks_v4)
         ipv4Settings.includedRoutes = ipv4IncludedRoutes
         networkSettings.ipv4Settings = ipv4Settings
 
         // IPv6 addresses
-        let addrs_v6 = interface.addresses.filter { $0.address is IPv6Address }
+        let addrs_v6 = addresses.filter { $0.address is IPv6Address }
             .map { String(describing: $0.address) }
         // IMPORTANT: macOS/iOS has limitations handling IPv6 prefix masks longer than /120 due to
         // standards compliance and implementation choices in its network stack.
-        let masks_v6 = interface.addresses.filter { $0.address is IPv6Address }
+        let masks_v6 = addresses.filter { $0.address is IPv6Address }
             .map { NSNumber(value: min(120, $0.cidr)) }
         let ipv6Settings = NEIPv6Settings(addresses: addrs_v6, networkPrefixLengths: masks_v6)
         ipv6Settings.includedRoutes = ipv6IncludedRoutes
         networkSettings.ipv6Settings = ipv6Settings
 
-        networkSettings.mtu = interface.mtu as NSNumber?
+        networkSettings.mtu = mtu as NSNumber?
         networkSettings.tunnelOverheadBytes = 80
 
-        let dnsSettings = NEDNSSettings(servers: interface.dns)
-        dnsSettings.searchDomains = interface.dnsSearch
-        if !interface.dns.isEmpty {
+        let dnsSettings = NEDNSSettings(servers: dns)
+        dnsSettings.searchDomains = dnsSearch
+        if !dns.isEmpty {
             // Make all DNS queries go through the tunnel.
             dnsSettings.matchDomains = [""]
         }
@@ -71,7 +87,7 @@ final class TunnelConfiguration: Codable {
         var ipv6IncludedRoutes = [NEIPv6Route]()
 
         // Routes to interface addresses.
-        for addr_mask in interface.addresses {
+        for addr_mask in addresses {
             if addr_mask.address is IPv4Address {
                 let route = NEIPv4Route(
                     destinationAddress: "\(addr_mask.maskedAddress())",
@@ -108,6 +124,7 @@ final class TunnelConfiguration: Codable {
         return (ipv4IncludedRoutes, ipv6IncludedRoutes)
     }
 
+#if os(iOS)
     /// Helper function allowing to parse comma-separated string of addresses.
     private func parseAddresses(fromString string: String) -> [IpAddrMask] {
         var addresses: [IpAddrMask] = []
@@ -125,23 +142,22 @@ final class TunnelConfiguration: Codable {
 
     init(fromStartData startData: TunnelStartData) {
         name = startData.locationName
-        interface = InterfaceConfiguration(privateKey: startData.privateKey)
+        privateKey = startData.privateKey
         let peer = Peer(publicKey: startData.publicKey)
         peers = [peer]
 
-        interface.addresses = self.parseAddresses(fromString: startData.address)
+        addresses = self.parseAddresses(fromString: startData.address)
 
         // DNS settings
-        let dnsRecords =
-            startData.dns?.split(separator: ",").map {
-                $0.trimmingCharacters(in: .whitespaces)
-            } ?? []
+        let dnsRecords = startData.dns?.split(separator: ",").map {
+            $0.trimmingCharacters(in: .whitespaces)
+        } ?? []
         if !dnsRecords.isEmpty {
             for record in dnsRecords {
                 if IPv4Address(record) != nil || IPv6Address(record) != nil {
-                    interface.dns.append(record)
+                    dns.append(record)
                 } else {
-                    interface.dnsSearch.append(record)
+                    dnsSearch.append(record)
                 }
             }
         }
@@ -151,7 +167,7 @@ final class TunnelConfiguration: Codable {
         peer.endpoint = Endpoint(from: startData.endpoint)
         peer.persistentKeepAlive = UInt16(startData.keepalive)
         peer.allowedIPs =
-            switch startData.traffic {
+        switch startData.traffic {
             case .All:
                 [
                     IpAddrMask(address: IPv4Address.any, cidr: 0),
@@ -159,14 +175,12 @@ final class TunnelConfiguration: Codable {
                 ]
             case .Predefined:
                 self.parseAddresses(fromString: startData.allowedIps)
-            }
+        }
+    }
+#endif
+
+    /// Client connection expects one peer, so check for that.
+    func isValidForClientConnection() -> Bool {
+        return peers.count == 1
     }
 }
-
-//extension TunnelConfiguration: Equatable {
-//    public static func == (lhs: TunnelConfiguration, rhs: TunnelConfiguration) -> Bool {
-//        return lhs.name == rhs.name &&
-//            lhs.interface == rhs.interface &&
-//            Set(lhs.peers) == Set(rhs.peers)
-//    }
-//}

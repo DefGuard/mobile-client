@@ -1,96 +1,97 @@
 import NetworkExtension
-import os
-import Network
 
-enum VPNEventType: String {
-    case tunnelUp = "tunnel_up"
-    case tunnelDown = "tunnel_down"
-    case tunnelError = "tunnel_error"
-    case connectionStatusChanged = "connection_status_changed"
-    case bytesTransferred = "bytes_transferred"
+enum WireGuardTunnelError: Error {
+    case invalidTunnelConfiguration
 }
 
 class PacketTunnelProvider: NEPacketTunnelProvider {
-    /// Logging
-    private var logger = Logger(
-        subsystem: Bundle.main.bundleIdentifier!,
-        category: "PacketTunnelProvider"
-    )
+    /// Unified logger (writes to both system log and file)
+    private let log = Log(category: "PacketTunnelProvider")
 
     private lazy var adapter: Adapter = {
         return Adapter(with: self)
     }()
 
-    override func startTunnel(options: [String : NSObject]?, completionHandler: @escaping (Error?) -> Void) {
-        guard let tunnelConfig = extractTunnelConfiguration() else {
-            let error = NSError(domain: "VPNExtension", code: -1,
-                                userInfo: [NSLocalizedDescriptionKey: "Tunnel configuration is missing or invalid."])
-            logger.error("Tunnel configuration is missing or invalid.")
+    override func startTunnel(
+        options: [String: NSObject]?, completionHandler: @escaping (Error?) -> Void
+    ) {
+        if let options = options {
+            log.debug("Options: \(options)")
+        }
+
+        guard let protocolConfig = self.protocolConfiguration as? NETunnelProviderProtocol,
+              let providerConfig = protocolConfig.providerConfiguration
+        else {
+          log.error("Failed to parse provider configuration")
+          completionHandler(WireGuardTunnelError.invalidTunnelConfiguration)
+          return
+        }
+
+#if os(macOS)
+        guard let tunnelConfig = try? TunnelConfiguration.from(dictionary: providerConfig)
+        else {
+            log.error("Failed to parse tunnel configuration")
+            completionHandler(WireGuardTunnelError.invalidTunnelConfiguration)
+            return
+        }
+#else
+        guard let startData = try? TunnelStartData.from(dictionary: providerConfig)
+        else {
+            log.error("Failed to parse tunnel configuration")
+            completionHandler(WireGuardTunnelError.invalidTunnelConfiguration)
+            return
+        }
+        let tunnelConfig = TunnelConfiguration(fromStartData: startData)
+#endif
+
+        let networkSettings = tunnelConfig.asNetworkSettings()
+        self.setTunnelNetworkSettings(networkSettings) { error in
+            if error != nil {
+                self.log.error("Failed to set tunnel network settings: \(String(describing: error))")
+            }
             completionHandler(error)
             return
         }
 
-        logger.log("Starting tunnel with configuration: \(String(describing: tunnelConfig), privacy: .public)")
-
-        guard Endpoint(from: tunnelConfig.endpoint) != nil else {
-            let error = NSError(domain: "VPNExtension", code: -1, userInfo: [NSLocalizedDescriptionKey: "Invalid endpoint format: \(tunnelConfig.endpoint)"])
-            logger.error("Invalid endpoint format: \(tunnelConfig.endpoint, privacy: .public)")
+        do {
+            try adapter.start(tunnelConfiguration: tunnelConfig)
+        } catch {
+            log.error("Failed to start tunnel: \(error)")
             completionHandler(error)
-            return
         }
+        log.info("Tunnel started successfully")
 
-        let tunnelConfiguration = TunnelConfiguration(fromStartData: tunnelConfig)
-        let networkSettings = tunnelConfiguration.asNetworkSettings()
-
-        setTunnelNetworkSettings(networkSettings) { [weak self] error in
-            guard let self = self else { return }
-
-            if let error = error {
-                logger.warning("Set tunnel network settings returned an error \(error, privacy: .public)")
-                completionHandler(error)
-                return
-            }
-
-            do {
-                try self.adapter.start(tunnelConfiguration: tunnelConfiguration)
-            } catch {
-                logger.error("Failed to start adapter with error: \(error.localizedDescription, privacy: .public)")
-                completionHandler(error)
-                return
-            }
-
-            logger.log("Tunnel started successfully")
-            completionHandler(nil)
-        }
+        completionHandler(nil)
     }
 
-    override func stopTunnel(with reason: NEProviderStopReason, completionHandler: @escaping () -> Void) {
-        self.adapter.stop()
+    override func stopTunnel(
+        with reason: NEProviderStopReason, completionHandler: @escaping () -> Void
+    ) {
+        adapter.stop()
+        log.info("Tunnel stopped")
         completionHandler()
     }
 
     override func handleAppMessage(_ messageData: Data, completionHandler: ((Data?) -> Void)?) {
-        logger.debug("\(#function)")
+        // TODO: messageData should contain a valid message.
         if let handler = completionHandler {
-            handler(messageData)
+            if let stats = adapter.stats() {
+                let data = try? JSONEncoder().encode(stats)
+                handler(data)
+            } else {
+                handler(nil)
+            }
         }
     }
 
     override func sleep(completionHandler: @escaping () -> Void) {
-        logger.debug("\(#function)")
+        log.info("System going to sleep")
+        // Add code here to get ready to sleep.
         completionHandler()
     }
 
     override func wake() {
-        logger.debug("\(#function)")
-    }
-
-    // MARK: - Helpers
-
-    private func extractTunnelConfiguration() -> TunnelStartData? {
-        guard let providerConfig = (self.protocolConfiguration as? NETunnelProviderProtocol)?.providerConfiguration as? [String: Any] else {
-            return nil
-        }
-        return try? TunnelStartData.from(dictionary: providerConfig)
+        log.info("System waking up")
+        // Add code here to wake up.
     }
 }

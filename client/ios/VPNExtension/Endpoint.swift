@@ -1,3 +1,4 @@
+import Foundation
 import Network
 
 struct Endpoint: Codable, CustomStringConvertible {
@@ -15,9 +16,11 @@ struct Endpoint: Codable, CustomStringConvertible {
         var endpointHost = trimmedEndpoint
 
         // Extract host, supporting IPv4, IPv6, and domains
-        if trimmedEndpoint.hasPrefix("[") { // IPv6 with port, e.g. [fd00::1]:51820
+        if trimmedEndpoint.hasPrefix("[") {  // IPv6 with port, e.g. [fd00::1]:51820
             if let closing = trimmedEndpoint.firstIndex(of: "]") {
-                endpointHost = String(trimmedEndpoint[trimmedEndpoint.index(after: trimmedEndpoint.startIndex)..<closing])
+                endpointHost = String(
+                    trimmedEndpoint[
+                        trimmedEndpoint.index(after: trimmedEndpoint.startIndex)..<closing])
             }
         } else if trimmedEndpoint.contains(":") {
             let parts = trimmedEndpoint.split(separator: ":", omittingEmptySubsequences: false)
@@ -28,7 +31,8 @@ struct Endpoint: Codable, CustomStringConvertible {
 
         let endpointPort: Network.NWEndpoint.Port
         if let portPart = trimmedEndpoint.split(separator: ":").last, let port = Int(portPart),
-           let nwPort = NWEndpoint.Port(rawValue: UInt16(port)) {
+            let nwPort = NWEndpoint.Port(rawValue: UInt16(port))
+        {
             endpointPort = nwPort
         } else {
             return nil
@@ -47,22 +51,30 @@ struct Endpoint: Codable, CustomStringConvertible {
         "\(host)"
     }
 
-    enum CodingKeys: String, CodingKey {
-        case host
-        case port
+    func toString() -> String {
+        "\(host):\(port)"
     }
 
+    // Encode to a single string "host:port", to smoothly encode into JSON.
     func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode("\(host)", forKey: .host)
-        try container.encode(port.rawValue, forKey: .port)
+        var container = encoder.singleValueContainer()
+        try container.encode(self.toString())
     }
 
+    // Decode from a single string "host:port", to smoothly decode from JSON.
     init(from decoder: Decoder) throws {
-        let values = try decoder.container(keyedBy: CodingKeys.self)
-
-        host = try NWEndpoint.Host(values.decode(String.self, forKey: .host))
-        port = try NWEndpoint.Port(rawValue: values.decode(UInt16.self, forKey: .port)) ?? 0
+        let container = try decoder.singleValueContainer()
+        let value = try container.decode(String.self)
+        guard let endpoint = Endpoint(from: value) else {
+            throw
+                DecodingError
+                .dataCorrupted(
+                    DecodingError.Context(
+                        codingPath: decoder.codingPath,
+                        debugDescription: "Not in host:port format")
+                )
+        }
+        self = endpoint
     }
 
     func asNWEndpoint() -> NWEndpoint {
