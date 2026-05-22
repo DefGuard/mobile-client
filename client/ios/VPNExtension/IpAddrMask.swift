@@ -44,7 +44,7 @@ struct IpAddrMask: Codable, Equatable {
     /// Conform to `Encodable`.
     func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(address.rawValue, forKey: .address)
+        try container.encode("\(address)", forKey: .address)
         try container.encode(cidr, forKey: .cidr)
     }
 
@@ -52,39 +52,21 @@ struct IpAddrMask: Codable, Equatable {
     init(from decoder: Decoder) throws {
         let values = try decoder.container(keyedBy: CodingKeys.self)
 
-        let address_data = try values.decode(Data.self, forKey: .address)
-        switch address_data.count {
-        case 4:
-            guard let ipv4 = IPv4Address(address_data) else {
-                throw
-                    DecodingError
-                    .dataCorrupted(
-                        DecodingError.Context(
-                            codingPath: decoder.codingPath,
-                            debugDescription: "Unable to decode IP v4 address"
-                        ))
-
-            }
+        let address_string = try values.decode(String.self, forKey: .address)
+        if let ipv4 = IPv4Address(address_string) {
             address = ipv4
-        case 16:
-            guard let ipv6 = IPv6Address(address_data) else {
-                throw
-                    DecodingError
-                    .dataCorrupted(
-                        DecodingError.Context(
-                            codingPath: decoder.codingPath,
-                            debugDescription: "Unable to decode IP v6 address"
-                        ))
-
-            }
+        } else if let ipv6 = IPv6Address(address_string) {
             address = ipv6
-        default:
-            throw DecodingError.typeMismatch(
-                IpAddrMask.self,
-                DecodingError.Context(
-                    codingPath: decoder.codingPath, debugDescription: "Invalid IP address length"
-                ))
+        } else {
+            throw
+                DecodingError
+                .dataCorrupted(
+                    DecodingError.Context(
+                        codingPath: decoder.codingPath,
+                        debugDescription: "Unable to decode IP address"
+                    ))
         }
+
         cidr = try values.decode(UInt8.self, forKey: .cidr)
     }
 
