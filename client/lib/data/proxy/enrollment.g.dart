@@ -263,6 +263,10 @@ DeviceConfig _$DeviceConfigFromJson(Map<String, dynamic> json) =>
             'location_mfa_mode',
             (v) => $enumDecodeNullable(_$LocationMfaModeEnumMap, v),
           ),
+          postureCheckRequired: $checkedConvert(
+            'posture_check_required',
+            (v) => v as bool?,
+          ),
         );
         return val;
       },
@@ -274,6 +278,7 @@ DeviceConfig _$DeviceConfigFromJson(Map<String, dynamic> json) =>
         'mfaEnabled': 'mfa_enabled',
         'keepaliveInterval': 'keepalive_interval',
         'locationMfaMode': 'location_mfa_mode',
+        'postureCheckRequired': 'posture_check_required',
       },
     );
 
@@ -289,6 +294,7 @@ const _$DeviceConfigFieldMap = <String, String>{
   'mfaEnabled': 'mfa_enabled',
   'keepaliveInterval': 'keepalive_interval',
   'locationMfaMode': 'location_mfa_mode',
+  'postureCheckRequired': 'posture_check_required',
 };
 
 Map<String, dynamic> _$DeviceConfigToJson(DeviceConfig instance) =>
@@ -304,6 +310,7 @@ Map<String, dynamic> _$DeviceConfigToJson(DeviceConfig instance) =>
       'mfa_enabled': instance.mfaEnabled,
       'keepalive_interval': instance.keepaliveInterval,
       'location_mfa_mode': _$LocationMfaModeEnumMap[instance.locationMfaMode],
+      'posture_check_required': instance.postureCheckRequired,
     };
 
 const _$LocationMfaModeEnumMap = {
