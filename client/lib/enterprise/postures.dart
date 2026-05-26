@@ -101,6 +101,36 @@ class DevicePostureData {
   Map<String, dynamic> toJson() => _$DevicePostureDataToJson(this);
 }
 
+@JsonSerializable()
+class PostureConnectRequest {
+  final int locationId;
+  final String pubkey;
+  final DevicePostureData devicePostureData;
+
+  const PostureConnectRequest({
+    required this.locationId,
+    required this.pubkey,
+    required this.devicePostureData,
+  });
+
+  factory PostureConnectRequest.fromJson(Map<String, dynamic> json) =>
+      _$PostureConnectRequestFromJson(json);
+
+  Map<String, dynamic> toJson() => _$PostureConnectRequestToJson(this);
+}
+
+@JsonSerializable()
+class PostureConnectResponse {
+  final String presharedKey;
+
+  const PostureConnectResponse({required this.presharedKey});
+
+  factory PostureConnectResponse.fromJson(Map<String, dynamic> json) =>
+      _$PostureConnectResponseFromJson(json);
+
+  Map<String, dynamic> toJson() => _$PostureConnectResponseToJson(this);
+}
+
 Future<DevicePostureData> getPosture() async {
   final packageInfo = await PackageInfo.fromPlatform();
   final deviceInfo = DeviceInfoPlugin();

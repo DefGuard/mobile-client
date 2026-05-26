@@ -137,3 +137,61 @@ Map<String, dynamic> _$DevicePostureDataToJson(DevicePostureData instance) =>
       'linux_kernel_version': instance.linuxKernelVersion,
       'device_integrity': instance.deviceIntegrity,
     };
+
+PostureConnectRequest _$PostureConnectRequestFromJson(
+  Map<String, dynamic> json,
+) => $checkedCreate(
+  'PostureConnectRequest',
+  json,
+  ($checkedConvert) {
+    final val = PostureConnectRequest(
+      locationId: $checkedConvert('location_id', (v) => (v as num).toInt()),
+      pubkey: $checkedConvert('pubkey', (v) => v as String),
+      devicePostureData: $checkedConvert(
+        'device_posture_data',
+        (v) => DevicePostureData.fromJson(v as Map<String, dynamic>),
+      ),
+    );
+    return val;
+  },
+  fieldKeyMap: const {
+    'locationId': 'location_id',
+    'devicePostureData': 'device_posture_data',
+  },
+);
+
+const _$PostureConnectRequestFieldMap = <String, String>{
+  'locationId': 'location_id',
+  'pubkey': 'pubkey',
+  'devicePostureData': 'device_posture_data',
+};
+
+Map<String, dynamic> _$PostureConnectRequestToJson(
+  PostureConnectRequest instance,
+) => <String, dynamic>{
+  'location_id': instance.locationId,
+  'pubkey': instance.pubkey,
+  'device_posture_data': instance.devicePostureData,
+};
+
+PostureConnectResponse _$PostureConnectResponseFromJson(
+  Map<String, dynamic> json,
+) => $checkedCreate(
+  'PostureConnectResponse',
+  json,
+  ($checkedConvert) {
+    final val = PostureConnectResponse(
+      presharedKey: $checkedConvert('preshared_key', (v) => v as String),
+    );
+    return val;
+  },
+  fieldKeyMap: const {'presharedKey': 'preshared_key'},
+);
+
+const _$PostureConnectResponseFieldMap = <String, String>{
+  'presharedKey': 'preshared_key',
+};
+
+Map<String, dynamic> _$PostureConnectResponseToJson(
+  PostureConnectResponse instance,
+) => <String, dynamic>{'preshared_key': instance.presharedKey};
