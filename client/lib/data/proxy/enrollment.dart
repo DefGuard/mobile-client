@@ -209,6 +209,7 @@ class DeviceConfig {
       allowedIps: d.Value(allowedIps),
       address: d.Value(assignedIp),
       locationMfaMode: d.Value(locationMfaMode),
+      postureCheckRequired: d.Value(postureCheckRequired),
     );
   }
 }

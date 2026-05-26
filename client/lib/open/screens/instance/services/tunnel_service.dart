@@ -152,6 +152,7 @@ class TunnelService {
         payload.devicePublicKey,
         payload.networkId,
         method,
+        payload.postureCheckRequired,
       );
       if (method == MfaMethod.openid) {
         // perform openid-based MFA
@@ -285,14 +286,17 @@ class TunnelService {
     String pubkey,
     int networkId,
     MfaMethod method,
+    bool postureCheckRequired,
   ) async {
     talker.debug(
       "Starting MFA for networkId: $networkId, method: ${method.toReadableString()}",
     );
+    final postureData = postureCheckRequired ? getPosture() : null;
     final request = StartMfaRequest(
       pubkey: pubkey,
       locationId: networkId,
       method: method,
+      postureData: postureData,
     );
 
     final uri = Uri.parse(url);
@@ -319,6 +323,7 @@ class TunnelService {
       networkId: location.networkId,
       instanceId: instance.id,
       traffic: trafficMethod,
+      postureCheckRequired: location.postureCheckRequired == true,
     );
   }
 

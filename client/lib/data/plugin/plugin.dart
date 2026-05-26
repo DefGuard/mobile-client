@@ -4,8 +4,6 @@ import '../db/enums.dart';
 
 part 'plugin.g.dart';
 
-
-
 @JsonSerializable()
 class PluginConnectPayload {
   // config
@@ -25,6 +23,7 @@ class PluginConnectPayload {
   final int instanceId;
   final int networkId;
   RoutingMethod traffic;
+  final bool postureCheckRequired;
 
   PluginConnectPayload({
     required this.publicKey,
@@ -41,6 +40,7 @@ class PluginConnectPayload {
     required this.networkId,
     this.dns,
     this.presharedKey,
+    required this.postureCheckRequired,
   });
 
   factory PluginConnectPayload.fromJson(Map<String, dynamic> json) =>
@@ -48,7 +48,6 @@ class PluginConnectPayload {
 
   Map<String, dynamic> toJson() => _$PluginConnectPayloadToJson(this);
 }
-
 
 @JsonSerializable()
 class PluginTunnelEventData {
@@ -62,7 +61,8 @@ class PluginTunnelEventData {
     required this.traffic,
   });
 
-  factory PluginTunnelEventData.fromJson(Map<String, dynamic> json) => _$PluginTunnelEventDataFromJson(json);
+  factory PluginTunnelEventData.fromJson(Map<String, dynamic> json) =>
+      _$PluginTunnelEventDataFromJson(json);
 
   Map<String, dynamic> toJson() => _$PluginTunnelEventDataToJson(this);
 }
