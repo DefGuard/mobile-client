@@ -1,4 +1,8 @@
+import 'dart:io';
+
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:json_annotation/json_annotation.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 part 'postures.g.dart';
 
@@ -97,19 +101,76 @@ class DevicePostureData {
   Map<String, dynamic> toJson() => _$DevicePostureDataToJson(this);
 }
 
-DevicePostureData getPosture() {
-  final notApplicable = UnavailableReason.notApplicable;
+Future<DevicePostureData> getPosture() async {
+  final packageInfo = await PackageInfo.fromPlatform();
+  final deviceInfo = DeviceInfoPlugin();
 
+  // Handle Android
+  if (Platform.isAndroid) {
+    final android = await deviceInfo.androidInfo;
+    return DevicePostureData(
+      defguardClientVersion: packageInfo.version,
+      osType: "Android",
+      osName: StringCheck.value(android.version.release),
+      osVersion: StringCheck.value(android.version.release),
+      // TODO
+      deviceIntegrity: BoolCheck.value(true),
+
+      diskEncryption: BoolCheck.unavailable(UnavailableReason.notApplicable),
+      antivirusPresent: BoolCheck.unavailable(UnavailableReason.notApplicable),
+      windowsAdDomainJoined: BoolCheck.unavailable(
+        UnavailableReason.notApplicable,
+      ),
+      windowsSecurityUpdateAgeDays: Int32Check.unavailable(
+        UnavailableReason.notApplicable,
+      ),
+      linuxKernelVersion: StringCheck.unavailable(
+        UnavailableReason.notApplicable,
+      ),
+    );
+  }
+
+  // Handle iOS
+  if (Platform.isIOS) {
+    final ios = await deviceInfo.iosInfo;
+    return DevicePostureData(
+      defguardClientVersion: packageInfo.version,
+      osType: "iOS",
+      osName: StringCheck.value(ios.systemName),
+      osVersion: StringCheck.value(ios.systemVersion),
+      deviceIntegrity: BoolCheck.unavailable(UnavailableReason.notApplicable),
+
+      diskEncryption: BoolCheck.unavailable(UnavailableReason.notApplicable),
+      antivirusPresent: BoolCheck.unavailable(UnavailableReason.notApplicable),
+      windowsAdDomainJoined: BoolCheck.unavailable(
+        UnavailableReason.notApplicable,
+      ),
+      windowsSecurityUpdateAgeDays: Int32Check.unavailable(
+        UnavailableReason.notApplicable,
+      ),
+      linuxKernelVersion: StringCheck.unavailable(
+        UnavailableReason.notApplicable,
+      ),
+    );
+  }
+
+  // Fallback for unsupported platforms: report the generic Dart OS values
   return DevicePostureData(
-    defguardClientVersion: '2.1.0',
-    osType: 'Android',
-    osName: StringCheck.value('Android'),
-    osVersion: StringCheck.value('16'),
-    diskEncryption: BoolCheck.unavailable(notApplicable),
-    antivirusPresent: BoolCheck.unavailable(notApplicable),
-    windowsAdDomainJoined: BoolCheck.unavailable(notApplicable),
-    windowsSecurityUpdateAgeDays: Int32Check.unavailable(notApplicable),
-    linuxKernelVersion: StringCheck.unavailable(notApplicable),
-    deviceIntegrity: BoolCheck.value(true),
+    defguardClientVersion: packageInfo.version,
+    osType: Platform.operatingSystem,
+    osName: StringCheck.value(Platform.operatingSystem),
+    osVersion: StringCheck.unavailable(UnavailableReason.unspecified),
+    diskEncryption: BoolCheck.unavailable(UnavailableReason.notApplicable),
+    antivirusPresent: BoolCheck.unavailable(UnavailableReason.notApplicable),
+    windowsAdDomainJoined: BoolCheck.unavailable(
+      UnavailableReason.notApplicable,
+    ),
+    windowsSecurityUpdateAgeDays: Int32Check.unavailable(
+      UnavailableReason.notApplicable,
+    ),
+    linuxKernelVersion: StringCheck.unavailable(
+      UnavailableReason.notApplicable,
+    ),
+    deviceIntegrity: BoolCheck.unavailable(UnavailableReason.notApplicable),
   );
 }

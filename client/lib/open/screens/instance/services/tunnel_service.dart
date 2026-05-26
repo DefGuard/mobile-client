@@ -292,7 +292,7 @@ class TunnelService {
     talker.debug(
       "Starting MFA for networkId: $networkId, method: ${method.toReadableString()}",
     );
-    final postureData = postureCheckRequired ? getPosture() : null;
+    final postureData = postureCheckRequired ? await getPosture() : null;
     final request = StartMfaRequest(
       pubkey: pubkey,
       locationId: networkId,
