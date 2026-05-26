@@ -113,8 +113,9 @@ Future<DevicePostureData> getPosture() async {
       osType: "Android",
       osName: StringCheck.value(android.version.release),
       osVersion: StringCheck.value(android.version.release),
-      // TODO
-      deviceIntegrity: BoolCheck.value(true),
+      // TODO: implement full google play integrity check flow
+      // TODO: https://github.com/DefGuard/defguard/issues/2986
+      deviceIntegrity: BoolCheck.unavailable(UnavailableReason.unspecified),
 
       diskEncryption: BoolCheck.unavailable(UnavailableReason.notApplicable),
       antivirusPresent: BoolCheck.unavailable(UnavailableReason.notApplicable),
