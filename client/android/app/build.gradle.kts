@@ -8,7 +8,7 @@ plugins {
 android {
     namespace = "net.defguard.mobile"
     compileSdk = 36
-    ndkVersion = "27.0.12077973"
+    ndkVersion = flutter.ndkVersion
 
     compileOptions {
         isCoreLibraryDesugaringEnabled = true

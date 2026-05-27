@@ -152,6 +152,7 @@ class DeviceConfig {
   final bool mfaEnabled;
   final int keepaliveInterval;
   final LocationMfaMode? locationMfaMode;
+  final bool? postureCheckRequired;
 
   factory DeviceConfig.fromJson(Map<String, dynamic> json) =>
       _$DeviceConfigFromJson(json);
@@ -170,6 +171,7 @@ class DeviceConfig {
     required this.mfaEnabled,
     required this.keepaliveInterval,
     this.locationMfaMode,
+    this.postureCheckRequired,
   });
 
   bool matchesLocation(Location other) {
@@ -182,7 +184,8 @@ class DeviceConfig {
         dns == other.dns &&
         mfaEnabled == other.mfaEnabled &&
         keepaliveInterval == other.keepAliveInterval &&
-        locationMfaMode == other.locationMfaMode;
+        locationMfaMode == other.locationMfaMode &&
+        postureCheckRequired == other.postureCheckRequired;
   }
 
   LocationsCompanion toCompanion({
@@ -206,6 +209,7 @@ class DeviceConfig {
       allowedIps: d.Value(allowedIps),
       address: d.Value(assignedIp),
       locationMfaMode: d.Value(locationMfaMode),
+      postureCheckRequired: d.Value(postureCheckRequired),
     );
   }
 }

@@ -1,5 +1,6 @@
 import 'package:json_annotation/json_annotation.dart';
 import 'package:mobile/data/db/enums.dart';
+import 'package:mobile/enterprise/postures.dart';
 
 part 'mfa.g.dart';
 
@@ -8,11 +9,13 @@ class StartMfaRequest {
   final String pubkey;
   final int locationId;
   final MfaMethod method;
+  final DevicePostureData? postureData;
 
   const StartMfaRequest({
     required this.pubkey,
     required this.locationId,
     required this.method,
+    this.postureData,
   });
 
   factory StartMfaRequest.fromJson(Map<String, dynamic> json) =>

@@ -9,6 +9,7 @@ import 'package:native_dio_adapter/native_dio_adapter.dart';
 import 'package:mobile/data/db/enums.dart';
 import 'package:mobile/data/proto/client_platform_info.pb.dart';
 import 'package:mobile/data/proxy/config.dart';
+import 'package:mobile/enterprise/postures.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:mobile/data/proxy/enrollment.dart';
 import 'package:mobile/data/proxy/mfa.dart';
@@ -20,6 +21,16 @@ import '../logging.dart';
 const _apiV1Segments = ['api', 'v1'];
 final enrollmentPathSegments = ['api', 'v1', 'enrollment'];
 final mfaPathSegments = ['api', 'v1', 'client-mfa'];
+final posturePathSegments = ['api', 'v1', 'posture'];
+
+class PostureCheckException implements Exception {
+  final String message;
+
+  const PostureCheckException(this.message);
+
+  @override
+  String toString() => 'Posture error: $message';
+}
 
 class MfaMethodNotAvailableException implements Exception {
   final MfaMethod method;
@@ -209,6 +220,38 @@ class _ProxyApi {
     } catch (e) {
       throw FormatException(
         "Invalid JSON sent by start MFA endpoint! Error: $e",
+      );
+    }
+  }
+
+  Future<PostureConnectResponse> postureConnect(
+    Uri url,
+    PostureConnectRequest data,
+  ) async {
+    final endpoint = url.replace(
+      pathSegments: [...url.pathSegments, ...posturePathSegments, 'connect'],
+    );
+
+    try {
+      final response = await _dio.postUri(endpoint, data: data.toJson());
+      return PostureConnectResponse.fromJson(response.data);
+    } on DioException catch (e) {
+      final responseData = e.response?.data;
+      final dataError = responseData is Map<String, dynamic>
+          ? responseData['error']
+          : null;
+      if (e.response?.statusCode == 403 && dataError is String) {
+        throw PostureCheckException(dataError);
+      }
+      if (e.response != null) {
+        throw HttpException(
+          'Failed to perform posture check. Status: ${e.response?.statusCode} Body: ${e.response?.data}',
+        );
+      }
+      rethrow;
+    } catch (e) {
+      throw FormatException(
+        'Invalid JSON sent by posture check endpoint! Error: $e',
       );
     }
   }

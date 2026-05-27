@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:mobile/data/db/database.dart';
 import 'package:mobile/data/proxy/mfa.dart';
+import 'package:mobile/enterprise/postures.dart';
 import 'package:mobile/enterprise/screens/mfa/openid_mfa_screen.dart';
 import 'package:mobile/open/api.dart';
 import 'package:mobile/data/plugin/plugin.dart';
@@ -119,6 +120,16 @@ class TunnelService {
         return;
       }
       payload.presharedKey = presharedKey;
+    } else if (payload.postureCheckRequired) {
+      final presharedKey = await _performPostureCheck(
+        navigator: navigator,
+        proxyUrl: instance.proxyUrl,
+        payload: payload,
+      );
+      if (presharedKey == null) {
+        return;
+      }
+      payload.presharedKey = presharedKey;
     }
 
     // start the tunnel
@@ -131,6 +142,38 @@ class TunnelService {
     return location.mfaEnabled == true ||
         location.locationMfaMode == LocationMfaMode.internal ||
         location.locationMfaMode == LocationMfaMode.external;
+  }
+
+  /// Performs posture-only authorization and returns runtime preshared key.
+  static Future<String?> _performPostureCheck({
+    required NavigatorState navigator,
+    required String proxyUrl,
+    required PluginConnectPayload payload,
+  }) async {
+    final messenger = ScaffoldMessenger.of(navigator.context);
+    try {
+      return await _authorizePostureOnly(
+        proxyUrl,
+        payload.devicePublicKey,
+        payload.networkId,
+      );
+    } on PostureCheckException catch (e) {
+      talker.error('Posture check failed', e);
+      messenger.showSnackBar(
+        dgSnackBar(text: e.toString(), textColor: DgColor.textAlert),
+      );
+    } on HttpException catch (e) {
+      talker.error('Posture check request failed', e);
+      messenger.showSnackBar(
+        dgSnackBar(text: 'Error: ${e.message}', textColor: DgColor.textAlert),
+      );
+    } catch (e) {
+      talker.error('Posture-only connect failed: $e');
+      messenger.showSnackBar(
+        dgSnackBar(text: 'Error: $e', textColor: DgColor.textAlert),
+      );
+    }
+    return null;
   }
 
   /// Performs MFA using specified method.
@@ -152,6 +195,7 @@ class TunnelService {
         payload.devicePublicKey,
         payload.networkId,
         method,
+        payload.postureCheckRequired,
       );
       if (method == MfaMethod.openid) {
         // perform openid-based MFA
@@ -285,18 +329,38 @@ class TunnelService {
     String pubkey,
     int networkId,
     MfaMethod method,
+    bool postureCheckRequired,
   ) async {
     talker.debug(
       "Starting MFA for networkId: $networkId, method: ${method.toReadableString()}",
     );
+    final postureData = postureCheckRequired ? await getPosture() : null;
     final request = StartMfaRequest(
       pubkey: pubkey,
       locationId: networkId,
       method: method,
+      postureData: postureData,
     );
 
     final uri = Uri.parse(url);
     return await proxyApi.startMfa(uri, request);
+  }
+
+  /// Calls `/posture/connect` endpoint and returns runtime preshared key.
+  static Future<String> _authorizePostureOnly(
+    String url,
+    String pubkey,
+    int networkId,
+  ) async {
+    talker.debug('Starting posture check for networkId: $networkId');
+    final request = PostureConnectRequest(
+      locationId: networkId,
+      pubkey: pubkey,
+      devicePostureData: await getPosture(),
+    );
+
+    final response = await proxyApi.postureConnect(Uri.parse(url), request);
+    return response.presharedKey;
   }
 
   /// Prepares wireguard plugin configuration
@@ -319,6 +383,7 @@ class TunnelService {
       networkId: location.networkId,
       instanceId: instance.id,
       traffic: trafficMethod,
+      postureCheckRequired: location.postureCheckRequired == true,
     );
   }
 

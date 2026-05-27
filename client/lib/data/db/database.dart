@@ -94,6 +94,8 @@ class Locations extends Table with AutoIncrementingPrimaryKey {
   @JsonKey('location_mfa_mode')
   IntColumn get locationMfaMode =>
       integer().nullable().map(const LocationMfaModeConverter())();
+  @JsonKey('posture_check_required')
+  BoolColumn get postureCheckRequired => boolean().nullable()();
 }
 
 @DriftDatabase(tables: [DefguardInstances, Locations])
@@ -101,7 +103,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration {
@@ -130,6 +132,12 @@ class AppDatabase extends _$AppDatabase {
           await m.addColumn(
             schema.defguardInstances,
             schema.defguardInstances.openidDisplayName,
+          );
+        },
+        from3To4: (m, schema) async {
+          await m.addColumn(
+            schema.locations,
+            schema.locations.postureCheckRequired,
           );
         },
       ),
