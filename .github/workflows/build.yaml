@@ -54,8 +54,11 @@ jobs:
       - name: Build iOS
         run: flutter build ipa --release --obfuscate --split-debug-info=build/debug-info --build-number=${{ github.run_number }}
 
+      - name: Get last commit message
+        run: echo "COMMIT_MSG=$(git log -1 --pretty=%B)" >> $GITHUB_ENV
+
       - name: Upload app to TestFlight
-        uses: apple-actions/upload-testflight-build@v3
+        uses: apple-actions/upload-testflight-build@v5
         # Mobile applications are published to the App Store manually, with release tags applied
         # post-publication. To avoid redundant uploads, this step executes only for non-tagged
         # builds, ensuring tagged releases are distributed exclusively to GitHub.
@@ -65,6 +68,7 @@ jobs:
           issuer-id: ${{ secrets.API_ISSUER_ID }}
           api-key-id: ${{ secrets.ASC_API_KEY_ID }}
           api-private-key: ${{ secrets.PRIVATE_KEY_CONTENTS }}
+          release-notes: ${{ env.COMMIT_MSG }}
 
   build-android:
     runs-on: [self-hosted, macOS]
