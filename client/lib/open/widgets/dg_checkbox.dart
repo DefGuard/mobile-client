@@ -31,7 +31,7 @@ class DgCheckbox extends StatelessWidget {
   Widget _getBody() {
     final icon = DgIconCheckbox(size: iconSize, variant: _getIconVariant());
     TextStyle textStyleInner;
-    if(textStyle == null) {
+    if (textStyle == null) {
       textStyleInner = DgText.modal1.copyWith(color: DgColor.textBodySecondary);
     } else {
       textStyleInner = textStyle!;

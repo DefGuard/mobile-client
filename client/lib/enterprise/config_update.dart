@@ -44,8 +44,7 @@ class ConfigurationUpdater extends HookConsumerWidget {
         );
         for (final instance in instances) {
           talker.debug(
-            "Auto configuration update started for ${instance.name} (${instance
-                .id})",
+            "Auto configuration update started for ${instance.name} (${instance.id})",
           );
           final (responseData, responseStatus, headers) = await proxyApi
               .pollConfiguration(instance.proxyUrl, instance.poolingToken);
@@ -61,8 +60,7 @@ class ConfigurationUpdater extends HookConsumerWidget {
                 headers['defguard-component-version']?.first;
             if (coreVersionStr == null || proxyVersionStr == null) {
               talker.error(
-                "Version headers missing for ${instance
-                    .logName}, treating as unsupported",
+                "Version headers missing for ${instance.logName}, treating as unsupported",
               );
               versionUnsupportedInstances.add({
                 'name': instance.name,
@@ -95,9 +93,7 @@ class ConfigurationUpdater extends HookConsumerWidget {
           }
           if (responseData == null) {
             talker.error(
-              "Auto configuration update failed for ${instance
-                  .logName} ! Update data retrieval failed, status: ${responseStatus ??
-                  "unknown"}!",
+              "Auto configuration update failed for ${instance.logName} ! Update data retrieval failed, status: ${responseStatus ?? "unknown"}!",
             );
             continue;
           }
@@ -112,12 +108,7 @@ class ConfigurationUpdater extends HookConsumerWidget {
             );
             if (updateResult != null) {
               talker.info(
-                "Instance ${instance
-                    .logName} results: Instance updated: ${updateResult
-                    .instanceChanged} | Locations updated: ${updateResult
-                    .locationsUpdated} | Locations removed: ${updateResult
-                    .locationsRemoved} | Locations added: ${updateResult
-                    .locationsAdded}",
+                "Instance ${instance.logName} results: Instance updated: ${updateResult.instanceChanged} | Locations updated: ${updateResult.locationsUpdated} | Locations removed: ${updateResult.locationsRemoved} | Locations added: ${updateResult.locationsAdded}",
               );
               if (updateResult.didChange) {
                 final message = getInstanceUpdateMessage(
@@ -144,7 +135,7 @@ class ConfigurationUpdater extends HookConsumerWidget {
                 "The following instances have versions that are incompatible with your Defguard Mobile Client and may not work correctly:\n\n";
             for (final instance in versionUnsupportedInstances) {
               message +=
-              "- ${instance['name']}: Defguard Core ${instance['coreVersion']} (expected >=$supportedCoreVersion), Defguard Proxy ${instance['proxyVersion']} (expected >=$supportedProxyVersion)\n";
+                  "- ${instance['name']}: Defguard Core ${instance['coreVersion']} (expected >=$supportedCoreVersion), Defguard Proxy ${instance['proxyVersion']} (expected >=$supportedProxyVersion)\n";
             }
             message += "\nPlease contact your administrator.";
             toaster.showInfo(
@@ -170,10 +161,12 @@ class ConfigurationUpdater extends HookConsumerWidget {
     // update when user wakes up application
     useEffect(() {
       final timeTick = DateTime.now();
-      final afterCooldown = lastConfigUpdate.value == null ||
+      final afterCooldown =
+          lastConfigUpdate.value == null ||
           (lastConfigUpdate.value != null &&
-              lastConfigUpdate.value!.add(Duration(seconds: 60)).isBefore(
-                  timeTick));
+              lastConfigUpdate.value!
+                  .add(Duration(seconds: 60))
+                  .isBefore(timeTick));
       if (lifecycle == AppLifecycleState.resumed && afterCooldown) {
         lastConfigUpdate.value = timeTick;
         updateConfiguration();

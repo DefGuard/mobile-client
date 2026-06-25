@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -31,7 +30,9 @@ class DgMenu extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final topOffset = useMemoized(() => anchorGeometry.position.dy + 10 + anchorGeometry.size.height);
+    final topOffset = useMemoized(
+      () => anchorGeometry.position.dy + 10 + anchorGeometry.size.height,
+    );
     final leftOffset = useMemoized(() => anchorGeometry.position.dx);
     final animationController = useAnimationController(
       duration: 100.ms,
@@ -67,8 +68,11 @@ class DgMenu extends HookConsumerWidget {
             builder: (context, _) => FadeTransition(
               opacity: animationController,
               child: SlideTransition(
-                position: Tween<Offset>(begin: Offset(0, -0.05), end: Offset.zero)
-                    .animate(
+                position:
+                    Tween<Offset>(
+                      begin: Offset(0, -0.05),
+                      end: Offset.zero,
+                    ).animate(
                       CurvedAnimation(
                         parent: animationController,
                         curve: Curves.easeOut,

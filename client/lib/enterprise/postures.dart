@@ -81,6 +81,7 @@ class DevicePostureData {
   final Int32Check? windowsSecurityUpdateAgeDays;
   final StringCheck? linuxKernelVersion;
   final BoolCheck? deviceIntegrity;
+  final StringCheck? androidSecurityPatchDate;
 
   const DevicePostureData({
     required this.defguardClientVersion,
@@ -93,6 +94,7 @@ class DevicePostureData {
     this.windowsSecurityUpdateAgeDays,
     this.linuxKernelVersion,
     this.deviceIntegrity,
+    this.androidSecurityPatchDate,
   });
 
   factory DevicePostureData.fromJson(Map<String, dynamic> json) =>
@@ -158,6 +160,9 @@ Future<DevicePostureData> getPosture() async {
       linuxKernelVersion: StringCheck.unavailable(
         UnavailableReason.notApplicable,
       ),
+      androidSecurityPatchDate: android.version.securityPatch != null
+          ? StringCheck.value(android.version.securityPatch!)
+          : StringCheck.unavailable(UnavailableReason.detectionFailed),
     );
   }
 
@@ -182,6 +187,9 @@ Future<DevicePostureData> getPosture() async {
       linuxKernelVersion: StringCheck.unavailable(
         UnavailableReason.notApplicable,
       ),
+      androidSecurityPatchDate: StringCheck.unavailable(
+        UnavailableReason.notApplicable,
+      ),
     );
   }
 
@@ -203,5 +211,8 @@ Future<DevicePostureData> getPosture() async {
       UnavailableReason.notApplicable,
     ),
     deviceIntegrity: BoolCheck.unavailable(UnavailableReason.notApplicable),
+    androidSecurityPatchDate: StringCheck.unavailable(
+      UnavailableReason.notApplicable,
+    ),
   );
 }

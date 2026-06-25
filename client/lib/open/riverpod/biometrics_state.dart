@@ -7,7 +7,6 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'biometrics_state.g.dart';
 
-
 class BiometricsState {
   bool isSupported;
   bool canCheck;

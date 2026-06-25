@@ -49,8 +49,8 @@ class NetworkInfoResponse {
     this.token,
   });
 
-    factory NetworkInfoResponse.fromJson(Map<String, dynamic> json) =>
-          _$NetworkInfoResponseFromJson(json);
+  factory NetworkInfoResponse.fromJson(Map<String, dynamic> json) =>
+      _$NetworkInfoResponseFromJson(json);
 
-      Map<String, dynamic> toJson() => _$NetworkInfoResponseToJson(this);
+  Map<String, dynamic> toJson() => _$NetworkInfoResponseToJson(this);
 }
