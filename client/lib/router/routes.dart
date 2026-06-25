@@ -21,8 +21,7 @@ part 'routes.g.dart';
 
 @TypedGoRoute<ProcessQrScreenRoute>(path: "/process_qr")
 @immutable
-class ProcessQrScreenRoute extends GoRouteData
-    with _$ProcessQrScreenRoute {
+class ProcessQrScreenRoute extends GoRouteData with _$ProcessQrScreenRoute {
   const ProcessQrScreenRoute(this.$extra);
 
   final ProcessQrScreenData $extra;
@@ -35,8 +34,7 @@ class ProcessQrScreenRoute extends GoRouteData
 
 @TypedGoRoute<HomeScreenRoute>(path: '/')
 @immutable
-class HomeScreenRoute extends GoRouteData
-    with _$HomeScreenRoute {
+class HomeScreenRoute extends GoRouteData with _$HomeScreenRoute {
   const HomeScreenRoute();
 
   @override
@@ -47,8 +45,7 @@ class HomeScreenRoute extends GoRouteData
 
 @TypedGoRoute<QRScreenRoute>(path: "/qr")
 @immutable
-class QRScreenRoute extends GoRouteData
-    with _$QRScreenRoute {
+class QRScreenRoute extends GoRouteData with _$QRScreenRoute {
   const QRScreenRoute(this.$extra);
 
   final QrScreenData $extra;
@@ -61,8 +58,7 @@ class QRScreenRoute extends GoRouteData
 
 @TypedGoRoute<InstanceScreenRoute>(path: "/instance/:id")
 @immutable
-class InstanceScreenRoute extends GoRouteData
-    with _$InstanceScreenRoute {
+class InstanceScreenRoute extends GoRouteData with _$InstanceScreenRoute {
   final String id;
 
   const InstanceScreenRoute({required this.id});
@@ -75,8 +71,7 @@ class InstanceScreenRoute extends GoRouteData
 
 @TypedGoRoute<NameDeviceScreenRoute>(path: "/add_instance/name_device")
 @immutable
-class NameDeviceScreenRoute extends GoRouteData
-    with _$NameDeviceScreenRoute {
+class NameDeviceScreenRoute extends GoRouteData with _$NameDeviceScreenRoute {
   const NameDeviceScreenRoute(this.$extra);
 
   final NameDeviceScreenData $extra;
@@ -99,8 +94,7 @@ class AddInstanceFormScreenRoute extends GoRouteData
 
 @TypedGoRoute<AddInstanceScreenRoute>(path: '/add_instance/init')
 @immutable
-class AddInstanceScreenRoute extends GoRouteData
-    with _$AddInstanceScreenRoute {
+class AddInstanceScreenRoute extends GoRouteData with _$AddInstanceScreenRoute {
   const AddInstanceScreenRoute();
 
   @override
@@ -111,8 +105,7 @@ class AddInstanceScreenRoute extends GoRouteData
 
 @TypedGoRoute<TalkerScreenRoute>(path: "/talker")
 @immutable
-class TalkerScreenRoute extends GoRouteData
-    with _$TalkerScreenRoute {
+class TalkerScreenRoute extends GoRouteData with _$TalkerScreenRoute {
   @override
   Widget build(BuildContext context, GoRouterState state) {
     return TalkerScreen(talker: talker);
@@ -121,8 +114,7 @@ class TalkerScreenRoute extends GoRouteData
 
 @TypedGoRoute<OpenIdMfaScreenRoute>(path: "/mfa/openid")
 @immutable
-class OpenIdMfaScreenRoute extends GoRouteData
-    with _$OpenIdMfaScreenRoute {
+class OpenIdMfaScreenRoute extends GoRouteData with _$OpenIdMfaScreenRoute {
   const OpenIdMfaScreenRoute(this.$extra);
 
   final OpenIdMfaScreenData $extra;
@@ -149,8 +141,7 @@ class OpenIdMfaWaitingScreenRoute extends GoRouteData
 
 @TypedGoRoute<MfaCodeScreenRoute>(path: "/mfa/code")
 @immutable
-class MfaCodeScreenRoute extends GoRouteData
-    with _$MfaCodeScreenRoute {
+class MfaCodeScreenRoute extends GoRouteData with _$MfaCodeScreenRoute {
   const MfaCodeScreenRoute(this.$extra);
 
   final MfaCodeScreenData $extra;

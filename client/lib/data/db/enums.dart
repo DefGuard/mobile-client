@@ -101,7 +101,8 @@ enum ClientTrafficPolicy {
       ClientTrafficPolicy.values.firstWhere((e) => e.value == value);
 }
 
-class ClientTrafficPolicyConverter extends TypeConverter<ClientTrafficPolicy, int> {
+class ClientTrafficPolicyConverter
+    extends TypeConverter<ClientTrafficPolicy, int> {
   const ClientTrafficPolicyConverter();
 
   @override

@@ -5,15 +5,14 @@ import 'package:cookie_jar/cookie_jar.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:dio/dio.dart';
 import 'package:dio_cookie_manager/dio_cookie_manager.dart';
-import 'package:native_dio_adapter/native_dio_adapter.dart';
 import 'package:mobile/data/db/enums.dart';
 import 'package:mobile/data/proto/client_platform_info.pb.dart';
 import 'package:mobile/data/proxy/config.dart';
-import 'package:mobile/enterprise/postures.dart';
-import 'package:package_info_plus/package_info_plus.dart';
 import 'package:mobile/data/proxy/enrollment.dart';
 import 'package:mobile/data/proxy/mfa.dart';
-
+import 'package:mobile/enterprise/postures.dart';
+import 'package:native_dio_adapter/native_dio_adapter.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:talker_dio_logger/talker_dio_logger_interceptor.dart';
 
 import '../logging.dart';
@@ -211,6 +210,13 @@ class _ProxyApi {
               dataError.toLowerCase().trim() == missingMFAMethodError) {
             throw MfaMethodNotAvailableException(data.method);
           }
+
+          if (e.response?.statusCode == 403) {
+            final error = responseData['error'] ?? responseData['message'];
+            if (error is String) {
+              throw HttpException(error);
+            }
+          }
         }
         throw HttpException(
           "Failed to start MFA. Status: ${e.response?.statusCode} Body: ${e.response?.data}",
@@ -237,11 +243,12 @@ class _ProxyApi {
       return PostureConnectResponse.fromJson(response.data);
     } on DioException catch (e) {
       final responseData = e.response?.data;
-      final dataError = responseData is Map<String, dynamic>
-          ? responseData['error']
-          : null;
-      if (e.response?.statusCode == 403 && dataError is String) {
-        throw PostureCheckException(dataError);
+      if (e.response?.statusCode == 403 &&
+          responseData is Map<String, dynamic>) {
+        final error = responseData['error'] ?? responseData['message'];
+        if (error is String) {
+          throw PostureCheckException(error);
+        }
       }
       if (e.response != null) {
         throw HttpException(

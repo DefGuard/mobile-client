@@ -25,7 +25,7 @@ class DgText {
   static const TextStyle body2 = TextStyle(
     fontFamily: _poppins,
     fontWeight: FontWeight.w400,
-    fontSize: 15
+    fontSize: 15,
   );
   static const TextStyle modal1 = TextStyle(
     fontFamily: _roboto,

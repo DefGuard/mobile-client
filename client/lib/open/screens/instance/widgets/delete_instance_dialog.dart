@@ -10,7 +10,6 @@ import 'package:mobile/utils/secure_storage.dart';
 
 import '../../../services/snackbar_service.dart';
 
-
 class DeleteInstanceDialog extends HookConsumerWidget {
   final DefguardInstance instance;
 
@@ -25,7 +24,7 @@ class DeleteInstanceDialog extends HookConsumerWidget {
 
     Future<void> deleteInstance(BuildContext context) async {
       try {
-        if(instance.mfaKeysStored) {
+        if (instance.mfaKeysStored) {
           await removeInstanceStorage(instance.secureStorageKey);
         }
         await db.managers.defguardInstances
@@ -35,8 +34,10 @@ class DeleteInstanceDialog extends HookConsumerWidget {
           SnackbarService.show("Instance deleted");
           Navigator.of(context).pop();
         }
-      } catch(e) {
-        talker.error("Failed to delete instance ${instance.logName}! Reason: \n $e");
+      } catch (e) {
+        talker.error(
+          "Failed to delete instance ${instance.logName}! Reason: \n $e",
+        );
       }
     }
 

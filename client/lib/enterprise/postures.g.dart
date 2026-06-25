@@ -94,6 +94,11 @@ DevicePostureData _$DevicePostureDataFromJson(
         'device_integrity',
         (v) => v == null ? null : BoolCheck.fromJson(v as Map<String, dynamic>),
       ),
+      androidSecurityPatchDate: $checkedConvert(
+        'android_security_patch_date',
+        (v) =>
+            v == null ? null : StringCheck.fromJson(v as Map<String, dynamic>),
+      ),
     );
     return val;
   },
@@ -108,6 +113,7 @@ DevicePostureData _$DevicePostureDataFromJson(
     'windowsSecurityUpdateAgeDays': 'windows_security_update_age_days',
     'linuxKernelVersion': 'linux_kernel_version',
     'deviceIntegrity': 'device_integrity',
+    'androidSecurityPatchDate': 'android_security_patch_date',
   },
 );
 
@@ -122,6 +128,7 @@ const _$DevicePostureDataFieldMap = <String, String>{
   'windowsSecurityUpdateAgeDays': 'windows_security_update_age_days',
   'linuxKernelVersion': 'linux_kernel_version',
   'deviceIntegrity': 'device_integrity',
+  'androidSecurityPatchDate': 'android_security_patch_date',
 };
 
 Map<String, dynamic> _$DevicePostureDataToJson(DevicePostureData instance) =>
@@ -136,6 +143,7 @@ Map<String, dynamic> _$DevicePostureDataToJson(DevicePostureData instance) =>
       'windows_security_update_age_days': instance.windowsSecurityUpdateAgeDays,
       'linux_kernel_version': instance.linuxKernelVersion,
       'device_integrity': instance.deviceIntegrity,
+      'android_security_patch_date': instance.androidSecurityPatchDate,
     };
 
 PostureConnectRequest _$PostureConnectRequestFromJson(
