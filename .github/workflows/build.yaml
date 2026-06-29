@@ -52,7 +52,7 @@ jobs:
         run: pod repo update
 
       - name: Build iOS
-        run: flutter build ipa -v --release --obfuscate --split-debug-info=build/debug-info --build-number=${{ github.run_number }}
+        run: flutter build ipa --release --obfuscate --split-debug-info=build/debug-info --build-number=${{ github.run_number }}
 
       - name: Get last commit message
         run: echo "COMMIT_MSG=$(git log -1 --pretty=%B)" >> $GITHUB_ENV
