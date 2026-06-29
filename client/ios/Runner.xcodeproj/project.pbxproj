@@ -609,6 +609,7 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)/VPNExtension/BoringTun",
 				);
+				MARKETING_VERSION = 1.7.0;
 				PRODUCT_BUNDLE_IDENTIFIER = net.defguard.mobile;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -648,7 +649,7 @@
 					"$(PROJECT_DIR)/VPNExtension/BoringTun",
 				);
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
-				MARKETING_VERSION = 1.6.4;
+				MARKETING_VERSION = 1.7.0;
 				MODULEMAP_FILE = "";
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
@@ -702,7 +703,7 @@
 					"$(PROJECT_DIR)/VPNExtension/BoringTun",
 				);
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
-				MARKETING_VERSION = 1.6.4;
+				MARKETING_VERSION = 1.7.0;
 				MODULEMAP_FILE = "";
 				MTL_FAST_MATH = YES;
 				OTHER_LDFLAGS = "";
@@ -753,7 +754,7 @@
 					"$(PROJECT_DIR)/VPNExtension/BoringTun",
 				);
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
-				MARKETING_VERSION = 1.6.4;
+				MARKETING_VERSION = 1.7.0;
 				MODULEMAP_FILE = "";
 				MTL_FAST_MATH = YES;
 				OTHER_LDFLAGS = "";
@@ -968,6 +969,7 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)/boringtun/target/release",
 				);
+				MARKETING_VERSION = 1.7.0;
 				PRODUCT_BUNDLE_IDENTIFIER = net.defguard.mobile;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -1001,6 +1003,7 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)/boringtun/target/release",
 				);
+				MARKETING_VERSION = 1.7.0;
 				PRODUCT_BUNDLE_IDENTIFIER = net.defguard.mobile;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
