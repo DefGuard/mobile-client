@@ -31,12 +31,17 @@ android {
     buildTypes {
         release {
             // let r0adkll/sign-android-release@v1 in CI do the signing
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
         }
     }
 }
 
 dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")
+    implementation("com.google.android.gms:play-services-cronet:18.1.1")
     implementation(files("../../../lib/tunnel.aar"))
 }
 
