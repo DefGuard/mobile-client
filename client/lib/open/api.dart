@@ -71,6 +71,7 @@ class _ProxyApi {
       if (Platform.isAndroid) {
         final android = await deviceInfo.androidInfo;
         platformInfo = ClientPlatformInfo(
+          osFamily: 'android',
           osType: 'Android',
           version: android.version.release,
           codename: android.version.codename,
@@ -80,6 +81,7 @@ class _ProxyApi {
       } else if (Platform.isIOS) {
         final ios = await deviceInfo.iosInfo;
         platformInfo = ClientPlatformInfo(
+          osFamily: 'ios',
           osType: 'iOS',
           version: ios.systemVersion,
           architecture: 'arm64',

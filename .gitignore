@@ -1,2 +1,5 @@
 .envrc
 .direnv/
+
+# FVM Version Cache
+.fvm/
