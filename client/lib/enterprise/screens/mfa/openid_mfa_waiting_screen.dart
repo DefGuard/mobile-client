@@ -13,6 +13,7 @@ import 'package:mobile/theme/text.dart';
 
 import '../../../../../logging.dart';
 import '../../../open/services/snackbar_service.dart';
+import '../../../utils/error_handler.dart';
 
 class OpenIdMfaWaitingScreenData {
   final String proxyUrl;
@@ -51,8 +52,18 @@ class OpenIdMfaWaitingScreen extends HookConsumerWidget {
         final response = await proxyApi.finishMfa(uri, request);
         return response;
       } on DioException catch (e) {
-        if (e.response?.statusCode == 428) {
-          talker.debug("User did not complete openid browser login, waiting");
+        final isNetworkError =
+            e.type == DioExceptionType.connectionError ||
+            e.type == DioExceptionType.connectionTimeout ||
+            (e.error?.toString().contains("-1005") ?? false) ||
+            (e.message?.contains("-1005") ?? false);
+
+        if (e.response?.statusCode == 428 || isNetworkError) {
+          if (isNetworkError) {
+            talker.warning("Network error during MFA polling, retrying: $e");
+          } else {
+            talker.debug("User did not complete openid browser login, waiting");
+          }
           await Future.delayed(Duration(seconds: 2));
         } else {
           rethrow;
@@ -83,8 +94,9 @@ class OpenIdMfaWaitingScreen extends HookConsumerWidget {
           })
           .catchError((error) {
             talker.error("OpenID MFA polling error: $error");
+            final message = ErrorHandler.getHumanReadableError(error);
             SnackbarService.show(
-              "Error: $error",
+              message,
               textColor: DgColor.textAlert,
               dismissable: true,
             );
