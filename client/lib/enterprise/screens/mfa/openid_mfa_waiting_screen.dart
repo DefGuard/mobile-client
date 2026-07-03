@@ -52,7 +52,8 @@ class OpenIdMfaWaitingScreen extends HookConsumerWidget {
         final response = await proxyApi.finishMfa(uri, request);
         return response;
       } on DioException catch (e) {
-        final isNetworkError = e.type == DioExceptionType.connectionError ||
+        final isNetworkError =
+            e.type == DioExceptionType.connectionError ||
             e.type == DioExceptionType.connectionTimeout ||
             (e.error?.toString().contains("-1005") ?? false) ||
             (e.message?.contains("-1005") ?? false);
