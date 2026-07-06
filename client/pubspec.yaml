@@ -59,7 +59,7 @@ dependencies:
   mobile_scanner: ^7.0.1
   rxdart: ^0.28.0
   talker: ^4.9.1
-  talker_flutter: ^4.9.1
+  talker_flutter: ^5.0.0
   talker_dio_logger: ^4.9.1
   package_info_plus: ^8.3.0
   flutter_animate: ^4.5.2
