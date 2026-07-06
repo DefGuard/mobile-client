@@ -43,7 +43,7 @@ dependencies:
   flutter_hooks: ^0.21.2
   json_annotation: ^4.9.0
   drift: ^2.26.1
-  drift_flutter: ^0.2.4
+  drift_flutter: ^0.3.0
   path_provider: ^2.1.5
   http: ^1.4.0
   path: ^1.9.1
