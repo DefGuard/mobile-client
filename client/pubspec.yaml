@@ -89,7 +89,7 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
-  go_router_builder: ^3.0.0
+  go_router_builder: ^4.0.0
   build_runner: ^2.5.0
   build_verify: ^3.1.0
   riverpod_generator: ^2.6.5
