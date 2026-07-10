@@ -1,5 +1,8 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": ["github>DefGuard/ci-workflows//renovate/default.json"],
-  "baseBranches": ["dev", "main"]
+  "baseBranchPatterns": [
+    "dev",
+    "main"
+  ]
 }
