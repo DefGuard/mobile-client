@@ -29,7 +29,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           submodules: "recursive"
 
@@ -57,7 +57,7 @@ jobs:
 
   # test-ios:
   #   name: Run iOS tests
-  #   runs-on: [self-hosted, macOS]
+  #   runs-on: [self-hosted, macOS, native]
   #   needs: lint
   #   defaults:
   #     run:
@@ -65,7 +65,7 @@ jobs:
 
   #   steps:
   #     - name: Checkout
-  #       uses: actions/checkout@v6
+  #       uses: actions/checkout@v7
   #       with:
   #         submodules: "recursive"
 
