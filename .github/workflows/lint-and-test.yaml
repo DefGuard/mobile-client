@@ -29,7 +29,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           submodules: "recursive"
 
@@ -57,7 +57,7 @@ jobs:
 
   # test-ios:
   #   name: Run iOS tests
-  #   runs-on: [self-hosted, macOS]
+  #   runs-on: [self-hosted, macOS, native]
   #   needs: lint
   #   defaults:
   #     run:
@@ -65,7 +65,7 @@ jobs:
 
   #   steps:
   #     - name: Checkout
-  #       uses: actions/checkout@v6
+  #       uses: actions/checkout@v7
   #       with:
   #         submodules: "recursive"
 
@@ -89,9 +89,6 @@ jobs:
 
   #     # - name: build project
   #     #   run: flutter build ios
-
-  #     - name: Unlock Keychain
-  #       run: security -v unlock-keychain -p "${{ secrets.KEYCHAIN_PASSWORD }}" /Users/admin/Library/Keychains/login.keychain
 
   #     - name: run plugin tests
   #       run: xcodebuild test -workspace Runner.xcworkspace -scheme Runner

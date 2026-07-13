@@ -15,13 +15,13 @@ on:
 
 jobs:
   build-ios:
-    runs-on: [self-hosted, macOS]
+    runs-on: [self-hosted, macOS, native]
     defaults:
       run:
         working-directory: ./client
     steps:
       - name: Checkout main repo
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           submodules: "recursive"
 
@@ -40,7 +40,7 @@ jobs:
         run: flutter pub get
 
       - name: Unlock Keychain
-        run: security -v unlock-keychain -p "${{ secrets.KEYCHAIN_PASSWORD }}" /Users/admin/Library/Keychains/login.keychain
+        run: security unlock-keychain -p "${{ secrets.BUILD_KEYCHAIN_PASSWORD }}" build.keychain
 
       - name: Create BoringTun directory
         run: mkdir -p ios/VPNExtension/BoringTun
@@ -54,24 +54,37 @@ jobs:
       - name: Build iOS
         run: flutter build ipa --release --obfuscate --split-debug-info=build/debug-info --build-number=${{ github.run_number }}
 
-      - name: Get last commit message
-        run: echo "COMMIT_MSG=$(git log -1 --pretty=%B)" >> $GITHUB_ENV
-
       - name: Upload app to TestFlight
-        uses: apple-actions/upload-testflight-build@v5
         # Mobile applications are published to the App Store manually, with release tags applied
         # post-publication. To avoid redundant uploads, this step executes only for non-tagged
         # builds, ensuring tagged releases are distributed exclusively to GitHub.
-        if: "!startsWith(github.ref, 'refs/tags/')"
-        with:
-          app-path: "client/build/ios/ipa/Defguard.ipa"
-          issuer-id: ${{ secrets.API_ISSUER_ID }}
-          api-key-id: ${{ secrets.ASC_API_KEY_ID }}
-          api-private-key: ${{ secrets.PRIVATE_KEY_CONTENTS }}
-          release-notes: ${{ env.COMMIT_MSG }}
+        run: |
+          xcrun altool --api-key ${{ secrets.ASC_API_KEY_ID }} \
+            --api-issuer ${{ secrets.API_ISSUER_ID }} \
+            --upload-app --platform ios --file build/ios/ipa/Defguard.ipa --wait
+
+      - name: Upload What's New
+        env:
+          APP_ID: "6748068630"
+        run: |
+          UPLOAD_DIR=$(mktemp -d)
+          VERSION=$(grep '^version:' pubspec.yaml | cut -d ' ' -f 2 | cut -d '+' -f 1)
+          mkdir -p "${UPLOAD_DIR}/beta-${APP_ID}/upload/IOS"
+          git log -1 --pretty='"whatsNew" = "%B";' > "${UPLOAD_DIR}/beta-${APP_ID}/upload/IOS/en-GB.txt"
+          RETRIES=0
+          until [ ${RETRIES} -gt 6 ]
+          do
+            xcrun altool --api-key ${{ secrets.ASC_API_KEY_ID }} --api-issuer ${{ secrets.API_ISSUER_ID }} \
+              --apple-id ${APP_ID} --bundle-version ${{ github.run_number }} \--bundle-short-version-string ${VERSION} \
+              --platform macos --beta-app-store-text "${UPLOAD_DIR}" --upload && break
+            echo "Waiting for app ${APP_ID} build ${{ github.run_number }} version ${VERSION}"
+            sleep 10
+            ((RETRIES++))
+          done
+          rm -f -r "${UPLOAD_DIR}"
 
   build-android:
-    runs-on: [self-hosted, macOS]
+    runs-on: [self-hosted, macOS, native]
     env:
       ANDROID_HOME: /Users/admin/Library/Android/sdk
       ANDROID_SDK_ROOT: /Users/admin/Library/Android/sdk
@@ -79,7 +92,7 @@ jobs:
       run:
         working-directory: ./client
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           submodules: "recursive"
 
@@ -141,7 +154,7 @@ jobs:
           retention-days: 2
 
   build-android-apk:
-    runs-on: [self-hosted, macOS]
+    runs-on: [self-hosted, macOS, native]
     env:
       ANDROID_HOME: /Users/admin/Library/Android/sdk
       ANDROID_SDK_ROOT: /Users/admin/Library/Android/sdk
@@ -149,7 +162,7 @@ jobs:
       run:
         working-directory: ./client
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           submodules: "recursive"
 
