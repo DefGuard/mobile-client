@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:mobile/enterprise/screens/mfa/openid_mfa_screen.dart';
+import 'package:mobile/enterprise/screens/mfa/openid_mfa_waiting_screen.dart';
 import 'package:mobile/open/screens/add_instance/add_instance_screen.dart';
 import 'package:mobile/open/screens/add_instance/screens/add_instance_form.dart';
 import 'package:mobile/open/screens/add_instance/screens/biometry/biometry_finish_screen.dart';
@@ -9,8 +11,6 @@ import 'package:mobile/open/screens/add_instance/screens/name_device_screen.dart
 import 'package:mobile/open/screens/home/home_screen.dart';
 import 'package:mobile/open/screens/instance/instance_screen.dart';
 import 'package:mobile/open/screens/mfa/mfa_code_screen.dart';
-import 'package:mobile/enterprise/screens/mfa/openid_mfa_screen.dart';
-import 'package:mobile/enterprise/screens/mfa/openid_mfa_waiting_screen.dart';
 import 'package:mobile/open/screens/process_qr_screen.dart';
 import 'package:mobile/open/screens/scan_qr_screen.dart';
 import 'package:talker_flutter/talker_flutter.dart';
@@ -21,7 +21,7 @@ part 'routes.g.dart';
 
 @TypedGoRoute<ProcessQrScreenRoute>(path: "/process_qr")
 @immutable
-class ProcessQrScreenRoute extends GoRouteData with _$ProcessQrScreenRoute {
+class ProcessQrScreenRoute extends GoRouteData with $ProcessQrScreenRoute {
   const ProcessQrScreenRoute(this.$extra);
 
   final ProcessQrScreenData $extra;
@@ -34,7 +34,7 @@ class ProcessQrScreenRoute extends GoRouteData with _$ProcessQrScreenRoute {
 
 @TypedGoRoute<HomeScreenRoute>(path: '/')
 @immutable
-class HomeScreenRoute extends GoRouteData with _$HomeScreenRoute {
+class HomeScreenRoute extends GoRouteData with $HomeScreenRoute {
   const HomeScreenRoute();
 
   @override
@@ -45,7 +45,7 @@ class HomeScreenRoute extends GoRouteData with _$HomeScreenRoute {
 
 @TypedGoRoute<QRScreenRoute>(path: "/qr")
 @immutable
-class QRScreenRoute extends GoRouteData with _$QRScreenRoute {
+class QRScreenRoute extends GoRouteData with $QRScreenRoute {
   const QRScreenRoute(this.$extra);
 
   final QrScreenData $extra;
@@ -58,7 +58,7 @@ class QRScreenRoute extends GoRouteData with _$QRScreenRoute {
 
 @TypedGoRoute<InstanceScreenRoute>(path: "/instance/:id")
 @immutable
-class InstanceScreenRoute extends GoRouteData with _$InstanceScreenRoute {
+class InstanceScreenRoute extends GoRouteData with $InstanceScreenRoute {
   final String id;
 
   const InstanceScreenRoute({required this.id});
@@ -71,7 +71,7 @@ class InstanceScreenRoute extends GoRouteData with _$InstanceScreenRoute {
 
 @TypedGoRoute<NameDeviceScreenRoute>(path: "/add_instance/name_device")
 @immutable
-class NameDeviceScreenRoute extends GoRouteData with _$NameDeviceScreenRoute {
+class NameDeviceScreenRoute extends GoRouteData with $NameDeviceScreenRoute {
   const NameDeviceScreenRoute(this.$extra);
 
   final NameDeviceScreenData $extra;
@@ -85,7 +85,7 @@ class NameDeviceScreenRoute extends GoRouteData with _$NameDeviceScreenRoute {
 @TypedGoRoute<AddInstanceFormScreenRoute>(path: "/add_instance/form")
 @immutable
 class AddInstanceFormScreenRoute extends GoRouteData
-    with _$AddInstanceFormScreenRoute {
+    with $AddInstanceFormScreenRoute {
   @override
   Widget build(BuildContext context, GoRouterState state) {
     return AddInstanceFormScreen();
@@ -94,7 +94,7 @@ class AddInstanceFormScreenRoute extends GoRouteData
 
 @TypedGoRoute<AddInstanceScreenRoute>(path: '/add_instance/init')
 @immutable
-class AddInstanceScreenRoute extends GoRouteData with _$AddInstanceScreenRoute {
+class AddInstanceScreenRoute extends GoRouteData with $AddInstanceScreenRoute {
   const AddInstanceScreenRoute();
 
   @override
@@ -105,7 +105,7 @@ class AddInstanceScreenRoute extends GoRouteData with _$AddInstanceScreenRoute {
 
 @TypedGoRoute<TalkerScreenRoute>(path: "/talker")
 @immutable
-class TalkerScreenRoute extends GoRouteData with _$TalkerScreenRoute {
+class TalkerScreenRoute extends GoRouteData with $TalkerScreenRoute {
   @override
   Widget build(BuildContext context, GoRouterState state) {
     return TalkerScreen(talker: talker);
@@ -114,7 +114,7 @@ class TalkerScreenRoute extends GoRouteData with _$TalkerScreenRoute {
 
 @TypedGoRoute<OpenIdMfaScreenRoute>(path: "/mfa/openid")
 @immutable
-class OpenIdMfaScreenRoute extends GoRouteData with _$OpenIdMfaScreenRoute {
+class OpenIdMfaScreenRoute extends GoRouteData with $OpenIdMfaScreenRoute {
   const OpenIdMfaScreenRoute(this.$extra);
 
   final OpenIdMfaScreenData $extra;
@@ -128,7 +128,7 @@ class OpenIdMfaScreenRoute extends GoRouteData with _$OpenIdMfaScreenRoute {
 @TypedGoRoute<OpenIdMfaWaitingScreenRoute>(path: "/mfa/openid/waiting")
 @immutable
 class OpenIdMfaWaitingScreenRoute extends GoRouteData
-    with _$OpenIdMfaWaitingScreenRoute {
+    with $OpenIdMfaWaitingScreenRoute {
   const OpenIdMfaWaitingScreenRoute(this.$extra);
 
   final OpenIdMfaWaitingScreenData $extra;
@@ -141,7 +141,7 @@ class OpenIdMfaWaitingScreenRoute extends GoRouteData
 
 @TypedGoRoute<MfaCodeScreenRoute>(path: "/mfa/code")
 @immutable
-class MfaCodeScreenRoute extends GoRouteData with _$MfaCodeScreenRoute {
+class MfaCodeScreenRoute extends GoRouteData with $MfaCodeScreenRoute {
   const MfaCodeScreenRoute(this.$extra);
 
   final MfaCodeScreenData $extra;
@@ -155,7 +155,7 @@ class MfaCodeScreenRoute extends GoRouteData with _$MfaCodeScreenRoute {
 @TypedGoRoute<BiometrySetupScreenRoute>(path: "/biometry_setup/:id")
 @immutable
 class BiometrySetupScreenRoute extends GoRouteData
-    with _$BiometrySetupScreenRoute {
+    with $BiometrySetupScreenRoute {
   final String id;
 
   const BiometrySetupScreenRoute({required this.id});
@@ -169,7 +169,7 @@ class BiometrySetupScreenRoute extends GoRouteData
 @TypedGoRoute<BiometrySetupFailedScreenRoute>(path: "/biometry_failed")
 @immutable
 class BiometrySetupFailedScreenRoute extends GoRouteData
-    with _$BiometrySetupFailedScreenRoute {
+    with $BiometrySetupFailedScreenRoute {
   const BiometrySetupFailedScreenRoute();
 
   @override
@@ -181,7 +181,7 @@ class BiometrySetupFailedScreenRoute extends GoRouteData
 @TypedGoRoute<BiometryFinishScreenRoute>(path: "/biometry_finish")
 @immutable
 class BiometryFinishScreenRoute extends GoRouteData
-    with _$BiometryFinishScreenRoute {
+    with $BiometryFinishScreenRoute {
   const BiometryFinishScreenRoute();
 
   @override

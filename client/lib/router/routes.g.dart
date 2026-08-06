@@ -25,11 +25,11 @@ List<RouteBase> get $appRoutes => [
 
 RouteBase get $processQrScreenRoute => GoRouteData.$route(
   path: '/process_qr',
-
-  factory: _$ProcessQrScreenRoute._fromState,
+  hasOverriddenOnExit: false,
+  factory: $ProcessQrScreenRoute._fromState,
 );
 
-mixin _$ProcessQrScreenRoute on GoRouteData {
+mixin $ProcessQrScreenRoute on GoRouteData {
   static ProcessQrScreenRoute _fromState(GoRouterState state) =>
       ProcessQrScreenRoute(state.extra as ProcessQrScreenData);
 
@@ -54,10 +54,13 @@ mixin _$ProcessQrScreenRoute on GoRouteData {
       context.replace(location, extra: _self.$extra);
 }
 
-RouteBase get $homeScreenRoute =>
-    GoRouteData.$route(path: '/', factory: _$HomeScreenRoute._fromState);
+RouteBase get $homeScreenRoute => GoRouteData.$route(
+  path: '/',
+  hasOverriddenOnExit: false,
+  factory: $HomeScreenRoute._fromState,
+);
 
-mixin _$HomeScreenRoute on GoRouteData {
+mixin $HomeScreenRoute on GoRouteData {
   static HomeScreenRoute _fromState(GoRouterState state) =>
       const HomeScreenRoute();
 
@@ -78,10 +81,13 @@ mixin _$HomeScreenRoute on GoRouteData {
   void replace(BuildContext context) => context.replace(location);
 }
 
-RouteBase get $qRScreenRoute =>
-    GoRouteData.$route(path: '/qr', factory: _$QRScreenRoute._fromState);
+RouteBase get $qRScreenRoute => GoRouteData.$route(
+  path: '/qr',
+  hasOverriddenOnExit: false,
+  factory: $QRScreenRoute._fromState,
+);
 
-mixin _$QRScreenRoute on GoRouteData {
+mixin $QRScreenRoute on GoRouteData {
   static QRScreenRoute _fromState(GoRouterState state) =>
       QRScreenRoute(state.extra as QrScreenData);
 
@@ -108,11 +114,11 @@ mixin _$QRScreenRoute on GoRouteData {
 
 RouteBase get $instanceScreenRoute => GoRouteData.$route(
   path: '/instance/:id',
-
-  factory: _$InstanceScreenRoute._fromState,
+  hasOverriddenOnExit: false,
+  factory: $InstanceScreenRoute._fromState,
 );
 
-mixin _$InstanceScreenRoute on GoRouteData {
+mixin $InstanceScreenRoute on GoRouteData {
   static InstanceScreenRoute _fromState(GoRouterState state) =>
       InstanceScreenRoute(id: state.pathParameters['id']!);
 
@@ -138,11 +144,11 @@ mixin _$InstanceScreenRoute on GoRouteData {
 
 RouteBase get $nameDeviceScreenRoute => GoRouteData.$route(
   path: '/add_instance/name_device',
-
-  factory: _$NameDeviceScreenRoute._fromState,
+  hasOverriddenOnExit: false,
+  factory: $NameDeviceScreenRoute._fromState,
 );
 
-mixin _$NameDeviceScreenRoute on GoRouteData {
+mixin $NameDeviceScreenRoute on GoRouteData {
   static NameDeviceScreenRoute _fromState(GoRouterState state) =>
       NameDeviceScreenRoute(state.extra as NameDeviceScreenData);
 
@@ -169,11 +175,11 @@ mixin _$NameDeviceScreenRoute on GoRouteData {
 
 RouteBase get $addInstanceFormScreenRoute => GoRouteData.$route(
   path: '/add_instance/form',
-
-  factory: _$AddInstanceFormScreenRoute._fromState,
+  hasOverriddenOnExit: false,
+  factory: $AddInstanceFormScreenRoute._fromState,
 );
 
-mixin _$AddInstanceFormScreenRoute on GoRouteData {
+mixin $AddInstanceFormScreenRoute on GoRouteData {
   static AddInstanceFormScreenRoute _fromState(GoRouterState state) =>
       AddInstanceFormScreenRoute();
 
@@ -196,11 +202,11 @@ mixin _$AddInstanceFormScreenRoute on GoRouteData {
 
 RouteBase get $addInstanceScreenRoute => GoRouteData.$route(
   path: '/add_instance/init',
-
-  factory: _$AddInstanceScreenRoute._fromState,
+  hasOverriddenOnExit: false,
+  factory: $AddInstanceScreenRoute._fromState,
 );
 
-mixin _$AddInstanceScreenRoute on GoRouteData {
+mixin $AddInstanceScreenRoute on GoRouteData {
   static AddInstanceScreenRoute _fromState(GoRouterState state) =>
       const AddInstanceScreenRoute();
 
@@ -223,11 +229,11 @@ mixin _$AddInstanceScreenRoute on GoRouteData {
 
 RouteBase get $talkerScreenRoute => GoRouteData.$route(
   path: '/talker',
-
-  factory: _$TalkerScreenRoute._fromState,
+  hasOverriddenOnExit: false,
+  factory: $TalkerScreenRoute._fromState,
 );
 
-mixin _$TalkerScreenRoute on GoRouteData {
+mixin $TalkerScreenRoute on GoRouteData {
   static TalkerScreenRoute _fromState(GoRouterState state) =>
       TalkerScreenRoute();
 
@@ -250,11 +256,11 @@ mixin _$TalkerScreenRoute on GoRouteData {
 
 RouteBase get $openIdMfaScreenRoute => GoRouteData.$route(
   path: '/mfa/openid',
-
-  factory: _$OpenIdMfaScreenRoute._fromState,
+  hasOverriddenOnExit: false,
+  factory: $OpenIdMfaScreenRoute._fromState,
 );
 
-mixin _$OpenIdMfaScreenRoute on GoRouteData {
+mixin $OpenIdMfaScreenRoute on GoRouteData {
   static OpenIdMfaScreenRoute _fromState(GoRouterState state) =>
       OpenIdMfaScreenRoute(state.extra as OpenIdMfaScreenData);
 
@@ -281,11 +287,11 @@ mixin _$OpenIdMfaScreenRoute on GoRouteData {
 
 RouteBase get $openIdMfaWaitingScreenRoute => GoRouteData.$route(
   path: '/mfa/openid/waiting',
-
-  factory: _$OpenIdMfaWaitingScreenRoute._fromState,
+  hasOverriddenOnExit: false,
+  factory: $OpenIdMfaWaitingScreenRoute._fromState,
 );
 
-mixin _$OpenIdMfaWaitingScreenRoute on GoRouteData {
+mixin $OpenIdMfaWaitingScreenRoute on GoRouteData {
   static OpenIdMfaWaitingScreenRoute _fromState(GoRouterState state) =>
       OpenIdMfaWaitingScreenRoute(state.extra as OpenIdMfaWaitingScreenData);
 
@@ -312,11 +318,11 @@ mixin _$OpenIdMfaWaitingScreenRoute on GoRouteData {
 
 RouteBase get $mfaCodeScreenRoute => GoRouteData.$route(
   path: '/mfa/code',
-
-  factory: _$MfaCodeScreenRoute._fromState,
+  hasOverriddenOnExit: false,
+  factory: $MfaCodeScreenRoute._fromState,
 );
 
-mixin _$MfaCodeScreenRoute on GoRouteData {
+mixin $MfaCodeScreenRoute on GoRouteData {
   static MfaCodeScreenRoute _fromState(GoRouterState state) =>
       MfaCodeScreenRoute(state.extra as MfaCodeScreenData);
 
@@ -343,11 +349,11 @@ mixin _$MfaCodeScreenRoute on GoRouteData {
 
 RouteBase get $biometrySetupScreenRoute => GoRouteData.$route(
   path: '/biometry_setup/:id',
-
-  factory: _$BiometrySetupScreenRoute._fromState,
+  hasOverriddenOnExit: false,
+  factory: $BiometrySetupScreenRoute._fromState,
 );
 
-mixin _$BiometrySetupScreenRoute on GoRouteData {
+mixin $BiometrySetupScreenRoute on GoRouteData {
   static BiometrySetupScreenRoute _fromState(GoRouterState state) =>
       BiometrySetupScreenRoute(id: state.pathParameters['id']!);
 
@@ -373,11 +379,11 @@ mixin _$BiometrySetupScreenRoute on GoRouteData {
 
 RouteBase get $biometrySetupFailedScreenRoute => GoRouteData.$route(
   path: '/biometry_failed',
-
-  factory: _$BiometrySetupFailedScreenRoute._fromState,
+  hasOverriddenOnExit: false,
+  factory: $BiometrySetupFailedScreenRoute._fromState,
 );
 
-mixin _$BiometrySetupFailedScreenRoute on GoRouteData {
+mixin $BiometrySetupFailedScreenRoute on GoRouteData {
   static BiometrySetupFailedScreenRoute _fromState(GoRouterState state) =>
       const BiometrySetupFailedScreenRoute();
 
@@ -400,11 +406,11 @@ mixin _$BiometrySetupFailedScreenRoute on GoRouteData {
 
 RouteBase get $biometryFinishScreenRoute => GoRouteData.$route(
   path: '/biometry_finish',
-
-  factory: _$BiometryFinishScreenRoute._fromState,
+  hasOverriddenOnExit: false,
+  factory: $BiometryFinishScreenRoute._fromState,
 );
 
-mixin _$BiometryFinishScreenRoute on GoRouteData {
+mixin $BiometryFinishScreenRoute on GoRouteData {
   static BiometryFinishScreenRoute _fromState(GoRouterState state) =>
       const BiometryFinishScreenRoute();
 

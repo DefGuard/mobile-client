@@ -3,3 +3,10 @@
 
 # FVM Version Cache
 .fvm/
+
+# JetBrains IDEs
+.idea/
+*.iml
+*.iws
+*.ipr
+out/

@@ -8,9 +8,9 @@ import 'package:mobile/data/plugin/plugin.dart';
 import 'package:mobile/open/api.dart';
 import 'package:mobile/open/riverpod/biometrics_state.dart';
 import 'package:mobile/open/riverpod/plugin/plugin.dart';
+import 'package:mobile/open/screens/instance/services/tunnel_service.dart';
 import 'package:mobile/open/screens/instance/widgets/connection_conflict_dialog.dart';
 import 'package:mobile/open/screens/instance/widgets/delete_instance_dialog.dart';
-import 'package:mobile/open/screens/instance/services/tunnel_service.dart';
 import 'package:mobile/open/screens/instance/widgets/mfa_method_dialog.dart';
 import 'package:mobile/open/screens/instance/widgets/refresh_instance_dialog.dart';
 import 'package:mobile/open/screens/instance/widgets/routing_method_dialog.dart';
@@ -53,7 +53,7 @@ class _ScreenData {
 }
 
 @riverpod
-Stream<_ScreenData?> _screenData(Ref ref, String id) {
+Stream _screenData(Ref ref, String id) {
   final db = ref.read(databaseProvider);
   final parsedId = int.parse(id);
   final query = db.select(db.defguardInstances).join([

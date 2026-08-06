@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:mobile/data/db/database.dart';
 import 'package:mobile/open/riverpod/biometrics_state.dart';
 import 'package:mobile/open/screens/add_instance/screens/biometry/widgets/biometry_setup_banner.dart';
 import 'package:mobile/open/widgets/dg_single_child_scroll_view.dart';
@@ -10,7 +11,6 @@ import 'package:mobile/theme/spacing.dart';
 import 'package:mobile/utils/screen_padding.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import '../../../../../data/db/database.dart';
 import '../../../../../logging.dart';
 import '../../../../../router/routes.dart';
 import '../../../../../theme/color.dart';
@@ -54,7 +54,7 @@ class BiometrySetupScreen extends StatelessWidget {
 }
 
 @riverpod
-Stream<DefguardInstance> _screenData(Ref ref, int id) {
+Stream _screenData(Ref ref, int id) {
   final db = ref.read(databaseProvider);
   return db.managers.defguardInstances
       .filter((row) => row.id.equals(id))

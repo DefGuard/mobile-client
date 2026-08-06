@@ -5,33 +5,38 @@ import 'package:flutter/services.dart';
 import 'package:mobile/data/proxy/mfa.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:local_auth/local_auth.dart';
-import 'package:local_auth/error_codes.dart' as auth_error;
 import 'package:mobile/logging.dart';
 
 class UserCanceledAuth implements Exception {
   const UserCanceledAuth();
 }
 
-String getErrorMessageFromBiometricsException(PlatformException e) {
-  final errorCode = e.code;
-  talker.error("Biometrics check failed with code: $errorCode");
-  if (errorCode == auth_error.notAvailable) {
-    return "Device is not supported or is busy.";
+String getErrorMessageFromBiometricsException(Object e) {
+  if (e is LocalAuthException) {
+    talker.error("Biometrics check failed with code: ${e.code}");
+    switch (e.code) {
+      case LocalAuthExceptionCode.noBiometricHardware:
+        return "Device is not supported or is busy.";
+      case LocalAuthExceptionCode.noBiometricsEnrolled:
+      case LocalAuthExceptionCode.noCredentialsSet:
+        return "Biometrics auth is not configured on the device.";
+      case LocalAuthExceptionCode.biometricLockout:
+      case LocalAuthExceptionCode.temporaryLockout:
+        return "Biometrics auth is temporarily locked.";
+      default:
+        return "Unknown error: ${e.description ?? 'No description'}";
+    }
   }
-  if (errorCode == auth_error.biometricOnlyNotSupported) {
-    return "Biometrics auth is not configured on the device.";
+  if (e is PlatformException) {
+    talker.error("Biometrics check failed with PlatformException code: ${e.code}");
+    return "Platform error: ${e.message ?? 'Unknown error'}";
   }
-  if (errorCode == auth_error.lockedOut) {
-    return "Biometrics auth is not configured on the device.";
-  }
-  if (errorCode == auth_error.notEnrolled) {
-    return "Biometrics auth is not configured on the device.";
-  }
+  talker.error("Biometrics check failed with unexpected error: $e");
   return "Unknown error";
 }
 
 AndroidOptions _getAndroidOptions() =>
-    const AndroidOptions(encryptedSharedPreferences: true);
+    const AndroidOptions();
 
 FlutterSecureStorage _getStorage() =>
     FlutterSecureStorage(aOptions: _getAndroidOptions());
@@ -62,10 +67,7 @@ Future<SecureInstanceStorage> createBiometricStorage(
   final auth = LocalAuthentication();
   if (await auth.authenticate(
     localizedReason: prompt ?? "Authenticate to proceed",
-    options: const AuthenticationOptions(
-      useErrorDialogs: false,
-      biometricOnly: true,
-    ),
+    biometricOnly: true,
   )) {
     final storage = _getStorage();
     final instanceStorage = _generateInstanceStorage();
@@ -84,10 +86,7 @@ Future<SecureInstanceStorage> getBiometricInstanceStorage(
   final auth = LocalAuthentication();
   if (await auth.authenticate(
     localizedReason: message,
-    options: const AuthenticationOptions(
-      useErrorDialogs: false,
-      biometricOnly: true,
-    ),
+    biometricOnly: true,
   )) {
     final storage = _getStorage();
     final storeRawData = await storage.read(key: storageKey);

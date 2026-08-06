@@ -6,22 +6,60 @@ part of 'plugin.dart';
 // RiverpodGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
+// ignore_for_file: type=lint, type=warning
+
+@ProviderFor(PluginActiveTunnelState)
+final pluginActiveTunnelStateProvider = PluginActiveTunnelStateProvider._();
+
+final class PluginActiveTunnelStateProvider
+    extends $NotifierProvider<PluginActiveTunnelState, PluginTunnelEventData?> {
+  PluginActiveTunnelStateProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'pluginActiveTunnelStateProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$pluginActiveTunnelStateHash();
+
+  @$internal
+  @override
+  PluginActiveTunnelState create() => PluginActiveTunnelState();
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(PluginTunnelEventData? value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<PluginTunnelEventData?>(value),
+    );
+  }
+}
+
 String _$pluginActiveTunnelStateHash() =>
     r'55599a4824466a2d18b3333ee242975b0de1c68b';
 
-/// See also [PluginActiveTunnelState].
-@ProviderFor(PluginActiveTunnelState)
-final pluginActiveTunnelStateProvider =
-    NotifierProvider<PluginActiveTunnelState, PluginTunnelEventData?>.internal(
-      PluginActiveTunnelState.new,
-      name: r'pluginActiveTunnelStateProvider',
-      debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-          ? null
-          : _$pluginActiveTunnelStateHash,
-      dependencies: null,
-      allTransitiveDependencies: null,
-    );
-
-typedef _$PluginActiveTunnelState = Notifier<PluginTunnelEventData?>;
-// ignore_for_file: type=lint
-// ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package
+abstract class _$PluginActiveTunnelState
+    extends $Notifier<PluginTunnelEventData?> {
+  PluginTunnelEventData? build();
+  @$mustCallSuper
+  @override
+  void runBuild() {
+    final ref =
+        this.ref as $Ref<PluginTunnelEventData?, PluginTunnelEventData?>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<PluginTunnelEventData?, PluginTunnelEventData?>,
+              PluginTunnelEventData?,
+              Object?,
+              Object?
+            >;
+    element.handleCreate(ref, build);
+  }
+}
