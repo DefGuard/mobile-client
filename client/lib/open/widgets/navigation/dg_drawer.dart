@@ -92,6 +92,10 @@ class DgDrawer extends HookConsumerWidget {
                 }
               },
             ),
+            _DrawerItemData(
+              label: "Testing Buttons",
+              route: const ButtonsTestingScreenRoute(),
+            ),
           ]
           .where(
             (item) =>

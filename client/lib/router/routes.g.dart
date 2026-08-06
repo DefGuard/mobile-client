@@ -21,6 +21,7 @@ List<RouteBase> get $appRoutes => [
   $biometrySetupScreenRoute,
   $biometrySetupFailedScreenRoute,
   $biometryFinishScreenRoute,
+  $buttonsTestingScreenRoute,
 ];
 
 RouteBase get $processQrScreenRoute => GoRouteData.$route(
@@ -416,6 +417,33 @@ mixin $BiometryFinishScreenRoute on GoRouteData {
 
   @override
   String get location => GoRouteData.$location('/biometry_finish');
+
+  @override
+  void go(BuildContext context) => context.go(location);
+
+  @override
+  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
+
+  @override
+  void pushReplacement(BuildContext context) =>
+      context.pushReplacement(location);
+
+  @override
+  void replace(BuildContext context) => context.replace(location);
+}
+
+RouteBase get $buttonsTestingScreenRoute => GoRouteData.$route(
+  path: '/testing/buttons',
+  hasOverriddenOnExit: false,
+  factory: $ButtonsTestingScreenRoute._fromState,
+);
+
+mixin $ButtonsTestingScreenRoute on GoRouteData {
+  static ButtonsTestingScreenRoute _fromState(GoRouterState state) =>
+      const ButtonsTestingScreenRoute();
+
+  @override
+  String get location => GoRouteData.$location('/testing/buttons');
 
   @override
   void go(BuildContext context) => context.go(location);
