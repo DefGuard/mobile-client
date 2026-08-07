@@ -176,11 +176,11 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: stable
-          flutter-version: 3.38.10
+          flutter-version: 3.44
 
       - name: Install Android SDK components
         run: |
-          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install 'build-tools;29.0.3'
+          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install 'build-tools;36.0.0'
       - name: Accept licenses
         run: yes | flutter doctor --android-licenses
 
