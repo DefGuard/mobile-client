@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mobile/open/widgets/next/next_circular_progress.dart';
 import 'package:mobile/theme/next/color.dart';
 import 'package:mobile/theme/next/spacing.dart';
 import 'package:mobile/theme/next/text.dart';
@@ -86,10 +87,11 @@ class NextButton extends StatelessWidget {
     // Style variants (minimal styling for now as requested)
     switch (style) {
       case NextButtonStyle.primary:
-        backgroundColorInner = NextColor.bgWhite10;
+        backgroundColorInner = NextColor.bgWhite100;
+        textStyleInner = textStyleInner.copyWith(color: NextColor.fgAction);
         break;
       case NextButtonStyle.secondary:
-        backgroundColorInner = Colors.grey.shade200;
+        backgroundColorInner = NextColor.bgWhite10;
         break;
       case NextButtonStyle.critical:
         backgroundColorInner = Colors.red;
@@ -186,16 +188,7 @@ class NextButton extends StatelessWidget {
     final List<Widget> children = [];
 
     if (loading) {
-      children.add(
-        SizedBox(
-          width: 20,
-          height: 20,
-          child: CircularProgressIndicator(
-            strokeWidth: 2,
-            valueColor: AlwaysStoppedAnimation(textStyle.color),
-          ),
-        ),
-      );
+      children.add(NextCircularProgress(color: textStyle.color, size: 16));
       return children;
     } else if (icon != null) {
       children.add(icon!);
