@@ -13,7 +13,6 @@ import 'package:mobile/open/screens/instance/instance_screen.dart';
 import 'package:mobile/open/screens/mfa/mfa_code_screen.dart';
 import 'package:mobile/open/screens/process_qr_screen.dart';
 import 'package:mobile/open/screens/scan_qr_screen.dart';
-import 'package:mobile/open/screens/testing/buttons_screen.dart';
 import 'package:talker_flutter/talker_flutter.dart';
 
 import '../logging.dart';
@@ -188,17 +187,5 @@ class BiometryFinishScreenRoute extends GoRouteData
   @override
   Widget build(BuildContext context, GoRouterState state) {
     return BiometryFinishScreen();
-  }
-}
-
-@TypedGoRoute<ButtonsTestingScreenRoute>(path: "/testing/buttons")
-@immutable
-class ButtonsTestingScreenRoute extends GoRouteData
-    with $ButtonsTestingScreenRoute {
-  const ButtonsTestingScreenRoute();
-
-  @override
-  Widget build(BuildContext context, GoRouterState state) {
-    return const ButtonsTestingScreen();
   }
 }
