@@ -6,7 +6,16 @@ enum RoutingMethod {
   @j.JsonValue("all")
   all,
   @j.JsonValue("predefined")
-  predefined,
+  predefined;
+
+  String toUiString() {
+    switch (this) {
+      case RoutingMethod.all:
+        return "All Traffic";
+      case RoutingMethod.predefined:
+        return "Predefined Traffic";
+    }
+  }
 }
 
 @j.JsonEnum()
@@ -35,6 +44,19 @@ enum MfaMethod {
     MfaMethod.openid: 'OpenId',
     MfaMethod.biometric: "Biometric",
   };
+
+  String toUiString({String? openidDisplayName}) {
+    switch (this) {
+      case MfaMethod.totp:
+        return "Authenticator App";
+      case MfaMethod.biometric:
+        return "Biometric";
+      case MfaMethod.email:
+        return "Email";
+      case MfaMethod.openid:
+        return openidDisplayName ?? "OpenID";
+    }
+  }
 }
 
 class MfaMethodConverter extends TypeConverter<MfaMethod, int> {

@@ -139,6 +139,7 @@ class NextColor {
   // Background Colors - Semantic
   static const Color bgCritical = _Primitive.saturatedRed500;
   static const Color bgNeutral = _Primitive.saturatedBlueNeutral;
+  static const Color bgDarkBlue80 = _Primitive.saturatedDarkBlue80;
   static const Color bgDarkBlue60 = _Primitive.saturatedDarkBlue60;
   static const Color bgDarkBlue40 = _Primitive.saturatedDarkBlue40;
   static const Color bgDarkBlue30 = _Primitive.saturatedDarkBlue30;

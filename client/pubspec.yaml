@@ -67,7 +67,6 @@ dependencies:
   url_launcher: ^6.3.2
   uuid: ^4.5.1
   flutter_local_notifications: ^22.2.0
-  # sqlite3_flutter_libs version 0.5.37 bumps minimum compatible iOS version
   sqlite3_flutter_libs: ^0.5.42
   x25519: ^0.1.1
   ed25519_edwards: ^0.3.1
@@ -83,11 +82,6 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
 
-  # The "flutter_lints" package below contains a set of recommended lints to
-  # encourage good coding practices. The lint set provided by the package is
-  # activated in the `analysis_options.yaml` file located at the root of your
-  # package. See that file for information about deactivating specific lint
-  # rules and activating additional ones.
   flutter_lints: ^6.0.0
   go_router_builder: ^4.4.0
   build_runner: ^2.15.1
@@ -110,6 +104,8 @@ flutter:
 
   assets:
     - assets/icons/
+    - assets/next/icons/
+    - assets/next/img/
 
   fonts:
     - family: Roboto

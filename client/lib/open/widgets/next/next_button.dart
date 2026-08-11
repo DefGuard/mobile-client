@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/widget_previews.dart';
 import 'package:mobile/open/widgets/next/next_circular_progress.dart';
 import 'package:mobile/theme/next/color.dart';
 import 'package:mobile/theme/next/spacing.dart';
@@ -69,13 +70,13 @@ class NextButton extends StatelessWidget {
     // Size variants
     switch (size) {
       case NextButtonSize.big:
-        heightInner = 44;
+        heightInner = height ?? 44;
         borderRadiusInner = BorderRadius.circular(100);
         paddingInner = NextSpacing.lg;
         textStyleInner = NextText.buttonLabelBig;
         break;
       case NextButtonSize.primary:
-        heightInner = 36;
+        heightInner = height ?? 36;
         borderRadiusInner = BorderRadius.circular(8);
         paddingInner = NextSpacing.lg;
         textStyleInner = NextText.buttonLabelPrimary;
@@ -94,7 +95,7 @@ class NextButton extends StatelessWidget {
         backgroundColorInner = NextColor.bgWhite10;
         break;
       case NextButtonStyle.critical:
-        backgroundColorInner = Colors.red;
+        backgroundColorInner = NextColor.bgCritical;
         break;
       case NextButtonStyle.outlined:
         backgroundColorInner = Colors.transparent;
@@ -198,4 +199,292 @@ class NextButton extends StatelessWidget {
 
     return children;
   }
+}
+
+@Preview(name: 'Normal', group: 'Big/Primary')
+Widget previewBigPrimaryNormal() {
+  return Center(
+    child: NextButton(
+      text: 'Button',
+      size: NextButtonSize.big,
+      style: NextButtonStyle.primary,
+      onTap: () {},
+    ),
+  );
+}
+
+@Preview(name: 'Loading', group: 'Big/Primary')
+Widget previewBigPrimaryLoading() {
+  return Center(
+    child: NextButton(
+      text: 'Button',
+      size: NextButtonSize.big,
+      style: NextButtonStyle.primary,
+      loading: true,
+    ),
+  );
+}
+
+@Preview(name: 'Disabled', group: 'Big/Primary')
+Widget previewBigPrimaryDisabled() {
+  return Center(
+    child: NextButton(
+      text: 'Button',
+      size: NextButtonSize.big,
+      style: NextButtonStyle.primary,
+      disabled: true,
+    ),
+  );
+}
+
+@Preview(name: 'Normal', group: 'Big/Secondary')
+Widget previewBigSecondaryNormal() {
+  return Center(
+    child: NextButton(
+      text: 'Button',
+      size: NextButtonSize.big,
+      style: NextButtonStyle.secondary,
+      onTap: () {},
+    ),
+  );
+}
+
+@Preview(name: 'Loading', group: 'Big/Secondary')
+Widget previewBigSecondaryLoading() {
+  return Center(
+    child: NextButton(
+      text: 'Button',
+      size: NextButtonSize.big,
+      style: NextButtonStyle.secondary,
+      loading: true,
+    ),
+  );
+}
+
+@Preview(name: 'Disabled', group: 'Big/Secondary')
+Widget previewBigSecondaryDisabled() {
+  return Center(
+    child: NextButton(
+      text: 'Button',
+      size: NextButtonSize.big,
+      style: NextButtonStyle.secondary,
+      disabled: true,
+    ),
+  );
+}
+
+@Preview(name: 'Normal', group: 'Big/Critical')
+Widget previewBigCriticalNormal() {
+  return Center(
+    child: NextButton(
+      text: 'Button',
+      size: NextButtonSize.big,
+      style: NextButtonStyle.critical,
+      onTap: () {},
+    ),
+  );
+}
+
+@Preview(name: 'Loading', group: 'Big/Critical')
+Widget previewBigCriticalLoading() {
+  return Center(
+    child: NextButton(
+      text: 'Button',
+      size: NextButtonSize.big,
+      style: NextButtonStyle.critical,
+      loading: true,
+    ),
+  );
+}
+
+@Preview(name: 'Disabled', group: 'Big/Critical')
+Widget previewBigCriticalDisabled() {
+  return Center(
+    child: NextButton(
+      text: 'Button',
+      size: NextButtonSize.big,
+      style: NextButtonStyle.critical,
+      disabled: true,
+    ),
+  );
+}
+
+@Preview(name: 'Normal', group: 'Big/Outlined')
+Widget previewBigOutlinedNormal() {
+  return Center(
+    child: NextButton(
+      text: 'Button',
+      size: NextButtonSize.big,
+      style: NextButtonStyle.outlined,
+      onTap: () {},
+    ),
+  );
+}
+
+@Preview(name: 'Loading', group: 'Big/Outlined')
+Widget previewBigOutlinedLoading() {
+  return Center(
+    child: NextButton(
+      text: 'Button',
+      size: NextButtonSize.big,
+      style: NextButtonStyle.outlined,
+      loading: true,
+    ),
+  );
+}
+
+@Preview(name: 'Disabled', group: 'Big/Outlined')
+Widget previewBigOutlinedDisabled() {
+  return Center(
+    child: NextButton(
+      text: 'Button',
+      size: NextButtonSize.big,
+      style: NextButtonStyle.outlined,
+      disabled: true,
+    ),
+  );
+}
+
+@Preview(name: 'Normal', group: 'Primary/Primary')
+Widget previewPrimaryPrimaryNormal() {
+  return Center(
+    child: NextButton(
+      text: 'Button',
+      size: NextButtonSize.primary,
+      style: NextButtonStyle.primary,
+      onTap: () {},
+    ),
+  );
+}
+
+@Preview(name: 'Loading', group: 'Primary/Primary')
+Widget previewPrimaryPrimaryLoading() {
+  return Center(
+    child: NextButton(
+      text: 'Button',
+      size: NextButtonSize.primary,
+      style: NextButtonStyle.primary,
+      loading: true,
+    ),
+  );
+}
+
+@Preview(name: 'Disabled', group: 'Primary/Primary')
+Widget previewPrimaryPrimaryDisabled() {
+  return Center(
+    child: NextButton(
+      text: 'Button',
+      size: NextButtonSize.primary,
+      style: NextButtonStyle.primary,
+      disabled: true,
+    ),
+  );
+}
+
+@Preview(name: 'Normal', group: 'Primary/Secondary')
+Widget previewPrimarySecondaryNormal() {
+  return Center(
+    child: NextButton(
+      text: 'Button',
+      size: NextButtonSize.primary,
+      style: NextButtonStyle.secondary,
+      onTap: () {},
+    ),
+  );
+}
+
+@Preview(name: 'Loading', group: 'Primary/Secondary')
+Widget previewPrimarySecondaryLoading() {
+  return Center(
+    child: NextButton(
+      text: 'Button',
+      size: NextButtonSize.primary,
+      style: NextButtonStyle.secondary,
+      loading: true,
+    ),
+  );
+}
+
+@Preview(name: 'Disabled', group: 'Primary/Secondary')
+Widget previewPrimarySecondaryDisabled() {
+  return Center(
+    child: NextButton(
+      text: 'Button',
+      size: NextButtonSize.primary,
+      style: NextButtonStyle.secondary,
+      disabled: true,
+    ),
+  );
+}
+
+@Preview(name: 'Normal', group: 'Primary/Critical')
+Widget previewPrimaryCriticalNormal() {
+  return Center(
+    child: NextButton(
+      text: 'Button',
+      size: NextButtonSize.primary,
+      style: NextButtonStyle.critical,
+      onTap: () {},
+    ),
+  );
+}
+
+@Preview(name: 'Loading', group: 'Primary/Critical')
+Widget previewPrimaryCriticalLoading() {
+  return Center(
+    child: NextButton(
+      text: 'Button',
+      size: NextButtonSize.primary,
+      style: NextButtonStyle.critical,
+      loading: true,
+    ),
+  );
+}
+
+@Preview(name: 'Disabled', group: 'Primary/Critical')
+Widget previewPrimaryCriticalDisabled() {
+  return Center(
+    child: NextButton(
+      text: 'Button',
+      size: NextButtonSize.primary,
+      style: NextButtonStyle.critical,
+      disabled: true,
+    ),
+  );
+}
+
+@Preview(name: 'Normal', group: 'Primary/Outlined')
+Widget previewPrimaryOutlinedNormal() {
+  return Center(
+    child: NextButton(
+      text: 'Button',
+      size: NextButtonSize.primary,
+      style: NextButtonStyle.outlined,
+      onTap: () {},
+    ),
+  );
+}
+
+@Preview(name: 'Loading', group: 'Primary/Outlined')
+Widget previewPrimaryOutlinedLoading() {
+  return Center(
+    child: NextButton(
+      text: 'Button',
+      size: NextButtonSize.primary,
+      style: NextButtonStyle.outlined,
+      loading: true,
+    ),
+  );
+}
+
+@Preview(name: 'Disabled', group: 'Primary/Outlined')
+Widget previewPrimaryOutlinedDisabled() {
+  return Center(
+    child: NextButton(
+      text: 'Button',
+      size: NextButtonSize.primary,
+      style: NextButtonStyle.outlined,
+      disabled: true,
+    ),
+  );
 }

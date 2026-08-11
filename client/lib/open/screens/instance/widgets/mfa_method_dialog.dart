@@ -90,21 +90,21 @@ class MfaMethodDialog extends HookConsumerWidget {
             children: [
               if (instance.mfaKeysStored && biometricsStatus.canOpenStorage)
                 DgRadioBox(
-                  text: "Biometric",
+                  text: MfaMethod.biometric.toUiString(),
                   active: selectedMethod.value == MfaMethod.biometric,
                   onTap: () {
                     selectedMethod.value = MfaMethod.biometric;
                   },
                 ),
               DgRadioBox(
-                text: "Authenticator App",
+                text: MfaMethod.totp.toUiString(),
                 active: selectedMethod.value == MfaMethod.totp,
                 onTap: () {
                   selectedMethod.value = MfaMethod.totp;
                 },
               ),
               DgRadioBox(
-                text: "Email",
+                text: MfaMethod.email.toUiString(),
                 active: selectedMethod.value == MfaMethod.email,
                 onTap: () {
                   selectedMethod.value = MfaMethod.email;
