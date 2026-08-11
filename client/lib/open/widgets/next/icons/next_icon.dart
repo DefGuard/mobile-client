@@ -5,6 +5,8 @@ import 'package:flutter/widget_previews.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:mobile/theme/next/color.dart';
 
+import '../next_preview_wrapper.dart';
+
 /// Direction enum for Next design system icons.
 enum NextIconDirection { right, down, left, up }
 
@@ -98,13 +100,13 @@ class NextIcon extends StatelessWidget {
     double rotation = 0,
     NextIconDirection? direction,
   }) : this(
-          name,
-          key: key,
-          color: color,
-          size: size,
-          rotation: rotation,
-          direction: direction,
-        );
+         name,
+         key: key,
+         color: color,
+         size: size,
+         rotation: rotation,
+         direction: direction,
+       );
 
   /// Constructs full asset path from asset name.
   String get assetPath {
@@ -171,33 +173,35 @@ class NextIcon extends StatelessWidget {
   }
 }
 
-Widget _previewWrapper(Widget child) {
-  return Container(
-    decoration: const BoxDecoration(
-      gradient: LinearGradient(
-        begin: Alignment(-0.72, -0.69),
-        end: Alignment(0.72, 0.69),
-        colors: [Color(0xFF141517), Color(0xFF191A1C)],
-      ),
-    ),
-    padding: const EdgeInsets.all(24.0),
-    child: Center(child: child),
-  );
-}
-
 @Preview(name: 'Arrow Small Directions', group: 'NextIcon')
 Widget previewArrowSmallDirections() {
-  return _previewWrapper(
-    Row(
+  return NextPreviewWrapper(
+    child: Row(
       mainAxisSize: MainAxisSize.min,
       children: const [
-        NextIcon('arrow_small', direction: NextIconDirection.right),
+        NextIcon(
+          'arrow_small',
+          direction: NextIconDirection.right,
+          color: NextColor.fgWhite100,
+        ),
         SizedBox(width: 16),
-        NextIcon('arrow_small', direction: NextIconDirection.down),
+        NextIcon(
+          'arrow_small',
+          direction: NextIconDirection.down,
+          color: NextColor.fgWhite100,
+        ),
         SizedBox(width: 16),
-        NextIcon('arrow_small', direction: NextIconDirection.left),
+        NextIcon(
+          'arrow_small',
+          direction: NextIconDirection.left,
+          color: NextColor.fgWhite100,
+        ),
         SizedBox(width: 16),
-        NextIcon('arrow_small', direction: NextIconDirection.up),
+        NextIcon(
+          'arrow_small',
+          direction: NextIconDirection.up,
+          color: NextColor.fgWhite100,
+        ),
       ],
     ),
   );
@@ -205,17 +209,33 @@ Widget previewArrowSmallDirections() {
 
 @Preview(name: 'Arrow Big Directions', group: 'NextIcon')
 Widget previewArrowBigDirections() {
-  return _previewWrapper(
-    Row(
+  return NextPreviewWrapper(
+    child: Row(
       mainAxisSize: MainAxisSize.min,
       children: const [
-        NextIcon('arrow_big', direction: NextIconDirection.right),
+        NextIcon(
+          'arrow_big',
+          direction: NextIconDirection.right,
+          color: NextColor.fgWhite100,
+        ),
         SizedBox(width: 16),
-        NextIcon('arrow_big', direction: NextIconDirection.down),
+        NextIcon(
+          'arrow_big',
+          direction: NextIconDirection.down,
+          color: NextColor.fgWhite100,
+        ),
         SizedBox(width: 16),
-        NextIcon('arrow_big', direction: NextIconDirection.left),
+        NextIcon(
+          'arrow_big',
+          direction: NextIconDirection.left,
+          color: NextColor.fgWhite100,
+        ),
         SizedBox(width: 16),
-        NextIcon('arrow_big', direction: NextIconDirection.up),
+        NextIcon(
+          'arrow_big',
+          direction: NextIconDirection.up,
+          color: NextColor.fgWhite100,
+        ),
       ],
     ),
   );
@@ -223,8 +243,8 @@ Widget previewArrowBigDirections() {
 
 @Preview(name: 'Arrow Colors & Sizes', group: 'NextIcon')
 Widget previewArrowColorsAndSizes() {
-  return _previewWrapper(
-    Row(
+  return NextPreviewWrapper(
+    child: Row(
       mainAxisSize: MainAxisSize.min,
       children: const [
         NextIcon('arrow_small', size: 16, color: NextColor.fgWhite100),

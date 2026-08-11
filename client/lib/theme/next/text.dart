@@ -125,7 +125,7 @@ class NextText {
   static const TextStyle h5 = TextStyle(
     fontFamily: _defaultFontFamily,
     fontSize: 18,
-    fontWeight: FontWeight.w600,
+    fontWeight: FontWeight.w500,
     height: 28 / 18,
   );
 
@@ -133,7 +133,7 @@ class NextText {
   static const TextStyle inputTitle = TextStyle(
     fontFamily: _defaultFontFamily,
     fontSize: 12,
-    fontWeight: FontWeight.w500,
+    fontWeight: FontWeight.w300,
     height: 16 / 12,
   );
   static const TextStyle inputPrimary = TextStyle(
@@ -159,7 +159,7 @@ class NextText {
   static const TextStyle menuTitle = TextStyle(
     fontFamily: _defaultFontFamily,
     fontSize: 12,
-    fontWeight: FontWeight.w600,
+    fontWeight: FontWeight.w300,
     height: 2,
   );
   static const TextStyle menuText = TextStyle(
@@ -173,16 +173,16 @@ class NextText {
   static const TextStyle buttonLabelBig = TextStyle(
     fontFamily: _defaultFontFamily,
     fontSize: 14,
-    fontWeight: FontWeight.w600,
+    fontWeight: FontWeight.w500,
   );
   static const TextStyle buttonLabelPrimary = TextStyle(
     fontFamily: _defaultFontFamily,
     fontSize: 14,
-    fontWeight: FontWeight.w600,
+    fontWeight: FontWeight.w500,
   );
   static const TextStyle buttonLabelSecondary = TextStyle(
     fontFamily: _defaultFontFamily,
     fontSize: 14,
-    fontWeight: FontWeight.w500,
+    fontWeight: FontWeight.w400,
   );
 }

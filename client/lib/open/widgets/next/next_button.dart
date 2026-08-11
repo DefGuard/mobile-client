@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widget_previews.dart';
 import 'package:mobile/open/widgets/next/next_circular_progress.dart';
+import 'package:mobile/open/widgets/next/next_preview_wrapper.dart';
 import 'package:mobile/theme/next/color.dart';
 import 'package:mobile/theme/next/spacing.dart';
 import 'package:mobile/theme/next/text.dart';
@@ -203,7 +204,7 @@ class NextButton extends StatelessWidget {
 
 @Preview(name: 'Normal', group: 'Big/Primary')
 Widget previewBigPrimaryNormal() {
-  return Center(
+  return NextPreviewWrapper(
     child: NextButton(
       text: 'Button',
       size: NextButtonSize.big,
@@ -215,7 +216,7 @@ Widget previewBigPrimaryNormal() {
 
 @Preview(name: 'Loading', group: 'Big/Primary')
 Widget previewBigPrimaryLoading() {
-  return Center(
+  return NextPreviewWrapper(
     child: NextButton(
       text: 'Button',
       size: NextButtonSize.big,
@@ -227,7 +228,7 @@ Widget previewBigPrimaryLoading() {
 
 @Preview(name: 'Disabled', group: 'Big/Primary')
 Widget previewBigPrimaryDisabled() {
-  return Center(
+  return NextPreviewWrapper(
     child: NextButton(
       text: 'Button',
       size: NextButtonSize.big,
@@ -239,7 +240,7 @@ Widget previewBigPrimaryDisabled() {
 
 @Preview(name: 'Normal', group: 'Big/Secondary')
 Widget previewBigSecondaryNormal() {
-  return Center(
+  return NextPreviewWrapper(
     child: NextButton(
       text: 'Button',
       size: NextButtonSize.big,
@@ -251,7 +252,7 @@ Widget previewBigSecondaryNormal() {
 
 @Preview(name: 'Loading', group: 'Big/Secondary')
 Widget previewBigSecondaryLoading() {
-  return Center(
+  return NextPreviewWrapper(
     child: NextButton(
       text: 'Button',
       size: NextButtonSize.big,
@@ -263,7 +264,7 @@ Widget previewBigSecondaryLoading() {
 
 @Preview(name: 'Disabled', group: 'Big/Secondary')
 Widget previewBigSecondaryDisabled() {
-  return Center(
+  return NextPreviewWrapper(
     child: NextButton(
       text: 'Button',
       size: NextButtonSize.big,
@@ -275,7 +276,7 @@ Widget previewBigSecondaryDisabled() {
 
 @Preview(name: 'Normal', group: 'Big/Critical')
 Widget previewBigCriticalNormal() {
-  return Center(
+  return NextPreviewWrapper(
     child: NextButton(
       text: 'Button',
       size: NextButtonSize.big,
@@ -287,7 +288,7 @@ Widget previewBigCriticalNormal() {
 
 @Preview(name: 'Loading', group: 'Big/Critical')
 Widget previewBigCriticalLoading() {
-  return Center(
+  return NextPreviewWrapper(
     child: NextButton(
       text: 'Button',
       size: NextButtonSize.big,
@@ -299,7 +300,7 @@ Widget previewBigCriticalLoading() {
 
 @Preview(name: 'Disabled', group: 'Big/Critical')
 Widget previewBigCriticalDisabled() {
-  return Center(
+  return NextPreviewWrapper(
     child: NextButton(
       text: 'Button',
       size: NextButtonSize.big,
@@ -311,7 +312,7 @@ Widget previewBigCriticalDisabled() {
 
 @Preview(name: 'Normal', group: 'Big/Outlined')
 Widget previewBigOutlinedNormal() {
-  return Center(
+  return NextPreviewWrapper(
     child: NextButton(
       text: 'Button',
       size: NextButtonSize.big,
@@ -323,7 +324,7 @@ Widget previewBigOutlinedNormal() {
 
 @Preview(name: 'Loading', group: 'Big/Outlined')
 Widget previewBigOutlinedLoading() {
-  return Center(
+  return NextPreviewWrapper(
     child: NextButton(
       text: 'Button',
       size: NextButtonSize.big,
@@ -335,7 +336,7 @@ Widget previewBigOutlinedLoading() {
 
 @Preview(name: 'Disabled', group: 'Big/Outlined')
 Widget previewBigOutlinedDisabled() {
-  return Center(
+  return NextPreviewWrapper(
     child: NextButton(
       text: 'Button',
       size: NextButtonSize.big,
@@ -347,7 +348,7 @@ Widget previewBigOutlinedDisabled() {
 
 @Preview(name: 'Normal', group: 'Primary/Primary')
 Widget previewPrimaryPrimaryNormal() {
-  return Center(
+  return NextPreviewWrapper(
     child: NextButton(
       text: 'Button',
       size: NextButtonSize.primary,
@@ -359,7 +360,7 @@ Widget previewPrimaryPrimaryNormal() {
 
 @Preview(name: 'Loading', group: 'Primary/Primary')
 Widget previewPrimaryPrimaryLoading() {
-  return Center(
+  return NextPreviewWrapper(
     child: NextButton(
       text: 'Button',
       size: NextButtonSize.primary,
@@ -371,7 +372,7 @@ Widget previewPrimaryPrimaryLoading() {
 
 @Preview(name: 'Disabled', group: 'Primary/Primary')
 Widget previewPrimaryPrimaryDisabled() {
-  return Center(
+  return NextPreviewWrapper(
     child: NextButton(
       text: 'Button',
       size: NextButtonSize.primary,
@@ -383,7 +384,7 @@ Widget previewPrimaryPrimaryDisabled() {
 
 @Preview(name: 'Normal', group: 'Primary/Secondary')
 Widget previewPrimarySecondaryNormal() {
-  return Center(
+  return NextPreviewWrapper(
     child: NextButton(
       text: 'Button',
       size: NextButtonSize.primary,
@@ -395,7 +396,7 @@ Widget previewPrimarySecondaryNormal() {
 
 @Preview(name: 'Loading', group: 'Primary/Secondary')
 Widget previewPrimarySecondaryLoading() {
-  return Center(
+  return NextPreviewWrapper(
     child: NextButton(
       text: 'Button',
       size: NextButtonSize.primary,
@@ -407,7 +408,7 @@ Widget previewPrimarySecondaryLoading() {
 
 @Preview(name: 'Disabled', group: 'Primary/Secondary')
 Widget previewPrimarySecondaryDisabled() {
-  return Center(
+  return NextPreviewWrapper(
     child: NextButton(
       text: 'Button',
       size: NextButtonSize.primary,
@@ -419,7 +420,7 @@ Widget previewPrimarySecondaryDisabled() {
 
 @Preview(name: 'Normal', group: 'Primary/Critical')
 Widget previewPrimaryCriticalNormal() {
-  return Center(
+  return NextPreviewWrapper(
     child: NextButton(
       text: 'Button',
       size: NextButtonSize.primary,
@@ -431,7 +432,7 @@ Widget previewPrimaryCriticalNormal() {
 
 @Preview(name: 'Loading', group: 'Primary/Critical')
 Widget previewPrimaryCriticalLoading() {
-  return Center(
+  return NextPreviewWrapper(
     child: NextButton(
       text: 'Button',
       size: NextButtonSize.primary,
@@ -443,7 +444,7 @@ Widget previewPrimaryCriticalLoading() {
 
 @Preview(name: 'Disabled', group: 'Primary/Critical')
 Widget previewPrimaryCriticalDisabled() {
-  return Center(
+  return NextPreviewWrapper(
     child: NextButton(
       text: 'Button',
       size: NextButtonSize.primary,
@@ -455,7 +456,7 @@ Widget previewPrimaryCriticalDisabled() {
 
 @Preview(name: 'Normal', group: 'Primary/Outlined')
 Widget previewPrimaryOutlinedNormal() {
-  return Center(
+  return NextPreviewWrapper(
     child: NextButton(
       text: 'Button',
       size: NextButtonSize.primary,
@@ -467,7 +468,7 @@ Widget previewPrimaryOutlinedNormal() {
 
 @Preview(name: 'Loading', group: 'Primary/Outlined')
 Widget previewPrimaryOutlinedLoading() {
-  return Center(
+  return NextPreviewWrapper(
     child: NextButton(
       text: 'Button',
       size: NextButtonSize.primary,
@@ -479,7 +480,7 @@ Widget previewPrimaryOutlinedLoading() {
 
 @Preview(name: 'Disabled', group: 'Primary/Outlined')
 Widget previewPrimaryOutlinedDisabled() {
-  return Center(
+  return NextPreviewWrapper(
     child: NextButton(
       text: 'Button',
       size: NextButtonSize.primary,

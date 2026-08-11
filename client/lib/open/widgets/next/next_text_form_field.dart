@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widget_previews.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:mobile/open/widgets/next/next_preview_wrapper.dart';
 import 'package:mobile/theme/next/color.dart';
 import 'package:mobile/theme/next/spacing.dart';
 import 'package:mobile/theme/next/text.dart';
@@ -285,24 +286,11 @@ class _NextTextFormFieldContent extends HookWidget {
   }
 }
 
-Widget _previewWrapper(Widget child) {
-  return Container(
-    decoration: const BoxDecoration(
-      gradient: LinearGradient(
-        begin: Alignment(-0.72, -0.69),
-        end: Alignment(0.72, 0.69),
-        colors: [Color(0xFF5B83FF), Color(0xFF0036DB)],
-      ),
-    ),
-    padding: const EdgeInsets.all(24.0),
-    child: Center(child: SizedBox(width: 320, child: child)),
-  );
-}
-
 @Preview(name: 'Default', group: 'Primary')
 Widget previewPrimaryDefault() {
-  return _previewWrapper(
-    NextTextFormField(
+  return NextPreviewWrapper(
+    width: 320,
+    child: NextTextFormField(
       size: NextTextFormFieldSize.primary,
       hintText: 'Enter text...',
     ),
@@ -311,8 +299,9 @@ Widget previewPrimaryDefault() {
 
 @Preview(name: 'With Label & Required', group: 'Primary')
 Widget previewPrimaryWithLabel() {
-  return _previewWrapper(
-    NextTextFormField(
+  return NextPreviewWrapper(
+    width: 320,
+    child: NextTextFormField(
       size: NextTextFormFieldSize.primary,
       label: 'Email address',
       required: true,
@@ -323,8 +312,9 @@ Widget previewPrimaryWithLabel() {
 
 @Preview(name: 'With Text', group: 'Primary')
 Widget previewPrimaryWithText() {
-  return _previewWrapper(
-    NextTextFormField(
+  return NextPreviewWrapper(
+    width: 320,
+    child: NextTextFormField(
       size: NextTextFormFieldSize.primary,
       label: 'Username',
       controller: TextEditingController(text: 'antigravity_user'),
@@ -334,8 +324,9 @@ Widget previewPrimaryWithText() {
 
 @Preview(name: 'Disabled', group: 'Primary')
 Widget previewPrimaryDisabled() {
-  return _previewWrapper(
-    NextTextFormField(
+  return NextPreviewWrapper(
+    width: 320,
+    child: NextTextFormField(
       size: NextTextFormFieldSize.primary,
       label: 'Role',
       controller: TextEditingController(text: 'Administrator'),
@@ -346,8 +337,9 @@ Widget previewPrimaryDisabled() {
 
 @Preview(name: 'With Error', group: 'Primary')
 Widget previewPrimaryWithError() {
-  return _previewWrapper(
-    NextTextFormField(
+  return NextPreviewWrapper(
+    width: 320,
+    child: NextTextFormField(
       size: NextTextFormFieldSize.primary,
       label: 'Password',
       required: true,
@@ -360,8 +352,9 @@ Widget previewPrimaryWithError() {
 
 @Preview(name: 'Default', group: 'Big')
 Widget previewBigDefault() {
-  return _previewWrapper(
-    NextTextFormField(
+  return NextPreviewWrapper(
+    width: 320,
+    child: NextTextFormField(
       size: NextTextFormFieldSize.big,
       hintText: 'Search location...',
     ),
@@ -370,8 +363,9 @@ Widget previewBigDefault() {
 
 @Preview(name: 'With Label & Required', group: 'Big')
 Widget previewBigWithLabel() {
-  return _previewWrapper(
-    NextTextFormField(
+  return NextPreviewWrapper(
+    width: 320,
+    child: NextTextFormField(
       size: NextTextFormFieldSize.big,
       label: 'Server Name',
       required: true,
@@ -382,8 +376,9 @@ Widget previewBigWithLabel() {
 
 @Preview(name: 'Disabled', group: 'Big')
 Widget previewBigDisabled() {
-  return _previewWrapper(
-    NextTextFormField(
+  return NextPreviewWrapper(
+    width: 320,
+    child: NextTextFormField(
       size: NextTextFormFieldSize.big,
       label: 'Server Name',
       controller: TextEditingController(text: 'Production Server'),
@@ -394,8 +389,9 @@ Widget previewBigDisabled() {
 
 @Preview(name: 'With Error', group: 'Big')
 Widget previewBigWithError() {
-  return _previewWrapper(
-    NextTextFormField(
+  return NextPreviewWrapper(
+    width: 320,
+    child: NextTextFormField(
       size: NextTextFormFieldSize.big,
       label: 'Port',
       required: true,

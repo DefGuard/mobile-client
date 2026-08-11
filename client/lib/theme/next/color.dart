@@ -105,6 +105,10 @@ class _Primitive {
   static const Color saturatedBlue100 = Color(0xffedf1fc);
   static const Color saturatedBlue50 = Color(0xfff9fafe);
   static const Color saturatedBlue500Transparent = Color(0x14325cdb);
+
+  // Gradient Colors
+  static const Color gradientBlue1 = Color(0xff4F79FA);
+  static const Color gradientBlue2 = Color(0xff0A3EDF);
 }
 
 class NextColor {
@@ -174,4 +178,12 @@ class NextColor {
   static const Color fgMuted = _Primitive.darkNeutral600;
   static const Color fgDisabled = _Primitive.darkNeutral500;
   static const Color fgSuccess = _Primitive.saturatedSuccess;
+
+  // Gradients
+  static const LinearGradient previewGradient = LinearGradient(
+    begin: Alignment(-0.7, -1.0),
+    end: Alignment(0.7, 1.0),
+    colors: [_Primitive.gradientBlue1, _Primitive.gradientBlue2],
+  );
+  static const LinearGradient gradientPrimary = previewGradient;
 }

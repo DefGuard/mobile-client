@@ -4,9 +4,12 @@ import 'package:mobile/data/db/database.dart';
 import 'package:mobile/data/db/enums.dart';
 import 'package:mobile/open/widgets/next/icons/next_icon.dart';
 import 'package:mobile/open/widgets/next/next_button.dart';
+import 'package:mobile/open/widgets/next/next_preview_wrapper.dart';
 import 'package:mobile/theme/next/color.dart';
 import 'package:mobile/theme/next/spacing.dart';
 import 'package:mobile/theme/next/text.dart';
+
+import 'next_main_cta.dart';
 
 class NextLocationCard extends StatelessWidget {
   final Location location;
@@ -105,17 +108,23 @@ class NextLocationCard extends StatelessWidget {
           Row(
             spacing: NextSpacing.md,
             children: [
-              if (routingMethod != null)
-                Expanded(child: _InnerInfoCard(routing: routingMethod)),
-              Expanded(child: _InnerInfoCard(mfaMethod: mfaMethod)),
+              Expanded(
+                child: routingMethod != null
+                    ? _InnerInfoCard(routing: routingMethod)
+                    : _InnerInfoCard(mfaMethod: mfaMethod),
+              ),
+              Expanded(
+                child: routingMethod != null
+                    ? _InnerInfoCard(mfaMethod: mfaMethod)
+                    : const SizedBox.shrink(),
+              ),
             ],
           ),
           const SizedBox(height: NextSpacing.lg),
-          NextButton(
+          NextMainCta(
             text: "Disconnect",
+            connected: false,
             onTap: onDisconnectTap,
-            size: NextButtonSize.big,
-            style: NextButtonStyle.outlined,
           ),
         ],
       ),
@@ -180,21 +189,69 @@ class NextLocationCard extends StatelessWidget {
 
 @Preview(name: 'Connected', group: 'NextLocationCard')
 Widget previewConnected() {
-  return _PreviewWrapper(
+  return NextPreviewWrapper(
     child: NextLocationCard(isConnected: true, location: _mockLocation()),
+  );
+}
+
+@Preview(name: 'Connected + MFA TOTP', group: 'NextLocationCard')
+Widget previewConnectedMfaTotp() {
+  return NextPreviewWrapper(
+    child: NextLocationCard(
+      isConnected: true,
+      location: _mockLocation(mfaEnabled: true),
+      mfaMethod: MfaMethod.totp,
+      routingMethod: RoutingMethod.all,
+    ),
+  );
+}
+
+@Preview(name: 'Connected + MFA Biometric', group: 'NextLocationCard')
+Widget previewConnectedMfaBiometric() {
+  return NextPreviewWrapper(
+    child: NextLocationCard(
+      isConnected: true,
+      location: _mockLocation(mfaEnabled: true),
+      mfaMethod: MfaMethod.biometric,
+      routingMethod: RoutingMethod.all,
+    ),
+  );
+}
+
+@Preview(name: 'Connected + MFA Email', group: 'NextLocationCard')
+Widget previewConnectedMfaEmail() {
+  return NextPreviewWrapper(
+    child: NextLocationCard(
+      isConnected: true,
+      location: _mockLocation(mfaEnabled: true),
+      mfaMethod: MfaMethod.email,
+      routingMethod: RoutingMethod.all,
+    ),
+  );
+}
+
+@Preview(name: 'Connected + MFA OpenID', group: 'NextLocationCard')
+Widget previewConnectedMfaOpenId() {
+  return NextPreviewWrapper(
+    child: NextLocationCard(
+      isConnected: true,
+      location: _mockLocation(mfaEnabled: true),
+      mfaMethod: MfaMethod.openid,
+      routingMethod: RoutingMethod.all,
+    ),
   );
 }
 
 @Preview(name: 'Not Connected', group: 'NextLocationCard')
 Widget previewNotConnected() {
-  return _PreviewWrapper(
+  return NextPreviewWrapper(
     child: NextLocationCard(isConnected: false, location: _mockLocation()),
   );
 }
 
 @Preview(name: 'Loading', group: 'NextLocationCard')
 Widget previewLoading() {
-  return _PreviewWrapper(
+  return NextPreviewWrapper(
     child: NextLocationCard(
       isConnected: false,
       loading: true,
@@ -241,6 +298,7 @@ class _InnerInfoCard extends StatelessWidget {
           ),
           Column(
             mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
             spacing: 2,
             children: [
               Text(
@@ -312,26 +370,6 @@ class _InnerInfoCard extends StatelessWidget {
       return NextColor.fgWhite60;
     }
     return NextColor.fgWhite100;
-  }
-}
-
-class _PreviewWrapper extends StatelessWidget {
-  final Widget child;
-  const _PreviewWrapper({required this.child});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment(-0.72, -0.69),
-          end: Alignment(0.72, 0.69),
-          colors: [Color(0xFF141517), Color(0xFF191A1C)],
-        ),
-      ),
-      padding: const EdgeInsets.all(24.0),
-      child: Center(child: child),
-    );
   }
 }
 
