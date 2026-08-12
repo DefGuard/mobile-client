@@ -108,6 +108,9 @@ jobs:
           channel: stable
           flutter-version: 3.38.10
 
+      - name: Configure Flutter JDK
+        run: flutter config --jdk-dir "$JAVA_HOME"
+
       - name: Accept licenses
         run: yes | flutter doctor --android-licenses
 
@@ -177,6 +180,9 @@ jobs:
         with:
           channel: stable
           flutter-version: 3.38.10
+
+      - name: Configure Flutter JDK
+        run: flutter config --jdk-dir "$JAVA_HOME"
 
       - name: Install Android SDK components
         run: |
