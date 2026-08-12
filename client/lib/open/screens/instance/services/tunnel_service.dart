@@ -125,6 +125,7 @@ class TunnelService {
         navigator: navigator,
         proxyUrl: instance.proxyUrl,
         payload: payload,
+        pollingToken: instance.poolingToken,
       );
       if (presharedKey == null) {
         return;
@@ -149,6 +150,7 @@ class TunnelService {
     required NavigatorState navigator,
     required String proxyUrl,
     required PluginConnectPayload payload,
+    required String pollingToken,
   }) async {
     final messenger = ScaffoldMessenger.of(navigator.context);
     try {
@@ -156,6 +158,7 @@ class TunnelService {
         proxyUrl,
         payload.devicePublicKey,
         payload.networkId,
+        pollingToken,
       );
     } on PostureCheckException catch (e) {
       talker.error('Posture check failed', e);
@@ -351,12 +354,14 @@ class TunnelService {
     String url,
     String pubkey,
     int networkId,
+    String pollingToken,
   ) async {
     talker.debug('Starting posture check for networkId: $networkId');
     final request = PostureConnectRequest(
       locationId: networkId,
       pubkey: pubkey,
       devicePostureData: await getPosture(),
+      token: pollingToken,
     );
 
     final response = await proxyApi.postureConnect(Uri.parse(url), request);
