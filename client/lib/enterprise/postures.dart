@@ -108,11 +108,13 @@ class PostureConnectRequest {
   final int locationId;
   final String pubkey;
   final DevicePostureData devicePostureData;
+  final String token;
 
   const PostureConnectRequest({
     required this.locationId,
     required this.pubkey,
     required this.devicePostureData,
+    required this.token,
   });
 
   factory PostureConnectRequest.fromJson(Map<String, dynamic> json) =>
