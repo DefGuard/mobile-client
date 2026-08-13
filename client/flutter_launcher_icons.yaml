@@ -2,11 +2,11 @@
 flutter_launcher_icons:
   image_path: assets/launcher/icon.png
   android: true
-  adaptive_icon_background: "#0c8ce0"
+  adaptive_icon_background: "#4F79FA"
   adaptive_icon_foreground: assets/launcher/adaptive_foreground.png
   min_sdk_android: 31
   ios: true
-  background_color_ios: "#0c8ce0"
+  background_color_ios: "#4F79FA"
   image_path_ios: assets/launcher/icon.png
   remove_alpha_ios: true
   web:

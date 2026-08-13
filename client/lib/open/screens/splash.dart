@@ -29,20 +29,35 @@ class AppSplash extends HookConsumerWidget {
     useEffect(() {
       final instances = instancesAsync.data;
       if (instances != null && timerDone.value) {
-        if (instances.isEmpty) {
-          const AddInstanceScreenRoute().go(context);
-        } else if (instances.length == 1) {
-          InstanceScreenRoute(id: instances[0].id.toString()).go(context);
-        } else {
-          const InstancesListScreenRoute().go(context);
-        }
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (context.mounted) {
+            if (instances.isEmpty) {
+              const AddInstanceScreenRoute().go(context);
+            } else if (instances.length == 1) {
+              InstanceScreenRoute(id: instances[0].id.toString()).go(context);
+            } else {
+              const InstancesListScreenRoute().go(context);
+            }
+          }
+        });
       }
       return null;
     }, [instancesAsync.data, timerDone.value]);
 
     return Container(
       decoration: const BoxDecoration(gradient: NextColor.gradientPrimary),
-      child: Center(child: Image.asset("assets/splash/logo.png")),
+      child: Stack(
+        children: [
+          Center(child: Image.asset("assets/splash/logo.png", width: 160)),
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 24),
+              child: Image.asset("assets/splash/branding.png", width: 140),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

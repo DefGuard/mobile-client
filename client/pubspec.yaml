@@ -106,6 +106,7 @@ flutter:
     - assets/icons/
     - assets/next/icons/
     - assets/next/img/
+    - assets/splash/
 
   fonts:
     - family: Roboto
@@ -171,7 +172,7 @@ flutter:
   # see https://flutter.dev/to/font-from-package
 
 flutter_native_splash:
-  color: "#0C8CE0"
+  color: "#4F79FA"
   image: assets/splash/logo.png
   branding: assets/splash/branding.png
   branding_mode: bottom
@@ -179,7 +180,7 @@ flutter_native_splash:
 
   android_12:
     image: assets/splash/logo.png
-    icon_background_color: "#0c8ce0"
+    icon_background_color: "#4F79FA"
     branding: assets/splash/branding.png
     branding_mode: bottom
     branding_bottom_padding: 24
