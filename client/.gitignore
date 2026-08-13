@@ -51,3 +51,5 @@ app.*.map.json
 
 local.properties
 ios/VPNExtension/BoringTun
+# Widget Preview related
+.widget_preview/

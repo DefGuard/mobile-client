@@ -174,16 +174,10 @@ flutter:
 flutter_native_splash:
   color: "#4F79FA"
   image: assets/splash/logo.png
-  branding: assets/splash/branding.png
-  branding_mode: bottom
-  branding_bottom_padding: 24
 
   android_12:
     image: assets/splash/logo.png
     icon_background_color: "#4F79FA"
-    branding: assets/splash/branding.png
-    branding_mode: bottom
-    branding_bottom_padding: 24
 
   web: false
   android: true

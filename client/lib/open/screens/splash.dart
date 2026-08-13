@@ -46,17 +46,8 @@ class AppSplash extends HookConsumerWidget {
 
     return Container(
       decoration: const BoxDecoration(gradient: NextColor.gradientPrimary),
-      child: Stack(
-        children: [
-          Center(child: Image.asset("assets/splash/logo.png", width: 160)),
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: Padding(
-              padding: const EdgeInsets.only(bottom: 24),
-              child: Image.asset("assets/splash/branding.png", width: 140),
-            ),
-          ),
-        ],
+      child: SafeArea(
+        child: Center(child: Image.asset("assets/splash/logo.png", width: 160)),
       ),
     );
   }

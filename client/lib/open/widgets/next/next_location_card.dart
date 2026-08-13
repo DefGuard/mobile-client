@@ -137,7 +137,12 @@ class NextLocationCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         color: NextColor.bgDarkBlue20,
       ),
-      padding: const EdgeInsets.all(NextSpacing.sm),
+      padding: const EdgeInsets.fromLTRB(
+        NextSpacing.sm,
+        NextSpacing.sm,
+        NextSpacing.md,
+        NextSpacing.sm,
+      ),
       child: Row(
         spacing: NextSpacing.sm,
         crossAxisAlignment: CrossAxisAlignment.center,

@@ -9,7 +9,6 @@ import 'package:mobile/open/screens/add_instance/screens/biometry/biometry_setup
 import 'package:mobile/open/screens/add_instance/screens/biometry/biometry_setup_screen.dart';
 import 'package:mobile/open/screens/add_instance/screens/name_device_screen.dart';
 import 'package:mobile/open/screens/home/instances_list_screen.dart';
-import 'package:mobile/open/screens/instance/instance_screen.dart';
 import 'package:mobile/open/screens/mfa/mfa_code_screen.dart';
 import 'package:mobile/open/screens/process_qr_screen.dart';
 import 'package:mobile/open/screens/scan_qr_screen.dart';
@@ -17,6 +16,7 @@ import 'package:mobile/open/screens/splash.dart';
 import 'package:talker_flutter/talker_flutter.dart';
 
 import '../logging.dart';
+import '../open/screens/instance/next_instance_screen.dart';
 
 part 'routes.g.dart';
 
@@ -78,7 +78,7 @@ class InstanceScreenRoute extends GoRouteData with $InstanceScreenRoute {
 
   @override
   Widget build(BuildContext context, GoRouterState state) {
-    return InstanceScreen(id: id);
+    return NextInstanceScreen(id: id);
   }
 }
 
