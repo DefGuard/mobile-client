@@ -8,7 +8,8 @@ part of 'routes.dart';
 
 List<RouteBase> get $appRoutes => [
   $processQrScreenRoute,
-  $homeScreenRoute,
+  $appSplashRoute,
+  $instancesListScreenRoute,
   $qRScreenRoute,
   $instanceScreenRoute,
   $nameDeviceScreenRoute,
@@ -54,18 +55,45 @@ mixin $ProcessQrScreenRoute on GoRouteData {
       context.replace(location, extra: _self.$extra);
 }
 
-RouteBase get $homeScreenRoute => GoRouteData.$route(
+RouteBase get $appSplashRoute => GoRouteData.$route(
   path: '/',
   hasOverriddenOnExit: false,
-  factory: $HomeScreenRoute._fromState,
+  factory: $AppSplashRoute._fromState,
 );
 
-mixin $HomeScreenRoute on GoRouteData {
-  static HomeScreenRoute _fromState(GoRouterState state) =>
-      const HomeScreenRoute();
+mixin $AppSplashRoute on GoRouteData {
+  static AppSplashRoute _fromState(GoRouterState state) =>
+      const AppSplashRoute();
 
   @override
   String get location => GoRouteData.$location('/');
+
+  @override
+  void go(BuildContext context) => context.go(location);
+
+  @override
+  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
+
+  @override
+  void pushReplacement(BuildContext context) =>
+      context.pushReplacement(location);
+
+  @override
+  void replace(BuildContext context) => context.replace(location);
+}
+
+RouteBase get $instancesListScreenRoute => GoRouteData.$route(
+  path: '/home',
+  hasOverriddenOnExit: false,
+  factory: $InstancesListScreenRoute._fromState,
+);
+
+mixin $InstancesListScreenRoute on GoRouteData {
+  static InstancesListScreenRoute _fromState(GoRouterState state) =>
+      const InstancesListScreenRoute();
+
+  @override
+  String get location => GoRouteData.$location('/home');
 
   @override
   void go(BuildContext context) => context.go(location);

@@ -41,7 +41,7 @@ class RegisterFromQrScreen extends HookConsumerWidget {
         SnackbarService.showError("Instance is already registered!");
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (context.mounted) {
-            HomeScreenRoute().go(context);
+            InstancesListScreenRoute().go(context);
           }
         });
         return;

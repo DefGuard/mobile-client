@@ -142,7 +142,7 @@ class InstanceScreen extends HookConsumerWidget {
               talker.debug("Instance $id not found id DB, redirecting.");
               Future.microtask(() {
                 if (context.mounted) {
-                  HomeScreenRoute().go(context);
+                  InstancesListScreenRoute().go(context);
                 }
               });
               return const SizedBox();
@@ -158,7 +158,7 @@ class InstanceScreen extends HookConsumerWidget {
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (err, _) {
             talker.error("Instance route screen data returned error", err);
-            HomeScreenRoute().go(context);
+            InstancesListScreenRoute().go(context);
             return const SizedBox();
           },
         ),
@@ -243,7 +243,7 @@ class _ScreenContent extends HookConsumerWidget {
                         direction: DgIconDirection.left,
                       ),
                       onTap: () {
-                        HomeScreenRoute().go(context);
+                        InstancesListScreenRoute().go(context);
                       },
                     ),
                   SizedBox(

@@ -13,8 +13,8 @@ import 'package:mobile/theme/color.dart';
 import 'package:mobile/theme/spacing.dart';
 import 'package:mobile/theme/text.dart';
 
-class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key});
+class InstancesListScreen extends StatelessWidget {
+  const InstancesListScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -69,17 +69,7 @@ class _InstancesList extends HookConsumerWidget {
     return asyncInstances.when(
       data: (instances) {
         if (instances.isEmpty) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            AddInstanceScreenRoute().go(context);
-          });
           return Center(child: Text("No instances found", style: DgText.body1));
-        }
-
-        if (instances.length == 1) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            final instance = instances[0];
-            InstanceScreenRoute(id: instance.id.toString()).go(context);
-          });
         }
 
         return CustomScrollView(

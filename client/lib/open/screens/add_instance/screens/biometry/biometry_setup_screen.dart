@@ -123,7 +123,7 @@ class _ScreenContent extends HookConsumerWidget {
       loading: () => LoadingView(),
       error: (err, _) {
         talker.error("Failed to get screen data", err);
-        HomeScreenRoute().go(context);
+        InstancesListScreenRoute().go(context);
         return const SizedBox();
       },
       data: (instance) => DgSingleChildScrollView(
@@ -203,7 +203,7 @@ class _ScreenContent extends HookConsumerWidget {
                     variant: DgButtonVariant.secondary,
                     disabled: isLoading.value,
                     onTap: () {
-                      HomeScreenRoute().go(context);
+                      InstancesListScreenRoute().go(context);
                     },
                   ),
                 ),

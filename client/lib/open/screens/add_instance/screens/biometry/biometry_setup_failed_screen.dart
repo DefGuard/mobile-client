@@ -51,7 +51,7 @@ class BiometrySetupFailedScreen extends StatelessWidget {
                     size: DgButtonSize.big,
                     variant: DgButtonVariant.secondary,
                     onTap: () {
-                      HomeScreenRoute().go(context);
+                      InstancesListScreenRoute().go(context);
                     },
                   ),
                 ),

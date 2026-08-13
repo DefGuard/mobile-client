@@ -10,7 +10,7 @@ part 'router.g.dart';
 @riverpod
 GoRouter router(Ref ref) {
   return GoRouter(
-    initialLocation: HomeScreenRoute().location,
+    initialLocation: const AppSplashRoute().location,
     routes: $appRoutes,
     observers: [TalkerRouteObserver(talker)],
   );
