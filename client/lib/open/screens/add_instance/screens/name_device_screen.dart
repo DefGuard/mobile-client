@@ -58,12 +58,15 @@ class NameDeviceScreen extends HookConsumerWidget {
         uuid: createResponse.instance.id,
         deviceId: createResponse.device.id,
         enterpriseEnabled: createResponse.instance.enterpriseEnabled,
-        disableAllTraffic: createResponse.instance.disableAllTraffic,
+        clientTrafficPolicy: drift.Value(createResponse.instance.getPolicy()),
         proxyUrl: createResponse.instance.proxyUrl,
         url: screenData.startResponse.instance.url,
         username: createResponse.instance.username,
         poolingToken: createResponse.token,
         mfaKeysStored: false,
+        openidDisplayName: drift.Value(
+          createResponse.instance.openidDisplayName,
+        ),
       ),
       mode: drift.InsertMode.insertOrFail,
     );
@@ -101,7 +104,7 @@ class NameDeviceScreen extends HookConsumerWidget {
             suggestedName = "";
           }
           nameController.text = suggestedName;
-        } catch(e) {
+        } catch (e) {
           talker.error("Failed to get suggested device name! Reason: $e");
         }
       }

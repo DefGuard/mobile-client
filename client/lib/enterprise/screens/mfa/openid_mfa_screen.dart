@@ -17,18 +17,28 @@ import '../../../open/services/snackbar_service.dart';
 class OpenIdMfaScreenData {
   final String proxyUrl;
   final String token;
+  final String? openidDisplayName;
 
-  const OpenIdMfaScreenData({required this.proxyUrl, required this.token});
+  const OpenIdMfaScreenData({
+    required this.proxyUrl,
+    required this.token,
+    this.openidDisplayName,
+  });
 }
 
 final String _title = "Two-factor authentication";
-final String _mfaMsg1 =
-    "In order to connect to VPN please login with your OpenID provider. To do so, please click \"Authenticate with OpenId\"";
+String _mfaMsg1(String? providerName) {
+  final name = providerName ?? 'OpenID';
+  return "In order to connect to VPN please login with $name. To do so, please click \"Authenticate with $name\" button below";
+}
 
-final String _mfaMsg2 =
-    "This will open a new window in your web browser and automatically redirect you to your OpenID provider login page. After authenticating please get back here";
+String _mfaMsg2(String? providerName) {
+  final name = providerName ?? 'OpenID';
+  return "This will open a new window in your Web Browser and automatically redirect you to the $name login page. After authenticating with $name please get back here";
+}
 
-final String _authenticateMsg = "Authenticate with OpenID";
+String _authenticateMsg(String? providerName) =>
+    'Authenticate with ${providerName ?? 'OpenID'}';
 
 class OpenIdMfaScreen extends HookConsumerWidget {
   final OpenIdMfaScreenData screenData;
@@ -67,17 +77,17 @@ class OpenIdMfaScreen extends HookConsumerWidget {
             ),
             Center(child: DgIconOpenidOpen(size: 128)),
             Text(
-              _mfaMsg1,
+              _mfaMsg1(screenData.openidDisplayName),
               style: DgText.modal1.copyWith(color: DgColor.textBodySecondary),
               textAlign: TextAlign.center,
             ),
             Text(
-              _mfaMsg2,
+              _mfaMsg2(screenData.openidDisplayName),
               style: DgText.modal1.copyWith(color: DgColor.textBodySecondary),
               textAlign: TextAlign.center,
             ),
             DgButton(
-              text: _authenticateMsg,
+              text: _authenticateMsg(screenData.openidDisplayName),
               variant: DgButtonVariant.primary,
               size: DgButtonSize.big,
               width: double.infinity,

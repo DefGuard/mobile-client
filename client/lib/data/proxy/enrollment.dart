@@ -152,6 +152,7 @@ class DeviceConfig {
   final bool mfaEnabled;
   final int keepaliveInterval;
   final LocationMfaMode? locationMfaMode;
+  final bool? postureCheckRequired;
 
   factory DeviceConfig.fromJson(Map<String, dynamic> json) =>
       _$DeviceConfigFromJson(json);
@@ -170,6 +171,7 @@ class DeviceConfig {
     required this.mfaEnabled,
     required this.keepaliveInterval,
     this.locationMfaMode,
+    this.postureCheckRequired,
   });
 
   bool matchesLocation(Location other) {
@@ -182,7 +184,8 @@ class DeviceConfig {
         dns == other.dns &&
         mfaEnabled == other.mfaEnabled &&
         keepaliveInterval == other.keepAliveInterval &&
-        locationMfaMode == other.locationMfaMode;
+        locationMfaMode == other.locationMfaMode &&
+        postureCheckRequired == other.postureCheckRequired;
   }
 
   LocationsCompanion toCompanion({
@@ -206,6 +209,7 @@ class DeviceConfig {
       allowedIps: d.Value(allowedIps),
       address: d.Value(assignedIp),
       locationMfaMode: d.Value(locationMfaMode),
+      postureCheckRequired: d.Value(postureCheckRequired),
     );
   }
 }
@@ -252,6 +256,8 @@ class InstanceInfo {
   final String username;
   final bool enterpriseEnabled;
   final bool disableAllTraffic;
+  final ClientTrafficPolicy? clientTrafficPolicy;
+  final String? openidDisplayName;
 
   const InstanceInfo({
     required this.id,
@@ -260,7 +266,10 @@ class InstanceInfo {
     required this.proxyUrl,
     required this.username,
     required this.enterpriseEnabled,
-    required this.disableAllTraffic,
+    // deprecated, use clientTrafficPolicy instead
+    @Deprecated('1.6') required this.disableAllTraffic,
+    required this.clientTrafficPolicy,
+    this.openidDisplayName,
   });
 
   factory InstanceInfo.fromJson(Map<String, dynamic> json) =>
@@ -275,7 +284,8 @@ class InstanceInfo {
         proxyUrl == other.proxyUrl &&
         username == other.username &&
         enterpriseEnabled == other.enterpriseEnabled &&
-        disableAllTraffic == other.disableAllTraffic;
+        getPolicy() == other.clientTrafficPolicy &&
+        openidDisplayName == other.openidDisplayName;
   }
 
   DefguardInstancesCompanion toCompanion({DefguardInstance? instance}) {
@@ -290,9 +300,18 @@ class InstanceInfo {
       proxyUrl: d.Value(proxyUrl),
       username: d.Value(username),
       enterpriseEnabled: d.Value(enterpriseEnabled),
-      disableAllTraffic: d.Value(disableAllTraffic),
+      clientTrafficPolicy: d.Value(getPolicy()),
       uuid: d.Value(id),
+      openidDisplayName: d.Value(openidDisplayName),
     );
+  }
+
+  /// Retrieves `ClientTrafficPolicy` while ensuring backwards compatibility
+  ClientTrafficPolicy getPolicy() {
+    return clientTrafficPolicy ??
+        (disableAllTraffic
+            ? ClientTrafficPolicy.disableAllTraffic
+            : ClientTrafficPolicy.none);
   }
 }
 

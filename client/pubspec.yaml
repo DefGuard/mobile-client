@@ -2,7 +2,7 @@ name: mobile
 description: "Defguard mobile client"
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
-publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+publish_to: "none" # Remove this line if you wish to publish to pub.dev
 
 # The following defines the version and build number for your application.
 # A version number is three numbers separated by dots, like 1.2.43
@@ -16,7 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 1.6.0+1
+version: 1.7.0+1
 
 environment:
   sdk: ^3.8.1
@@ -50,6 +50,7 @@ dependencies:
   cookie_jar: ^4.0.8
   dio: ^5.8.0+1
   dio_cookie_manager: ^3.2.0
+  native_dio_adapter: ^1.3.0
   flutter_native_splash: ^2.4.6
   flutter_launcher_icons: ^0.14.4
   flutter_svg: ^2.1.0
@@ -76,6 +77,7 @@ dependencies:
   shared_preferences: ^2.5.3
   flutter_secure_storage: ^9.2.4
   device_info_plus: ^11.5.0
+  protobuf: ^6.0.0
 
 dev_dependencies:
   flutter_test:
@@ -101,34 +103,33 @@ dev_dependencies:
 
 # The following section is specific to Flutter packages.
 flutter:
-
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
 
   assets:
-  - assets/icons/
+    - assets/icons/
 
   fonts:
-  - family: Roboto
-    fonts:
-    - asset: assets/fonts/roboto-400.ttf
-      weight: 400
-    - asset: assets/fonts/roboto-500.ttf
-      weight: 500
-    - asset: assets/fonts/roboto-600.ttf
-      weight: 600
-  - family: Poppins
-    fonts:
-    - asset: assets/fonts/poppins-300.ttf
-      weight: 300
-    - asset: assets/fonts/poppins-400.ttf
-      weight: 400
-    - asset: assets/fonts/poppins-500.ttf
-      weight: 500
-    - asset: assets/fonts/poppins-600.ttf
-      weight: 600
+    - family: Roboto
+      fonts:
+        - asset: assets/fonts/roboto-400.ttf
+          weight: 400
+        - asset: assets/fonts/roboto-500.ttf
+          weight: 500
+        - asset: assets/fonts/roboto-600.ttf
+          weight: 600
+    - family: Poppins
+      fonts:
+        - asset: assets/fonts/poppins-300.ttf
+          weight: 300
+        - asset: assets/fonts/poppins-400.ttf
+          weight: 400
+        - asset: assets/fonts/poppins-500.ttf
+          weight: 500
+        - asset: assets/fonts/poppins-600.ttf
+          weight: 600
   # To add assets to your application, add an assets section, like this:
   # assets:
   #   - images/a_dot_burr.jpeg

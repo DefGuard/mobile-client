@@ -1,13 +1,18 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:cookie_jar/cookie_jar.dart';
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:dio/dio.dart';
 import 'package:dio_cookie_manager/dio_cookie_manager.dart';
 import 'package:mobile/data/db/enums.dart';
+import 'package:mobile/data/proto/client_platform_info.pb.dart';
 import 'package:mobile/data/proxy/config.dart';
 import 'package:mobile/data/proxy/enrollment.dart';
 import 'package:mobile/data/proxy/mfa.dart';
-
+import 'package:mobile/enterprise/postures.dart';
+import 'package:native_dio_adapter/native_dio_adapter.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:talker_dio_logger/talker_dio_logger_interceptor.dart';
 
 import '../logging.dart';
@@ -15,6 +20,16 @@ import '../logging.dart';
 const _apiV1Segments = ['api', 'v1'];
 final enrollmentPathSegments = ['api', 'v1', 'enrollment'];
 final mfaPathSegments = ['api', 'v1', 'client-mfa'];
+final posturePathSegments = ['api', 'v1', 'posture'];
+
+class PostureCheckException implements Exception {
+  final String message;
+
+  const PostureCheckException(this.message);
+
+  @override
+  String toString() => 'Posture error: $message';
+}
 
 class MfaMethodNotAvailableException implements Exception {
   final MfaMethod method;
@@ -41,9 +56,54 @@ class _ProxyApi {
   );
 
   _ProxyApi._internal() {
+    _dio.httpClientAdapter = NativeAdapter();
     final cookieJar = CookieJar();
     _dio.interceptors.add(CookieManager(cookieJar));
     _dio.interceptors.add(TalkerDioLogger(talker: talker));
+    _initHeaders();
+  }
+
+  Future<void> _initHeaders() async {
+    try {
+      final deviceInfo = DeviceInfoPlugin();
+      final ClientPlatformInfo platformInfo;
+
+      if (Platform.isAndroid) {
+        final android = await deviceInfo.androidInfo;
+        platformInfo = ClientPlatformInfo(
+          osFamily: 'android',
+          osType: 'Android',
+          version: android.version.release,
+          codename: android.version.codename,
+          architecture: android.supportedAbis.first,
+          bitness: '64',
+        );
+      } else if (Platform.isIOS) {
+        final ios = await deviceInfo.iosInfo;
+        platformInfo = ClientPlatformInfo(
+          osFamily: 'ios',
+          osType: 'iOS',
+          version: ios.systemVersion,
+          architecture: 'arm64',
+          bitness: '64',
+        );
+      } else {
+        platformInfo = ClientPlatformInfo(
+          osFamily: Platform.operatingSystem,
+          osType: Platform.operatingSystem,
+          version: Platform.operatingSystemVersion,
+        );
+      }
+
+      final platformBytes = platformInfo.writeToBuffer();
+      final platformBase64 = base64Encode(platformBytes);
+
+      final packageInfo = await PackageInfo.fromPlatform();
+      _dio.options.headers['defguard-client-version'] = packageInfo.version;
+      _dio.options.headers['defguard-client-platform'] = platformBase64;
+    } catch (e) {
+      talker.error("Failed to set client headers", e);
+    }
   }
 
   Future<(ConfigurationPollResponse?, int?, Headers?)> pollConfiguration(
@@ -152,6 +212,13 @@ class _ProxyApi {
               dataError.toLowerCase().trim() == missingMFAMethodError) {
             throw MfaMethodNotAvailableException(data.method);
           }
+
+          if (e.response?.statusCode == 403) {
+            final error = responseData['error'] ?? responseData['message'];
+            if (error is String) {
+              throw HttpException(error);
+            }
+          }
         }
         throw HttpException(
           "Failed to start MFA. Status: ${e.response?.statusCode} Body: ${e.response?.data}",
@@ -161,6 +228,39 @@ class _ProxyApi {
     } catch (e) {
       throw FormatException(
         "Invalid JSON sent by start MFA endpoint! Error: $e",
+      );
+    }
+  }
+
+  Future<PostureConnectResponse> postureConnect(
+    Uri url,
+    PostureConnectRequest data,
+  ) async {
+    final endpoint = url.replace(
+      pathSegments: [...url.pathSegments, ...posturePathSegments, 'connect'],
+    );
+
+    try {
+      final response = await _dio.postUri(endpoint, data: data.toJson());
+      return PostureConnectResponse.fromJson(response.data);
+    } on DioException catch (e) {
+      final responseData = e.response?.data;
+      if (e.response?.statusCode == 403 &&
+          responseData is Map<String, dynamic>) {
+        final error = responseData['error'] ?? responseData['message'];
+        if (error is String) {
+          throw PostureCheckException(error);
+        }
+      }
+      if (e.response != null) {
+        throw HttpException(
+          'Failed to perform posture check. Status: ${e.response?.statusCode} Body: ${e.response?.data}',
+        );
+      }
+      rethrow;
+    } catch (e) {
+      throw FormatException(
+        'Invalid JSON sent by posture check endpoint! Error: $e',
       );
     }
   }

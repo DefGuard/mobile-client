@@ -29,7 +29,7 @@ class LoadingView extends StatelessWidget {
               mainAxisSize: MainAxisSize.max,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                  DgCircularProgress(color: DgColor.iconSecondary, size: 92),
+                DgCircularProgress(color: DgColor.iconSecondary, size: 92),
               ],
             ),
           );

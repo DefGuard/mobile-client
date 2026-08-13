@@ -11,6 +11,7 @@ import 'package:mobile/open/widgets/navigation/dg_scaffold.dart';
 import 'package:mobile/theme/color.dart';
 import 'package:mobile/theme/spacing.dart';
 import 'package:mobile/theme/text.dart';
+import 'package:mobile/utils/error_handler.dart';
 import 'package:mobile/utils/screen_padding.dart';
 
 import '../../../../../data/db/enums.dart';
@@ -151,9 +152,15 @@ class _CodeForm extends HookConsumerWidget {
                       if (e.response?.statusCode == 401) {
                         codeInvalid.value = true;
                         formKey.currentState?.validate();
+                      } else {
+                        SnackbarService.showError(
+                          ErrorHandler.getHumanReadableError(e),
+                        );
                       }
                     } catch (e) {
-                      SnackbarService.showError("Error: $e");
+                      SnackbarService.showError(
+                        ErrorHandler.getHumanReadableError(e),
+                      );
                     } finally {
                       isLoading.value = false;
                     }

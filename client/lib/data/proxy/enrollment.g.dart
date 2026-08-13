@@ -263,6 +263,10 @@ DeviceConfig _$DeviceConfigFromJson(Map<String, dynamic> json) =>
             'location_mfa_mode',
             (v) => $enumDecodeNullable(_$LocationMfaModeEnumMap, v),
           ),
+          postureCheckRequired: $checkedConvert(
+            'posture_check_required',
+            (v) => v as bool?,
+          ),
         );
         return val;
       },
@@ -274,6 +278,7 @@ DeviceConfig _$DeviceConfigFromJson(Map<String, dynamic> json) =>
         'mfaEnabled': 'mfa_enabled',
         'keepaliveInterval': 'keepalive_interval',
         'locationMfaMode': 'location_mfa_mode',
+        'postureCheckRequired': 'posture_check_required',
       },
     );
 
@@ -289,6 +294,7 @@ const _$DeviceConfigFieldMap = <String, String>{
   'mfaEnabled': 'mfa_enabled',
   'keepaliveInterval': 'keepalive_interval',
   'locationMfaMode': 'location_mfa_mode',
+  'postureCheckRequired': 'posture_check_required',
 };
 
 Map<String, dynamic> _$DeviceConfigToJson(DeviceConfig instance) =>
@@ -304,6 +310,7 @@ Map<String, dynamic> _$DeviceConfigToJson(DeviceConfig instance) =>
       'mfa_enabled': instance.mfaEnabled,
       'keepalive_interval': instance.keepaliveInterval,
       'location_mfa_mode': _$LocationMfaModeEnumMap[instance.locationMfaMode],
+      'posture_check_required': instance.postureCheckRequired,
     };
 
 const _$LocationMfaModeEnumMap = {
@@ -389,6 +396,14 @@ InstanceInfo _$InstanceInfoFromJson(Map<String, dynamic> json) =>
             'disable_all_traffic',
             (v) => v as bool,
           ),
+          clientTrafficPolicy: $checkedConvert(
+            'client_traffic_policy',
+            (v) => $enumDecodeNullable(_$ClientTrafficPolicyEnumMap, v),
+          ),
+          openidDisplayName: $checkedConvert(
+            'openid_display_name',
+            (v) => v as String?,
+          ),
         );
         return val;
       },
@@ -396,6 +411,8 @@ InstanceInfo _$InstanceInfoFromJson(Map<String, dynamic> json) =>
         'proxyUrl': 'proxy_url',
         'enterpriseEnabled': 'enterprise_enabled',
         'disableAllTraffic': 'disable_all_traffic',
+        'clientTrafficPolicy': 'client_traffic_policy',
+        'openidDisplayName': 'openid_display_name',
       },
     );
 
@@ -407,6 +424,8 @@ const _$InstanceInfoFieldMap = <String, String>{
   'username': 'username',
   'enterpriseEnabled': 'enterprise_enabled',
   'disableAllTraffic': 'disable_all_traffic',
+  'clientTrafficPolicy': 'client_traffic_policy',
+  'openidDisplayName': 'openid_display_name',
 };
 
 Map<String, dynamic> _$InstanceInfoToJson(InstanceInfo instance) =>
@@ -418,7 +437,16 @@ Map<String, dynamic> _$InstanceInfoToJson(InstanceInfo instance) =>
       'username': instance.username,
       'enterprise_enabled': instance.enterpriseEnabled,
       'disable_all_traffic': instance.disableAllTraffic,
+      'client_traffic_policy':
+          _$ClientTrafficPolicyEnumMap[instance.clientTrafficPolicy],
+      'openid_display_name': instance.openidDisplayName,
     };
+
+const _$ClientTrafficPolicyEnumMap = {
+  ClientTrafficPolicy.none: 0,
+  ClientTrafficPolicy.disableAllTraffic: 1,
+  ClientTrafficPolicy.forceAllTraffic: 2,
+};
 
 AppInfoResponse _$AppInfoResponseFromJson(Map<String, dynamic> json) =>
     $checkedCreate('AppInfoResponse', json, ($checkedConvert) {

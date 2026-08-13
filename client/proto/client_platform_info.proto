@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package defguard.proxy;
+
+message ClientPlatformInfo {
+  string os_family = 1;
+  string os_type = 2;
+  string version = 3;
+  optional string edition = 4;
+  optional string codename = 5;
+  optional string bitness = 6;
+  optional string architecture = 7; 
+}

@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:mobile/data/db/database.dart';
 import 'package:mobile/data/proxy/mfa.dart';
+import 'package:mobile/enterprise/postures.dart';
 import 'package:mobile/enterprise/screens/mfa/openid_mfa_screen.dart';
 import 'package:mobile/open/api.dart';
 import 'package:mobile/data/plugin/plugin.dart';
@@ -35,9 +36,13 @@ class TunnelService {
 
     // handle traffic type selection if necessary
     late RoutingMethod trafficMethod;
-    if (instance.disableAllTraffic) {
+    if (instance.clientTrafficPolicy == ClientTrafficPolicy.disableAllTraffic) {
       // instance enforces predefined traffic
       trafficMethod = RoutingMethod.predefined;
+    } else if (instance.clientTrafficPolicy ==
+        ClientTrafficPolicy.forceAllTraffic) {
+      // instance enforces all traffic
+      trafficMethod = RoutingMethod.all;
     } else {
       // instance allows traffic type selection - use stored method or display selection dialog
       if (location.trafficMethod != null) {
@@ -52,6 +57,7 @@ class TunnelService {
           builder: (_) => RoutingMethodDialog(
             location: location,
             intention: dialogIntention,
+            clientTrafficPolicy: instance.clientTrafficPolicy,
           ),
         );
         // smth went wrong or user canceled the operation
@@ -107,9 +113,21 @@ class TunnelService {
         payload: payload,
         method: mfaMethod,
         secureStorageKey: instance.secureStorageKey,
+        openidDisplayName: instance.openidDisplayName,
       );
       if (presharedKey == null) {
         // user dismissed the dialog
+        return;
+      }
+      payload.presharedKey = presharedKey;
+    } else if (payload.postureCheckRequired) {
+      final presharedKey = await _performPostureCheck(
+        navigator: navigator,
+        proxyUrl: instance.proxyUrl,
+        payload: payload,
+        pollingToken: instance.poolingToken,
+      );
+      if (presharedKey == null) {
         return;
       }
       payload.presharedKey = presharedKey;
@@ -127,6 +145,40 @@ class TunnelService {
         location.locationMfaMode == LocationMfaMode.external;
   }
 
+  /// Performs posture-only authorization and returns runtime preshared key.
+  static Future<String?> _performPostureCheck({
+    required NavigatorState navigator,
+    required String proxyUrl,
+    required PluginConnectPayload payload,
+    required String pollingToken,
+  }) async {
+    final messenger = ScaffoldMessenger.of(navigator.context);
+    try {
+      return await _authorizePostureOnly(
+        proxyUrl,
+        payload.devicePublicKey,
+        payload.networkId,
+        pollingToken,
+      );
+    } on PostureCheckException catch (e) {
+      talker.error('Posture check failed', e);
+      messenger.showSnackBar(
+        dgSnackBar(text: e.toString(), textColor: DgColor.textAlert),
+      );
+    } on HttpException catch (e) {
+      talker.error('Posture check request failed', e);
+      messenger.showSnackBar(
+        dgSnackBar(text: 'Error: ${e.message}', textColor: DgColor.textAlert),
+      );
+    } catch (e) {
+      talker.error('Posture-only connect failed: $e');
+      messenger.showSnackBar(
+        dgSnackBar(text: 'Error: $e', textColor: DgColor.textAlert),
+      );
+    }
+    return null;
+  }
+
   /// Performs MFA using specified method.
   /// Returns preshared key.
   static Future<String?> _performMfa({
@@ -135,6 +187,7 @@ class TunnelService {
     required PluginConnectPayload payload,
     required MfaMethod method,
     String? secureStorageKey,
+    String? openidDisplayName,
   }) async {
     // prepare messenger to avoid "context use across async gaps"
     final messenger = ScaffoldMessenger.of(navigator.context);
@@ -145,6 +198,7 @@ class TunnelService {
         payload.devicePublicKey,
         payload.networkId,
         method,
+        payload.postureCheckRequired,
       );
       if (method == MfaMethod.openid) {
         // perform openid-based MFA
@@ -153,6 +207,7 @@ class TunnelService {
           token: startMfaResponse.token,
           proxyUrl: proxyUrl,
           method: method,
+          openidDisplayName: openidDisplayName,
         );
       }
       if (method == MfaMethod.biometric) {
@@ -223,11 +278,16 @@ class TunnelService {
     required String token,
     required String proxyUrl,
     required MfaMethod method,
+    String? openidDisplayName,
   }) async {
     final presharedKey = await Navigator.of(navigator.context).push<String?>(
       MaterialPageRoute(
         builder: (context) => OpenIdMfaScreen(
-          screenData: OpenIdMfaScreenData(proxyUrl: proxyUrl, token: token),
+          screenData: OpenIdMfaScreenData(
+            proxyUrl: proxyUrl,
+            token: token,
+            openidDisplayName: openidDisplayName,
+          ),
         ),
       ),
     );
@@ -272,18 +332,40 @@ class TunnelService {
     String pubkey,
     int networkId,
     MfaMethod method,
+    bool postureCheckRequired,
   ) async {
     talker.debug(
       "Starting MFA for networkId: $networkId, method: ${method.toReadableString()}",
     );
+    final postureData = postureCheckRequired ? await getPosture() : null;
     final request = StartMfaRequest(
       pubkey: pubkey,
       locationId: networkId,
       method: method,
+      postureData: postureData,
     );
 
     final uri = Uri.parse(url);
     return await proxyApi.startMfa(uri, request);
+  }
+
+  /// Calls `/posture/connect` endpoint and returns runtime preshared key.
+  static Future<String> _authorizePostureOnly(
+    String url,
+    String pubkey,
+    int networkId,
+    String pollingToken,
+  ) async {
+    talker.debug('Starting posture check for networkId: $networkId');
+    final request = PostureConnectRequest(
+      locationId: networkId,
+      pubkey: pubkey,
+      devicePostureData: await getPosture(),
+      token: pollingToken,
+    );
+
+    final response = await proxyApi.postureConnect(Uri.parse(url), request);
+    return response.presharedKey;
   }
 
   /// Prepares wireguard plugin configuration
@@ -306,6 +388,7 @@ class TunnelService {
       networkId: location.networkId,
       instanceId: instance.id,
       traffic: trafficMethod,
+      postureCheckRequired: location.postureCheckRequired == true,
     );
   }
 

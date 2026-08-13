@@ -77,9 +77,7 @@ class AddInstanceScreen extends HookConsumerWidget {
                 if (isAgreed ?? false) {
                   if (context.mounted) {
                     QRScreenRoute(
-                      QrScreenData(
-                        intent: QrScreenIntent.addInstance,
-                      ),
+                      QrScreenData(intent: QrScreenIntent.addInstance),
                     ).push(context);
                   }
                 } else {
@@ -92,9 +90,7 @@ class AddInstanceScreen extends HookConsumerWidget {
                       await asyncPrefs.setBool(agreementPrefsKey, true);
                       if (context.mounted) {
                         QRScreenRoute(
-                          QrScreenData(
-                            intent: QrScreenIntent.addInstance,
-                          ),
+                          QrScreenData(intent: QrScreenIntent.addInstance),
                         ).push(context);
                       }
                     }

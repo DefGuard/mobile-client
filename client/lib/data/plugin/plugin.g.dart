@@ -30,6 +30,10 @@ PluginConnectPayload _$PluginConnectPayloadFromJson(
       networkId: $checkedConvert('network_id', (v) => (v as num).toInt()),
       dns: $checkedConvert('dns', (v) => v as String?),
       presharedKey: $checkedConvert('preshared_key', (v) => v as String?),
+      postureCheckRequired: $checkedConvert(
+        'posture_check_required',
+        (v) => v as bool,
+      ),
     );
     return val;
   },
@@ -43,6 +47,7 @@ PluginConnectPayload _$PluginConnectPayloadFromJson(
     'instanceId': 'instance_id',
     'networkId': 'network_id',
     'presharedKey': 'preshared_key',
+    'postureCheckRequired': 'posture_check_required',
   },
 );
 
@@ -61,6 +66,7 @@ const _$PluginConnectPayloadFieldMap = <String, String>{
   'instanceId': 'instance_id',
   'networkId': 'network_id',
   'traffic': 'traffic',
+  'postureCheckRequired': 'posture_check_required',
 };
 
 Map<String, dynamic> _$PluginConnectPayloadToJson(
@@ -80,6 +86,7 @@ Map<String, dynamic> _$PluginConnectPayloadToJson(
   'instance_id': instance.instanceId,
   'network_id': instance.networkId,
   'traffic': _$RoutingMethodEnumMap[instance.traffic]!,
+  'posture_check_required': instance.postureCheckRequired,
 };
 
 const _$RoutingMethodEnumMap = {
