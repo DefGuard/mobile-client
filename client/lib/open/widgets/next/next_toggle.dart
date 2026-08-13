@@ -22,7 +22,7 @@ class NextToggle extends StatelessWidget {
         width: 64,
         height: 28,
         decoration: BoxDecoration(
-          color: value ? NextColor.bgSuccess : NextColor.bgWhite20,
+          color: value ? Color(0xff34C759) : NextColor.bgWhite20,
           borderRadius: BorderRadius.circular(100),
         ),
         padding: const EdgeInsets.all(2),
