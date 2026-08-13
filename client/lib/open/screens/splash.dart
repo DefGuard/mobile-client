@@ -20,7 +20,7 @@ class AppSplash extends HookConsumerWidget {
     final timerDone = useState(false);
 
     useEffect(() {
-      final timer = Timer(const Duration(milliseconds: 1500), () {
+      final timer = Timer(const Duration(milliseconds: 300), () {
         timerDone.value = true;
       });
       return timer.cancel;
