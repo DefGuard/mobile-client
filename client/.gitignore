@@ -12,6 +12,8 @@
 .swiftpm/
 .gradle
 migrate_working_dir/
+.artifacts
+docs
 
 # IntelliJ related
 *.iml
