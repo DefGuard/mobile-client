@@ -193,6 +193,8 @@ class _NextTextFormFieldContent extends HookWidget {
         ? BorderRadius.circular(100)
         : BorderRadius.circular(8);
 
+    final double trackHeight = size == NextTextFormFieldSize.big ? 44.0 : 36.0;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
@@ -230,6 +232,8 @@ class _NextTextFormFieldContent extends HookWidget {
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 160),
             curve: Curves.easeOut,
+            height: trackHeight,
+            alignment: Alignment.centerLeft,
             padding: padding,
             decoration: BoxDecoration(
               color: backgroundColor,
