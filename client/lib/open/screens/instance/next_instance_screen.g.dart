@@ -83,3 +83,36 @@ final class _NextScreenDataFamily extends $Family
   @override
   String toString() => r'_nextScreenDataProvider';
 }
+
+@ProviderFor(isSingleInstance)
+final isSingleInstanceProvider = IsSingleInstanceProvider._();
+
+final class IsSingleInstanceProvider
+    extends $FunctionalProvider<AsyncValue<bool>, bool, Stream<bool>>
+    with $FutureModifier<bool>, $StreamProvider<bool> {
+  IsSingleInstanceProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'isSingleInstanceProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$isSingleInstanceHash();
+
+  @$internal
+  @override
+  $StreamProviderElement<bool> $createElement($ProviderPointer pointer) =>
+      $StreamProviderElement(pointer);
+
+  @override
+  Stream<bool> create(Ref ref) {
+    return isSingleInstance(ref);
+  }
+}
+
+String _$isSingleInstanceHash() => r'42cc4e762c350ed0b350e02bdea373f52f40a1cb';

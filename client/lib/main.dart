@@ -6,12 +6,13 @@ import 'package:mobile/open/riverpod/router/router.dart';
 import 'package:mobile/open/services/snackbar_service.dart';
 import 'package:mobile/plugin.dart';
 import 'package:mobile/theme.dart';
-
 import 'package:mobile/utils/notifications.dart';
+import 'package:rive/rive.dart' as rive;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initNotifications();
+  await rive.RiveNative.init();
   runApp(
     ProviderScope(
       child: ConfigurationUpdater(child: BiometricsController(child: _App())),

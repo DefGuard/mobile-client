@@ -8,7 +8,7 @@ import 'package:mobile/open/screens/add_instance/screens/biometry/biometry_finis
 import 'package:mobile/open/screens/add_instance/screens/biometry/biometry_setup_failed_screen.dart';
 import 'package:mobile/open/screens/add_instance/screens/biometry/biometry_setup_screen.dart';
 import 'package:mobile/open/screens/add_instance/screens/name_device_screen.dart';
-import 'package:mobile/open/screens/home/instances_list_screen.dart';
+import 'package:mobile/open/screens/instances_list/next_instances_list_screen.dart';
 import 'package:mobile/open/screens/mfa/mfa_code_screen.dart';
 import 'package:mobile/open/screens/process_qr_screen.dart';
 import 'package:mobile/open/screens/scan_qr_screen.dart';
@@ -52,7 +52,7 @@ class InstancesListScreenRoute extends GoRouteData
 
   @override
   Widget build(BuildContext context, GoRouterState state) {
-    return const InstancesListScreen();
+    return const NextInstancesListScreen();
   }
 }
 

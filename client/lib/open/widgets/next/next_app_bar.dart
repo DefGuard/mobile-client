@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
+import 'package:mobile/open/widgets/next/images/dg_logo.dart';
 import 'package:mobile/theme/next/spacing.dart';
 
 import '../../../theme/next/color.dart';
@@ -8,7 +8,7 @@ import '../../../theme/next/text.dart';
 class NextAppBar extends StatelessWidget implements PreferredSizeWidget {
   final double height;
   final Widget? actionLeft;
-  final Widget? actionRight;
+  final List<Widget>? actionRight;
   final String? title;
   final String? subtitle;
   final bool? showLogo;
@@ -42,14 +42,14 @@ class NextAppBar extends StatelessWidget implements PreferredSizeWidget {
               crossAxisAlignment: CrossAxisAlignment.center,
               spacing: NextSpacing.xl,
               children: [
-                ?actionLeft,
+                actionLeft ?? const SizedBox(width: 44, height: 44),
                 if (showLogo == true)
                   Expanded(
                     child: Align(
-                      alignment: Alignment.centerLeft,
-                      child: SvgPicture.asset(
-                        'assets/next/img/app_bar_logo.svg',
-                      ),
+                      alignment: (actionRight?.length ?? 0) > 1
+                          ? Alignment.centerLeft
+                          : Alignment.center,
+                      child: DgLogo(),
                     ),
                   )
                 else if (title != null || subtitle != null)
@@ -83,7 +83,14 @@ class NextAppBar extends StatelessWidget implements PreferredSizeWidget {
                   )
                 else
                   const Spacer(),
-                ?actionRight,
+                if (actionRight != null && actionRight!.isNotEmpty)
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    spacing: NextSpacing.md,
+                    children: actionRight!,
+                  )
+                else
+                  const SizedBox(width: 44, height: 44),
               ],
             ),
           ),

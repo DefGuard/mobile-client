@@ -102,6 +102,23 @@ class Locations extends Table with AutoIncrementingPrimaryKey {
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
+  Future<bool> get isSingleInstance async {
+    final count =
+        await (selectOnly(defguardInstances)
+              ..addColumns([defguardInstances.id.count()]))
+            .map((row) => row.read(defguardInstances.id.count()))
+            .getSingle();
+    return count == 1;
+  }
+
+  Stream<bool> watchIsSingleInstance() {
+    return (selectOnly(defguardInstances)
+          ..addColumns([defguardInstances.id.count()]))
+        .map((row) => row.read(defguardInstances.id.count()))
+        .watchSingle()
+        .map((count) => count == 1);
+  }
+
   @override
   int get schemaVersion => 4;
 

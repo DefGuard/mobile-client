@@ -1,13 +1,16 @@
 import 'package:collection/collection.dart';
 import 'package:drift/drift.dart' as drift;
 import 'package:flutter/material.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mobile/data/db/database.dart';
 import 'package:mobile/open/riverpod/biometrics_state.dart';
 import 'package:mobile/open/riverpod/plugin/plugin.dart';
 import 'package:mobile/open/screens/instance/services/tunnel_service.dart';
+import 'package:mobile/open/widgets/next/icons/next_icon.dart';
 import 'package:mobile/open/widgets/next/next_app_bar.dart';
 import 'package:mobile/open/widgets/next/next_location_card.dart';
+import 'package:mobile/open/widgets/next/next_menu.dart';
 import 'package:mobile/plugin.dart';
 import 'package:mobile/router/routes.dart';
 import 'package:mobile/theme/next/color.dart';
@@ -17,6 +20,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../logging.dart';
 import '../../services/snackbar_service.dart';
+import '../../widgets/next/next_icon_button.dart';
 
 part 'next_instance_screen.g.dart';
 
@@ -55,6 +59,11 @@ Stream<_ScreenData?> _nextScreenData(Ref ref, String id) {
   });
 }
 
+@riverpod
+Stream<bool> isSingleInstance(Ref ref) {
+  return ref.watch(databaseProvider).watchIsSingleInstance();
+}
+
 class NextInstanceScreen extends HookConsumerWidget {
   final String id;
 
@@ -62,19 +71,78 @@ class NextInstanceScreen extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final actionsController = useOverlayPortalController();
+    final actionsLayerLink = useMemoized(() => LayerLink());
     final screenDataAsync = ref.watch(_nextScreenDataProvider(id));
     final activeTunnel = ref.watch(pluginActiveTunnelStateProvider);
     final wireguardPlugin = ref.watch(wireguardPluginProvider);
     final biometricStatus = ref.watch(biometricsCapabilityProvider);
+    final isSingleAsync = ref.watch(isSingleInstanceProvider);
 
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: NextAppBar(
-        title: screenDataAsync.maybeWhen(
-          data: (data) => data?.instance.name ?? "Instance",
-          orElse: () => "...",
-        ),
-        subtitle: "Instance",
+        showLogo: isSingleAsync.value == true,
+        title: isSingleAsync.value == false
+            ? screenDataAsync.maybeWhen(
+                data: (data) => data?.instance.name ?? "Instance",
+                orElse: () => "...",
+              )
+            : null,
+        subtitle: isSingleAsync.value == false ? "Instance" : null,
+        actionLeft: isSingleAsync.value == false
+            ? NextIconButton(
+                icon: "arrow_big",
+                direction: NextIconDirection.left,
+                onTap: () => const InstancesListScreenRoute().go(context),
+              )
+            : NextIconButton(icon: "hamburger", onTap: () {}),
+        actionRight: [
+          if (isSingleAsync.value == true)
+            NextIconButton(
+              icon: "plus",
+              onTap: () {
+                const AddInstanceScreenRoute().push(context);
+              },
+            ),
+          OverlayPortal(
+            controller: actionsController,
+            overlayChildBuilder: (context) {
+              return NextMenu(
+                items: [
+                  NextMenuItem(
+                    icon: "disconnect_all",
+                    text: "Disconnect all locations",
+                    onTap: () {},
+                  ),
+                  NextMenuItem(
+                    text: "Refresh configuration",
+                    icon: "refresh",
+                    onTap: () {
+                      ref.invalidate(_nextScreenDataProvider(id));
+                    },
+                  ),
+                  NextMenuItem(
+                    icon: "delete",
+                    text: "Delete Instance",
+                    onTap: () {},
+                  ),
+                ],
+                controller: actionsController,
+                link: actionsLayerLink,
+                targetAnchor: Alignment.bottomRight,
+                followerAnchor: Alignment.topRight,
+              );
+            },
+            child: CompositedTransformTarget(
+              link: actionsLayerLink,
+              child: NextIconButton(
+                icon: "menu",
+                onTap: actionsController.toggle,
+              ),
+            ),
+          ),
+        ],
       ),
       body: Container(
         decoration: const BoxDecoration(gradient: NextColor.previewGradient),

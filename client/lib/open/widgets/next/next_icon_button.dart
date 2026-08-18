@@ -7,9 +7,15 @@ import 'next_preview_wrapper.dart';
 
 class NextIconButton extends StatelessWidget {
   final String icon;
+  final NextIconDirection? direction;
   final VoidCallback? onTap;
 
-  const NextIconButton({super.key, required this.icon, this.onTap});
+  const NextIconButton({
+    super.key,
+    required this.icon,
+    this.direction,
+    this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -27,7 +33,12 @@ class NextIconButton extends StatelessWidget {
           borderRadius: borderRadius,
           child: Padding(
             padding: const EdgeInsets.all(12),
-            child: NextIcon(icon, size: 20, color: NextColor.fgWhite100),
+            child: NextIcon(
+              icon,
+              size: 20,
+              color: NextColor.fgWhite100,
+              direction: direction,
+            ),
           ),
         ),
       ),
