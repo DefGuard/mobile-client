@@ -114,14 +114,6 @@ jobs:
       - name: Accept licenses
         run: yes | flutter doctor --android-licenses
 
-      - name: Pre-install Android SDK 37
-        run: |
-          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platforms;android-37"
-          if [ -d "$ANDROID_HOME/platforms/android-37.0" ] && [ ! -d "$ANDROID_HOME/platforms/android-37" ]; then
-            echo "Fixing SDK naming mismatch: linking android-37.0 to android-37"
-            ln -s "$ANDROID_HOME/platforms/android-37.0" "$ANDROID_HOME/platforms/android-37"
-          fi
-
       - name: Clean flutter
         run: flutter clean
 
@@ -189,23 +181,8 @@ jobs:
           channel: stable
           flutter-version: 3.47.0
 
-      - name: Install Android SDK components
-        run: |
-          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "platforms;android-37" "build-tools;37.0.0"
-          if [ -d "$ANDROID_HOME/platforms/android-37.0" ] && [ ! -d "$ANDROID_HOME/platforms/android-37" ]; then
-            echo "Fixing SDK naming mismatch: linking android-37.0 to android-37"
-            ln -s "$ANDROID_HOME/platforms/android-37.0" "$ANDROID_HOME/platforms/android-37"
-          fi
       - name: Accept licenses
         run: yes | flutter doctor --android-licenses
-
-      - name: Pre-install Android SDK 37
-        run: |
-          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platforms;android-37"
-          if [ -d "$ANDROID_HOME/platforms/android-37.0" ] && [ ! -d "$ANDROID_HOME/platforms/android-37" ]; then
-            echo "Fixing SDK naming mismatch: linking android-37.0 to android-37"
-            ln -s "$ANDROID_HOME/platforms/android-37.0" "$ANDROID_HOME/platforms/android-37"
-          fi
 
       - name: Clean flutter
         run: flutter clean
