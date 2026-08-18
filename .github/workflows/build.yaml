@@ -29,7 +29,7 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: stable
-          flutter-version: 3.38.10
+          flutter-version: 3.47.0
 
       - name: Use homebrew ruby
         run: |
@@ -106,7 +106,7 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: stable
-          flutter-version: 3.44
+          flutter-version: 3.47.0
 
       - name: Configure Flutter JDK
         run: flutter config --jdk-dir "$JAVA_HOME"
@@ -179,7 +179,7 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: stable
-          flutter-version: 3.44
+          flutter-version: 3.47.0
 
       - name: Install Android SDK components
         run: |
