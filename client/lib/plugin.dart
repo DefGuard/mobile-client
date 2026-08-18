@@ -1,9 +1,9 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mobile/data/plugin/plugin.dart';
-import 'package:mobile/utils/notifications.dart';
 import 'package:mobile/open/riverpod/plugin/plugin.dart';
 import 'package:mobile/open/widgets/toaster/toast_manager.dart';
+import 'package:mobile/utils/notifications.dart';
 import 'package:wireguard_plugin/wireguard_plugin.dart';
 
 import 'logging.dart';
@@ -13,18 +13,14 @@ final wireguardPluginProvider = Provider<WireguardPlugin>((ref) {
   return plugin;
 });
 
-class PluginEventRouter extends StateNotifier<void> {
-  final Ref ref;
-
-  PluginEventRouter(this.ref) : super(null) {
+class PluginEventRouter extends Notifier<void> {
+  @override
+  void build() {
     final plugin = ref.read(wireguardPluginProvider);
     plugin.startListening(onEvent: handleEvent);
-  }
-
-  @override
-  void dispose() {
-    ref.read(wireguardPluginProvider).stopListening();
-    super.dispose();
+    ref.onDispose(() {
+      ref.read(wireguardPluginProvider).stopListening();
+    });
   }
 
   void handleEvent(String event, Map<String, dynamic>? data) {
@@ -67,10 +63,10 @@ class PluginEventRouter extends StateNotifier<void> {
   void notifyMfaSessionExpired() {
     // show system notification
     flutterLocalNotificationsPlugin.show(
-      0,
-      'Connection Lost',
-      'VPN gateway unreachable, MFA session expired. Reconnect to continue.',
-      const NotificationDetails(
+      id: 0,
+      title: 'Connection Lost',
+      body: 'VPN gateway unreachable, MFA session expired. Reconnect to continue.',
+      notificationDetails: const NotificationDetails(
         android: AndroidNotificationDetails(
           'defguard_channel',
           'DefGuard',
@@ -92,7 +88,6 @@ class PluginEventRouter extends StateNotifier<void> {
   }
 }
 
-final pluginEventRouterProvider =
-    StateNotifierProvider<PluginEventRouter, void>(
-      (ref) => PluginEventRouter(ref),
-    );
+final pluginEventRouterProvider = NotifierProvider<PluginEventRouter, void>(
+  PluginEventRouter.new,
+);

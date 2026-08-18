@@ -61,7 +61,7 @@ class ProcessQrScreen extends HookConsumerWidget {
         } else {
           await WidgetsBinding.instance.endOfFrame;
           if (context.mounted) {
-            HomeScreenRoute().go(context);
+            InstancesListScreenRoute().go(context);
           }
         }
         break;

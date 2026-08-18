@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:collection/collection.dart';
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:drift/drift.dart' as drift;
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
@@ -6,19 +9,19 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mobile/data/db/database.dart';
 import 'package:mobile/data/proxy/enrollment.dart';
 import 'package:mobile/open/screens/add_instance/generate_wireguard.dart';
-import 'package:mobile/open/widgets/buttons/dg_button.dart';
-import 'package:mobile/open/widgets/dg_single_child_scroll_view.dart';
-import 'package:mobile/open/widgets/dg_text_form_field.dart';
+import 'package:mobile/open/widgets/next/icons/next_icon.dart';
+import 'package:mobile/open/widgets/next/next_app_bar.dart';
+import 'package:mobile/open/widgets/next/next_button.dart';
+import 'package:mobile/open/widgets/next/next_icon_button.dart';
+import 'package:mobile/open/widgets/next/next_text_form_field.dart';
 import 'package:mobile/router/routes.dart';
-import 'package:mobile/theme/spacing.dart';
-import 'package:mobile/utils/screen_padding.dart';
-import 'dart:io';
-import 'package:device_info_plus/device_info_plus.dart';
+import 'package:mobile/theme/next/color.dart';
+import 'package:mobile/theme/next/spacing.dart';
+import 'package:mobile/theme/next/text.dart';
 
 import '../../../../logging.dart';
 import '../../../api.dart';
 import '../../../services/snackbar_service.dart';
-import '../../../widgets/navigation/dg_scaffold.dart';
 
 class NameDeviceScreenData {
   final EnrollmentStartResponse startResponse;
@@ -113,87 +116,113 @@ class NameDeviceScreen extends HookConsumerWidget {
       return null;
     }, const []);
 
-    return DgScaffold(
-      title: "Add Instance",
-      child: DgSingleChildScrollView(
-        padding: screenPadding(
-          top: DgSpacing.m,
-          bottom: DgSpacing.m,
-          horizontal: DgSpacing.s,
-          context: context,
+    return Scaffold(
+      extendBodyBehindAppBar: true,
+      appBar: NextAppBar(
+        showLogo: false,
+        actionLeft: NextIconButton(
+          icon: "arrow_big",
+          direction: NextIconDirection.left,
+          onTap: () => Navigator.of(context).pop(),
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.max,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Form(
-              key: formKey,
-              child: Column(
-                mainAxisSize: MainAxisSize.max,
-                mainAxisAlignment: MainAxisAlignment.center,
-                spacing: DgSpacing.m,
-                children: [
-                  DgTextFormField(
-                    controller: nameController,
-                    autovalidateMode: AutovalidateMode.always,
-                    hintText: "Name this device",
-                    validator: (value) {
-                      if (value == null) {
-                        return "Field is required";
-                      }
-                      if (value != null) {
-                        final valueText = value as String;
-                        final matchedName = screenData
-                            .startResponse
-                            .user
-                            .deviceNames
-                            .firstWhereOrNull(
-                              (name) =>
-                                  name.toLowerCase() ==
-                                  valueText.toLowerCase().trim(),
-                            );
-                        if (matchedName != null) {
-                          return "Name is already used";
-                        }
-                      }
-                      return null;
-                    },
+      ),
+      body: Container(
+        decoration: const BoxDecoration(gradient: NextColor.gradientPrimary),
+        child: SafeArea(
+          child: Form(
+            key: formKey,
+            child: CustomScrollView(
+              slivers: [
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+                  sliver: SliverList(
+                    delegate: SliverChildListDelegate([
+                      Text(
+                        "Add Instance",
+                        style: NextText.h4.copyWith(
+                          color: NextColor.fgWhite100,
+                        ),
+                        textAlign: TextAlign.left,
+                      ),
+                      const SizedBox(height: NextSpacing.sm),
+                      Text(
+                        "Name your device to help you quickly identify it in the list.\nChoose something meaningful and easy to recognize.",
+                        style: NextText.bodySm400.copyWith(
+                          color: NextColor.fgWhite60,
+                        ),
+                        textAlign: TextAlign.left,
+                      ),
+                      const SizedBox(height: NextSpacing.xl3),
+                      NextTextFormField(
+                        size: NextTextFormFieldSize.big,
+                        controller: nameController,
+                        label: "Device Name",
+                        required: true,
+                        hintText: "Name this device",
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return "Field is required";
+                          }
+                          final matchedName = screenData
+                              .startResponse
+                              .user
+                              .deviceNames
+                              .firstWhereOrNull(
+                                (name) =>
+                                    name.toLowerCase() ==
+                                    value.toLowerCase().trim(),
+                              );
+                          if (matchedName != null) {
+                            return "Name is already used";
+                          }
+                          return null;
+                        },
+                      ),
+                    ]),
                   ),
-                  DgButton(
-                    variant: DgButtonVariant.primary,
-                    size: DgButtonSize.big,
-                    width: double.infinity,
-                    loading: isLoading.value,
-                    text: "Submit",
-                    onTap: () async {
-                      if (!formKey.currentState!.validate()) {
-                        return;
-                      }
-                      isLoading.value = true;
-                      try {
-                        final instance = await _handleRegistration(
-                          context,
-                          db,
-                          nameController.text.trim(),
-                        );
-                        if (context.mounted) {
-                          BiometrySetupScreenRoute(
-                            id: instance.id.toString(),
-                          ).go(context);
-                        }
-                      } catch (e) {
-                        SnackbarService.showError(
-                          "Something went wrong. Please try again.",
-                        );
-                      } finally {
-                        isLoading.value = false;
-                      }
-                    },
+                ),
+                SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                    child: Align(
+                      alignment: Alignment.bottomCenter,
+                      child: NextButton(
+                        text: "Submit",
+                        style: NextButtonStyle.primary,
+                        size: NextButtonSize.big,
+                        width: double.infinity,
+                        loading: isLoading.value,
+                        onTap: () async {
+                          if (formKey.currentState?.validate() ?? false) {
+                            isLoading.value = true;
+                            try {
+                              final instance = await _handleRegistration(
+                                context,
+                                db,
+                                nameController.text.trim(),
+                              );
+                              if (context.mounted) {
+                                BiometrySetupScreenRoute(
+                                  id: instance.id.toString(),
+                                ).go(context);
+                              }
+                            } catch (e) {
+                              SnackbarService.showError(
+                                "Something went wrong. Please try again.",
+                              );
+                            } finally {
+                              isLoading.value = false;
+                            }
+                          }
+                        },
+                      ),
+                    ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );

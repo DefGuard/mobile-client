@@ -64,7 +64,10 @@ class DgDrawer extends HookConsumerWidget {
       return [
             if (instancesAsync.value != null &&
                 instancesAsync.value!.length > 1)
-              _DrawerItemData(label: "Instances", route: HomeScreenRoute()),
+              _DrawerItemData(
+                label: "Instances",
+                route: InstancesListScreenRoute(),
+              ),
             if (instancesAsync.value != null &&
                 instancesAsync.value!.length == 1)
               _DrawerItemData(

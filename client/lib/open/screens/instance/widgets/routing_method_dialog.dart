@@ -93,7 +93,7 @@ class RoutingMethodDialog extends HookConsumerWidget {
               spacing: DgSpacing.s,
               children: [
                 DgRadioBox(
-                  text: "Predefined Traffic",
+                  text: RoutingMethod.predefined.toUiString(),
                   active: connectionType.value == RoutingMethod.predefined,
                   onTap: () {
                     connectionType.value = RoutingMethod.predefined;
@@ -105,7 +105,7 @@ class RoutingMethodDialog extends HookConsumerWidget {
                 ),
                 DgSeparator(),
                 DgRadioBox(
-                  text: "All Traffic",
+                  text: RoutingMethod.all.toUiString(),
                   active: connectionType.value == RoutingMethod.all,
                   onTap: () {
                     connectionType.value = RoutingMethod.all;

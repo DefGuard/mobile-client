@@ -5,18 +5,15 @@ import 'package:mobile/data/db/database.dart';
 import 'package:mobile/data/proxy/enrollment.dart';
 import 'package:mobile/open/api.dart';
 import 'package:mobile/open/screens/add_instance/screens/name_device_screen.dart';
-import 'package:mobile/open/widgets/buttons/dg_button.dart';
-import 'package:mobile/open/widgets/dg_message_box.dart';
-import 'package:mobile/open/widgets/dg_single_child_scroll_view.dart';
-import 'package:mobile/open/widgets/dg_text_form_field.dart';
-import 'package:mobile/open/widgets/icons/arrow_single.dart';
-import 'package:mobile/open/widgets/icons/asset_icons_simple.dart';
-import 'package:mobile/open/widgets/icons/icon_rotation.dart';
-import 'package:mobile/open/widgets/navigation/dg_scaffold.dart';
+import 'package:mobile/open/widgets/next/icons/next_icon.dart';
+import 'package:mobile/open/widgets/next/next_app_bar.dart';
+import 'package:mobile/open/widgets/next/next_button.dart';
+import 'package:mobile/open/widgets/next/next_icon_button.dart';
+import 'package:mobile/open/widgets/next/next_text_form_field.dart';
 import 'package:mobile/router/routes.dart';
-import 'package:mobile/theme/spacing.dart';
-import 'package:mobile/theme/text.dart';
-import 'package:mobile/utils/screen_padding.dart';
+import 'package:mobile/theme/next/color.dart';
+import 'package:mobile/theme/next/spacing.dart';
+import 'package:mobile/theme/next/text.dart';
 
 import '../../../services/snackbar_service.dart';
 
@@ -25,29 +22,127 @@ class AddInstanceFormScreen extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return DgScaffold(
-      title: "Add Instance",
-      child: DgSingleChildScrollView(
-        padding: screenPadding(
-          top: DgSpacing.m,
-          bottom: DgSpacing.m,
-          horizontal: DgSpacing.s,
-          context: context,
+    return Scaffold(
+      extendBodyBehindAppBar: true,
+      appBar: NextAppBar(
+        showLogo: false,
+        actionLeft: NextIconButton(
+          icon: "arrow_big",
+          direction: NextIconDirection.left,
+          onTap: () => Navigator.of(context).pop(),
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.max,
-          children: [
-            SizedBox(height: DgSpacing.xl),
-            Text(
-              "Please, enter instance URL and token",
-              style: DgText.body1,
-              textAlign: TextAlign.center,
+      ),
+      body: Container(
+        decoration: const BoxDecoration(gradient: NextColor.gradientPrimary),
+        child: const SafeArea(child: _AddInstanceFormContent()),
+      ),
+    );
+  }
+}
+
+class _AddInstanceFormContent extends HookConsumerWidget {
+  const _AddInstanceFormContent();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final db = ref.read(databaseProvider);
+    final formKey = useMemoized(() => GlobalKey<FormState>());
+    final urlController = useTextEditingController();
+    final tokenController = useTextEditingController();
+    final isLoading = useState(false);
+
+    String? validateUrl(String? value) {
+      if (value == null || value.trim().isEmpty) {
+        return "This field is required";
+      }
+      if (!_isValidUri(value)) {
+        return "Enter valid URL";
+      }
+      return null;
+    }
+
+    return Form(
+      key: formKey,
+      child: CustomScrollView(
+        slivers: [
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+            sliver: SliverList(
+              delegate: SliverChildListDelegate([
+                Text(
+                  "Add Instance Manually",
+                  style: NextText.h4.copyWith(color: NextColor.fgWhite100),
+                  textAlign: TextAlign.left,
+                ),
+                const SizedBox(height: NextSpacing.sm),
+                Text(
+                  "Enter the token and URL provided by your system administrator. These details are required to securely connect your system and complete the setup.",
+                  style: NextText.bodySm400.copyWith(
+                    color: NextColor.fgWhite60,
+                  ),
+                  textAlign: TextAlign.left,
+                ),
+                const SizedBox(height: NextSpacing.xl3),
+                NextTextFormField(
+                  size: .big,
+                  controller: tokenController,
+                  label: "Token",
+                  required: true,
+                  hintText: "Enrollment token",
+                  validator: (v) => v == null || v.trim().isEmpty
+                      ? 'Field is required'
+                      : null,
+                ),
+                const SizedBox(height: NextSpacing.xl),
+                NextTextFormField(
+                  size: .big,
+                  controller: urlController,
+                  label: "URL",
+                  required: true,
+                  hintText: "Instance URL",
+                  keyboardType: TextInputType.url,
+                  validator: validateUrl,
+                ),
+              ]),
             ),
-            SizedBox(height: DgSpacing.m),
-            _AddInstanceForm(),
-            SizedBox(height: DgSpacing.m),
-          ],
-        ),
+          ),
+          SliverFillRemaining(
+            hasScrollBody: false,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+              child: Align(
+                alignment: Alignment.bottomCenter,
+                child: NextButton(
+                  text: "Continue",
+                  style: NextButtonStyle.primary,
+                  size: NextButtonSize.big,
+                  width: double.infinity,
+                  loading: isLoading.value,
+                  onTap: () async {
+                    if (formKey.currentState?.validate() ?? false) {
+                      isLoading.value = true;
+                      try {
+                        await _handleSubmit(
+                          context,
+                          db,
+                          urlController.text.trim(),
+                          tokenController.text.trim(),
+                        );
+                      } catch (e) {
+                        print("Submit Error: $e");
+                        SnackbarService.showError(
+                          "Device registration failed! Error $e",
+                        );
+                      } finally {
+                        isLoading.value = false;
+                      }
+                    }
+                  },
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -85,108 +180,5 @@ Future<void> _handleSubmit(
   );
   if (context.mounted) {
     NameDeviceScreenRoute(routeData).push(context);
-  }
-}
-
-class _AddInstanceForm extends HookConsumerWidget {
-  const _AddInstanceForm();
-
-  String? _validateUrl(String? value) {
-    if (value == null || value.trim().isEmpty) {
-      return "This field is required";
-    }
-    if (!_isValidUri(value)) {
-      return "Enter valid URL";
-    }
-    return null;
-  }
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final db = ref.read(databaseProvider);
-    final formKey = useMemoized(() => GlobalKey<FormState>());
-    final urlController = useTextEditingController();
-    final tokenController = useTextEditingController();
-    final isLoading = useState(false);
-
-    return (Form(
-      key: formKey,
-      child: Column(
-        spacing: DgSpacing.m,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          DgMessageBox(
-            width: double.infinity,
-            text: "Please continue by entering a received URL and token below.",
-          ),
-          Column(
-            spacing: DgSpacing.l,
-            children: [
-              DgTextFormField(
-                controller: urlController,
-                required: true,
-                hintText: "URL",
-                keyboardType: TextInputType.url,
-                validator: (value) => _validateUrl(value),
-              ),
-              // Token Field
-              DgTextFormField(
-                controller: tokenController,
-                hintText: 'Token',
-                required: true,
-                validator: (v) =>
-                    v == null || v.trim().isEmpty ? 'Field is required' : null,
-              ),
-            ],
-          ),
-          Column(
-            spacing: DgSpacing.m,
-            children: [
-              DgButton(
-                text: "Add Instance",
-                variant: DgButtonVariant.primary,
-                size: DgButtonSize.big,
-                width: double.infinity,
-                icon: DgIconPlus(size: 32),
-                loading: isLoading.value,
-                onTap: () async {
-                  if (formKey.currentState?.validate() ?? false) {
-                    isLoading.value = true;
-                    try {
-                      await _handleSubmit(
-                        context,
-                        db,
-                        urlController.text.trim(),
-                        tokenController.text.trim(),
-                      );
-                    } catch (e) {
-                      print("Submit Error: $e");
-                      SnackbarService.showError(
-                        "Device registration failed! Error $e",
-                      );
-                    } finally {
-                      isLoading.value = false;
-                    }
-                  }
-                },
-              ),
-              DgButton(
-                text: "Cancel",
-                width: double.infinity,
-                variant: DgButtonVariant.secondary,
-                size: DgButtonSize.big,
-                icon: DgIconArrowSingle(
-                  direction: DgIconDirection.left,
-                  size: 36,
-                ),
-                onTap: () {
-                  Navigator.of(context).pop();
-                },
-              ),
-            ],
-          ),
-        ],
-      ),
-    ));
   }
 }

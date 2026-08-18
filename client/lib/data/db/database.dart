@@ -1,10 +1,10 @@
 import "package:drift/drift.dart";
 import "package:drift_flutter/drift_flutter.dart";
-import "package:flutter_riverpod/flutter_riverpod.dart";
 import "package:mobile/data/db/database.steps.dart";
 import "package:mobile/data/db/enums.dart";
 import "package:path_provider/path_provider.dart";
-import "package:riverpod_annotation/riverpod_annotation.dart";
+
+export 'database_provider.dart';
 
 part 'database.g.dart';
 
@@ -102,6 +102,23 @@ class Locations extends Table with AutoIncrementingPrimaryKey {
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
+  Future<bool> get isSingleInstance async {
+    final count =
+        await (selectOnly(defguardInstances)
+              ..addColumns([defguardInstances.id.count()]))
+            .map((row) => row.read(defguardInstances.id.count()))
+            .getSingle();
+    return count == 1;
+  }
+
+  Stream<bool> watchIsSingleInstance() {
+    return (selectOnly(defguardInstances)
+          ..addColumns([defguardInstances.id.count()]))
+        .map((row) => row.read(defguardInstances.id.count()))
+        .watchSingle()
+        .map((count) => count == 1);
+  }
+
   @override
   int get schemaVersion => 4;
 
@@ -154,12 +171,7 @@ class AppDatabase extends _$AppDatabase {
   }
 }
 
-@Riverpod(keepAlive: true)
-AppDatabase database(Ref ref) {
-  final db = AppDatabase();
-  ref.onDispose(() => db.close());
-  return db;
-}
+// database provider moved to database_provider.dart
 
 extension DefguardInstanceLogName on DefguardInstance {
   String get logName => '$name ($id)';

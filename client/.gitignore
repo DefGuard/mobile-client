@@ -12,6 +12,8 @@
 .swiftpm/
 .gradle
 migrate_working_dir/
+.artifacts
+docs
 
 # IntelliJ related
 *.iml
@@ -51,3 +53,5 @@ app.*.map.json
 
 local.properties
 ios/VPNExtension/BoringTun
+# Widget Preview related
+.widget_preview/

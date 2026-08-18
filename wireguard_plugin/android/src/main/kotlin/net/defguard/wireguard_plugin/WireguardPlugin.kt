@@ -1,5 +1,6 @@
 package net.defguard.wireguard_plugin
 
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
@@ -30,6 +31,7 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonNamingStrategy
 import java.util.Timer
 import java.util.TimerTask
+import kotlin.time.Duration.Companion.milliseconds
 
 @OptIn(ExperimentalSerializationApi::class)
 val json = Json {
@@ -57,6 +59,7 @@ class WireguardPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
         @JvmStatic  
         private var activeTunnelData: ActiveTunnelData? = null
         @JvmStatic
+        @SuppressLint("StaticFieldLeak")
         private var backend: GoBackend? = null
         @JvmStatic
         private var futureBackend: CompletableDeferred<GoBackend>? = null
@@ -106,7 +109,7 @@ class WireguardPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
                 Globals.pendingRecoveryEvent?.let { tunnelData ->
                     Log.i(LOG_TAG, "Sending pending recovery event for active tunnel")
                     scope.launch(Dispatchers.Main) {
-                        delay(50) // Small delay to ensure event sink is ready
+                        delay(50.milliseconds) // Small delay to ensure event sink is ready
                         emitEvent(WireguardPluginEvent.TUNNEL_UP, json.encodeToString(tunnelData))
                         Globals.pendingRecoveryEvent = null // Clear after sending
                     }
@@ -207,7 +210,7 @@ class WireguardPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
 
     private fun createBackend(): GoBackend {
         if (Globals.backend == null) {
-            Globals.backend = GoBackend(context);
+            Globals.backend = GoBackend(context.applicationContext);
         }
         return Globals.backend as GoBackend;
     }
@@ -350,7 +353,7 @@ class WireguardPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
         
         // Start periodic health checks
         Globals.healthCheckTimer = Timer("HealthCheckTimer", true)
-        Globals.healthCheckTimer?.scheduleAtFixedRate(object : TimerTask() {
+        Globals.healthCheckTimer?.schedule(object : TimerTask() {
             override fun run() {
                 performHealthCheck()
             }
@@ -375,9 +378,9 @@ class WireguardPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
                 // Try to get tunnel stats from the backend
                 scope.launch(Dispatchers.IO) {
                     val stats = futureBackend.await().getStatistics(tunnel)
-                    stats?.let { tunnelStats ->
+                    stats.let { tunnelStats ->
                         val currentDownloadBytes = tunnelStats.totalRx()
-                        
+
                         // Check if there's been any data transfer since last check
                         if (currentDownloadBytes > Globals.lastDownloadBytes) {
                             Globals.lastDownloadBytes = currentDownloadBytes

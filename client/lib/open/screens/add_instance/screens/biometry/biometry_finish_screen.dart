@@ -44,7 +44,7 @@ class BiometryFinishScreen extends StatelessWidget {
               size: DgButtonSize.big,
               variant: DgButtonVariant.primary,
               onTap: () {
-                HomeScreenRoute().go(context);
+                InstancesListScreenRoute().go(context);
               },
             ),
           ],
