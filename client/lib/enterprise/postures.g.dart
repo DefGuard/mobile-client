@@ -159,6 +159,7 @@ PostureConnectRequest _$PostureConnectRequestFromJson(
         'device_posture_data',
         (v) => DevicePostureData.fromJson(v as Map<String, dynamic>),
       ),
+      token: $checkedConvert('token', (v) => v as String),
     );
     return val;
   },
@@ -172,6 +173,7 @@ const _$PostureConnectRequestFieldMap = <String, String>{
   'locationId': 'location_id',
   'pubkey': 'pubkey',
   'devicePostureData': 'device_posture_data',
+  'token': 'token',
 };
 
 Map<String, dynamic> _$PostureConnectRequestToJson(
@@ -180,6 +182,7 @@ Map<String, dynamic> _$PostureConnectRequestToJson(
   'location_id': instance.locationId,
   'pubkey': instance.pubkey,
   'device_posture_data': instance.devicePostureData,
+  'token': instance.token,
 };
 
 PostureConnectResponse _$PostureConnectResponseFromJson(

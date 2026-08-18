@@ -106,7 +106,10 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: stable
-          flutter-version: 3.38.10
+          flutter-version: 3.44
+
+      - name: Configure Flutter JDK
+        run: flutter config --jdk-dir "$JAVA_HOME"
 
       - name: Accept licenses
         run: yes | flutter doctor --android-licenses
