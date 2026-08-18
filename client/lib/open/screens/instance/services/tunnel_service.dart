@@ -1,20 +1,20 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:mobile/data/db/database.dart';
+import 'package:mobile/data/plugin/plugin.dart';
 import 'package:mobile/data/proxy/mfa.dart';
 import 'package:mobile/enterprise/postures.dart';
 import 'package:mobile/enterprise/screens/mfa/openid_mfa_screen.dart';
 import 'package:mobile/open/api.dart';
-import 'package:mobile/data/plugin/plugin.dart';
 import 'package:mobile/open/riverpod/biometrics_state.dart';
-import 'package:mobile/open/screens/mfa/mfa_code_screen.dart';
 import 'package:mobile/open/screens/instance/widgets/mfa_method_dialog.dart';
 import 'package:mobile/open/screens/instance/widgets/routing_method_dialog.dart';
+import 'package:mobile/open/screens/mfa/mfa_code_screen.dart';
 import 'package:mobile/open/widgets/dg_snackbar.dart';
 import 'package:mobile/theme/color.dart';
 import 'package:mobile/utils/secure_storage.dart';
-import 'dart:convert';
 
 import '../../../../data/db/enums.dart';
 import '../../../../logging.dart';
@@ -125,6 +125,7 @@ class TunnelService {
         navigator: navigator,
         proxyUrl: instance.proxyUrl,
         payload: payload,
+        pollingToken: instance.poolingToken,
       );
       if (presharedKey == null) {
         return;
@@ -149,6 +150,7 @@ class TunnelService {
     required NavigatorState navigator,
     required String proxyUrl,
     required PluginConnectPayload payload,
+    required String pollingToken,
   }) async {
     final messenger = ScaffoldMessenger.of(navigator.context);
     try {
@@ -156,6 +158,7 @@ class TunnelService {
         proxyUrl,
         payload.devicePublicKey,
         payload.networkId,
+        pollingToken,
       );
     } on PostureCheckException catch (e) {
       talker.error('Posture check failed', e);
@@ -351,12 +354,14 @@ class TunnelService {
     String url,
     String pubkey,
     int networkId,
+    String poolingToken,
   ) async {
     talker.debug('Starting posture check for networkId: $networkId');
     final request = PostureConnectRequest(
       locationId: networkId,
       pubkey: pubkey,
       devicePostureData: await getPosture(),
+      token: poolingToken,
     );
 
     final response = await proxyApi.postureConnect(Uri.parse(url), request);
