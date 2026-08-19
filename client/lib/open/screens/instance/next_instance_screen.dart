@@ -9,6 +9,7 @@ import 'package:mobile/open/riverpod/plugin/plugin.dart';
 import 'package:mobile/open/screens/instance/services/tunnel_service.dart';
 import 'package:mobile/open/widgets/next/icons/next_icon.dart';
 import 'package:mobile/open/widgets/next/next_app_bar.dart';
+import 'package:mobile/open/widgets/next/next_drawer.dart';
 import 'package:mobile/open/widgets/next/next_location_card.dart';
 import 'package:mobile/open/widgets/next/next_menu.dart';
 import 'package:mobile/plugin.dart';
@@ -80,6 +81,7 @@ class NextInstanceScreen extends HookConsumerWidget {
     final isSingleAsync = ref.watch(isSingleInstanceProvider);
 
     return Scaffold(
+      drawer: const NextDrawer(),
       extendBodyBehindAppBar: true,
       appBar: NextAppBar(
         showLogo: isSingleAsync.value == true,
@@ -96,7 +98,12 @@ class NextInstanceScreen extends HookConsumerWidget {
                 direction: NextIconDirection.left,
                 onTap: () => const InstancesListScreenRoute().go(context),
               )
-            : NextIconButton(icon: "hamburger", onTap: () {}),
+            : Builder(
+                builder: (context) => NextIconButton(
+                  icon: "hamburger",
+                  onTap: () => Scaffold.of(context).openDrawer(),
+                ),
+              ),
         actionRight: [
           if (isSingleAsync.value == true)
             NextIconButton(

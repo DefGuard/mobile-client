@@ -8,6 +8,7 @@ import 'package:mobile/open/screens/add_instance/screens/name_device_screen.dart
 import 'package:mobile/open/widgets/next/icons/next_icon.dart';
 import 'package:mobile/open/widgets/next/next_app_bar.dart';
 import 'package:mobile/open/widgets/next/next_button.dart';
+import 'package:mobile/open/widgets/next/next_drawer.dart';
 import 'package:mobile/open/widgets/next/next_icon_button.dart';
 import 'package:mobile/open/widgets/next/next_text_form_field.dart';
 import 'package:mobile/router/routes.dart';
@@ -23,6 +24,7 @@ class AddInstanceFormScreen extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
+      drawer: const NextDrawer(),
       extendBodyBehindAppBar: true,
       appBar: NextAppBar(
         showLogo: false,
