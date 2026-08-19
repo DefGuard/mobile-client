@@ -6,6 +6,7 @@ import 'package:mobile/open/screens/scan_qr_screen.dart';
 import 'package:mobile/open/widgets/next/icons/next_icon.dart';
 import 'package:mobile/open/widgets/next/next_app_bar.dart';
 import 'package:mobile/open/widgets/next/next_button.dart';
+import 'package:mobile/open/widgets/next/next_drawer.dart';
 import 'package:mobile/open/widgets/next/next_icon_button.dart';
 import 'package:mobile/open/widgets/rive_asset_animation.dart';
 import 'package:mobile/router/routes.dart';
@@ -27,6 +28,7 @@ class AddInstanceScreen extends HookConsumerWidget {
     final canPop = Navigator.of(context).canPop();
 
     return Scaffold(
+      drawer: const NextDrawer(),
       appBar: NextAppBar(
         showLogo: true,
         actionLeft: canPop

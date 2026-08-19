@@ -12,6 +12,7 @@ import 'package:mobile/open/screens/add_instance/generate_wireguard.dart';
 import 'package:mobile/open/widgets/next/icons/next_icon.dart';
 import 'package:mobile/open/widgets/next/next_app_bar.dart';
 import 'package:mobile/open/widgets/next/next_button.dart';
+import 'package:mobile/open/widgets/next/next_drawer.dart';
 import 'package:mobile/open/widgets/next/next_icon_button.dart';
 import 'package:mobile/open/widgets/next/next_text_form_field.dart';
 import 'package:mobile/router/routes.dart';
@@ -117,6 +118,7 @@ class NameDeviceScreen extends HookConsumerWidget {
     }, const []);
 
     return Scaffold(
+      drawer: const NextDrawer(),
       extendBodyBehindAppBar: true,
       appBar: NextAppBar(
         showLogo: false,

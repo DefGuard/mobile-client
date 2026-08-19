@@ -3,6 +3,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mobile/data/db/database.dart';
 import 'package:mobile/open/riverpod/plugin/plugin.dart';
 import 'package:mobile/open/widgets/next/next_app_bar.dart';
+import 'package:mobile/open/widgets/next/next_drawer.dart';
 import 'package:mobile/open/widgets/next/next_icon_button.dart';
 import 'package:mobile/open/widgets/next/next_instance_card.dart';
 import 'package:mobile/router/routes.dart';
@@ -68,9 +69,15 @@ class NextInstancesListScreen extends HookConsumerWidget {
     final instancesAsync = ref.watch(_nextInstancesListDataProvider);
 
     return Scaffold(
+      drawer: const NextDrawer(),
       extendBodyBehindAppBar: true,
       appBar: NextAppBar(
-        actionLeft: NextIconButton(icon: "hamburger", onTap: () {}),
+        actionLeft: Builder(
+          builder: (context) => NextIconButton(
+            icon: "hamburger",
+            onTap: () => Scaffold.of(context).openDrawer(),
+          ),
+        ),
         actionRight: [
           NextIconButton(
             icon: "plus",
