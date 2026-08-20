@@ -87,6 +87,16 @@ class _AddInstanceFormContent extends HookConsumerWidget {
                 const SizedBox(height: NextSpacing.xl3),
                 NextTextFormField(
                   size: .big,
+                  controller: urlController,
+                  label: "URL",
+                  required: true,
+                  hintText: "Instance URL",
+                  keyboardType: TextInputType.url,
+                  validator: validateUrl,
+                ),
+                const SizedBox(height: NextSpacing.xl),
+                NextTextFormField(
+                  size: .big,
                   controller: tokenController,
                   label: "Token",
                   required: true,
@@ -94,16 +104,6 @@ class _AddInstanceFormContent extends HookConsumerWidget {
                   validator: (v) => v == null || v.trim().isEmpty
                       ? 'Field is required'
                       : null,
-                ),
-                const SizedBox(height: NextSpacing.xl),
-                NextTextFormField(
-                  size: .big,
-                  controller: urlController,
-                  label: "URL",
-                  required: true,
-                  hintText: "Instance URL",
-                  keyboardType: TextInputType.url,
-                  validator: validateUrl,
                 ),
               ]),
             ),
@@ -130,10 +130,11 @@ class _AddInstanceFormContent extends HookConsumerWidget {
                           urlController.text.trim(),
                           tokenController.text.trim(),
                         );
-                      } catch (e) {
-                        print("Submit Error: $e");
+                      } catch (e, st) {
                         SnackbarService.showError(
                           "Device registration failed! Error $e",
+                          error: e,
+                          stackTrace: st,
                         );
                       } finally {
                         isLoading.value = false;

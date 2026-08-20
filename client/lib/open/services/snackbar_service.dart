@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/open/widgets/dg_snackbar.dart';
 
+import '../../logging.dart';
 import '../../theme/color.dart';
 
 class SnackbarService {
@@ -35,9 +36,13 @@ class SnackbarService {
 
   static void showError(
     String message, {
+    String? logMessage,
+    Object? error,
+    StackTrace? stackTrace,
     Duration duration = const Duration(seconds: 6),
     bool onlyDismiss = false,
   }) {
+    talker.error(logMessage ?? message, error, stackTrace);
     messengerKey.currentState?.showSnackBar(
       dgSnackBar(
         text: message,

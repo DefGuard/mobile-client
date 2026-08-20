@@ -4,9 +4,9 @@ import 'package:mobile/enterprise/screens/mfa/openid_mfa_screen.dart';
 import 'package:mobile/enterprise/screens/mfa/openid_mfa_waiting_screen.dart';
 import 'package:mobile/open/screens/add_instance/add_instance_screen.dart';
 import 'package:mobile/open/screens/add_instance/screens/add_instance_form.dart';
-import 'package:mobile/open/screens/add_instance/screens/biometry/biometry_finish_screen.dart';
-import 'package:mobile/open/screens/add_instance/screens/biometry/biometry_setup_failed_screen.dart';
-import 'package:mobile/open/screens/add_instance/screens/biometry/biometry_setup_screen.dart';
+import 'package:mobile/open/screens/add_instance/screens/biometry/next_biometry_finish_screen.dart';
+import 'package:mobile/open/screens/add_instance/screens/biometry/next_biometry_setup_failed_screen.dart';
+import 'package:mobile/open/screens/add_instance/screens/biometry/next_biometry_setup_screen.dart';
 import 'package:mobile/open/screens/add_instance/screens/name_device_screen.dart';
 import 'package:mobile/open/screens/instances_list/next_instances_list_screen.dart';
 import 'package:mobile/open/screens/mfa/mfa_code_screen.dart';
@@ -175,7 +175,7 @@ class BiometrySetupScreenRoute extends GoRouteData
 
   @override
   Widget build(BuildContext context, GoRouterState state) {
-    return BiometrySetupScreen(instanceId: int.parse(id));
+    return NextBiometrySetupScreen(instanceId: int.parse(id));
   }
 }
 
@@ -187,7 +187,7 @@ class BiometrySetupFailedScreenRoute extends GoRouteData
 
   @override
   Widget build(BuildContext context, GoRouterState state) {
-    return BiometrySetupFailedScreen();
+    return NextBiometrySetupFailedScreen();
   }
 }
 
@@ -199,6 +199,6 @@ class BiometryFinishScreenRoute extends GoRouteData
 
   @override
   Widget build(BuildContext context, GoRouterState state) {
-    return BiometryFinishScreen();
+    return NextBiometryFinishScreen();
   }
 }

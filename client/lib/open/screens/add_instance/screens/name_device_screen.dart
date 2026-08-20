@@ -209,9 +209,11 @@ class NameDeviceScreen extends HookConsumerWidget {
                                   id: instance.id.toString(),
                                 ).go(context);
                               }
-                            } catch (e) {
+                            } catch (e, st) {
                               SnackbarService.showError(
                                 "Something went wrong. Please try again.",
+                                error: e,
+                                stackTrace: st,
                               );
                             } finally {
                               isLoading.value = false;
