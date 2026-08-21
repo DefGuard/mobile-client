@@ -11,6 +11,7 @@ import 'package:mobile/open/riverpod/plugin/plugin.dart';
 import 'package:mobile/open/screens/instance/services/tunnel_service.dart';
 import 'package:mobile/open/screens/instance/widgets/delete_instance_dialog.dart';
 import 'package:mobile/open/screens/instance/widgets/next_refresh_instance_dialog.dart';
+import 'package:mobile/open/screens/mfa/remote_mfa_qr_screen.dart';
 import 'package:mobile/open/widgets/next/icons/next_icon.dart';
 import 'package:mobile/open/widgets/next/next_app_bar.dart';
 import 'package:mobile/open/widgets/next/next_drawer.dart';
@@ -184,6 +185,8 @@ class NextInstanceScreen extends HookConsumerWidget {
       return null;
     }, [screenDataAsync.value, screenDataAsync.isLoading, isDeleting.value]);
 
+    final instance = screenDataAsync.value?.instance;
+
     return Scaffold(
       drawer: const NextDrawer(),
       extendBodyBehindAppBar: true,
@@ -201,41 +204,60 @@ class NextInstanceScreen extends HookConsumerWidget {
       body: Container(
         decoration: const BoxDecoration(gradient: NextColor.previewGradient),
         child: SafeArea(
-          child: screenDataAsync.when(
-            data: (data) {
-              if (data == null || isDeleting.value) {
-                return const Center(
+          child: Stack(
+            children: [
+              screenDataAsync.when(
+                data: (data) {
+                  if (data == null || isDeleting.value) {
+                    return const Center(
+                      child: CircularProgressIndicator(
+                        color: NextColor.fgWhite100,
+                      ),
+                    );
+                  }
+
+                  Widget content = _LocationList(
+                    data: data,
+                    activeTunnel: activeTunnel,
+                    wireguardPlugin: wireguardPlugin,
+                    biometricStatus: biometricStatus,
+                  );
+
+                  if (data.instance.enterpriseEnabled) {
+                    content = RefreshIndicator(
+                      color: NextColor.bgWhite100,
+                      backgroundColor: NextColor.bgDarkBlue80,
+                      onRefresh: onRefresh,
+                      child: content,
+                    );
+                  }
+
+                  return content;
+                },
+                loading: () => const Center(
                   child: CircularProgressIndicator(color: NextColor.fgWhite100),
-                );
-              }
-
-              Widget content = _LocationList(
-                data: data,
-                activeTunnel: activeTunnel,
-                wireguardPlugin: wireguardPlugin,
-                biometricStatus: biometricStatus,
-              );
-
-              if (data.instance.enterpriseEnabled) {
-                content = RefreshIndicator(
-                  color: NextColor.bgWhite100,
-                  backgroundColor: NextColor.bgDarkBlue80,
-                  onRefresh: onRefresh,
-                  child: content,
-                );
-              }
-
-              return content;
-            },
-            loading: () => const Center(
-              child: CircularProgressIndicator(color: NextColor.fgWhite100),
-            ),
-            error: (err, stack) => Center(
-              child: Text(
-                "Error: $err",
-                style: const TextStyle(color: NextColor.fgWhite100),
+                ),
+                error: (err, stack) => Center(
+                  child: Text(
+                    "Error: $err",
+                    style: const TextStyle(color: NextColor.fgWhite100),
+                  ),
+                ),
               ),
-            ),
+              if (instance != null &&
+                  !isDeleting.value &&
+                  instance.mfaKeysStored &&
+                  biometricStatus.canOpenStorage)
+                Positioned(
+                  right: NextSpacing.xl,
+                  bottom: _QrScanButton.bottomPadding,
+                  child: _QrScanButton(
+                    onTap: () => RemoteMfaQrScreenRoute(
+                      RemoteMfaQrScreenData(instance: instance),
+                    ).push(context),
+                  ),
+                ),
+            ],
           ),
         ),
       ),
@@ -419,7 +441,7 @@ class _LocationList extends StatelessWidget {
         NextSpacing.xl,
         NextSpacing.sm,
         NextSpacing.xl,
-        NextSpacing.xl,
+        _QrScanButton.reservedScrollSpace,
       ),
       children: [
         Padding(
@@ -461,6 +483,38 @@ class _LocationList extends StatelessWidget {
           ),
         ],
       ],
+    );
+  }
+}
+
+class _QrScanButton extends StatelessWidget {
+  static const double size = 52;
+
+  static const double bottomPadding = 6;
+
+  static const double reservedScrollSpace =
+      size + bottomPadding + NextSpacing.md;
+
+  final VoidCallback onTap;
+
+  const _QrScanButton({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: size,
+      height: size,
+      child: Material(
+        color: NextColor.fgWhite100,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(Radius.circular(100)),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          child: const Center(child: NextIcon("qr", color: NextColor.fgAction)),
+        ),
+      ),
     );
   }
 }

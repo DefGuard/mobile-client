@@ -14,6 +14,7 @@ import 'package:mobile/open/screens/instance/widgets/delete_instance_dialog.dart
 import 'package:mobile/open/screens/instance/widgets/mfa_method_dialog.dart';
 import 'package:mobile/open/screens/instance/widgets/refresh_instance_dialog.dart';
 import 'package:mobile/open/screens/instance/widgets/routing_method_dialog.dart';
+import 'package:mobile/open/screens/mfa/remote_mfa_qr_screen.dart';
 import 'package:mobile/open/widgets/buttons/dg_button.dart';
 import 'package:mobile/open/widgets/dg_menu.dart';
 import 'package:mobile/open/widgets/dg_pill.dart';

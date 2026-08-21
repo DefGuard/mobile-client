@@ -98,11 +98,7 @@ class _NextQrOverlayState extends State<NextQrOverlay> {
                 if (widget.loading)
                   const NextCircularProgress(size: 16)
                 else
-                  const NextIcon(
-                    'assets/icons/qr',
-                    size: 24,
-                    color: NextColor.fgWhite100,
-                  ),
+                  const NextIcon('qr', size: 24, color: NextColor.fgWhite100),
                 const SizedBox(height: 16),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 40),
