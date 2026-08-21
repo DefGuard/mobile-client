@@ -105,11 +105,15 @@ class ProcessQrScreen extends HookConsumerWidget {
         if (context.mounted) {
           NameDeviceScreenRoute(routeData).go(context);
         }
-      } catch (e) {
-        talker.error("Enrollment via QR start failed!", e);
+      } catch (e, st) {
         await WidgetsBinding.instance.endOfFrame;
         if (context.mounted) {
-          SnackbarService.showError("Something went wrong. Try again.");
+          SnackbarService.showError(
+            "Something went wrong. Try again.",
+            logMessage: "Enrollment via QR start failed!",
+            error: e,
+            stackTrace: st,
+          );
           unawaited(abortScreen(context));
         }
       }
@@ -161,9 +165,12 @@ class ProcessQrScreen extends HookConsumerWidget {
         );
         talker.info("Successfully authorized instance ${instance.logName}.");
         SnackbarService.show("Desktop client authorized successfully.");
-      } catch (e) {
-        talker.error(e);
-        SnackbarService.showError("Failed to authenticate desktop client.");
+      } catch (e, st) {
+        SnackbarService.showError(
+          "Failed to authenticate desktop client.",
+          error: e,
+          stackTrace: st,
+        );
       } finally {
         await WidgetsBinding.instance.endOfFrame;
         if (context.mounted) {

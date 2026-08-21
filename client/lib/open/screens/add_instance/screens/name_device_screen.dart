@@ -121,6 +121,7 @@ class NameDeviceScreen extends HookConsumerWidget {
       drawer: const NextDrawer(),
       extendBodyBehindAppBar: true,
       appBar: NextAppBar(
+        context: context,
         showLogo: false,
         actionLeft: NextIconButton(
           icon: "arrow_big",
@@ -209,9 +210,11 @@ class NameDeviceScreen extends HookConsumerWidget {
                                   id: instance.id.toString(),
                                 ).go(context);
                               }
-                            } catch (e) {
+                            } catch (e, st) {
                               SnackbarService.showError(
                                 "Something went wrong. Please try again.",
+                                error: e,
+                                stackTrace: st,
                               );
                             } finally {
                               isLoading.value = false;

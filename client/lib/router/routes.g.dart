@@ -19,9 +19,6 @@ List<RouteBase> get $appRoutes => [
   $openIdMfaScreenRoute,
   $openIdMfaWaitingScreenRoute,
   $mfaCodeScreenRoute,
-  $biometrySetupScreenRoute,
-  $biometrySetupFailedScreenRoute,
-  $biometryFinishScreenRoute,
 ];
 
 RouteBase get $processQrScreenRoute => GoRouteData.$route(
@@ -144,6 +141,23 @@ RouteBase get $instanceScreenRoute => GoRouteData.$route(
   path: '/instance/:id',
   hasOverriddenOnExit: false,
   factory: $InstanceScreenRoute._fromState,
+  routes: [
+    GoRouteData.$route(
+      path: 'biometry_setup',
+      hasOverriddenOnExit: false,
+      factory: $BiometrySetupScreenRoute._fromState,
+    ),
+    GoRouteData.$route(
+      path: 'biometry_failed',
+      hasOverriddenOnExit: false,
+      factory: $BiometrySetupFailedScreenRoute._fromState,
+    ),
+    GoRouteData.$route(
+      path: 'biometry_finish',
+      hasOverriddenOnExit: false,
+      factory: $BiometryFinishScreenRoute._fromState,
+    ),
+  ],
 );
 
 mixin $InstanceScreenRoute on GoRouteData {
@@ -155,6 +169,82 @@ mixin $InstanceScreenRoute on GoRouteData {
   @override
   String get location =>
       GoRouteData.$location('/instance/${Uri.encodeComponent(_self.id)}');
+
+  @override
+  void go(BuildContext context) => context.go(location);
+
+  @override
+  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
+
+  @override
+  void pushReplacement(BuildContext context) =>
+      context.pushReplacement(location);
+
+  @override
+  void replace(BuildContext context) => context.replace(location);
+}
+
+mixin $BiometrySetupScreenRoute on GoRouteData {
+  static BiometrySetupScreenRoute _fromState(GoRouterState state) =>
+      BiometrySetupScreenRoute(id: state.pathParameters['id']!);
+
+  BiometrySetupScreenRoute get _self => this as BiometrySetupScreenRoute;
+
+  @override
+  String get location => GoRouteData.$location(
+    '/instance/${Uri.encodeComponent(_self.id)}/biometry_setup',
+  );
+
+  @override
+  void go(BuildContext context) => context.go(location);
+
+  @override
+  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
+
+  @override
+  void pushReplacement(BuildContext context) =>
+      context.pushReplacement(location);
+
+  @override
+  void replace(BuildContext context) => context.replace(location);
+}
+
+mixin $BiometrySetupFailedScreenRoute on GoRouteData {
+  static BiometrySetupFailedScreenRoute _fromState(GoRouterState state) =>
+      BiometrySetupFailedScreenRoute(id: state.pathParameters['id']!);
+
+  BiometrySetupFailedScreenRoute get _self =>
+      this as BiometrySetupFailedScreenRoute;
+
+  @override
+  String get location => GoRouteData.$location(
+    '/instance/${Uri.encodeComponent(_self.id)}/biometry_failed',
+  );
+
+  @override
+  void go(BuildContext context) => context.go(location);
+
+  @override
+  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
+
+  @override
+  void pushReplacement(BuildContext context) =>
+      context.pushReplacement(location);
+
+  @override
+  void replace(BuildContext context) => context.replace(location);
+}
+
+mixin $BiometryFinishScreenRoute on GoRouteData {
+  static BiometryFinishScreenRoute _fromState(GoRouterState state) =>
+      BiometryFinishScreenRoute(id: state.pathParameters['id']!);
+
+  BiometryFinishScreenRoute get _self => this as BiometryFinishScreenRoute;
+
+  @override
+  String get location => GoRouteData.$location(
+    '/instance/${Uri.encodeComponent(_self.id)}/biometry_finish',
+  );
 
   @override
   void go(BuildContext context) => context.go(location);
@@ -373,88 +463,4 @@ mixin $MfaCodeScreenRoute on GoRouteData {
   @override
   void replace(BuildContext context) =>
       context.replace(location, extra: _self.$extra);
-}
-
-RouteBase get $biometrySetupScreenRoute => GoRouteData.$route(
-  path: '/biometry_setup/:id',
-  hasOverriddenOnExit: false,
-  factory: $BiometrySetupScreenRoute._fromState,
-);
-
-mixin $BiometrySetupScreenRoute on GoRouteData {
-  static BiometrySetupScreenRoute _fromState(GoRouterState state) =>
-      BiometrySetupScreenRoute(id: state.pathParameters['id']!);
-
-  BiometrySetupScreenRoute get _self => this as BiometrySetupScreenRoute;
-
-  @override
-  String get location =>
-      GoRouteData.$location('/biometry_setup/${Uri.encodeComponent(_self.id)}');
-
-  @override
-  void go(BuildContext context) => context.go(location);
-
-  @override
-  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
-
-  @override
-  void pushReplacement(BuildContext context) =>
-      context.pushReplacement(location);
-
-  @override
-  void replace(BuildContext context) => context.replace(location);
-}
-
-RouteBase get $biometrySetupFailedScreenRoute => GoRouteData.$route(
-  path: '/biometry_failed',
-  hasOverriddenOnExit: false,
-  factory: $BiometrySetupFailedScreenRoute._fromState,
-);
-
-mixin $BiometrySetupFailedScreenRoute on GoRouteData {
-  static BiometrySetupFailedScreenRoute _fromState(GoRouterState state) =>
-      const BiometrySetupFailedScreenRoute();
-
-  @override
-  String get location => GoRouteData.$location('/biometry_failed');
-
-  @override
-  void go(BuildContext context) => context.go(location);
-
-  @override
-  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
-
-  @override
-  void pushReplacement(BuildContext context) =>
-      context.pushReplacement(location);
-
-  @override
-  void replace(BuildContext context) => context.replace(location);
-}
-
-RouteBase get $biometryFinishScreenRoute => GoRouteData.$route(
-  path: '/biometry_finish',
-  hasOverriddenOnExit: false,
-  factory: $BiometryFinishScreenRoute._fromState,
-);
-
-mixin $BiometryFinishScreenRoute on GoRouteData {
-  static BiometryFinishScreenRoute _fromState(GoRouterState state) =>
-      const BiometryFinishScreenRoute();
-
-  @override
-  String get location => GoRouteData.$location('/biometry_finish');
-
-  @override
-  void go(BuildContext context) => context.go(location);
-
-  @override
-  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
-
-  @override
-  void pushReplacement(BuildContext context) =>
-      context.pushReplacement(location);
-
-  @override
-  void replace(BuildContext context) => context.replace(location);
 }

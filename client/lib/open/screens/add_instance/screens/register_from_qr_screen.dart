@@ -6,7 +6,6 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mobile/data/db/database.dart';
 import 'package:mobile/data/proxy/enrollment.dart';
 import 'package:mobile/data/proxy/qr_register.dart';
-import 'package:mobile/logging.dart';
 import 'package:mobile/open/api.dart';
 import 'package:mobile/open/screens/add_instance/screens/name_device_screen.dart';
 import 'package:mobile/open/widgets/buttons/dg_text_button.dart';
@@ -55,11 +54,14 @@ class RegisterFromQrScreen extends HookConsumerWidget {
           NameDeviceScreenRoute(routeData).push(context);
         }
       });
-    } catch (e) {
-      talker.error("Enrollment via QR start failed!", e);
+    } catch (e, st) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (context.mounted) {
-          SnackbarService.showError("Something went wrong. Try again.");
+          SnackbarService.showError(
+            "Something went wrong. Try again.",
+            error: e,
+            stackTrace: st,
+          );
           AddInstanceScreenRoute().go(context);
         }
       });

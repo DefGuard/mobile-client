@@ -2,13 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mobile/data/db/database.dart';
 import 'package:mobile/logging.dart';
-import 'package:mobile/open/widgets/buttons/dg_button.dart';
-import 'package:mobile/open/widgets/dg_dialog.dart';
-import 'package:mobile/open/widgets/icons/asset_icons_simple.dart';
-import 'package:mobile/theme/text.dart';
+import 'package:mobile/open/services/snackbar_service.dart';
+import 'package:mobile/open/widgets/next/icons/next_icon.dart';
+import 'package:mobile/open/widgets/next/next_button.dart';
+import 'package:mobile/open/widgets/next/next_dialog.dart';
+import 'package:mobile/theme/next/spacing.dart';
 import 'package:mobile/utils/secure_storage.dart';
 
-import '../../../services/snackbar_service.dart';
+import '../../../../theme/next/color.dart';
 
 class DeleteInstanceDialog extends HookConsumerWidget {
   final DefguardInstance instance;
@@ -18,7 +19,7 @@ class DeleteInstanceDialog extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final String warningText =
-        "Are you sure you want to delete this ${instance.name} instance? This action is permanent and cannot be undone. All associated data and configurations will be lost.";
+        "Are you sure you want to delete this instance ${instance.name}. This action can’t be undone and you will be disconnected from all locations from this instance.";
 
     final db = ref.watch(databaseProvider);
 
@@ -32,7 +33,7 @@ class DeleteInstanceDialog extends HookConsumerWidget {
             .delete();
         if (context.mounted) {
           SnackbarService.show("Instance deleted");
-          Navigator.of(context).pop();
+          Navigator.of(context).pop(true);
         }
       } catch (e) {
         talker.error(
@@ -41,64 +42,29 @@ class DeleteInstanceDialog extends HookConsumerWidget {
       }
     }
 
-    return DgDialog(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Center(
-            child: Text(
-              "Delete Instance",
-              style: DgText.sideBar,
-              textAlign: TextAlign.center,
-            ),
-          ),
-          SizedBox(height: 8),
-          Padding(
-            padding: EdgeInsetsGeometry.only(
-              top: 0,
-              left: 20,
-              right: 20,
-              bottom: 20,
-            ),
-            child: Column(
-              children: [
-                Text(
-                  warningText,
-                  style: DgText.copyright,
-                  textAlign: TextAlign.center,
-                ),
-                SizedBox(height: 20),
-                Row(
-                  mainAxisSize: MainAxisSize.max,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    DgButton(
-                      size: DgButtonSize.standard,
-                      variant: DgButtonVariant.secondary,
-                      text: "Cancel",
-                      onTap: () {
-                        Navigator.of(context).pop();
-                      },
-                    ),
-                    Flexible(
-                      fit: FlexFit.loose,
-                      child: DgButton(
-                        text: "Delete Instance",
-                        size: DgButtonSize.standard,
-                        variant: DgButtonVariant.alert,
-                        icon: DgIconX(size: 18),
-                        onTap: () {
-                          deleteInstance(context);
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
+    return NextDialog(
+      onClose: () => Navigator.of(context).pop(),
+      children: [
+        NextIcon("dialog_warning", size: 40, color: NextColor.fgWhite100),
+        const SizedBox(height: NextSpacing.xl2),
+        const NextDialogTitle("Delete instance"),
+        NextDialogDescription(warningText),
+        NextButton(
+          text: "Delete instance",
+          style: NextButtonStyle.critical,
+          size: NextButtonSize.big,
+          width: double.infinity,
+          onTap: () => deleteInstance(context),
+        ),
+        const SizedBox(height: NextSpacing.md),
+        NextButton(
+          text: "Cancel",
+          style: NextButtonStyle.secondary,
+          size: NextButtonSize.big,
+          width: double.infinity,
+          onTap: () => Navigator.of(context).pop(),
+        ),
+      ],
     );
   }
 }

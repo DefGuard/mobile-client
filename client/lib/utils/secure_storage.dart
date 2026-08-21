@@ -2,9 +2,9 @@ import 'dart:convert';
 
 import 'package:ed25519_edwards/ed25519_edwards.dart' as ed;
 import 'package:flutter/services.dart';
-import 'package:mobile/data/proxy/mfa.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:local_auth/local_auth.dart';
+import 'package:mobile/data/proxy/mfa.dart';
 import 'package:mobile/logging.dart';
 
 class UserCanceledAuth implements Exception {
@@ -28,15 +28,16 @@ String getErrorMessageFromBiometricsException(Object e) {
     }
   }
   if (e is PlatformException) {
-    talker.error("Biometrics check failed with PlatformException code: ${e.code}");
+    talker.error(
+      "Biometrics check failed with PlatformException code: ${e.code}",
+    );
     return "Platform error: ${e.message ?? 'Unknown error'}";
   }
   talker.error("Biometrics check failed with unexpected error: $e");
   return "Unknown error";
 }
 
-AndroidOptions _getAndroidOptions() =>
-    const AndroidOptions();
+AndroidOptions _getAndroidOptions() => const AndroidOptions();
 
 FlutterSecureStorage _getStorage() =>
     FlutterSecureStorage(aOptions: _getAndroidOptions());
@@ -84,10 +85,7 @@ Future<SecureInstanceStorage> getBiometricInstanceStorage(
 }) async {
   final message = prompt ?? "Authenticate to connect";
   final auth = LocalAuthentication();
-  if (await auth.authenticate(
-    localizedReason: message,
-    biometricOnly: true,
-  )) {
+  if (await auth.authenticate(localizedReason: message, biometricOnly: true)) {
     final storage = _getStorage();
     final storeRawData = await storage.read(key: storageKey);
     if (storeRawData != null) {

@@ -43,7 +43,10 @@ kotlin {
 
 dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")
-    implementation("com.google.android.gms:play-services-cronet:18.1.1")
+    // NOTE: do NOT declare a Cronet artifact here. The `cronet_http` plugin
+    // (pulled in via `native_dio_adapter`) declares it itself and picks between
+    // `play-services-cronet` and `cronet-embedded` from the
+    // `cronetHttpNoPlay` dart-define. Adding one here fights that choice.
     implementation(files("../../../lib/tunnel.aar"))
 }
 

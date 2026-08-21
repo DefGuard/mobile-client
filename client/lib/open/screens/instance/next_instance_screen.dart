@@ -4,9 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mobile/data/db/database.dart';
+import 'package:mobile/data/plugin/plugin.dart';
+import 'package:mobile/open/api.dart';
 import 'package:mobile/open/riverpod/biometrics_state.dart';
 import 'package:mobile/open/riverpod/plugin/plugin.dart';
 import 'package:mobile/open/screens/instance/services/tunnel_service.dart';
+import 'package:mobile/open/screens/instance/widgets/delete_instance_dialog.dart';
+import 'package:mobile/open/screens/instance/widgets/next_refresh_instance_dialog.dart';
 import 'package:mobile/open/widgets/next/icons/next_icon.dart';
 import 'package:mobile/open/widgets/next/next_app_bar.dart';
 import 'package:mobile/open/widgets/next/next_drawer.dart';
@@ -17,7 +21,9 @@ import 'package:mobile/router/routes.dart';
 import 'package:mobile/theme/next/color.dart';
 import 'package:mobile/theme/next/spacing.dart';
 import 'package:mobile/theme/next/text.dart';
+import 'package:mobile/utils/update_instance.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:wireguard_plugin/wireguard_plugin.dart';
 
 import '../../../logging.dart';
 import '../../services/snackbar_service.dart';
@@ -79,187 +85,147 @@ class NextInstanceScreen extends HookConsumerWidget {
     final wireguardPlugin = ref.watch(wireguardPluginProvider);
     final biometricStatus = ref.watch(biometricsCapabilityProvider);
     final isSingleAsync = ref.watch(isSingleInstanceProvider);
+    final isDeleting = useState(false);
+
+    final onRefresh = useCallback(() async {
+      try {
+        final instance = screenDataAsync.value?.instance;
+        if (instance == null) return;
+        final (responseData, responseStatus, _) = await proxyApi
+            .pollConfiguration(instance.proxyUrl, instance.poolingToken);
+        if (responseData == null) {
+          SnackbarService.showError(
+            "Failed to get new information for instance.",
+          );
+          talker.error(
+            "Failed to pull refresh instance data. Proxy response status: $responseStatus",
+          );
+          return;
+        }
+        await updateInstance(
+          db: ref.read(databaseProvider),
+          instance: instance,
+          configs: responseData.configs,
+          info: responseData.instance,
+          token: responseData.token,
+        );
+        SnackbarService.show("Instance information updated");
+      } catch (e) {
+        SnackbarService.showError(
+          "Failed to get new information for instance.",
+        );
+        talker.error("Failed pull refresh instance data.", e);
+      }
+    }, [screenDataAsync.value, ref]);
+
+    final onDeleteInstance = useCallback(() async {
+      try {
+        final instance = screenDataAsync.value?.instance;
+        if (instance == null) return;
+
+        isDeleting.value = true;
+        final confirmed = await showDialog<bool>(
+          context: context,
+          builder: (context) => DeleteInstanceDialog(instance: instance),
+        );
+
+        if (confirmed == true && context.mounted) {
+          talker.info("Instance deleted, determining next route...");
+          final db = ref.read(databaseProvider);
+          final instances = await db.select(db.defguardInstances).get();
+
+          if (!context.mounted) return;
+
+          if (instances.isEmpty) {
+            talker.info("No instances left, going to Add Instance.");
+            const AddInstanceScreenRoute().go(context);
+          } else if (instances.length == 1) {
+            final nextId = instances.first.id.toString();
+            talker.info("One instance left ($nextId), navigating...");
+            InstanceScreenRoute(id: nextId).go(context);
+          } else {
+            talker.info("${instances.length} instances left, going to list.");
+            const InstancesListScreenRoute().go(context);
+          }
+        } else {
+          isDeleting.value = false;
+        }
+      } catch (e, st) {
+        isDeleting.value = false;
+        talker.error("Error during instance deletion routing", e, st);
+        if (context.mounted) {
+          const InstancesListScreenRoute().go(context);
+        }
+      }
+    }, [screenDataAsync.value, context]);
+
+    useEffect(() {
+      final data = screenDataAsync.value;
+      if (data == null &&
+          !screenDataAsync.isLoading &&
+          !isDeleting.value &&
+          screenDataAsync.hasValue) {
+        talker.debug("Instance $id not found in DB, redirecting.");
+        Future.microtask(() async {
+          if (!context.mounted) return;
+          final db = ref.read(databaseProvider);
+          final instances = await db.select(db.defguardInstances).get();
+          if (!context.mounted) return;
+
+          if (instances.isEmpty) {
+            const AddInstanceScreenRoute().go(context);
+          } else if (instances.length == 1) {
+            InstanceScreenRoute(id: instances.first.id.toString()).go(context);
+          } else {
+            const InstancesListScreenRoute().go(context);
+          }
+        });
+      }
+      return null;
+    }, [screenDataAsync.value, screenDataAsync.isLoading, isDeleting.value]);
 
     return Scaffold(
       drawer: const NextDrawer(),
       extendBodyBehindAppBar: true,
-      appBar: NextAppBar(
-        showLogo: isSingleAsync.value == true,
-        title: isSingleAsync.value == false
-            ? screenDataAsync.maybeWhen(
-                data: (data) => data?.instance.name ?? "Instance",
-                orElse: () => "...",
-              )
-            : null,
-        subtitle: isSingleAsync.value == false ? "Instance" : null,
-        actionLeft: isSingleAsync.value == false
-            ? NextIconButton(
-                icon: "arrow_big",
-                direction: NextIconDirection.left,
-                onTap: () => const InstancesListScreenRoute().go(context),
-              )
-            : Builder(
-                builder: (context) => NextIconButton(
-                  icon: "hamburger",
-                  onTap: () => Scaffold.of(context).openDrawer(),
-                ),
-              ),
-        actionRight: [
-          if (isSingleAsync.value == true)
-            NextIconButton(
-              icon: "plus",
-              onTap: () {
-                const AddInstanceScreenRoute().push(context);
-              },
-            ),
-          OverlayPortal(
-            controller: actionsController,
-            overlayChildBuilder: (context) {
-              return NextMenu(
-                items: [
-                  NextMenuItem(
-                    icon: "disconnect_all",
-                    text: "Disconnect all locations",
-                    onTap: () {},
-                  ),
-                  NextMenuItem(
-                    text: "Refresh configuration",
-                    icon: "refresh",
-                    onTap: () {
-                      ref.invalidate(_nextScreenDataProvider(id));
-                    },
-                  ),
-                  NextMenuItem(
-                    icon: "delete",
-                    text: "Delete Instance",
-                    onTap: () {},
-                  ),
-                ],
-                controller: actionsController,
-                link: actionsLayerLink,
-                targetAnchor: Alignment.bottomRight,
-                followerAnchor: Alignment.topRight,
-              );
-            },
-            child: CompositedTransformTarget(
-              link: actionsLayerLink,
-              child: NextIconButton(
-                icon: "menu",
-                onTap: actionsController.toggle,
-              ),
-            ),
-          ),
-        ],
+      appBar: _InstanceAppBar(
+        id: id,
+        screenDataAsync: screenDataAsync,
+        activeTunnel: activeTunnel,
+        wireguardPlugin: wireguardPlugin,
+        isSingleAsync: isSingleAsync,
+        actionsController: actionsController,
+        actionsLayerLink: actionsLayerLink,
+        onDeleteInstance: onDeleteInstance,
+        topPadding: MediaQuery.paddingOf(context).top,
       ),
       body: Container(
         decoration: const BoxDecoration(gradient: NextColor.previewGradient),
         child: SafeArea(
           child: screenDataAsync.when(
             data: (data) {
-              if (data == null) {
-                talker.debug("Instance $id not found in DB, redirecting.");
-                Future.microtask(() {
-                  if (context.mounted) {
-                    InstancesListScreenRoute().go(context);
-                  }
-                });
+              if (data == null || isDeleting.value) {
                 return const Center(
                   child: CircularProgressIndicator(color: NextColor.fgWhite100),
                 );
               }
 
-              final locations = data.locations;
-              final connectedLocation = locations.firstWhereOrNull(
-                (l) =>
-                    activeTunnel?.instanceId == data.instance.id &&
-                    activeTunnel?.locationId == l.id,
+              Widget content = _LocationList(
+                data: data,
+                activeTunnel: activeTunnel,
+                wireguardPlugin: wireguardPlugin,
+                biometricStatus: biometricStatus,
               );
-              final otherLocations = locations
-                  .where((l) => l != connectedLocation)
-                  .toList();
 
-              return ListView(
-                padding: const EdgeInsets.fromLTRB(
-                  NextSpacing.xl,
-                  NextSpacing.sm,
-                  NextSpacing.xl,
-                  NextSpacing.xl,
-                ),
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: NextSpacing.xl),
-                    child: Text(
-                      "Locations",
-                      style: NextText.h4.copyWith(color: NextColor.fgWhite100),
-                    ),
-                  ),
-                  if (connectedLocation != null) ...[
-                    Text(
-                      "Connected",
-                      style: NextText.bodyXs400.copyWith(
-                        color: NextColor.fgWhite70,
-                      ),
-                    ),
-                    const SizedBox(height: NextSpacing.md),
-                    NextLocationCard(
-                      location: connectedLocation,
-                      isConnected: true,
-                      routingMethod: activeTunnel?.traffic,
-                      onDisconnectTap: () async {
-                        try {
-                          await wireguardPlugin.closeTunnel();
-                          talker.debug(
-                            "Disconnected from ${connectedLocation.name}",
-                          );
-                        } catch (e) {
-                          talker.error("Failed to disconnect", e);
-                          SnackbarService.showError("Failed to disconnect");
-                        }
-                      },
-                    ),
-                    const SizedBox(height: NextSpacing.xl),
-                  ],
-                  if (otherLocations.isNotEmpty) ...[
-                    Text(
-                      "Offline",
-                      style: NextText.bodyXs400.copyWith(
-                        color: NextColor.fgWhite70,
-                      ),
-                    ),
-                    const SizedBox(height: NextSpacing.md),
-                    ...otherLocations.map(
-                      (location) => Padding(
-                        padding: const EdgeInsets.only(bottom: NextSpacing.md),
-                        child: NextLocationCard(
-                          location: location,
-                          isConnected: false,
-                          onConnectTap: () async {
-                            try {
-                              final permissionsGranted = await wireguardPlugin
-                                  .requestPermissions();
-                              if (permissionsGranted) {
-                                if (context.mounted) {
-                                  await TunnelService.connect(
-                                    context: context,
-                                    instance: data.instance,
-                                    location: location,
-                                    wireguardPlugin: wireguardPlugin,
-                                    biometricsStatus: biometricStatus,
-                                  );
-                                  talker.debug("Connected to ${location.name}");
-                                }
-                              }
-                            } catch (e) {
-                              talker.error("Failed to connect", e);
-                              SnackbarService.showError("Failed to connect");
-                            }
-                          },
-                        ),
-                      ),
-                    ),
-                  ],
-                ],
-              );
+              if (data.instance.enterpriseEnabled) {
+                content = RefreshIndicator(
+                  color: NextColor.bgWhite100,
+                  backgroundColor: NextColor.bgDarkBlue80,
+                  onRefresh: onRefresh,
+                  child: content,
+                );
+              }
+
+              return content;
             },
             loading: () => const Center(
               child: CircularProgressIndicator(color: NextColor.fgWhite100),
@@ -273,6 +239,228 @@ class NextInstanceScreen extends HookConsumerWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _InstanceAppBar extends StatelessWidget implements PreferredSizeWidget {
+  final String id;
+  final AsyncValue<_ScreenData?> screenDataAsync;
+  final PluginTunnelEventData? activeTunnel;
+  final WireguardPlugin wireguardPlugin;
+  final AsyncValue<bool> isSingleAsync;
+  final OverlayPortalController actionsController;
+  final LayerLink actionsLayerLink;
+  final VoidCallback onDeleteInstance;
+  final double topPadding;
+
+  const _InstanceAppBar({
+    required this.id,
+    required this.screenDataAsync,
+    required this.activeTunnel,
+    required this.wireguardPlugin,
+    required this.isSingleAsync,
+    required this.actionsController,
+    required this.actionsLayerLink,
+    required this.onDeleteInstance,
+    required this.topPadding,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return NextAppBar(
+      context: context,
+      showLogo: isSingleAsync.value == true,
+      title: isSingleAsync.value == false
+          ? screenDataAsync.maybeWhen(
+              data: (data) => data?.instance.name ?? "Instance",
+              orElse: () => "...",
+            )
+          : null,
+      subtitle: isSingleAsync.value == false ? "Instance" : null,
+      actionLeft: isSingleAsync.value == false
+          ? NextIconButton(
+              icon: "arrow_big",
+              direction: NextIconDirection.left,
+              onTap: () => const InstancesListScreenRoute().go(context),
+            )
+          : Builder(
+              builder: (context) => NextIconButton(
+                icon: "hamburger",
+                onTap: () => Scaffold.of(context).openDrawer(),
+              ),
+            ),
+      actionRight: [
+        if (isSingleAsync.value == true)
+          NextIconButton(
+            icon: "plus",
+            onTap: () {
+              const AddInstanceScreenRoute().push(context);
+            },
+          ),
+        OverlayPortal(
+          controller: actionsController,
+          overlayChildBuilder: (context) {
+            return NextMenu(
+              items: [
+                if (activeTunnel != null)
+                  NextMenuItem(
+                    icon: "disconnect_all",
+                    text: "Disconnect all locations",
+                    onTap: () async {
+                      try {
+                        await wireguardPlugin.closeTunnel();
+                        talker.debug("Disconnected all locations");
+                      } catch (e) {
+                        talker.error("Failed to disconnect all", e);
+                        SnackbarService.showError("Failed to disconnect all");
+                      }
+                    },
+                  ),
+                NextMenuItem(
+                  text: "Refresh configuration",
+                  icon: "refresh",
+                  onTap: () {
+                    final instance = screenDataAsync.value?.instance;
+                    if (instance == null) return;
+                    showDialog(
+                      context: context,
+                      builder: (context) =>
+                          NextRefreshInstanceDialog(instance: instance),
+                    );
+                  },
+                ),
+                NextMenuItem(
+                  icon: "delete",
+                  text: "Delete Instance",
+                  onTap: onDeleteInstance,
+                ),
+              ],
+              controller: actionsController,
+              link: actionsLayerLink,
+              targetAnchor: Alignment.bottomRight,
+              followerAnchor: Alignment.topRight,
+            );
+          },
+          child: CompositedTransformTarget(
+            link: actionsLayerLink,
+            child: NextIconButton(
+              icon: "menu",
+              onTap: actionsController.toggle,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  @override
+  Size get preferredSize => Size.fromHeight(NextAppBar.baseHeight + topPadding);
+}
+
+class _LocationList extends StatelessWidget {
+  final _ScreenData data;
+  final PluginTunnelEventData? activeTunnel;
+  final WireguardPlugin wireguardPlugin;
+  final BiometricsState biometricStatus;
+
+  const _LocationList({
+    required this.data,
+    required this.activeTunnel,
+    required this.wireguardPlugin,
+    required this.biometricStatus,
+  });
+
+  Future<void> _onDisconnect(Location location) async {
+    try {
+      await wireguardPlugin.closeTunnel();
+      talker.debug("Disconnected from ${location.name}");
+    } catch (e) {
+      talker.error("Failed to disconnect", e);
+      SnackbarService.showError("Failed to disconnect");
+    }
+  }
+
+  Future<void> _onConnect(BuildContext context, Location location) async {
+    try {
+      final permissionsGranted = await wireguardPlugin.requestPermissions();
+      if (permissionsGranted) {
+        if (context.mounted) {
+          await TunnelService.connect(
+            context: context,
+            instance: data.instance,
+            location: location,
+            wireguardPlugin: wireguardPlugin,
+            biometricsStatus: biometricStatus,
+          );
+          talker.debug("Connected to ${location.name}");
+        }
+      }
+    } catch (e) {
+      talker.error("Failed to connect", e);
+      SnackbarService.showError("Failed to connect");
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final locations = data.locations;
+    final connectedLocation = locations.firstWhereOrNull(
+      (l) =>
+          activeTunnel?.instanceId == data.instance.id &&
+          activeTunnel?.locationId == l.id,
+    );
+    final otherLocations = locations
+        .where((l) => l != connectedLocation)
+        .toList();
+
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(
+        NextSpacing.xl,
+        NextSpacing.sm,
+        NextSpacing.xl,
+        NextSpacing.xl,
+      ),
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(bottom: NextSpacing.xl),
+          child: Text(
+            "Locations",
+            style: NextText.h4.copyWith(color: NextColor.fgWhite100),
+          ),
+        ),
+        if (connectedLocation != null) ...[
+          Text(
+            "Connected",
+            style: NextText.bodyXs400.copyWith(color: NextColor.fgWhite70),
+          ),
+          const SizedBox(height: NextSpacing.md),
+          NextLocationCard(
+            location: connectedLocation,
+            isConnected: true,
+            routingMethod: activeTunnel?.traffic,
+            onDisconnectTap: () => _onDisconnect(connectedLocation),
+          ),
+          const SizedBox(height: NextSpacing.xl),
+        ],
+        if (otherLocations.isNotEmpty) ...[
+          Text(
+            "Offline",
+            style: NextText.bodyXs400.copyWith(color: NextColor.fgWhite70),
+          ),
+          const SizedBox(height: NextSpacing.md),
+          ...otherLocations.map(
+            (location) => Padding(
+              padding: const EdgeInsets.only(bottom: NextSpacing.md),
+              child: NextLocationCard(
+                location: location,
+                isConnected: false,
+                onConnectTap: () => _onConnect(context, location),
+              ),
+            ),
+          ),
+        ],
+      ],
     );
   }
 }

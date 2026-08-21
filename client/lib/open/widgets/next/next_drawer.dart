@@ -61,16 +61,16 @@ class NextDrawer extends HookConsumerWidget {
     final entries = useMemoized<List<_DrawerEntry>>(() {
       return [
         _DrawerItemData(
-          label: "View Application Logs",
-          iconLeft: 'menu',
+          label: "Application Logs",
+          iconLeft: 'activity_notes',
           iconRight: 'arrow_small',
           route: TalkerScreenRoute(),
         ),
         _DrawerDividerData(),
         _DrawerItemData(
-          label: "Help & Support",
-          iconLeft: 'dialog_info',
-          iconRight: 'arrow_small',
+          label: "Help and Support",
+          iconLeft: 'question',
+          iconRight: 'open_in_new_window',
           onPressed: () async {
             final uri = Uri.parse(_helpUrl);
             try {

@@ -6,6 +6,8 @@ import '../../../theme/next/color.dart';
 import '../../../theme/next/text.dart';
 
 class NextAppBar extends StatelessWidget implements PreferredSizeWidget {
+  static const double baseHeight = 75;
+
   final double height;
   final Widget? actionLeft;
   final List<Widget>? actionRight;
@@ -13,19 +15,23 @@ class NextAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String? subtitle;
   final bool? showLogo;
 
-  const NextAppBar({
+  NextAppBar({
     super.key,
-    this.height = 75, // 19 (top) + 44 (min height) + 12 (bottom)
+    BuildContext? context,
+    double? height,
     this.actionLeft,
     this.actionRight,
     this.title,
     this.subtitle,
     this.showLogo,
-  });
+  }) : height =
+           (height ?? baseHeight) +
+           (context != null ? MediaQuery.paddingOf(context).top : 0);
 
   @override
   Widget build(BuildContext context) {
     return Container(
+      height: height,
       color: Colors.transparent,
       child: SafeArea(
         child: Padding(
