@@ -121,6 +121,7 @@ class NameDeviceScreen extends HookConsumerWidget {
       drawer: const NextDrawer(),
       extendBodyBehindAppBar: true,
       appBar: NextAppBar(
+        context: context,
         showLogo: false,
         actionLeft: NextIconButton(
           icon: "arrow_big",

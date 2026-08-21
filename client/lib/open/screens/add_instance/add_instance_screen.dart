@@ -30,6 +30,7 @@ class AddInstanceScreen extends HookConsumerWidget {
     return Scaffold(
       drawer: const NextDrawer(),
       appBar: NextAppBar(
+        context: context,
         showLogo: true,
         actionLeft: canPop
             ? NextIconButton(

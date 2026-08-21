@@ -6,6 +6,7 @@ import 'package:mobile/data/db/database.dart';
 import 'package:mobile/logging.dart';
 import 'package:mobile/open/api.dart';
 import 'package:mobile/open/riverpod/biometrics_state.dart';
+import 'package:mobile/open/screens/add_instance/screens/biometry/widgets/biometry_skip_dialog.dart';
 import 'package:mobile/open/widgets/loading_screen.dart';
 import 'package:mobile/open/widgets/next/next_button.dart';
 import 'package:mobile/open/widgets/rive_asset_animation.dart';
@@ -47,13 +48,10 @@ class _ScreenContent extends HookConsumerWidget {
   Widget _getRiveAnimation(BiometricsState status) {
     String asset = "assets/next/rive/biometric_face.riv";
     if (!status.isSupported) {
-      // unsupported case
       asset = "assets/next/rive/biometric_face.riv";
     } else if (status.enrolledOptions.isEmpty) {
-      // supported but not registered case
       asset = "assets/next/rive/biometric_face.riv";
     } else {
-      // supported and available case
       asset = "assets/next/rive/biometric_face.riv";
     }
 
@@ -118,7 +116,7 @@ class _ScreenContent extends HookConsumerWidget {
         await db.managers.defguardInstances.replace(instanceDb);
         isLoading.value = false;
         if (context.mounted) {
-          const BiometryFinishScreenRoute().go(context);
+          BiometryFinishScreenRoute(id: instanceId.toString()).go(context);
           return;
         }
       } on PlatformException catch (e) {
@@ -126,14 +124,18 @@ class _ScreenContent extends HookConsumerWidget {
         talker.error("Register biometry failed: $message");
         if (context.mounted) {
           isLoading.value = false;
-          const BiometrySetupFailedScreenRoute().push(context);
+          BiometrySetupFailedScreenRoute(
+            id: instanceId.toString(),
+          ).push(context);
           return;
         }
       } catch (e) {
         talker.error("Failed mobile auth registration!", e);
         if (context.mounted) {
           isLoading.value = false;
-          const BiometrySetupFailedScreenRoute().push(context);
+          BiometrySetupFailedScreenRoute(
+            id: instanceId.toString(),
+          ).push(context);
           return;
         }
       } finally {
@@ -145,7 +147,7 @@ class _ScreenContent extends HookConsumerWidget {
       loading: () => const LoadingView(),
       error: (err, _) {
         talker.error("Failed to get screen data", err);
-        const InstancesListScreenRoute().go(context);
+        InstanceScreenRoute(id: instanceId.toString()).go(context);
         return const SizedBox();
       },
       data: (instance) => Padding(
@@ -213,7 +215,19 @@ class _ScreenContent extends HookConsumerWidget {
                   disabled: isLoading.value,
                   width: .infinity,
                   onTap: () {
-                    const InstancesListScreenRoute().go(context);
+                    showDialog(
+                      context: context,
+                      useSafeArea: false,
+                      barrierColor: Colors.transparent,
+                      builder: (context) => BiometrySkipDialog(
+                        onSkip: () {
+                          InstanceScreenRoute(
+                            id: instanceId.toString(),
+                          ).go(context);
+                        },
+                        onCancel: () => Navigator.of(context).pop(),
+                      ),
+                    );
                   },
                 ),
               ],

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:mobile/open/screens/add_instance/screens/biometry/widgets/biometry_setup_banner.dart';
 import 'package:mobile/open/widgets/next/next_button.dart';
+import 'package:mobile/open/widgets/rive_asset_animation.dart';
 import 'package:mobile/router/routes.dart';
 import 'package:mobile/theme/next/color.dart';
 import 'package:mobile/theme/next/spacing.dart';
@@ -11,7 +11,9 @@ Biometrics have been successfully enabled as a Multi-Factor Authentication (MFA)
 """;
 
 class NextBiometryFinishScreen extends StatelessWidget {
-  const NextBiometryFinishScreen({super.key});
+  final String instanceId;
+
+  const NextBiometryFinishScreen({super.key, required this.instanceId});
 
   @override
   Widget build(BuildContext context) {
@@ -29,23 +31,31 @@ class NextBiometryFinishScreen extends StatelessWidget {
                 Expanded(
                   child: SingleChildScrollView(
                     child: Column(
-                      spacing: NextSpacing.md,
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Center(
-                          child: Text(
-                            "Biometric Authentication Enabled",
-                            style: NextText.h4.copyWith(
-                              color: NextColor.fgWhite100,
-                            ),
-                            textAlign: TextAlign.center,
+                        SizedBox(height: 50),
+                        SizedBox(
+                          width: 100,
+                          height: 100,
+                          child: RiveAssetAnimation(
+                            "assets/next/rive/biometric_check.riv",
                           ),
                         ),
-                        const BiometrySetupBanner(),
+                        SizedBox(height: 60),
                         Text(
-                          message,
-                          style: NextText.bodyPrimary400.copyWith(
+                          "Biometric Authentication Enabled",
+                          style: NextText.h4.copyWith(
+                            color: NextColor.fgWhite100,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        SizedBox(height: 8),
+                        Text(
+                          "Biometrics have been successfully enabled as a Multi-Factor Authentication (MFA) method. You can now use your device’s biometric capabilities when connecting to locations that require MFA.",
+                          style: NextText.bodySm400.copyWith(
                             color: NextColor.fgWhite80,
                           ),
+                          textAlign: TextAlign.center,
                         ),
                       ],
                     ),
@@ -57,7 +67,7 @@ class NextBiometryFinishScreen extends StatelessWidget {
                   width: double.infinity,
                   style: NextButtonStyle.primary,
                   onTap: () {
-                    const InstancesListScreenRoute().go(context);
+                    InstanceScreenRoute(id: instanceId).go(context);
                   },
                 ),
               ],

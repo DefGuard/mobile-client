@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mobile/open/screens/add_instance/screens/biometry/widgets/biometry_skip_dialog.dart';
 import 'package:mobile/open/widgets/next/next_button.dart';
 import 'package:mobile/router/routes.dart';
 import 'package:mobile/theme/next/color.dart';
@@ -6,7 +7,9 @@ import 'package:mobile/theme/next/spacing.dart';
 import 'package:mobile/theme/next/text.dart';
 
 class NextBiometrySetupFailedScreen extends StatelessWidget {
-  const NextBiometrySetupFailedScreen({super.key});
+  final String instanceId;
+
+  const NextBiometrySetupFailedScreen({super.key, required this.instanceId});
 
   @override
   Widget build(BuildContext context) {
@@ -55,7 +58,17 @@ class NextBiometrySetupFailedScreen extends StatelessWidget {
                         text: "Skip",
                         style: NextButtonStyle.secondary,
                         onTap: () {
-                          const InstancesListScreenRoute().go(context);
+                          showDialog(
+                            context: context,
+                            useSafeArea: false,
+                            barrierColor: Colors.transparent,
+                            builder: (context) => BiometrySkipDialog(
+                              onSkip: () {
+                                InstanceScreenRoute(id: instanceId).go(context);
+                              },
+                              onCancel: () => Navigator.of(context).pop(),
+                            ),
+                          );
                         },
                       ),
                     ),

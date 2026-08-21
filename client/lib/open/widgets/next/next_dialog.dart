@@ -19,53 +19,52 @@ class NextDialog extends StatelessWidget {
       color: Colors.transparent,
       child: Stack(
         children: [
-          // Backdrop
           GestureDetector(
             onTap: onClose,
             behavior: HitTestBehavior.opaque,
             child: Container(color: Colors.black.withValues(alpha: 0.7)),
           ),
-          // Dialog Box
           Center(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: NextColor.gradientPrimary,
-                  borderRadius: BorderRadius.circular(24),
-                ),
-                child: Stack(
-                  children: [
-                    // Close Button
-                    Positioned(
-                      top: 16,
-                      right: 16,
-                      child: GestureDetector(
-                        onTap: onClose,
-                        behavior: HitTestBehavior.opaque,
-                        child: const SizedBox(
-                          width: 24,
-                          height: 24,
-                          child: Center(
-                            child: NextIcon(
-                              'assets/icons/icon-x',
-                              size: 24,
-                              color: NextColor.fgWhite100,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 420),
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: NextColor.gradientPrimary,
+                    borderRadius: BorderRadius.circular(24),
+                  ),
+                  child: Stack(
+                    children: [
+                      Positioned(
+                        top: 16,
+                        right: 16,
+                        child: GestureDetector(
+                          onTap: onClose,
+                          behavior: HitTestBehavior.opaque,
+                          child: const SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: Center(
+                              child: NextIcon(
+                                'assets/icons/icon-x',
+                                size: 24,
+                                color: NextColor.fgWhite100,
+                              ),
                             ),
                           ),
                         ),
                       ),
-                    ),
-                    // Content
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 54, 16, 16),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: children,
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 56, 16, 16),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: children,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -84,10 +83,11 @@ class NextDialogDescription extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: .only(bottom: NextSpacing.xl3),
+      padding: const EdgeInsets.only(bottom: NextSpacing.xl3),
       child: Text(
         description,
         style: NextText.bodySm400.copyWith(color: NextColor.fgWhite90),
+        textAlign: TextAlign.center,
       ),
     );
   }
@@ -105,6 +105,7 @@ class NextDialogTitle extends StatelessWidget {
       child: Text(
         title,
         style: NextText.h5.copyWith(color: NextColor.fgWhite100),
+        textAlign: TextAlign.center,
       ),
     );
   }

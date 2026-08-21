@@ -69,7 +69,14 @@ class QRScreenRoute extends GoRouteData with $QRScreenRoute {
   }
 }
 
-@TypedGoRoute<InstanceScreenRoute>(path: "/instance/:id")
+@TypedGoRoute<InstanceScreenRoute>(
+  path: "/instance/:id",
+  routes: [
+    TypedGoRoute<BiometrySetupScreenRoute>(path: "biometry_setup"),
+    TypedGoRoute<BiometrySetupFailedScreenRoute>(path: "biometry_failed"),
+    TypedGoRoute<BiometryFinishScreenRoute>(path: "biometry_finish"),
+  ],
+)
 @immutable
 class InstanceScreenRoute extends GoRouteData with $InstanceScreenRoute {
   final String id;
@@ -165,7 +172,6 @@ class MfaCodeScreenRoute extends GoRouteData with $MfaCodeScreenRoute {
   }
 }
 
-@TypedGoRoute<BiometrySetupScreenRoute>(path: "/biometry_setup/:id")
 @immutable
 class BiometrySetupScreenRoute extends GoRouteData
     with $BiometrySetupScreenRoute {
@@ -179,26 +185,28 @@ class BiometrySetupScreenRoute extends GoRouteData
   }
 }
 
-@TypedGoRoute<BiometrySetupFailedScreenRoute>(path: "/biometry_failed")
 @immutable
 class BiometrySetupFailedScreenRoute extends GoRouteData
     with $BiometrySetupFailedScreenRoute {
-  const BiometrySetupFailedScreenRoute();
+  final String id;
+
+  const BiometrySetupFailedScreenRoute({required this.id});
 
   @override
   Widget build(BuildContext context, GoRouterState state) {
-    return NextBiometrySetupFailedScreen();
+    return NextBiometrySetupFailedScreen(instanceId: id);
   }
 }
 
-@TypedGoRoute<BiometryFinishScreenRoute>(path: "/biometry_finish")
 @immutable
 class BiometryFinishScreenRoute extends GoRouteData
     with $BiometryFinishScreenRoute {
-  const BiometryFinishScreenRoute();
+  final String id;
+
+  const BiometryFinishScreenRoute({required this.id});
 
   @override
   Widget build(BuildContext context, GoRouterState state) {
-    return NextBiometryFinishScreen();
+    return NextBiometryFinishScreen(instanceId: id);
   }
 }

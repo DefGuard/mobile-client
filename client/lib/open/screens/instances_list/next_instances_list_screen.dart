@@ -72,6 +72,7 @@ class NextInstancesListScreen extends HookConsumerWidget {
       drawer: const NextDrawer(),
       extendBodyBehindAppBar: true,
       appBar: NextAppBar(
+        context: context,
         actionLeft: Builder(
           builder: (context) => NextIconButton(
             icon: "hamburger",

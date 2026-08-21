@@ -96,7 +96,7 @@ class _ScreenContent extends HookConsumerWidget {
         await db.managers.defguardInstances.replace(instanceDb);
         isLoading.value = false;
         if (context.mounted) {
-          BiometryFinishScreenRoute().go(context);
+          BiometryFinishScreenRoute(id: instanceId.toString()).go(context);
           return;
         }
       } on PlatformException catch (e) {
@@ -104,14 +104,18 @@ class _ScreenContent extends HookConsumerWidget {
         talker.error("Register biometry failed: $message");
         if (context.mounted) {
           isLoading.value = false;
-          BiometrySetupFailedScreenRoute().push(context);
+          BiometrySetupFailedScreenRoute(
+            id: instanceId.toString(),
+          ).push(context);
           return;
         }
       } catch (e) {
         talker.error("Failed mobile auth registration!", e);
         if (context.mounted) {
           isLoading.value = false;
-          BiometrySetupFailedScreenRoute().push(context);
+          BiometrySetupFailedScreenRoute(
+            id: instanceId.toString(),
+          ).push(context);
           return;
         }
       } finally {
@@ -123,7 +127,7 @@ class _ScreenContent extends HookConsumerWidget {
       loading: () => LoadingView(),
       error: (err, _) {
         talker.error("Failed to get screen data", err);
-        InstancesListScreenRoute().go(context);
+        InstanceScreenRoute(id: instanceId.toString()).go(context);
         return const SizedBox();
       },
       data: (instance) => DgSingleChildScrollView(
@@ -203,7 +207,9 @@ class _ScreenContent extends HookConsumerWidget {
                     variant: DgButtonVariant.secondary,
                     disabled: isLoading.value,
                     onTap: () {
-                      InstancesListScreenRoute().go(context);
+                      InstanceScreenRoute(
+                        id: instanceId.toString(),
+                      ).go(context);
                     },
                   ),
                 ),
