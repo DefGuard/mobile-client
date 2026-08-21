@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widget_previews.dart';
+import 'package:mobile/open/widgets/next/next_icon_button.dart';
 import 'package:mobile/open/widgets/next/next_preview_wrapper.dart';
 import 'package:mobile/theme/next/color.dart';
 import 'package:mobile/theme/next/text.dart';
 
 import '../../../theme/next/spacing.dart';
-import 'icons/next_icon.dart';
 
 class NextDialog extends StatelessWidget {
   final List<Widget> children;
@@ -39,20 +39,10 @@ class NextDialog extends StatelessWidget {
                       Positioned(
                         top: 16,
                         right: 16,
-                        child: GestureDetector(
+                        child: NextIconButton(
                           onTap: onClose,
-                          behavior: HitTestBehavior.opaque,
-                          child: const SizedBox(
-                            width: 24,
-                            height: 24,
-                            child: Center(
-                              child: NextIcon(
-                                'assets/icons/icon-x',
-                                size: 24,
-                                color: NextColor.fgWhite100,
-                              ),
-                            ),
-                          ),
+                          icon: 'close',
+                          size: .small,
                         ),
                       ),
                       Padding(

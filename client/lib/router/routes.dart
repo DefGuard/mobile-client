@@ -4,14 +4,14 @@ import 'package:mobile/enterprise/screens/mfa/openid_mfa_screen.dart';
 import 'package:mobile/enterprise/screens/mfa/openid_mfa_waiting_screen.dart';
 import 'package:mobile/open/screens/add_instance/add_instance_screen.dart';
 import 'package:mobile/open/screens/add_instance/screens/add_instance_form.dart';
+import 'package:mobile/open/screens/add_instance/screens/add_instance_qr_screen.dart';
 import 'package:mobile/open/screens/add_instance/screens/biometry/next_biometry_finish_screen.dart';
 import 'package:mobile/open/screens/add_instance/screens/biometry/next_biometry_setup_failed_screen.dart';
 import 'package:mobile/open/screens/add_instance/screens/biometry/next_biometry_setup_screen.dart';
 import 'package:mobile/open/screens/add_instance/screens/name_device_screen.dart';
 import 'package:mobile/open/screens/instances_list/next_instances_list_screen.dart';
 import 'package:mobile/open/screens/mfa/mfa_code_screen.dart';
-import 'package:mobile/open/screens/process_qr_screen.dart';
-import 'package:mobile/open/screens/scan_qr_screen.dart';
+import 'package:mobile/open/screens/mfa/remote_mfa_qr_screen.dart';
 import 'package:mobile/open/screens/splash.dart';
 import 'package:talker_flutter/talker_flutter.dart';
 
@@ -19,19 +19,6 @@ import '../logging.dart';
 import '../open/screens/instance/next_instance_screen.dart';
 
 part 'routes.g.dart';
-
-@TypedGoRoute<ProcessQrScreenRoute>(path: "/process_qr")
-@immutable
-class ProcessQrScreenRoute extends GoRouteData with $ProcessQrScreenRoute {
-  const ProcessQrScreenRoute(this.$extra);
-
-  final ProcessQrScreenData $extra;
-
-  @override
-  Widget build(BuildContext context, GoRouterState state) {
-    return ProcessQrScreen(screenData: $extra);
-  }
-}
 
 @TypedGoRoute<AppSplashRoute>(path: '/')
 @immutable
@@ -56,16 +43,28 @@ class InstancesListScreenRoute extends GoRouteData
   }
 }
 
-@TypedGoRoute<QRScreenRoute>(path: "/qr")
+@TypedGoRoute<AddInstanceQrScreenRoute>(path: "/add_instance/qr")
 @immutable
-class QRScreenRoute extends GoRouteData with $QRScreenRoute {
-  const QRScreenRoute(this.$extra);
-
-  final QrScreenData $extra;
+class AddInstanceQrScreenRoute extends GoRouteData
+    with $AddInstanceQrScreenRoute {
+  const AddInstanceQrScreenRoute();
 
   @override
   Widget build(BuildContext context, GoRouterState state) {
-    return ScanQrScreen(screenData: $extra);
+    return const AddInstanceQrScreen();
+  }
+}
+
+@TypedGoRoute<RemoteMfaQrScreenRoute>(path: "/mfa/remote_qr")
+@immutable
+class RemoteMfaQrScreenRoute extends GoRouteData with $RemoteMfaQrScreenRoute {
+  const RemoteMfaQrScreenRoute(this.$extra);
+
+  final RemoteMfaQrScreenData $extra;
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) {
+    return RemoteMfaQrScreen(screenData: $extra);
   }
 }
 
