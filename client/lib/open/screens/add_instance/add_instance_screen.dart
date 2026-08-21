@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mobile/open/screens/add_instance/data_gathering_dialog.dart';
-import 'package:mobile/open/screens/scan_qr_screen.dart';
 import 'package:mobile/open/widgets/next/icons/next_icon.dart';
 import 'package:mobile/open/widgets/next/next_app_bar.dart';
 import 'package:mobile/open/widgets/next/next_button.dart';
@@ -117,11 +116,7 @@ class AddInstanceScreen extends HookConsumerWidget {
                             );
                             if (isAgreed ?? false) {
                               if (context.mounted) {
-                                QRScreenRoute(
-                                  QrScreenData(
-                                    intent: QrScreenIntent.addInstance,
-                                  ),
-                                ).push(context);
+                                const AddInstanceQrScreenRoute().push(context);
                               }
                             } else {
                               if (context.mounted) {
@@ -135,11 +130,9 @@ class AddInstanceScreen extends HookConsumerWidget {
                                     true,
                                   );
                                   if (context.mounted) {
-                                    QRScreenRoute(
-                                      QrScreenData(
-                                        intent: QrScreenIntent.addInstance,
-                                      ),
-                                    ).push(context);
+                                    const AddInstanceQrScreenRoute().push(
+                                      context,
+                                    );
                                   }
                                 }
                               }

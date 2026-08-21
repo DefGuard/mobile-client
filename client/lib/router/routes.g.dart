@@ -9,7 +9,8 @@ part of 'routes.dart';
 List<RouteBase> get $appRoutes => [
   $appSplashRoute,
   $instancesListScreenRoute,
-  $qRScreenRoute,
+  $addInstanceQrScreenRoute,
+  $remoteMfaQrScreenRoute,
   $instanceScreenRoute,
   $nameDeviceScreenRoute,
   $addInstanceFormScreenRoute,
@@ -74,20 +75,47 @@ mixin $InstancesListScreenRoute on GoRouteData {
   void replace(BuildContext context) => context.replace(location);
 }
 
-RouteBase get $qRScreenRoute => GoRouteData.$route(
-  path: '/qr',
+RouteBase get $addInstanceQrScreenRoute => GoRouteData.$route(
+  path: '/add_instance/qr',
   hasOverriddenOnExit: false,
-  factory: $QRScreenRoute._fromState,
+  factory: $AddInstanceQrScreenRoute._fromState,
 );
 
-mixin $QRScreenRoute on GoRouteData {
-  static QRScreenRoute _fromState(GoRouterState state) =>
-      QRScreenRoute(state.extra as QrScreenData);
-
-  QRScreenRoute get _self => this as QRScreenRoute;
+mixin $AddInstanceQrScreenRoute on GoRouteData {
+  static AddInstanceQrScreenRoute _fromState(GoRouterState state) =>
+      const AddInstanceQrScreenRoute();
 
   @override
-  String get location => GoRouteData.$location('/qr');
+  String get location => GoRouteData.$location('/add_instance/qr');
+
+  @override
+  void go(BuildContext context) => context.go(location);
+
+  @override
+  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
+
+  @override
+  void pushReplacement(BuildContext context) =>
+      context.pushReplacement(location);
+
+  @override
+  void replace(BuildContext context) => context.replace(location);
+}
+
+RouteBase get $remoteMfaQrScreenRoute => GoRouteData.$route(
+  path: '/mfa/remote_qr',
+  hasOverriddenOnExit: false,
+  factory: $RemoteMfaQrScreenRoute._fromState,
+);
+
+mixin $RemoteMfaQrScreenRoute on GoRouteData {
+  static RemoteMfaQrScreenRoute _fromState(GoRouterState state) =>
+      RemoteMfaQrScreenRoute(state.extra as RemoteMfaQrScreenData);
+
+  RemoteMfaQrScreenRoute get _self => this as RemoteMfaQrScreenRoute;
+
+  @override
+  String get location => GoRouteData.$location('/mfa/remote_qr');
 
   @override
   void go(BuildContext context) => context.go(location, extra: _self.$extra);

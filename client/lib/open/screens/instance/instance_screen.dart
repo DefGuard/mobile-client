@@ -14,7 +14,6 @@ import 'package:mobile/open/screens/instance/widgets/delete_instance_dialog.dart
 import 'package:mobile/open/screens/instance/widgets/mfa_method_dialog.dart';
 import 'package:mobile/open/screens/instance/widgets/refresh_instance_dialog.dart';
 import 'package:mobile/open/screens/instance/widgets/routing_method_dialog.dart';
-import 'package:mobile/open/screens/scan_qr_screen.dart';
 import 'package:mobile/open/widgets/buttons/dg_button.dart';
 import 'package:mobile/open/widgets/dg_menu.dart';
 import 'package:mobile/open/widgets/dg_pill.dart';
@@ -111,11 +110,9 @@ class InstanceScreen extends HookConsumerWidget {
               width: 60,
               child: FloatingActionButton(
                 onPressed: () {
-                  final data = QrScreenData(
-                    intent: QrScreenIntent.remoteMfa,
-                    instance: screenData.instance,
-                  );
-                  QRScreenRoute(data).push(context);
+                  RemoteMfaQrScreenRoute(
+                    RemoteMfaQrScreenData(instance: screenData.instance),
+                  ).push(context);
                 },
                 backgroundColor: DgColor.mainPrimary,
                 shape: RoundedRectangleBorder(
