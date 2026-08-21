@@ -31,6 +31,7 @@ class NextQrScanner<T> extends HookWidget {
   final void Function(T data, NextScannerController controller) onScan;
   final VoidCallback onCancel;
   final Widget Function(BuildContext, MobileScannerException)? onError;
+  final bool loading;
 
   const NextQrScanner({
     super.key,
@@ -39,6 +40,7 @@ class NextQrScanner<T> extends HookWidget {
     required this.onScan,
     required this.onCancel,
     this.onError,
+    this.loading = false,
   });
 
   @override
@@ -130,7 +132,11 @@ class NextQrScanner<T> extends HookWidget {
             );
           },
         ),
-        NextQrOverlay(description: description, onCancel: onCancel),
+        NextQrOverlay(
+          description: description,
+          onCancel: onCancel,
+          loading: loading,
+        ),
       ],
     );
   }

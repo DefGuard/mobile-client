@@ -10,7 +10,6 @@ import 'package:mobile/open/screens/add_instance/screens/biometry/next_biometry_
 import 'package:mobile/open/screens/add_instance/screens/name_device_screen.dart';
 import 'package:mobile/open/screens/instances_list/next_instances_list_screen.dart';
 import 'package:mobile/open/screens/mfa/mfa_code_screen.dart';
-import 'package:mobile/open/screens/process_qr_screen.dart';
 import 'package:mobile/open/screens/scan_qr_screen.dart';
 import 'package:mobile/open/screens/splash.dart';
 import 'package:talker_flutter/talker_flutter.dart';
@@ -19,19 +18,6 @@ import '../logging.dart';
 import '../open/screens/instance/next_instance_screen.dart';
 
 part 'routes.g.dart';
-
-@TypedGoRoute<ProcessQrScreenRoute>(path: "/process_qr")
-@immutable
-class ProcessQrScreenRoute extends GoRouteData with $ProcessQrScreenRoute {
-  const ProcessQrScreenRoute(this.$extra);
-
-  final ProcessQrScreenData $extra;
-
-  @override
-  Widget build(BuildContext context, GoRouterState state) {
-    return ProcessQrScreen(screenData: $extra);
-  }
-}
 
 @TypedGoRoute<AppSplashRoute>(path: '/')
 @immutable

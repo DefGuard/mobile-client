@@ -7,7 +7,6 @@ part of 'routes.dart';
 // **************************************************************************
 
 List<RouteBase> get $appRoutes => [
-  $processQrScreenRoute,
   $appSplashRoute,
   $instancesListScreenRoute,
   $qRScreenRoute,
@@ -20,37 +19,6 @@ List<RouteBase> get $appRoutes => [
   $openIdMfaWaitingScreenRoute,
   $mfaCodeScreenRoute,
 ];
-
-RouteBase get $processQrScreenRoute => GoRouteData.$route(
-  path: '/process_qr',
-  hasOverriddenOnExit: false,
-  factory: $ProcessQrScreenRoute._fromState,
-);
-
-mixin $ProcessQrScreenRoute on GoRouteData {
-  static ProcessQrScreenRoute _fromState(GoRouterState state) =>
-      ProcessQrScreenRoute(state.extra as ProcessQrScreenData);
-
-  ProcessQrScreenRoute get _self => this as ProcessQrScreenRoute;
-
-  @override
-  String get location => GoRouteData.$location('/process_qr');
-
-  @override
-  void go(BuildContext context) => context.go(location, extra: _self.$extra);
-
-  @override
-  Future<T?> push<T>(BuildContext context) =>
-      context.push<T>(location, extra: _self.$extra);
-
-  @override
-  void pushReplacement(BuildContext context) =>
-      context.pushReplacement(location, extra: _self.$extra);
-
-  @override
-  void replace(BuildContext context) =>
-      context.replace(location, extra: _self.$extra);
-}
 
 RouteBase get $appSplashRoute => GoRouteData.$route(
   path: '/',
