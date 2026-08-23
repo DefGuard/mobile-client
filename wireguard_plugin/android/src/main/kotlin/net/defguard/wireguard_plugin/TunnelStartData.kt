@@ -27,5 +27,8 @@ data class TunnelStartData(
     // context
     val locationName: String,
     val locationId: Int,
-    val instanceId: Int
+    val instanceId: Int,
+    // Opaque MFA method identifier, passed through from Dart for display only.
+    // Null when the tunnel was authorized without MFA.
+    val mfaMethod: Int? = null
 )

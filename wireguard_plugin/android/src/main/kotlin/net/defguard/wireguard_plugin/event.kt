@@ -15,4 +15,5 @@ data class ActiveTunnelData(
     val locationId: Int,
     val traffic: TunnelTraffic,
     val mfaEnabled: Boolean,
+    val mfaMethod: Int? = null,
 )

@@ -120,6 +120,9 @@ class TunnelService {
         return;
       }
       payload.presharedKey = presharedKey;
+      // record which method actually authorized this connection, so the UI can
+      // display it for the active tunnel
+      payload.mfaMethod = mfaMethod;
     } else if (payload.postureCheckRequired) {
       final presharedKey = await _performPostureCheck(
         navigator: navigator,

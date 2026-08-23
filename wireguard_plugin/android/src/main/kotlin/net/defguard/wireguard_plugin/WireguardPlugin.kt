@@ -303,6 +303,7 @@ class WireguardPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
                     instanceId = configData.instanceId,
                     traffic = configData.traffic,
                     mfaEnabled = !configData.presharedKey.isNullOrBlank(),
+                    mfaMethod = configData.mfaMethod,
                 )
 
                 futureBackend.await().setState(tunnel, Tunnel.State.UP, config)
