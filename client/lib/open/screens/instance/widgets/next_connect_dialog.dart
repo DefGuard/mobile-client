@@ -6,6 +6,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mobile/data/db/database.dart';
 import 'package:mobile/data/db/enums.dart';
 import 'package:mobile/open/riverpod/biometrics_state.dart';
+import 'package:mobile/open/screens/instance/services/tunnel_service.dart';
 import 'package:mobile/open/widgets/next/icons/next_icon.dart';
 import 'package:mobile/open/widgets/next/next_button.dart';
 import 'package:mobile/open/widgets/next/next_toggle.dart';
@@ -27,7 +28,9 @@ class NextConnectDialog extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final biometricsStatus = ref.watch(biometricsCapabilityProvider);
-    final isMfaEnabled = location.locationMfaMode != LocationMfaMode.disabled;
+    // must stay the same predicate TunnelService branches on, otherwise the
+    // sheet offers a factor the connect flow never asks for
+    final isMfaEnabled = TunnelService.checkMfaEnabled(location);
 
     final bool canChangeTraffic =
         instance.clientTrafficPolicy == ClientTrafficPolicy.none;

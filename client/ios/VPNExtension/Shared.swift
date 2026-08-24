@@ -25,14 +25,10 @@ public struct TunnelStartData: Codable {
     public var locationName: String
     public var locationId: Int
     public var instanceId: Int
-    // Opaque MFA method identifier, passed through from Dart for display only.
-    // Nil when the tunnel was authorized without MFA.
-    public var mfaMethod: Int?
 
     public init(publicKey: String, privateKey: String, address: String, dns: String? = nil,
                 endpoint: String, allowedIps: String, keepalive: Int, presharedKey: String? = nil,
-                traffic: TunnelTraffic, locationName: String, locationId: Int, instanceId: Int,
-                mfaMethod: Int? = nil) {
+                traffic: TunnelTraffic, locationName: String, locationId: Int, instanceId: Int) {
         self.publicKey = publicKey
         self.privateKey = privateKey
         self.address = address
@@ -45,7 +41,6 @@ public struct TunnelStartData: Codable {
         self.locationName = locationName
         self.locationId = locationId
         self.instanceId = instanceId
-        self.mfaMethod = mfaMethod
     }
 }
 
@@ -53,13 +48,11 @@ public struct ActiveTunnelData: Codable {
     var locationId: Int
     var instanceId: Int
     var traffic: TunnelTraffic
-    var mfaMethod: Int?
 
     init(fromConfig: TunnelStartData) {
         self.locationId = fromConfig.locationId
         self.instanceId = fromConfig.instanceId
         self.traffic = fromConfig.traffic
-        self.mfaMethod = fromConfig.mfaMethod
     }
 }
 

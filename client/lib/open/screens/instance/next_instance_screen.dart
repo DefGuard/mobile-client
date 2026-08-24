@@ -444,26 +444,21 @@ class _LocationList extends HookConsumerWidget {
             return;
           }
 
-          // Update location with selected traffic method so TunnelService uses it
-          final db = ref.read(databaseProvider);
-          await (db.update(
-            db.locations,
-          )..where((t) => t.id.equals(location.id))).write(
-            LocationsCompanion(
-              trafficMethod: drift.Value(result['traffic'] as RoutingMethod),
-            ),
-          );
-
           final permissionsGranted = await wireguardPlugin.requestPermissions();
           if (permissionsGranted) {
             if (context.mounted) {
+              // both preferences are passed explicitly - TunnelService persists
+              // them once the tunnel is up, so the legacy dialogs are never
+              // reachable from this path
               await TunnelService.connect(
                 context: context,
                 instance: data.instance,
                 location: location,
                 wireguardPlugin: wireguardPlugin,
                 biometricsStatus: biometricStatus,
+                db: ref.read(databaseProvider),
                 trafficMethod: result['traffic'] as RoutingMethod,
+                mfaMethod: result['mfa'] as MfaMethod?,
               );
               talker.debug("Connected to ${location.name}");
             }
@@ -512,7 +507,11 @@ class _LocationList extends HookConsumerWidget {
             location: connectedLocation,
             isConnected: true,
             routingMethod: activeTunnel?.traffic,
-            mfaMethod: connectedLocation.mfaMethod,
+            // gated so a stored preference never renders an MFA chip on a
+            // location whose MFA has since been disabled server-side
+            mfaMethod: TunnelService.checkMfaEnabled(connectedLocation)
+                ? connectedLocation.mfaMethod
+                : null,
             onDisconnectTap: () => onDisconnect(connectedLocation),
           ),
           const SizedBox(height: NextSpacing.xl),
@@ -530,7 +529,9 @@ class _LocationList extends HookConsumerWidget {
                 location: location,
                 isConnected: false,
                 loading: loadingLocationId.value == location.id,
-                mfaMethod: location.mfaMethod,
+                mfaMethod: TunnelService.checkMfaEnabled(location)
+                    ? location.mfaMethod
+                    : null,
                 onConnectTap: () => onConnect(context, location),
               ),
             ),

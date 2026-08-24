@@ -51,8 +51,7 @@ class RunnerTests: XCTestCase {
         traffic: .All,
         locationName: "Test Location",
         locationId: 1,
-        instanceId: 1,
-        mfaMethod: 0
+        instanceId: 1
     )
 
     func testConnectDisconnect() {

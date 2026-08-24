@@ -34,10 +34,6 @@ PluginConnectPayload _$PluginConnectPayloadFromJson(
         'posture_check_required',
         (v) => v as bool,
       ),
-      mfaMethod: $checkedConvert(
-        'mfa_method',
-        (v) => $enumDecodeNullable(_$MfaMethodEnumMap, v),
-      ),
     );
     return val;
   },
@@ -52,7 +48,6 @@ PluginConnectPayload _$PluginConnectPayloadFromJson(
     'networkId': 'network_id',
     'presharedKey': 'preshared_key',
     'postureCheckRequired': 'posture_check_required',
-    'mfaMethod': 'mfa_method',
   },
 );
 
@@ -72,7 +67,6 @@ const _$PluginConnectPayloadFieldMap = <String, String>{
   'networkId': 'network_id',
   'traffic': 'traffic',
   'postureCheckRequired': 'posture_check_required',
-  'mfaMethod': 'mfa_method',
 };
 
 Map<String, dynamic> _$PluginConnectPayloadToJson(
@@ -93,19 +87,11 @@ Map<String, dynamic> _$PluginConnectPayloadToJson(
   'network_id': instance.networkId,
   'traffic': _$RoutingMethodEnumMap[instance.traffic]!,
   'posture_check_required': instance.postureCheckRequired,
-  'mfa_method': _$MfaMethodEnumMap[instance.mfaMethod],
 };
 
 const _$RoutingMethodEnumMap = {
   RoutingMethod.all: 'all',
   RoutingMethod.predefined: 'predefined',
-};
-
-const _$MfaMethodEnumMap = {
-  MfaMethod.totp: 0,
-  MfaMethod.email: 1,
-  MfaMethod.openid: 2,
-  MfaMethod.biometric: 3,
 };
 
 PluginTunnelEventData _$PluginTunnelEventDataFromJson(
@@ -121,25 +107,16 @@ PluginTunnelEventData _$PluginTunnelEventDataFromJson(
         'traffic',
         (v) => $enumDecode(_$RoutingMethodEnumMap, v),
       ),
-      mfaMethod: $checkedConvert(
-        'mfa_method',
-        (v) => $enumDecodeNullable(_$MfaMethodEnumMap, v),
-      ),
     );
     return val;
   },
-  fieldKeyMap: const {
-    'instanceId': 'instance_id',
-    'locationId': 'location_id',
-    'mfaMethod': 'mfa_method',
-  },
+  fieldKeyMap: const {'instanceId': 'instance_id', 'locationId': 'location_id'},
 );
 
 const _$PluginTunnelEventDataFieldMap = <String, String>{
   'instanceId': 'instance_id',
   'locationId': 'location_id',
   'traffic': 'traffic',
-  'mfaMethod': 'mfa_method',
 };
 
 Map<String, dynamic> _$PluginTunnelEventDataToJson(
@@ -148,5 +125,4 @@ Map<String, dynamic> _$PluginTunnelEventDataToJson(
   'instance_id': instance.instanceId,
   'location_id': instance.locationId,
   'traffic': _$RoutingMethodEnumMap[instance.traffic]!,
-  'mfa_method': _$MfaMethodEnumMap[instance.mfaMethod],
 };

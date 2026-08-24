@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:drift/drift.dart' as drift;
 import 'package:flutter/material.dart';
 import 'package:mobile/data/db/database.dart';
 import 'package:mobile/data/plugin/plugin.dart';
@@ -30,7 +31,9 @@ class TunnelService {
     required Location location,
     required dynamic wireguardPlugin,
     required BiometricsState biometricsStatus,
+    required AppDatabase db,
     RoutingMethod? trafficMethod,
+    MfaMethod? mfaMethod,
   }) async {
     // prepare navigator to avoid "context use across async gaps"
     final navigator = Navigator.of(context);
@@ -79,14 +82,25 @@ class TunnelService {
       selectedTrafficMethod,
     );
 
+    // the method that actually authorized this connection - stays null when no
+    // MFA was performed, which is what keeps non-MFA locations from having a
+    // phantom method remembered for them
+    MfaMethod? authorizedWith;
+
     // handle MFA if configured
     if (checkMfaEnabled(location)) {
       // Request notification permissions for MFA session expiry alerts
       await requestNotificationPermissions();
-      MfaMethod mfaMethod;
+      late MfaMethod selectedMfaMethod;
       if (location.locationMfaMode == LocationMfaMode.external) {
-        // location setup for openid mfa login
-        mfaMethod = MfaMethod.openid;
+        // location setup for openid mfa login - the server dictates the method,
+        // so this stays ahead of any caller-supplied choice
+        selectedMfaMethod = MfaMethod.openid;
+      } else if (mfaMethod != null &&
+          !(mfaMethod == MfaMethod.biometric &&
+              !biometricsStatus.canOpenStorage)) {
+        // caller already collected the choice from the user
+        selectedMfaMethod = mfaMethod;
       } else {
         // non-openid mfa setup, use stored method or show method choice dialog
         if (location.mfaMethod == null ||
@@ -104,9 +118,9 @@ class TunnelService {
             // dialog dismissed
             return;
           }
-          mfaMethod = userSelection;
+          selectedMfaMethod = userSelection;
         } else {
-          mfaMethod = location.mfaMethod!;
+          selectedMfaMethod = location.mfaMethod!;
         }
       }
 
@@ -115,7 +129,7 @@ class TunnelService {
         navigator: navigator,
         proxyUrl: instance.proxyUrl,
         payload: payload,
-        method: mfaMethod,
+        method: selectedMfaMethod,
         secureStorageKey: instance.secureStorageKey,
         openidDisplayName: instance.openidDisplayName,
       );
@@ -124,9 +138,7 @@ class TunnelService {
         return;
       }
       payload.presharedKey = presharedKey;
-      // record which method actually authorized this connection, so the UI can
-      // display it for the active tunnel
-      payload.mfaMethod = mfaMethod;
+      authorizedWith = selectedMfaMethod;
     } else if (payload.postureCheckRequired) {
       final presharedKey = await _performPostureCheck(
         navigator: navigator,
@@ -142,6 +154,55 @@ class TunnelService {
 
     // start the tunnel
     await wireguardPlugin.startTunnel(jsonEncode(payload.toJson()));
+
+    // only remember what the caller explicitly collected from the user - the
+    // legacy dialogs keep owning their own "Remember my choice" checkbox
+    await _rememberPreferences(
+      db,
+      instance,
+      location,
+      trafficMethod: trafficMethod,
+      mfaMethod: mfaMethod != null ? authorizedWith : null,
+    );
+  }
+
+  /// Stores the connection preferences on the location row so the next connect
+  /// can pre-select them, and so the UI can show what authorized the tunnel.
+  ///
+  /// Runs only after the tunnel actually started, so a cancelled or failed
+  /// connect never overwrites a working preference. Fields left absent keep
+  /// their stored value - passing `Value(null)` would clear them instead.
+  static Future<void> _rememberPreferences(
+    AppDatabase db,
+    DefguardInstance instance,
+    Location location, {
+    RoutingMethod? trafficMethod,
+    MfaMethod? mfaMethod,
+  }) async {
+    // only the "none" policy leaves the routing choice to the user - under an
+    // enforced policy the value is the server's, not a preference
+    final traffic =
+        instance.clientTrafficPolicy == ClientTrafficPolicy.none &&
+            trafficMethod != null
+        ? drift.Value(trafficMethod)
+        : const drift.Value<RoutingMethod?>.absent();
+    final mfa = mfaMethod != null
+        ? drift.Value(mfaMethod)
+        : const drift.Value<MfaMethod?>.absent();
+
+    if (!traffic.present && !mfa.present) {
+      return;
+    }
+
+    try {
+      await (db.update(db.locations)..where((t) => t.id.equals(location.id)))
+          .write(LocationsCompanion(trafficMethod: traffic, mfaMethod: mfa));
+    } catch (e) {
+      talker.error(
+        "Failed to remember connection preferences for location ${location.id}",
+        e,
+      );
+    }
   }
 
   /// Checks if MFA is enabled for specified location taking into account
