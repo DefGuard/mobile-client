@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/widget_previews.dart';
 import 'package:mobile/open/widgets/next/next_preview_wrapper.dart';
@@ -44,12 +46,14 @@ class NextBottomSheet extends StatelessWidget {
     final bottomSafeArea = MediaQuery.paddingOf(context).bottom;
 
     final effectivePadding = contentPadding != null
-        ? contentPadding!.add(EdgeInsets.only(bottom: bottomSafeArea))
+        ? contentPadding!.add(
+            EdgeInsets.only(bottom: bottomSafeArea + NextSpacing.xl),
+          )
         : EdgeInsets.only(
             left: NextSpacing.xl,
             right: NextSpacing.xl,
             top: NextSpacing.sm,
-            bottom: NextSpacing.xs + bottomSafeArea,
+            bottom: NextSpacing.xl + bottomSafeArea,
           );
 
     return BottomSheet(
@@ -63,29 +67,32 @@ class NextBottomSheet extends StatelessWidget {
       ),
       clipBehavior: Clip.antiAlias,
       builder: (BuildContext context) {
-        return Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            if (showDragHandle)
-              SizedBox(
-                height: 37,
-                child: Center(
-                  child: Container(
-                    width: 50,
-                    height: 5,
-                    decoration: BoxDecoration(
-                      color: NextColor.fgDisabled,
-                      borderRadius: BorderRadius.circular(100),
+        return BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (showDragHandle)
+                SizedBox(
+                  height: 37,
+                  child: Center(
+                    child: Container(
+                      width: 50,
+                      height: 5,
+                      decoration: BoxDecoration(
+                        color: NextColor.fgDisabled,
+                        borderRadius: BorderRadius.circular(100),
+                      ),
                     ),
                   ),
                 ),
+              Padding(
+                padding: effectivePadding,
+                child: builder?.call(context) ?? child!,
               ),
-            Padding(
-              padding: effectivePadding,
-              child: builder?.call(context) ?? child!,
-            ),
-          ],
+            ],
+          ),
         );
       },
     );

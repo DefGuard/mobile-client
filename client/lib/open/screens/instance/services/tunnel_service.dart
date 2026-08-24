@@ -30,23 +30,27 @@ class TunnelService {
     required Location location,
     required dynamic wireguardPlugin,
     required BiometricsState biometricsStatus,
+    RoutingMethod? trafficMethod,
   }) async {
     // prepare navigator to avoid "context use across async gaps"
     final navigator = Navigator.of(context);
 
     // handle traffic type selection if necessary
-    late RoutingMethod trafficMethod;
-    if (instance.clientTrafficPolicy == ClientTrafficPolicy.disableAllTraffic) {
+    late RoutingMethod selectedTrafficMethod;
+    if (trafficMethod != null) {
+      selectedTrafficMethod = trafficMethod;
+    } else if (instance.clientTrafficPolicy ==
+        ClientTrafficPolicy.disableAllTraffic) {
       // instance enforces predefined traffic
-      trafficMethod = RoutingMethod.predefined;
+      selectedTrafficMethod = RoutingMethod.predefined;
     } else if (instance.clientTrafficPolicy ==
         ClientTrafficPolicy.forceAllTraffic) {
       // instance enforces all traffic
-      trafficMethod = RoutingMethod.all;
+      selectedTrafficMethod = RoutingMethod.all;
     } else {
       // instance allows traffic type selection - use stored method or display selection dialog
       if (location.trafficMethod != null) {
-        trafficMethod = location.trafficMethod!;
+        selectedTrafficMethod = location.trafficMethod!;
       } else {
         // no pre selected traffic choice available, ask user
         RoutingMethodDialogIntention dialogIntention = checkMfaEnabled(location)
@@ -64,7 +68,7 @@ class TunnelService {
         if (userSelection == null) {
           return;
         }
-        trafficMethod = userSelection;
+        selectedTrafficMethod = userSelection;
       }
     }
 
@@ -72,7 +76,7 @@ class TunnelService {
     PluginConnectPayload payload = _makePayload(
       instance,
       location,
-      trafficMethod,
+      selectedTrafficMethod,
     );
 
     // handle MFA if configured

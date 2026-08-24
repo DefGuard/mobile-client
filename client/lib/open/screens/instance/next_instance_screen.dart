@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mobile/data/db/database.dart';
+import 'package:mobile/data/db/enums.dart';
 import 'package:mobile/data/plugin/plugin.dart';
 import 'package:mobile/open/api.dart';
 import 'package:mobile/open/riverpod/biometrics_state.dart';
@@ -11,10 +12,12 @@ import 'package:mobile/open/riverpod/plugin/plugin.dart';
 import 'package:mobile/open/screens/instance/services/tunnel_service.dart';
 import 'package:mobile/open/screens/instance/widgets/connection_conflict_dialog.dart';
 import 'package:mobile/open/screens/instance/widgets/delete_instance_dialog.dart';
+import 'package:mobile/open/screens/instance/widgets/next_connect_dialog.dart';
 import 'package:mobile/open/screens/instance/widgets/next_refresh_instance_dialog.dart';
 import 'package:mobile/open/screens/mfa/remote_mfa_qr_screen.dart';
 import 'package:mobile/open/widgets/next/icons/next_icon.dart';
 import 'package:mobile/open/widgets/next/next_app_bar.dart';
+import 'package:mobile/open/widgets/next/next_bottom_sheet.dart';
 import 'package:mobile/open/widgets/next/next_drawer.dart';
 import 'package:mobile/open/widgets/next/next_location_card.dart';
 import 'package:mobile/open/widgets/next/next_menu.dart';
@@ -427,17 +430,43 @@ class _LocationList extends HookConsumerWidget {
           await wireguardPlugin.closeTunnel();
         }
 
-        final permissionsGranted = await wireguardPlugin.requestPermissions();
-        if (permissionsGranted) {
-          if (context.mounted) {
-            await TunnelService.connect(
-              context: context,
+        if (context.mounted) {
+          final result = await showNextBottomSheet<Map<String, dynamic>>(
+            context: context,
+            child: NextConnectDialog(
               instance: data.instance,
               location: location,
-              wireguardPlugin: wireguardPlugin,
-              biometricsStatus: biometricStatus,
-            );
-            talker.debug("Connected to ${location.name}");
+            ),
+          );
+
+          if (result == null) {
+            loadingLocationId.value = null;
+            return;
+          }
+
+          // Update location with selected traffic method so TunnelService uses it
+          final db = ref.read(databaseProvider);
+          await (db.update(
+            db.locations,
+          )..where((t) => t.id.equals(location.id))).write(
+            LocationsCompanion(
+              trafficMethod: drift.Value(result['traffic'] as RoutingMethod),
+            ),
+          );
+
+          final permissionsGranted = await wireguardPlugin.requestPermissions();
+          if (permissionsGranted) {
+            if (context.mounted) {
+              await TunnelService.connect(
+                context: context,
+                instance: data.instance,
+                location: location,
+                wireguardPlugin: wireguardPlugin,
+                biometricsStatus: biometricStatus,
+                trafficMethod: result['traffic'] as RoutingMethod,
+              );
+              talker.debug("Connected to ${location.name}");
+            }
           }
         }
       } catch (e) {

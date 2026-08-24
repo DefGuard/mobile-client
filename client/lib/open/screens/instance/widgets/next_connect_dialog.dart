@@ -1,0 +1,157 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:mobile/data/db/database.dart';
+import 'package:mobile/data/db/enums.dart';
+import 'package:mobile/open/riverpod/biometrics_state.dart';
+import 'package:mobile/open/screens/instance/services/tunnel_service.dart';
+import 'package:mobile/open/widgets/next/icons/next_icon.dart';
+import 'package:mobile/open/widgets/next/next_button.dart';
+import 'package:mobile/open/widgets/next/next_toggle.dart';
+import 'package:mobile/open/widgets/next_mfa_selector.dart';
+import 'package:mobile/theme/next/color.dart';
+import 'package:mobile/theme/next/spacing.dart';
+import 'package:mobile/theme/next/text.dart';
+
+class NextConnectDialog extends HookConsumerWidget {
+  final DefguardInstance instance;
+  final Location location;
+
+  const NextConnectDialog({
+    super.key,
+    required this.instance,
+    required this.location,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final biometricsStatus = ref.watch(biometricsCapabilityProvider);
+    final isMfaEnabled = TunnelService.checkMfaEnabled(location);
+
+    final bool canChangeTraffic =
+        instance.clientTrafficPolicy == ClientTrafficPolicy.none;
+    final bool initialAllTraffic =
+        instance.clientTrafficPolicy == ClientTrafficPolicy.forceAllTraffic ||
+        (canChangeTraffic && location.trafficMethod == RoutingMethod.all);
+
+    final allTraffic = useState(initialAllTraffic);
+
+    final availableMfaMethods = useMemoized(() {
+      if (location.locationMfaMode == LocationMfaMode.external) {
+        return [MfaMethod.openid];
+      }
+      final methods = [MfaMethod.totp, MfaMethod.email];
+      if (instance.mfaKeysStored && biometricsStatus.canOpenStorage) {
+        methods.insert(0, MfaMethod.biometric);
+      }
+      return methods;
+    }, [instance, location, biometricsStatus]);
+
+    final selectedMfaMethod = useState<MfaMethod>(
+      location.mfaMethod ?? availableMfaMethods.first,
+    );
+
+    final isMfaExpanded = useState(false);
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          "Connect ${location.name}",
+          style: NextText.bodyPrimary600.copyWith(color: NextColor.fgWhite100),
+          textAlign: TextAlign.center,
+        ),
+        const Padding(
+          padding: EdgeInsets.only(top: 20, bottom: 16),
+          child: Divider(height: 1, color: NextColor.bgWhite10),
+        ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              allTraffic.value ? "All traffic" : "Predefined traffic only",
+              style: NextText.bodySm400.copyWith(color: NextColor.fgWhite100),
+            ),
+            NextToggle(
+              value: allTraffic.value,
+              onTap: canChangeTraffic
+                  ? (val) => allTraffic.value = val
+                  : (_) {},
+            ),
+          ],
+        ),
+        const Padding(
+          padding: EdgeInsets.symmetric(vertical: NextSpacing.md),
+          child: Divider(height: 1, color: NextColor.bgWhite10),
+        ),
+        if (isMfaEnabled) ...[
+          InkWell(
+            onTap: () => isMfaExpanded.value = !isMfaExpanded.value,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: NextSpacing.xs),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    selectedMfaMethod.value.toUiString(
+                      openidDisplayName: instance.openidDisplayName,
+                    ),
+                    style: NextText.bodySm400.copyWith(
+                      color: NextColor.fgWhite100,
+                    ),
+                  ),
+                  NextIcon(
+                    "arrow_small",
+                    size: 20,
+                    color: NextColor.fgWhite100,
+                    direction: isMfaExpanded.value
+                        ? NextIconDirection.up
+                        : NextIconDirection.down,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          if (isMfaExpanded.value)
+            Padding(
+              padding: const EdgeInsets.only(top: NextSpacing.md),
+              child: Column(
+                children: availableMfaMethods
+                    .map(
+                      (method) => Padding(
+                        padding: const EdgeInsets.only(bottom: NextSpacing.md),
+                        child: NextMfaSelector(
+                          active: selectedMfaMethod.value == method,
+                          factor: method,
+                          onTap: () {
+                            selectedMfaMethod.value = method;
+                            isMfaExpanded.value = false;
+                          },
+                        ),
+                      ),
+                    )
+                    .toList(),
+              ),
+            ),
+          const Divider(height: 1, color: NextColor.bgWhite10),
+          const SizedBox(height: NextSpacing.md),
+        ],
+        NextButton(
+          text: "Connect VPN",
+          size: NextButtonSize.big,
+          style: NextButtonStyle.primary,
+          disabled: isMfaEnabled,
+          onTap: () {
+            Navigator.pop(context, {
+              'traffic': allTraffic.value
+                  ? RoutingMethod.all
+                  : RoutingMethod.predefined,
+              'mfa': selectedMfaMethod.value,
+            });
+          },
+        ),
+      ],
+    );
+  }
+}
