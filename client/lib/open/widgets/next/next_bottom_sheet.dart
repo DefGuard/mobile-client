@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/widget_previews.dart';
 import 'package:mobile/open/widgets/next/next_preview_wrapper.dart';
@@ -10,12 +8,6 @@ class NextBottomSheet extends StatelessWidget {
   final Widget? child;
 
   final WidgetBuilder? builder;
-
-  final VoidCallback? onClosing;
-
-  final AnimationController? animationController;
-
-  final bool enableDrag;
 
   final bool showDragHandle;
 
@@ -29,9 +21,6 @@ class NextBottomSheet extends StatelessWidget {
     super.key,
     this.child,
     this.builder,
-    this.onClosing,
-    this.animationController,
-    this.enableDrag = true,
     this.showDragHandle = true,
     this.backgroundColor,
     this.elevation,
@@ -56,45 +45,37 @@ class NextBottomSheet extends StatelessWidget {
             bottom: NextSpacing.xl + bottomSafeArea,
           );
 
-    return BottomSheet(
-      onClosing: onClosing ?? () {},
-      animationController: animationController,
-      enableDrag: enableDrag,
-      backgroundColor: backgroundColor ?? NextColor.bgDarkBlue80,
+    return Material(
+      color: backgroundColor ?? NextColor.bgDarkBlue80,
       elevation: elevation ?? 0,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       clipBehavior: Clip.antiAlias,
-      builder: (BuildContext context) {
-        return BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              if (showDragHandle)
-                SizedBox(
-                  height: 37,
-                  child: Center(
-                    child: Container(
-                      width: 50,
-                      height: 5,
-                      decoration: BoxDecoration(
-                        color: NextColor.fgDisabled,
-                        borderRadius: BorderRadius.circular(100),
-                      ),
-                    ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (showDragHandle)
+            SizedBox(
+              height: 37,
+              child: Center(
+                child: Container(
+                  width: 50,
+                  height: 5,
+                  decoration: BoxDecoration(
+                    color: NextColor.fgDisabled,
+                    borderRadius: BorderRadius.circular(100),
                   ),
                 ),
-              Padding(
-                padding: effectivePadding,
-                child: builder?.call(context) ?? child!,
               ),
-            ],
+            ),
+          Padding(
+            padding: effectivePadding,
+            child: builder?.call(context) ?? child!,
           ),
-        );
-      },
+        ],
+      ),
     );
   }
 }
@@ -126,20 +107,14 @@ Future<T?> showNextBottomSheet<T>({
     isDismissible: isDismissible,
     enableDrag: enableDrag,
     backgroundColor: Colors.transparent,
-    barrierColor: barrierColor,
+    barrierColor: barrierColor ?? const Color(0x80000000),
     routeSettings: routeSettings,
     transitionAnimationController: transitionAnimationController,
     builder: (modalContext) {
       return NextBottomSheet(
-        enableDrag: enableDrag,
         showDragHandle: showDragHandle,
         backgroundColor: backgroundColor,
         contentPadding: contentPadding,
-        onClosing: () {
-          if (Navigator.canPop(modalContext)) {
-            Navigator.pop(modalContext);
-          }
-        },
         builder: builder,
         child: child,
       );

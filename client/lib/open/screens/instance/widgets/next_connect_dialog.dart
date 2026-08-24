@@ -1,10 +1,11 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mobile/data/db/database.dart';
 import 'package:mobile/data/db/enums.dart';
 import 'package:mobile/open/riverpod/biometrics_state.dart';
-import 'package:mobile/open/screens/instance/services/tunnel_service.dart';
 import 'package:mobile/open/widgets/next/icons/next_icon.dart';
 import 'package:mobile/open/widgets/next/next_button.dart';
 import 'package:mobile/open/widgets/next/next_toggle.dart';
@@ -26,7 +27,7 @@ class NextConnectDialog extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final biometricsStatus = ref.watch(biometricsCapabilityProvider);
-    final isMfaEnabled = TunnelService.checkMfaEnabled(location);
+    final isMfaEnabled = location.locationMfaMode != LocationMfaMode.disabled;
 
     final bool canChangeTraffic =
         instance.clientTrafficPolicy == ClientTrafficPolicy.none;
@@ -51,92 +52,128 @@ class NextConnectDialog extends HookConsumerWidget {
       location.mfaMethod ?? availableMfaMethods.first,
     );
 
-    final isMfaExpanded = useState(false);
+    final mfaController = useMemoized(() => ExpansibleController(), []);
+    useEffect(() => mfaController.dispose, [mfaController]);
 
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          "Connect ${location.name}",
+          "Connect ${location.name} location",
           style: NextText.bodyPrimary600.copyWith(color: NextColor.fgWhite100),
-          textAlign: TextAlign.center,
+          textAlign: TextAlign.left,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
         ),
         const Padding(
           padding: EdgeInsets.only(top: 20, bottom: 16),
           child: Divider(height: 1, color: NextColor.bgWhite10),
         ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              allTraffic.value ? "All traffic" : "Predefined traffic only",
-              style: NextText.bodySm400.copyWith(color: NextColor.fgWhite100),
-            ),
-            NextToggle(
-              value: allTraffic.value,
-              onTap: canChangeTraffic
-                  ? (val) => allTraffic.value = val
-                  : (_) {},
-            ),
-          ],
-        ),
-        const Padding(
-          padding: EdgeInsets.symmetric(vertical: NextSpacing.md),
-          child: Divider(height: 1, color: NextColor.bgWhite10),
-        ),
-        if (isMfaEnabled) ...[
-          InkWell(
-            onTap: () => isMfaExpanded.value = !isMfaExpanded.value,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: NextSpacing.xs),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    selectedMfaMethod.value.toUiString(
-                      openidDisplayName: instance.openidDisplayName,
-                    ),
-                    style: NextText.bodySm400.copyWith(
-                      color: NextColor.fgWhite100,
-                    ),
-                  ),
-                  NextIcon(
-                    "arrow_small",
-                    size: 20,
+        GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: canChangeTraffic
+              ? () => allTraffic.value = !allTraffic.value
+              : null,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 44),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  allTraffic.value ? "All traffic" : "Predefined traffic only",
+                  style: NextText.bodySm400.copyWith(
                     color: NextColor.fgWhite100,
-                    direction: isMfaExpanded.value
-                        ? NextIconDirection.up
-                        : NextIconDirection.down,
                   ),
-                ],
-              ),
+                ),
+                NextToggle(value: allTraffic.value),
+              ],
             ),
           ),
-          if (isMfaExpanded.value)
-            Padding(
+        ),
+        if (isMfaEnabled) ...[
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 12),
+            child: Divider(color: NextColor.bgWhite10, height: 1),
+          ),
+          Expansible(
+            controller: mfaController,
+            expansibleBuilder: (context, header, body, animation) => Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [header, body],
+            ),
+            headerBuilder: (context, animation) => GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () => mfaController.toggle(),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(minHeight: 44),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 4,
+                        vertical: 1,
+                      ),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(4),
+                        color: NextColor.bgWhite100,
+                      ),
+                      child: Text(
+                        "MFA",
+                        style: NextText.bodyXs500.copyWith(
+                          color: const Color(0xff061a74),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        selectedMfaMethod.value.toUiString(
+                          openidDisplayName: instance.openidDisplayName,
+                        ),
+                        style: NextText.bodySm400.copyWith(
+                          color: NextColor.fgWhite100,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    NextIcon(
+                      "arrow_small",
+                      size: 20,
+                      color: NextColor.fgWhite100,
+                      rotation: animation.value * (math.pi / 2),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            bodyBuilder: (context, animation) => Padding(
               padding: const EdgeInsets.only(top: NextSpacing.md),
               child: Column(
+                spacing: NextSpacing.md,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: availableMfaMethods
                     .map(
-                      (method) => Padding(
-                        padding: const EdgeInsets.only(bottom: NextSpacing.md),
-                        child: NextMfaSelector(
-                          active: selectedMfaMethod.value == method,
-                          factor: method,
-                          onTap: () {
-                            selectedMfaMethod.value = method;
-                            isMfaExpanded.value = false;
-                          },
-                        ),
+                      (method) => NextMfaSelector(
+                        active: selectedMfaMethod.value == method,
+                        factor: method,
+                        onTap: () {
+                          selectedMfaMethod.value = method;
+                        },
                       ),
                     )
                     .toList(),
               ),
             ),
-          const Divider(height: 1, color: NextColor.bgWhite10),
-          const SizedBox(height: NextSpacing.md),
+          ),
         ],
+        const Padding(
+          padding: EdgeInsets.symmetric(vertical: NextSpacing.xl2),
+          child: Divider(height: 1, color: NextColor.bgWhite10),
+        ),
         NextButton(
           text: "Connect VPN",
           size: NextButtonSize.big,

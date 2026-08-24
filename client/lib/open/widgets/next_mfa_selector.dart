@@ -3,6 +3,7 @@ import 'package:flutter/widget_previews.dart';
 import 'package:mobile/data/db/enums.dart';
 import 'package:mobile/open/widgets/next/icons/next_icon.dart';
 import 'package:mobile/open/widgets/next/next_preview_wrapper.dart';
+import 'package:mobile/open/widgets/next/next_radio_indicator.dart';
 import 'package:mobile/theme/next/color.dart';
 import 'package:mobile/theme/next/spacing.dart';
 import 'package:mobile/theme/next/text.dart';
@@ -57,10 +58,11 @@ class NextMfaSelector extends StatelessWidget {
       child: AnimatedContainer(
         duration: duration,
         curve: curve,
+        constraints: BoxConstraints(minHeight: 44),
         padding: const EdgeInsets.fromLTRB(16, 8, 12, 8),
         decoration: BoxDecoration(
           color: active ? NextColor.bgWhite10 : Colors.transparent,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(12),
           border: Border.all(color: NextColor.bgWhite10, width: 1),
         ),
         child: TweenAnimationBuilder<Color?>(
@@ -74,10 +76,13 @@ class NextMfaSelector extends StatelessWidget {
               spacing: NextSpacing.md,
               children: [
                 NextIcon(getIcon, size: 20, color: effectiveColor),
-                Text(
-                  getLabel,
-                  style: NextText.bodySm400.copyWith(color: effectiveColor),
+                Expanded(
+                  child: Text(
+                    getLabel,
+                    style: NextText.bodySm400.copyWith(color: effectiveColor),
+                  ),
                 ),
+                NextRadioIndicator(value: active, size: 20),
               ],
             );
           },
