@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mobile/data/db/database.dart';
-import 'package:mobile/data/db/enums.dart';
 import 'package:mobile/data/plugin/plugin.dart';
 import 'package:mobile/open/api.dart';
 import 'package:mobile/open/riverpod/biometrics_state.dart';
@@ -431,38 +430,32 @@ class _LocationList extends HookConsumerWidget {
         }
 
         if (context.mounted) {
-          final result = await showNextBottomSheet<Map<String, dynamic>>(
+          await showNextBottomSheet(
             context: context,
             child: NextConnectDialog(
               instance: data.instance,
               location: location,
+              onConnect: (traffic, mfa) async {
+                final permissionsGranted = await wireguardPlugin
+                    .requestPermissions();
+                if (permissionsGranted) {
+                  if (context.mounted) {
+                    await TunnelService.connect(
+                      context: context,
+                      instance: data.instance,
+                      location: location,
+                      wireguardPlugin: wireguardPlugin,
+                      biometricsStatus: biometricStatus,
+                      db: ref.read(databaseProvider),
+                      trafficMethod: traffic,
+                      mfaMethod: mfa,
+                    );
+                  }
+                }
+              },
             ),
           );
-
-          if (result == null) {
-            loadingLocationId.value = null;
-            return;
-          }
-
-          final permissionsGranted = await wireguardPlugin.requestPermissions();
-          if (permissionsGranted) {
-            if (context.mounted) {
-              // both preferences are passed explicitly - TunnelService persists
-              // them once the tunnel is up, so the legacy dialogs are never
-              // reachable from this path
-              await TunnelService.connect(
-                context: context,
-                instance: data.instance,
-                location: location,
-                wireguardPlugin: wireguardPlugin,
-                biometricsStatus: biometricStatus,
-                db: ref.read(databaseProvider),
-                trafficMethod: result['traffic'] as RoutingMethod,
-                mfaMethod: result['mfa'] as MfaMethod?,
-              );
-              talker.debug("Connected to ${location.name}");
-            }
-          }
+          talker.debug("Connected to ${location.name}");
         }
       } catch (e) {
         talker.error("Failed to connect", e);

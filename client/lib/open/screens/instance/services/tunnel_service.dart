@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:dio/dio.dart';
 import 'package:drift/drift.dart' as drift;
 import 'package:flutter/material.dart';
 import 'package:mobile/data/db/database.dart';
@@ -12,9 +13,12 @@ import 'package:mobile/open/api.dart';
 import 'package:mobile/open/riverpod/biometrics_state.dart';
 import 'package:mobile/open/screens/instance/widgets/mfa_method_dialog.dart';
 import 'package:mobile/open/screens/instance/widgets/routing_method_dialog.dart';
-import 'package:mobile/open/screens/mfa/mfa_code_screen.dart';
+import 'package:mobile/open/screens/next/mfa/next_mfa_email_screen.dart';
+import 'package:mobile/open/screens/next/mfa/next_mfa_totp_screen.dart';
+import 'package:mobile/open/services/snackbar_service.dart';
 import 'package:mobile/open/widgets/dg_snackbar.dart';
 import 'package:mobile/theme/color.dart';
+import 'package:mobile/utils/error_handler.dart';
 import 'package:mobile/utils/secure_storage.dart';
 
 import '../../../../data/db/enums.dart';
@@ -373,17 +377,62 @@ class TunnelService {
     required MfaMethod method,
   }) async {
     try {
-      final presharedKey = await Navigator.of(navigator.context).push<String?>(
-        MaterialPageRoute(
-          builder: (context) => MfaCodeScreen(
-            screenData: MfaCodeScreenData(
-              token: token,
-              url: proxyUrl,
-              method: method,
-            ),
-          ),
-        ),
-      );
+      Widget screen;
+      if (method == MfaMethod.email) {
+        screen = NextMfaEmailScreen(
+          onSubmit: (code, setError) async {
+            try {
+              final finishData = FinishMfaRequest(token: token, code: code);
+              final response = await proxyApi.finishMfa(
+                Uri.parse(proxyUrl),
+                finishData,
+              );
+              if (navigator.mounted) {
+                Navigator.of(navigator.context).pop(response.presharedKey);
+              }
+            } on DioException catch (e) {
+              if (e.response?.statusCode == 401) {
+                setError('Enter valid code');
+              } else {
+                SnackbarService.showError(
+                  ErrorHandler.getHumanReadableError(e),
+                );
+              }
+            } catch (e) {
+              SnackbarService.showError(ErrorHandler.getHumanReadableError(e));
+            }
+          },
+        );
+      } else {
+        screen = NextMfaTotpScreen(
+          onSubmit: (code, setError) async {
+            try {
+              final finishData = FinishMfaRequest(token: token, code: code);
+              final response = await proxyApi.finishMfa(
+                Uri.parse(proxyUrl),
+                finishData,
+              );
+              if (navigator.mounted) {
+                Navigator.of(navigator.context).pop(response.presharedKey);
+              }
+            } on DioException catch (e) {
+              if (e.response?.statusCode == 401) {
+                setError('Enter valid code');
+              } else {
+                SnackbarService.showError(
+                  ErrorHandler.getHumanReadableError(e),
+                );
+              }
+            } catch (e) {
+              SnackbarService.showError(ErrorHandler.getHumanReadableError(e));
+            }
+          },
+        );
+      }
+
+      final presharedKey = await Navigator.of(
+        navigator.context,
+      ).push<String?>(MaterialPageRoute(builder: (context) => screen));
       if (presharedKey != null) {
         talker.info("Code authentication successful");
       }

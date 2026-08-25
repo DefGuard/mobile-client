@@ -18,11 +18,13 @@ import 'package:mobile/theme/next/text.dart';
 class NextConnectDialog extends HookConsumerWidget {
   final DefguardInstance instance;
   final Location location;
+  final Future<void> Function(RoutingMethod traffic, MfaMethod? mfa) onConnect;
 
   const NextConnectDialog({
     super.key,
     required this.instance,
     required this.location,
+    required this.onConnect,
   });
 
   @override
@@ -39,15 +41,16 @@ class NextConnectDialog extends HookConsumerWidget {
         (canChangeTraffic && location.trafficMethod == RoutingMethod.all);
 
     final allTraffic = useState(initialAllTraffic);
+    final isLoading = useState(false);
 
     final availableMfaMethods = useMemoized(() {
       if (location.locationMfaMode == LocationMfaMode.external) {
         return [MfaMethod.openid];
       }
       final methods = [MfaMethod.totp, MfaMethod.email];
-      if (instance.mfaKeysStored && biometricsStatus.canOpenStorage) {
-        methods.insert(0, MfaMethod.biometric);
-      }
+      // if (instance.mfaKeysStored && biometricsStatus.canOpenStorage) {
+      //   methods.insert(0, MfaMethod.biometric);
+      // }
       return methods;
     }, [instance, location, biometricsStatus]);
 
@@ -181,14 +184,22 @@ class NextConnectDialog extends HookConsumerWidget {
           text: "Connect VPN",
           size: NextButtonSize.big,
           style: NextButtonStyle.primary,
-          disabled: isMfaEnabled,
-          onTap: () {
-            Navigator.pop(context, {
-              'traffic': allTraffic.value
+          loading: isLoading.value,
+          onTap: () async {
+            isLoading.value = true;
+            try {
+              final traffic = allTraffic.value
                   ? RoutingMethod.all
-                  : RoutingMethod.predefined,
-              'mfa': selectedMfaMethod.value,
-            });
+                  : RoutingMethod.predefined;
+              final mfa = isMfaEnabled ? selectedMfaMethod.value : null;
+
+              await onConnect(traffic, mfa);
+              if (context.mounted) {
+                Navigator.of(context).pop();
+              }
+            } finally {
+              isLoading.value = false;
+            }
           },
         ),
       ],
