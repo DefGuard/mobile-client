@@ -4,16 +4,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mobile/data/db/database.dart';
+import 'package:mobile/data/db/enums.dart';
 import 'package:mobile/data/plugin/plugin.dart';
 import 'package:mobile/open/api.dart';
 import 'package:mobile/open/riverpod/biometrics_state.dart';
 import 'package:mobile/open/riverpod/plugin/plugin.dart';
 import 'package:mobile/open/screens/instance/services/tunnel_service.dart';
+import 'package:mobile/open/screens/instance/widgets/connection_conflict_dialog.dart';
 import 'package:mobile/open/screens/instance/widgets/delete_instance_dialog.dart';
+import 'package:mobile/open/screens/instance/widgets/next_connect_dialog.dart';
 import 'package:mobile/open/screens/instance/widgets/next_refresh_instance_dialog.dart';
 import 'package:mobile/open/screens/mfa/remote_mfa_qr_screen.dart';
 import 'package:mobile/open/widgets/next/icons/next_icon.dart';
 import 'package:mobile/open/widgets/next/next_app_bar.dart';
+import 'package:mobile/open/widgets/next/next_bottom_sheet.dart';
 import 'package:mobile/open/widgets/next/next_drawer.dart';
 import 'package:mobile/open/widgets/next/next_location_card.dart';
 import 'package:mobile/open/widgets/next/next_menu.dart';
@@ -380,7 +384,7 @@ class _InstanceAppBar extends StatelessWidget implements PreferredSizeWidget {
   Size get preferredSize => Size.fromHeight(NextAppBar.baseHeight + topPadding);
 }
 
-class _LocationList extends StatelessWidget {
+class _LocationList extends HookConsumerWidget {
   final _ScreenData data;
   final PluginTunnelEventData? activeTunnel;
   final WireguardPlugin wireguardPlugin;
@@ -393,39 +397,81 @@ class _LocationList extends StatelessWidget {
     required this.biometricStatus,
   });
 
-  Future<void> _onDisconnect(Location location) async {
-    try {
-      await wireguardPlugin.closeTunnel();
-      talker.debug("Disconnected from ${location.name}");
-    } catch (e) {
-      talker.error("Failed to disconnect", e);
-      SnackbarService.showError("Failed to disconnect");
-    }
-  }
-
-  Future<void> _onConnect(BuildContext context, Location location) async {
-    try {
-      final permissionsGranted = await wireguardPlugin.requestPermissions();
-      if (permissionsGranted) {
-        if (context.mounted) {
-          await TunnelService.connect(
-            context: context,
-            instance: data.instance,
-            location: location,
-            wireguardPlugin: wireguardPlugin,
-            biometricsStatus: biometricStatus,
-          );
-          talker.debug("Connected to ${location.name}");
-        }
-      }
-    } catch (e) {
-      talker.error("Failed to connect", e);
-      SnackbarService.showError("Failed to connect");
-    }
-  }
-
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final loadingLocationId = useState<int?>(null);
+
+    Future<void> onDisconnect(Location location) async {
+      try {
+        await wireguardPlugin.closeTunnel();
+        talker.debug("Disconnected from ${location.name}");
+      } catch (e) {
+        talker.error("Failed to disconnect", e);
+        SnackbarService.showError("Failed to disconnect");
+      }
+    }
+
+    Future<void> onConnect(BuildContext context, Location location) async {
+      loadingLocationId.value = location.id;
+      try {
+        if (activeTunnel != null) {
+          final bool? changeConnection = await showDialog<bool>(
+            context: context,
+            builder: (BuildContext context) {
+              return const ConnectionConflictDialog();
+            },
+          );
+
+          if (changeConnection != true) {
+            loadingLocationId.value = null;
+            return;
+          }
+
+          await wireguardPlugin.closeTunnel();
+        }
+
+        if (context.mounted) {
+          final result = await showNextBottomSheet<Map<String, dynamic>>(
+            context: context,
+            child: NextConnectDialog(
+              instance: data.instance,
+              location: location,
+            ),
+          );
+
+          if (result == null) {
+            loadingLocationId.value = null;
+            return;
+          }
+
+          final permissionsGranted = await wireguardPlugin.requestPermissions();
+          if (permissionsGranted) {
+            if (context.mounted) {
+              // both preferences are passed explicitly - TunnelService persists
+              // them once the tunnel is up, so the legacy dialogs are never
+              // reachable from this path
+              await TunnelService.connect(
+                context: context,
+                instance: data.instance,
+                location: location,
+                wireguardPlugin: wireguardPlugin,
+                biometricsStatus: biometricStatus,
+                db: ref.read(databaseProvider),
+                trafficMethod: result['traffic'] as RoutingMethod,
+                mfaMethod: result['mfa'] as MfaMethod?,
+              );
+              talker.debug("Connected to ${location.name}");
+            }
+          }
+        }
+      } catch (e) {
+        talker.error("Failed to connect", e);
+        SnackbarService.showError("Failed to connect");
+      } finally {
+        loadingLocationId.value = null;
+      }
+    }
+
     final locations = data.locations;
     final connectedLocation = locations.firstWhereOrNull(
       (l) =>
@@ -461,7 +507,12 @@ class _LocationList extends StatelessWidget {
             location: connectedLocation,
             isConnected: true,
             routingMethod: activeTunnel?.traffic,
-            onDisconnectTap: () => _onDisconnect(connectedLocation),
+            // gated so a stored preference never renders an MFA chip on a
+            // location whose MFA has since been disabled server-side
+            mfaMethod: TunnelService.checkMfaEnabled(connectedLocation)
+                ? connectedLocation.mfaMethod
+                : null,
+            onDisconnectTap: () => onDisconnect(connectedLocation),
           ),
           const SizedBox(height: NextSpacing.xl),
         ],
@@ -477,7 +528,11 @@ class _LocationList extends StatelessWidget {
               child: NextLocationCard(
                 location: location,
                 isConnected: false,
-                onConnectTap: () => _onConnect(context, location),
+                loading: loadingLocationId.value == location.id,
+                mfaMethod: TunnelService.checkMfaEnabled(location)
+                    ? location.mfaMethod
+                    : null,
+                onConnectTap: () => onConnect(context, location),
               ),
             ),
           ),

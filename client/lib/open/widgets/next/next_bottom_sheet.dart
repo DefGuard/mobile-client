@@ -9,12 +9,6 @@ class NextBottomSheet extends StatelessWidget {
 
   final WidgetBuilder? builder;
 
-  final VoidCallback? onClosing;
-
-  final AnimationController? animationController;
-
-  final bool enableDrag;
-
   final bool showDragHandle;
 
   final Color? backgroundColor;
@@ -27,9 +21,6 @@ class NextBottomSheet extends StatelessWidget {
     super.key,
     this.child,
     this.builder,
-    this.onClosing,
-    this.animationController,
-    this.enableDrag = true,
     this.showDragHandle = true,
     this.backgroundColor,
     this.elevation,
@@ -44,50 +35,47 @@ class NextBottomSheet extends StatelessWidget {
     final bottomSafeArea = MediaQuery.paddingOf(context).bottom;
 
     final effectivePadding = contentPadding != null
-        ? contentPadding!.add(EdgeInsets.only(bottom: bottomSafeArea))
+        ? contentPadding!.add(
+            EdgeInsets.only(bottom: bottomSafeArea + NextSpacing.xl),
+          )
         : EdgeInsets.only(
             left: NextSpacing.xl,
             right: NextSpacing.xl,
             top: NextSpacing.sm,
-            bottom: NextSpacing.xs + bottomSafeArea,
+            bottom: NextSpacing.xl + bottomSafeArea,
           );
 
-    return BottomSheet(
-      onClosing: onClosing ?? () {},
-      animationController: animationController,
-      enableDrag: enableDrag,
-      backgroundColor: backgroundColor ?? NextColor.bgDarkBlue80,
+    return Material(
+      color: backgroundColor ?? NextColor.bgDarkBlue80,
       elevation: elevation ?? 0,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       clipBehavior: Clip.antiAlias,
-      builder: (BuildContext context) {
-        return Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            if (showDragHandle)
-              SizedBox(
-                height: 37,
-                child: Center(
-                  child: Container(
-                    width: 50,
-                    height: 5,
-                    decoration: BoxDecoration(
-                      color: NextColor.fgDisabled,
-                      borderRadius: BorderRadius.circular(100),
-                    ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (showDragHandle)
+            SizedBox(
+              height: 37,
+              child: Center(
+                child: Container(
+                  width: 50,
+                  height: 5,
+                  decoration: BoxDecoration(
+                    color: NextColor.fgDisabled,
+                    borderRadius: BorderRadius.circular(100),
                   ),
                 ),
               ),
-            Padding(
-              padding: effectivePadding,
-              child: builder?.call(context) ?? child!,
             ),
-          ],
-        );
-      },
+          Padding(
+            padding: effectivePadding,
+            child: builder?.call(context) ?? child!,
+          ),
+        ],
+      ),
     );
   }
 }
@@ -119,20 +107,14 @@ Future<T?> showNextBottomSheet<T>({
     isDismissible: isDismissible,
     enableDrag: enableDrag,
     backgroundColor: Colors.transparent,
-    barrierColor: barrierColor,
+    barrierColor: barrierColor ?? const Color(0x80000000),
     routeSettings: routeSettings,
     transitionAnimationController: transitionAnimationController,
     builder: (modalContext) {
       return NextBottomSheet(
-        enableDrag: enableDrag,
         showDragHandle: showDragHandle,
         backgroundColor: backgroundColor,
         contentPadding: contentPadding,
-        onClosing: () {
-          if (Navigator.canPop(modalContext)) {
-            Navigator.pop(modalContext);
-          }
-        },
         builder: builder,
         child: child,
       );

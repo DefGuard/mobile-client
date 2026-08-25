@@ -48,7 +48,7 @@ public struct ActiveTunnelData: Codable {
     var locationId: Int
     var instanceId: Int
     var traffic: TunnelTraffic
-    
+
     init(fromConfig: TunnelStartData) {
         self.locationId = fromConfig.locationId
         self.instanceId = fromConfig.instanceId

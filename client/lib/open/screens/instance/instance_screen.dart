@@ -584,6 +584,7 @@ class _LocationItem extends HookConsumerWidget {
                             location: location,
                             wireguardPlugin: wireguardPlugin,
                             biometricsStatus: biometricStatus,
+                            db: ref.read(databaseProvider),
                           );
                           talker.debug(
                             "Location ${location.name} (${location.id}) connected",

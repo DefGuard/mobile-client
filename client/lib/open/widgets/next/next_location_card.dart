@@ -182,6 +182,7 @@ class NextLocationCard extends StatelessWidget {
           NextButton(
             text: "Connect",
             onTap: onConnectTap,
+            loading: loading,
             size: NextButtonSize.big,
             style: NextButtonStyle.secondary,
             height: 36,

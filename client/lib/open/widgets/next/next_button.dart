@@ -164,22 +164,37 @@ class NextButton extends StatelessWidget {
         child: InkWell(
           onTap: isInteractive ? onTap : null,
           borderRadius: borderRadius,
-          child: AnimatedPadding(
-            duration: duration,
-            curve: curve,
-            padding: EdgeInsets.symmetric(horizontal: padding, vertical: 0),
-            child: AnimatedDefaultTextStyle(
-              duration: duration,
-              curve: curve,
-              style: textStyle,
-              child: Row(
-                spacing: spacing,
-                mainAxisSize: MainAxisSize.min,
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: _getRow(),
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              AnimatedOpacity(
+                duration: duration,
+                curve: curve,
+                opacity: loading ? 0.0 : 1.0,
+                child: AnimatedPadding(
+                  duration: duration,
+                  curve: curve,
+                  padding: EdgeInsets.symmetric(
+                    horizontal: padding,
+                    vertical: 0,
+                  ),
+                  child: AnimatedDefaultTextStyle(
+                    duration: duration,
+                    curve: curve,
+                    style: textStyle,
+                    child: Row(
+                      spacing: spacing,
+                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: _getRow(),
+                    ),
+                  ),
+                ),
               ),
-            ),
+              if (loading)
+                NextCircularProgress(color: textStyle.color, size: 16),
+            ],
           ),
         ),
       ),
@@ -189,10 +204,7 @@ class NextButton extends StatelessWidget {
   List<Widget> _getRow() {
     final List<Widget> children = [];
 
-    if (loading) {
-      children.add(NextCircularProgress(color: textStyle.color, size: 16));
-      return children;
-    } else if (icon != null) {
+    if (icon != null) {
       children.add(icon!);
     }
 

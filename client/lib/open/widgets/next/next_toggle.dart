@@ -5,9 +5,9 @@ import 'package:mobile/theme/next/color.dart';
 
 class NextToggle extends StatelessWidget {
   final bool value;
-  final ValueChanged<bool> onTap;
+  final ValueChanged<bool>? onTap;
 
-  const NextToggle({super.key, required this.value, required this.onTap});
+  const NextToggle({super.key, required this.value, this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -15,7 +15,7 @@ class NextToggle extends StatelessWidget {
     const curve = Curves.easeOut;
 
     return GestureDetector(
-      onTap: () => onTap(!value),
+      onTap: onTap != null ? () => onTap!(!value) : null,
       child: AnimatedContainer(
         duration: duration,
         curve: curve,
@@ -50,10 +50,10 @@ class NextToggle extends StatelessWidget {
 
 @Preview(name: 'Toggle Off')
 Widget previewNextToggleOff() {
-  return NextPreviewWrapper(child: NextToggle(value: false, onTap: (_) {}));
+  return NextPreviewWrapper(child: NextToggle(value: false));
 }
 
 @Preview(name: 'Toggle On')
 Widget previewNextToggleOn() {
-  return NextPreviewWrapper(child: NextToggle(value: true, onTap: (_) {}));
+  return NextPreviewWrapper(child: NextToggle(value: true));
 }
