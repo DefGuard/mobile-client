@@ -13,6 +13,7 @@ import 'package:mobile/open/screens/instance/widgets/mfa_method_dialog.dart';
 import 'package:mobile/open/screens/instance/widgets/routing_method_dialog.dart';
 import 'package:mobile/open/widgets/dg_snackbar.dart';
 import 'package:mobile/theme/color.dart';
+import 'package:mobile/utils/instance_secrets.dart';
 import 'package:mobile/utils/secure_storage.dart';
 import 'dart:convert';
 
@@ -69,10 +70,16 @@ class TunnelService {
     }
 
     // prepare wireguard plugin payload
+    final privateKey = await instance.wireguardPrivateKey();
+    if (privateKey == null) {
+      reportMissingSecret(instance.logName, "WireGuard private key");
+      return;
+    }
     PluginConnectPayload payload = _makePayload(
       instance,
       location,
       trafficMethod,
+      privateKey,
     );
 
     // handle MFA if configured
@@ -121,11 +128,16 @@ class TunnelService {
       }
       payload.presharedKey = presharedKey;
     } else if (payload.postureCheckRequired) {
+      final pollingToken = await instance.poolingToken();
+      if (pollingToken == null) {
+        reportMissingSecret(instance.logName, "Proxy token");
+        return;
+      }
       final presharedKey = await _performPostureCheck(
         navigator: navigator,
         proxyUrl: instance.proxyUrl,
         payload: payload,
-        pollingToken: instance.poolingToken,
+        pollingToken: pollingToken,
       );
       if (presharedKey == null) {
         return;
@@ -373,11 +385,12 @@ class TunnelService {
     DefguardInstance instance,
     Location location,
     RoutingMethod trafficMethod,
+    String privateKey,
   ) {
     return PluginConnectPayload(
       publicKey: location.pubKey,
       devicePublicKey: instance.pubKey,
-      privateKey: instance.privateKey,
+      privateKey: privateKey,
       address: location.address,
       dns: location.dns,
       endpoint: location.endpoint,

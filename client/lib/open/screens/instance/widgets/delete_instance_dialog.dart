@@ -6,7 +6,6 @@ import 'package:mobile/open/widgets/buttons/dg_button.dart';
 import 'package:mobile/open/widgets/dg_dialog.dart';
 import 'package:mobile/open/widgets/icons/asset_icons_simple.dart';
 import 'package:mobile/theme/text.dart';
-import 'package:mobile/utils/secure_storage.dart';
 
 import '../../../services/snackbar_service.dart';
 
@@ -24,9 +23,7 @@ class DeleteInstanceDialog extends HookConsumerWidget {
 
     Future<void> deleteInstance(BuildContext context) async {
       try {
-        if (instance.mfaKeysStored) {
-          await removeInstanceStorage(instance.secureStorageKey);
-        }
+        await instance.removeSecrets();
         await db.managers.defguardInstances
             .filter((row) => row.id.equals(instance.id))
             .delete();
