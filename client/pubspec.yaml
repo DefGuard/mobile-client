@@ -43,7 +43,7 @@ dependencies:
   flutter_hooks: ^0.21.2
   json_annotation: ^4.9.0
   drift: ^2.26.1
-  drift_flutter: ^0.2.4
+  drift_flutter: ^0.3.0
   path_provider: ^2.1.5
   http: ^1.4.0
   path: ^1.9.1
@@ -67,7 +67,7 @@ dependencies:
   url_launcher: ^6.3.2
   uuid: ^4.5.1
   flutter_local_notifications: ^22.2.0
-  sqlite3_flutter_libs: ^0.5.42
+  sqlite3_flutter_libs: ^0.6.0
   x25519: ^0.1.1
   ed25519_edwards: ^0.3.1
   tuple: ^2.0.2
