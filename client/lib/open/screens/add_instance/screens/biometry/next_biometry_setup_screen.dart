@@ -162,7 +162,6 @@ class _ScreenContent extends HookConsumerWidget {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.start,
                   crossAxisAlignment: CrossAxisAlignment.center,
-                  spacing: NextSpacing.md,
                   children: [
                     SizedBox(height: 70),
                     _getRiveAnimation(biometryStatus),
