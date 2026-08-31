@@ -3,10 +3,10 @@ import 'dart:convert';
 import 'package:ed25519_edwards/ed25519_edwards.dart' as ed;
 import 'package:flutter/services.dart';
 import 'package:mobile/data/proxy/mfa.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:local_auth/error_codes.dart' as auth_error;
 import 'package:mobile/logging.dart';
+import 'package:mobile/utils/keychain.dart';
 
 class UserCanceledAuth implements Exception {
   const UserCanceledAuth();
@@ -30,12 +30,6 @@ String getErrorMessageFromBiometricsException(PlatformException e) {
   return "Unknown error";
 }
 
-AndroidOptions _getAndroidOptions() =>
-    const AndroidOptions(encryptedSharedPreferences: true);
-
-FlutterSecureStorage _getStorage() =>
-    FlutterSecureStorage(aOptions: _getAndroidOptions());
-
 String signChallenge(String challenge, String privateKey) {
   final List<int> decodedKey = base64.decode(privateKey).toList();
   final private = ed.PrivateKey(decodedKey);
@@ -50,11 +44,6 @@ SecureInstanceStorage _generateInstanceStorage() {
   return SecureInstanceStorage(privateKey: privateKey, publicKey: publicKey);
 }
 
-Future<void> removeInstanceStorage(String storageKey) async {
-  final storage = _getStorage();
-  await storage.delete(key: storageKey);
-}
-
 Future<SecureInstanceStorage> createBiometricStorage(
   String storageKey, {
   String? prompt,
@@ -67,10 +56,9 @@ Future<SecureInstanceStorage> createBiometricStorage(
       biometricOnly: true,
     ),
   )) {
-    final storage = _getStorage();
     final instanceStorage = _generateInstanceStorage();
     final serializedStorage = jsonEncode(instanceStorage.toJson());
-    await storage.write(key: storageKey, value: serializedStorage);
+    await secureStorage.write(key: storageKey, value: serializedStorage);
     return instanceStorage;
   }
   throw UserCanceledAuth();
@@ -89,8 +77,7 @@ Future<SecureInstanceStorage> getBiometricInstanceStorage(
       biometricOnly: true,
     ),
   )) {
-    final storage = _getStorage();
-    final storeRawData = await storage.read(key: storageKey);
+    final storeRawData = await secureStorage.read(key: storageKey);
     if (storeRawData != null) {
       return SecureInstanceStorage.fromJson(jsonDecode(storeRawData));
     }

@@ -1,6 +1,7 @@
 // dart format width=80
 // ignore_for_file: unused_local_variable, unused_import
 import 'package:drift/drift.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:drift_dev/api/migrations_native.dart';
 import 'package:mobile/data/db/database.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -8,6 +9,8 @@ import 'generated/schema.dart';
 
 import 'generated/schema_v1.dart' as v1;
 import 'generated/schema_v2.dart' as v2;
+import 'generated/schema_v4.dart' as v4;
+import 'generated/schema_v5.dart' as v5;
 
 void main() {
   driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
@@ -76,4 +79,55 @@ void main() {
       },
     );
   });
+
+  test(
+    'migration from v4 to v5 moves the secrets to the secure storage',
+    () async {
+      final storedSecrets = <String, String>{};
+      FlutterSecureStorage.setMockInitialValues(storedSecrets);
+
+      final oldDefguardInstancesData = <v4.DefguardInstancesData>[
+        const v4.DefguardInstancesData(
+          id: 1,
+          name: 'instance',
+          uuid: 'instance-uuid',
+          url: 'https://defguard.example',
+          deviceId: 7,
+          proxyUrl: 'https://proxy.defguard.example',
+          username: 'user',
+          poolingToken: 'polling-token',
+          clientTrafficPolicy: 0,
+          enterpriseEnabled: true,
+          pubKey: 'public-key',
+          privateKey: 'private-key',
+          mfaKeysStored: false,
+        ),
+      ];
+
+      await verifier.testWithDataIntegrity(
+        oldVersion: 4,
+        newVersion: 5,
+        createOld: v4.DatabaseAtV4.new,
+        createNew: v5.DatabaseAtV5.new,
+        openTestedDatabase: AppDatabase.new,
+        createItems: (batch, oldDb) {
+          batch.insertAll(oldDb.defguardInstances, oldDefguardInstancesData);
+        },
+        validateItems: (newDb) async {
+          // the instance is kept, only its secrets moved
+          final instance = await newDb
+              .select(newDb.defguardInstances)
+              .getSingle();
+          expect(instance.uuid, 'instance-uuid');
+          expect(instance.deviceId, 7);
+          expect(instance.pubKey, 'public-key');
+
+          expect(storedSecrets, {
+            'wg-key-instance-uuid-7': 'private-key',
+            'token-instance-uuid-7': 'polling-token',
+          });
+        },
+      );
+    },
+  );
 }

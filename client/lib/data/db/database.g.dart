@@ -82,17 +82,6 @@ class $DefguardInstancesTable extends DefguardInstances
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _poolingTokenMeta = const VerificationMeta(
-    'poolingToken',
-  );
-  @override
-  late final GeneratedColumn<String> poolingToken = GeneratedColumn<String>(
-    'pooling_token',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-  );
   @override
   late final GeneratedColumnWithTypeConverter<ClientTrafficPolicy, int>
   clientTrafficPolicy =
@@ -124,17 +113,6 @@ class $DefguardInstancesTable extends DefguardInstances
   @override
   late final GeneratedColumn<String> pubKey = GeneratedColumn<String>(
     'pub_key',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _privateKeyMeta = const VerificationMeta(
-    'privateKey',
-  );
-  @override
-  late final GeneratedColumn<String> privateKey = GeneratedColumn<String>(
-    'private_key',
     aliasedName,
     false,
     type: DriftSqlType.string,
@@ -175,11 +153,9 @@ class $DefguardInstancesTable extends DefguardInstances
     deviceId,
     proxyUrl,
     username,
-    poolingToken,
     clientTrafficPolicy,
     enterpriseEnabled,
     pubKey,
-    privateKey,
     mfaKeysStored,
     openidDisplayName,
   ];
@@ -246,17 +222,6 @@ class $DefguardInstancesTable extends DefguardInstances
     } else if (isInserting) {
       context.missing(_usernameMeta);
     }
-    if (data.containsKey('pooling_token')) {
-      context.handle(
-        _poolingTokenMeta,
-        poolingToken.isAcceptableOrUnknown(
-          data['pooling_token']!,
-          _poolingTokenMeta,
-        ),
-      );
-    } else if (isInserting) {
-      context.missing(_poolingTokenMeta);
-    }
     if (data.containsKey('enterprise_enabled')) {
       context.handle(
         _enterpriseEnabledMeta,
@@ -275,14 +240,6 @@ class $DefguardInstancesTable extends DefguardInstances
       );
     } else if (isInserting) {
       context.missing(_pubKeyMeta);
-    }
-    if (data.containsKey('private_key')) {
-      context.handle(
-        _privateKeyMeta,
-        privateKey.isAcceptableOrUnknown(data['private_key']!, _privateKeyMeta),
-      );
-    } else if (isInserting) {
-      context.missing(_privateKeyMeta);
     }
     if (data.containsKey('mfa_keys_stored')) {
       context.handle(
@@ -341,10 +298,6 @@ class $DefguardInstancesTable extends DefguardInstances
         DriftSqlType.string,
         data['${effectivePrefix}username'],
       )!,
-      poolingToken: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}pooling_token'],
-      )!,
       clientTrafficPolicy: $DefguardInstancesTable.$converterclientTrafficPolicy
           .fromSql(
             attachedDatabase.typeMapping.read(
@@ -359,10 +312,6 @@ class $DefguardInstancesTable extends DefguardInstances
       pubKey: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}pub_key'],
-      )!,
-      privateKey: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}private_key'],
       )!,
       mfaKeysStored: attachedDatabase.typeMapping.read(
         DriftSqlType.bool,
@@ -393,11 +342,9 @@ class DefguardInstance extends DataClass
   final int deviceId;
   final String proxyUrl;
   final String username;
-  final String poolingToken;
   final ClientTrafficPolicy clientTrafficPolicy;
   final bool enterpriseEnabled;
   final String pubKey;
-  final String privateKey;
   final bool mfaKeysStored;
   final String? openidDisplayName;
   const DefguardInstance({
@@ -408,11 +355,9 @@ class DefguardInstance extends DataClass
     required this.deviceId,
     required this.proxyUrl,
     required this.username,
-    required this.poolingToken,
     required this.clientTrafficPolicy,
     required this.enterpriseEnabled,
     required this.pubKey,
-    required this.privateKey,
     required this.mfaKeysStored,
     this.openidDisplayName,
   });
@@ -426,7 +371,6 @@ class DefguardInstance extends DataClass
     map['device_id'] = Variable<int>(deviceId);
     map['proxy_url'] = Variable<String>(proxyUrl);
     map['username'] = Variable<String>(username);
-    map['pooling_token'] = Variable<String>(poolingToken);
     {
       map['client_traffic_policy'] = Variable<int>(
         $DefguardInstancesTable.$converterclientTrafficPolicy.toSql(
@@ -436,7 +380,6 @@ class DefguardInstance extends DataClass
     }
     map['enterprise_enabled'] = Variable<bool>(enterpriseEnabled);
     map['pub_key'] = Variable<String>(pubKey);
-    map['private_key'] = Variable<String>(privateKey);
     map['mfa_keys_stored'] = Variable<bool>(mfaKeysStored);
     if (!nullToAbsent || openidDisplayName != null) {
       map['openid_display_name'] = Variable<String>(openidDisplayName);
@@ -453,11 +396,9 @@ class DefguardInstance extends DataClass
       deviceId: Value(deviceId),
       proxyUrl: Value(proxyUrl),
       username: Value(username),
-      poolingToken: Value(poolingToken),
       clientTrafficPolicy: Value(clientTrafficPolicy),
       enterpriseEnabled: Value(enterpriseEnabled),
       pubKey: Value(pubKey),
-      privateKey: Value(privateKey),
       mfaKeysStored: Value(mfaKeysStored),
       openidDisplayName: openidDisplayName == null && nullToAbsent
           ? const Value.absent()
@@ -478,13 +419,11 @@ class DefguardInstance extends DataClass
       deviceId: serializer.fromJson<int>(json['deviceId']),
       proxyUrl: serializer.fromJson<String>(json['proxy_url']),
       username: serializer.fromJson<String>(json['username']),
-      poolingToken: serializer.fromJson<String>(json['poolingToken']),
       clientTrafficPolicy: serializer.fromJson<ClientTrafficPolicy>(
         json['client_traffic_policy'],
       ),
       enterpriseEnabled: serializer.fromJson<bool>(json['enterprise_enabled']),
       pubKey: serializer.fromJson<String>(json['pubKey']),
-      privateKey: serializer.fromJson<String>(json['privateKey']),
       mfaKeysStored: serializer.fromJson<bool>(json['mfaKeysStored']),
       openidDisplayName: serializer.fromJson<String?>(
         json['openidDisplayName'],
@@ -502,13 +441,11 @@ class DefguardInstance extends DataClass
       'deviceId': serializer.toJson<int>(deviceId),
       'proxy_url': serializer.toJson<String>(proxyUrl),
       'username': serializer.toJson<String>(username),
-      'poolingToken': serializer.toJson<String>(poolingToken),
       'client_traffic_policy': serializer.toJson<ClientTrafficPolicy>(
         clientTrafficPolicy,
       ),
       'enterprise_enabled': serializer.toJson<bool>(enterpriseEnabled),
       'pubKey': serializer.toJson<String>(pubKey),
-      'privateKey': serializer.toJson<String>(privateKey),
       'mfaKeysStored': serializer.toJson<bool>(mfaKeysStored),
       'openidDisplayName': serializer.toJson<String?>(openidDisplayName),
     };
@@ -522,11 +459,9 @@ class DefguardInstance extends DataClass
     int? deviceId,
     String? proxyUrl,
     String? username,
-    String? poolingToken,
     ClientTrafficPolicy? clientTrafficPolicy,
     bool? enterpriseEnabled,
     String? pubKey,
-    String? privateKey,
     bool? mfaKeysStored,
     Value<String?> openidDisplayName = const Value.absent(),
   }) => DefguardInstance(
@@ -537,11 +472,9 @@ class DefguardInstance extends DataClass
     deviceId: deviceId ?? this.deviceId,
     proxyUrl: proxyUrl ?? this.proxyUrl,
     username: username ?? this.username,
-    poolingToken: poolingToken ?? this.poolingToken,
     clientTrafficPolicy: clientTrafficPolicy ?? this.clientTrafficPolicy,
     enterpriseEnabled: enterpriseEnabled ?? this.enterpriseEnabled,
     pubKey: pubKey ?? this.pubKey,
-    privateKey: privateKey ?? this.privateKey,
     mfaKeysStored: mfaKeysStored ?? this.mfaKeysStored,
     openidDisplayName: openidDisplayName.present
         ? openidDisplayName.value
@@ -556,9 +489,6 @@ class DefguardInstance extends DataClass
       deviceId: data.deviceId.present ? data.deviceId.value : this.deviceId,
       proxyUrl: data.proxyUrl.present ? data.proxyUrl.value : this.proxyUrl,
       username: data.username.present ? data.username.value : this.username,
-      poolingToken: data.poolingToken.present
-          ? data.poolingToken.value
-          : this.poolingToken,
       clientTrafficPolicy: data.clientTrafficPolicy.present
           ? data.clientTrafficPolicy.value
           : this.clientTrafficPolicy,
@@ -566,9 +496,6 @@ class DefguardInstance extends DataClass
           ? data.enterpriseEnabled.value
           : this.enterpriseEnabled,
       pubKey: data.pubKey.present ? data.pubKey.value : this.pubKey,
-      privateKey: data.privateKey.present
-          ? data.privateKey.value
-          : this.privateKey,
       mfaKeysStored: data.mfaKeysStored.present
           ? data.mfaKeysStored.value
           : this.mfaKeysStored,
@@ -588,11 +515,9 @@ class DefguardInstance extends DataClass
           ..write('deviceId: $deviceId, ')
           ..write('proxyUrl: $proxyUrl, ')
           ..write('username: $username, ')
-          ..write('poolingToken: $poolingToken, ')
           ..write('clientTrafficPolicy: $clientTrafficPolicy, ')
           ..write('enterpriseEnabled: $enterpriseEnabled, ')
           ..write('pubKey: $pubKey, ')
-          ..write('privateKey: $privateKey, ')
           ..write('mfaKeysStored: $mfaKeysStored, ')
           ..write('openidDisplayName: $openidDisplayName')
           ..write(')'))
@@ -608,11 +533,9 @@ class DefguardInstance extends DataClass
     deviceId,
     proxyUrl,
     username,
-    poolingToken,
     clientTrafficPolicy,
     enterpriseEnabled,
     pubKey,
-    privateKey,
     mfaKeysStored,
     openidDisplayName,
   );
@@ -627,11 +550,9 @@ class DefguardInstance extends DataClass
           other.deviceId == this.deviceId &&
           other.proxyUrl == this.proxyUrl &&
           other.username == this.username &&
-          other.poolingToken == this.poolingToken &&
           other.clientTrafficPolicy == this.clientTrafficPolicy &&
           other.enterpriseEnabled == this.enterpriseEnabled &&
           other.pubKey == this.pubKey &&
-          other.privateKey == this.privateKey &&
           other.mfaKeysStored == this.mfaKeysStored &&
           other.openidDisplayName == this.openidDisplayName);
 }
@@ -644,11 +565,9 @@ class DefguardInstancesCompanion extends UpdateCompanion<DefguardInstance> {
   final Value<int> deviceId;
   final Value<String> proxyUrl;
   final Value<String> username;
-  final Value<String> poolingToken;
   final Value<ClientTrafficPolicy> clientTrafficPolicy;
   final Value<bool> enterpriseEnabled;
   final Value<String> pubKey;
-  final Value<String> privateKey;
   final Value<bool> mfaKeysStored;
   final Value<String?> openidDisplayName;
   const DefguardInstancesCompanion({
@@ -659,11 +578,9 @@ class DefguardInstancesCompanion extends UpdateCompanion<DefguardInstance> {
     this.deviceId = const Value.absent(),
     this.proxyUrl = const Value.absent(),
     this.username = const Value.absent(),
-    this.poolingToken = const Value.absent(),
     this.clientTrafficPolicy = const Value.absent(),
     this.enterpriseEnabled = const Value.absent(),
     this.pubKey = const Value.absent(),
-    this.privateKey = const Value.absent(),
     this.mfaKeysStored = const Value.absent(),
     this.openidDisplayName = const Value.absent(),
   });
@@ -675,11 +592,9 @@ class DefguardInstancesCompanion extends UpdateCompanion<DefguardInstance> {
     required int deviceId,
     required String proxyUrl,
     required String username,
-    required String poolingToken,
     this.clientTrafficPolicy = const Value.absent(),
     required bool enterpriseEnabled,
     required String pubKey,
-    required String privateKey,
     required bool mfaKeysStored,
     this.openidDisplayName = const Value.absent(),
   }) : name = Value(name),
@@ -688,10 +603,8 @@ class DefguardInstancesCompanion extends UpdateCompanion<DefguardInstance> {
        deviceId = Value(deviceId),
        proxyUrl = Value(proxyUrl),
        username = Value(username),
-       poolingToken = Value(poolingToken),
        enterpriseEnabled = Value(enterpriseEnabled),
        pubKey = Value(pubKey),
-       privateKey = Value(privateKey),
        mfaKeysStored = Value(mfaKeysStored);
   static Insertable<DefguardInstance> custom({
     Expression<int>? id,
@@ -701,11 +614,9 @@ class DefguardInstancesCompanion extends UpdateCompanion<DefguardInstance> {
     Expression<int>? deviceId,
     Expression<String>? proxyUrl,
     Expression<String>? username,
-    Expression<String>? poolingToken,
     Expression<int>? clientTrafficPolicy,
     Expression<bool>? enterpriseEnabled,
     Expression<String>? pubKey,
-    Expression<String>? privateKey,
     Expression<bool>? mfaKeysStored,
     Expression<String>? openidDisplayName,
   }) {
@@ -717,12 +628,10 @@ class DefguardInstancesCompanion extends UpdateCompanion<DefguardInstance> {
       if (deviceId != null) 'device_id': deviceId,
       if (proxyUrl != null) 'proxy_url': proxyUrl,
       if (username != null) 'username': username,
-      if (poolingToken != null) 'pooling_token': poolingToken,
       if (clientTrafficPolicy != null)
         'client_traffic_policy': clientTrafficPolicy,
       if (enterpriseEnabled != null) 'enterprise_enabled': enterpriseEnabled,
       if (pubKey != null) 'pub_key': pubKey,
-      if (privateKey != null) 'private_key': privateKey,
       if (mfaKeysStored != null) 'mfa_keys_stored': mfaKeysStored,
       if (openidDisplayName != null) 'openid_display_name': openidDisplayName,
     });
@@ -736,11 +645,9 @@ class DefguardInstancesCompanion extends UpdateCompanion<DefguardInstance> {
     Value<int>? deviceId,
     Value<String>? proxyUrl,
     Value<String>? username,
-    Value<String>? poolingToken,
     Value<ClientTrafficPolicy>? clientTrafficPolicy,
     Value<bool>? enterpriseEnabled,
     Value<String>? pubKey,
-    Value<String>? privateKey,
     Value<bool>? mfaKeysStored,
     Value<String?>? openidDisplayName,
   }) {
@@ -752,11 +659,9 @@ class DefguardInstancesCompanion extends UpdateCompanion<DefguardInstance> {
       deviceId: deviceId ?? this.deviceId,
       proxyUrl: proxyUrl ?? this.proxyUrl,
       username: username ?? this.username,
-      poolingToken: poolingToken ?? this.poolingToken,
       clientTrafficPolicy: clientTrafficPolicy ?? this.clientTrafficPolicy,
       enterpriseEnabled: enterpriseEnabled ?? this.enterpriseEnabled,
       pubKey: pubKey ?? this.pubKey,
-      privateKey: privateKey ?? this.privateKey,
       mfaKeysStored: mfaKeysStored ?? this.mfaKeysStored,
       openidDisplayName: openidDisplayName ?? this.openidDisplayName,
     );
@@ -786,9 +691,6 @@ class DefguardInstancesCompanion extends UpdateCompanion<DefguardInstance> {
     if (username.present) {
       map['username'] = Variable<String>(username.value);
     }
-    if (poolingToken.present) {
-      map['pooling_token'] = Variable<String>(poolingToken.value);
-    }
     if (clientTrafficPolicy.present) {
       map['client_traffic_policy'] = Variable<int>(
         $DefguardInstancesTable.$converterclientTrafficPolicy.toSql(
@@ -801,9 +703,6 @@ class DefguardInstancesCompanion extends UpdateCompanion<DefguardInstance> {
     }
     if (pubKey.present) {
       map['pub_key'] = Variable<String>(pubKey.value);
-    }
-    if (privateKey.present) {
-      map['private_key'] = Variable<String>(privateKey.value);
     }
     if (mfaKeysStored.present) {
       map['mfa_keys_stored'] = Variable<bool>(mfaKeysStored.value);
@@ -824,11 +723,9 @@ class DefguardInstancesCompanion extends UpdateCompanion<DefguardInstance> {
           ..write('deviceId: $deviceId, ')
           ..write('proxyUrl: $proxyUrl, ')
           ..write('username: $username, ')
-          ..write('poolingToken: $poolingToken, ')
           ..write('clientTrafficPolicy: $clientTrafficPolicy, ')
           ..write('enterpriseEnabled: $enterpriseEnabled, ')
           ..write('pubKey: $pubKey, ')
-          ..write('privateKey: $privateKey, ')
           ..write('mfaKeysStored: $mfaKeysStored, ')
           ..write('openidDisplayName: $openidDisplayName')
           ..write(')'))
@@ -1761,11 +1658,9 @@ typedef $$DefguardInstancesTableCreateCompanionBuilder =
       required int deviceId,
       required String proxyUrl,
       required String username,
-      required String poolingToken,
       Value<ClientTrafficPolicy> clientTrafficPolicy,
       required bool enterpriseEnabled,
       required String pubKey,
-      required String privateKey,
       required bool mfaKeysStored,
       Value<String?> openidDisplayName,
     });
@@ -1778,11 +1673,9 @@ typedef $$DefguardInstancesTableUpdateCompanionBuilder =
       Value<int> deviceId,
       Value<String> proxyUrl,
       Value<String> username,
-      Value<String> poolingToken,
       Value<ClientTrafficPolicy> clientTrafficPolicy,
       Value<bool> enterpriseEnabled,
       Value<String> pubKey,
-      Value<String> privateKey,
       Value<bool> mfaKeysStored,
       Value<String?> openidDisplayName,
     });
@@ -1866,11 +1759,6 @@ class $$DefguardInstancesTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<String> get poolingToken => $composableBuilder(
-    column: $table.poolingToken,
-    builder: (column) => ColumnFilters(column),
-  );
-
   ColumnWithTypeConverterFilters<ClientTrafficPolicy, ClientTrafficPolicy, int>
   get clientTrafficPolicy => $composableBuilder(
     column: $table.clientTrafficPolicy,
@@ -1884,11 +1772,6 @@ class $$DefguardInstancesTableFilterComposer
 
   ColumnFilters<String> get pubKey => $composableBuilder(
     column: $table.pubKey,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<String> get privateKey => $composableBuilder(
-    column: $table.privateKey,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -1972,11 +1855,6 @@ class $$DefguardInstancesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<String> get poolingToken => $composableBuilder(
-    column: $table.poolingToken,
-    builder: (column) => ColumnOrderings(column),
-  );
-
   ColumnOrderings<int> get clientTrafficPolicy => $composableBuilder(
     column: $table.clientTrafficPolicy,
     builder: (column) => ColumnOrderings(column),
@@ -1989,11 +1867,6 @@ class $$DefguardInstancesTableOrderingComposer
 
   ColumnOrderings<String> get pubKey => $composableBuilder(
     column: $table.pubKey,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<String> get privateKey => $composableBuilder(
-    column: $table.privateKey,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -2038,11 +1911,6 @@ class $$DefguardInstancesTableAnnotationComposer
   GeneratedColumn<String> get username =>
       $composableBuilder(column: $table.username, builder: (column) => column);
 
-  GeneratedColumn<String> get poolingToken => $composableBuilder(
-    column: $table.poolingToken,
-    builder: (column) => column,
-  );
-
   GeneratedColumnWithTypeConverter<ClientTrafficPolicy, int>
   get clientTrafficPolicy => $composableBuilder(
     column: $table.clientTrafficPolicy,
@@ -2056,11 +1924,6 @@ class $$DefguardInstancesTableAnnotationComposer
 
   GeneratedColumn<String> get pubKey =>
       $composableBuilder(column: $table.pubKey, builder: (column) => column);
-
-  GeneratedColumn<String> get privateKey => $composableBuilder(
-    column: $table.privateKey,
-    builder: (column) => column,
-  );
 
   GeneratedColumn<bool> get mfaKeysStored => $composableBuilder(
     column: $table.mfaKeysStored,
@@ -2138,12 +2001,10 @@ class $$DefguardInstancesTableTableManager
                 Value<int> deviceId = const Value.absent(),
                 Value<String> proxyUrl = const Value.absent(),
                 Value<String> username = const Value.absent(),
-                Value<String> poolingToken = const Value.absent(),
                 Value<ClientTrafficPolicy> clientTrafficPolicy =
                     const Value.absent(),
                 Value<bool> enterpriseEnabled = const Value.absent(),
                 Value<String> pubKey = const Value.absent(),
-                Value<String> privateKey = const Value.absent(),
                 Value<bool> mfaKeysStored = const Value.absent(),
                 Value<String?> openidDisplayName = const Value.absent(),
               }) => DefguardInstancesCompanion(
@@ -2154,11 +2015,9 @@ class $$DefguardInstancesTableTableManager
                 deviceId: deviceId,
                 proxyUrl: proxyUrl,
                 username: username,
-                poolingToken: poolingToken,
                 clientTrafficPolicy: clientTrafficPolicy,
                 enterpriseEnabled: enterpriseEnabled,
                 pubKey: pubKey,
-                privateKey: privateKey,
                 mfaKeysStored: mfaKeysStored,
                 openidDisplayName: openidDisplayName,
               ),
@@ -2171,12 +2030,10 @@ class $$DefguardInstancesTableTableManager
                 required int deviceId,
                 required String proxyUrl,
                 required String username,
-                required String poolingToken,
                 Value<ClientTrafficPolicy> clientTrafficPolicy =
                     const Value.absent(),
                 required bool enterpriseEnabled,
                 required String pubKey,
-                required String privateKey,
                 required bool mfaKeysStored,
                 Value<String?> openidDisplayName = const Value.absent(),
               }) => DefguardInstancesCompanion.insert(
@@ -2187,11 +2044,9 @@ class $$DefguardInstancesTableTableManager
                 deviceId: deviceId,
                 proxyUrl: proxyUrl,
                 username: username,
-                poolingToken: poolingToken,
                 clientTrafficPolicy: clientTrafficPolicy,
                 enterpriseEnabled: enterpriseEnabled,
                 pubKey: pubKey,
-                privateKey: privateKey,
                 mfaKeysStored: mfaKeysStored,
                 openidDisplayName: openidDisplayName,
               ),

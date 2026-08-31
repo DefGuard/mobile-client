@@ -2,7 +2,6 @@ import 'package:collection/collection.dart';
 import 'package:mobile/logging.dart';
 import '../data/db/database.dart';
 import '../data/proxy/enrollment.dart';
-import 'package:drift/drift.dart' as drift;
 
 class UpdateInstanceResult {
   bool instanceChanged;
@@ -42,6 +41,12 @@ Future<UpdateInstanceResult?> updateInstance({
   );
 
   try {
+    // store the rotated token before anything else, it is the only copy
+    if (token != null) {
+      await instance.storeToken(token);
+      talker.debug("${instance.logName} token updated");
+    }
+
     final locations = await db.managers.locations
         .filter((row) => row.instance.id.equals(instance.id))
         .get();
@@ -53,17 +58,6 @@ Future<UpdateInstanceResult?> updateInstance({
             .filter((row) => row.uuid.equals(instance.uuid))
             .update((_) => companion);
         result.instanceChanged = true;
-      }
-
-      // update token if provided
-      if (token != null) {
-        await db.managers.defguardInstances
-            .filter((row) => row.id.equals(instance.id))
-            .update(
-              (_) =>
-                  DefguardInstancesCompanion(poolingToken: drift.Value(token)),
-            );
-        talker.debug("${instance.logName} token updated");
       }
 
       // remove locations not included in update (ware deleted or device have no longer granted access)
