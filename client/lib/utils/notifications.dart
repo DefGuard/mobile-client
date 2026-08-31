@@ -18,7 +18,9 @@ Future<void> initNotifications() async {
     macOS: initializationSettingsDarwin,
   );
 
-  await flutterLocalNotificationsPlugin.initialize(settings: initializationSettings);
+  await flutterLocalNotificationsPlugin.initialize(
+    settings: initializationSettings,
+  );
 }
 
 Future<bool> requestNotificationPermissions() async {

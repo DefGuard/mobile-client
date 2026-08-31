@@ -26,6 +26,12 @@ linter:
     avoid_print: false
     avoid_unused_constructor_parameters: false
 
+formatter:
+  # Generated sources (*.g.dart) are emitted with trailing commas by
+  # build_runner's formatter. "preserve" keeps those splits intact, so
+  # `dart format` is stable over both generated and hand-written code.
+  trailing_commas: preserve
+
 analyzer:
   exclude:
     - "**/*.g.dart"

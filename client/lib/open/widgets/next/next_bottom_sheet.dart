@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/widget_previews.dart';
 import 'package:mobile/open/widgets/next/next_preview_wrapper.dart';
@@ -46,35 +48,41 @@ class NextBottomSheet extends StatelessWidget {
           );
 
     return Material(
-      color: backgroundColor ?? NextColor.bgDarkBlue80,
+      color: Colors.transparent,
       elevation: elevation ?? 0,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       clipBehavior: Clip.antiAlias,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          if (showDragHandle)
-            SizedBox(
-              height: 37,
-              child: Center(
-                child: Container(
-                  width: 50,
-                  height: 5,
-                  decoration: BoxDecoration(
-                    color: NextColor.fgDisabled,
-                    borderRadius: BorderRadius.circular(100),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+        child: Container(
+          color: backgroundColor ?? NextColor.bgDarkBlue80,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (showDragHandle)
+                SizedBox(
+                  height: 37,
+                  child: Center(
+                    child: Container(
+                      width: 50,
+                      height: 5,
+                      decoration: BoxDecoration(
+                        color: NextColor.fgDisabled,
+                        borderRadius: BorderRadius.circular(100),
+                      ),
+                    ),
                   ),
                 ),
+              Padding(
+                padding: effectivePadding,
+                child: builder?.call(context) ?? child!,
               ),
-            ),
-          Padding(
-            padding: effectivePadding,
-            child: builder?.call(context) ?? child!,
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
