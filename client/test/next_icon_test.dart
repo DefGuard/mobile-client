@@ -25,19 +25,40 @@ void main() {
       expect(icon.effectiveRotation, equals(0.0));
     });
 
-    test('calculates direction rotation clockwise from base direction (right)', () {
-      const iconRight = NextIcon('arrow_small', direction: NextIconDirection.right);
-      expect(iconRight.effectiveRotation, equals(0.0));
+    test(
+      'calculates direction rotation clockwise from base direction (right)',
+      () {
+        const iconRight = NextIcon(
+          'arrow_small',
+          direction: NextIconDirection.right,
+        );
+        expect(iconRight.effectiveRotation, equals(0.0));
 
-      const iconDown = NextIcon('arrow_small', direction: NextIconDirection.down);
-      expect(iconDown.effectiveRotation, closeTo(math.pi / 2, 0.0001)); // 90 degrees
+        const iconDown = NextIcon(
+          'arrow_small',
+          direction: NextIconDirection.down,
+        );
+        expect(
+          iconDown.effectiveRotation,
+          closeTo(math.pi / 2, 0.0001),
+        ); // 90 degrees
 
-      const iconLeft = NextIcon('arrow_small', direction: NextIconDirection.left);
-      expect(iconLeft.effectiveRotation, closeTo(math.pi, 0.0001)); // 180 degrees
+        const iconLeft = NextIcon(
+          'arrow_small',
+          direction: NextIconDirection.left,
+        );
+        expect(
+          iconLeft.effectiveRotation,
+          closeTo(math.pi, 0.0001),
+        ); // 180 degrees
 
-      const iconUp = NextIcon('arrow_small', direction: NextIconDirection.up);
-      expect(iconUp.effectiveRotation, closeTo(3 * math.pi / 2, 0.0001)); // 270 degrees
-    });
+        const iconUp = NextIcon('arrow_small', direction: NextIconDirection.up);
+        expect(
+          iconUp.effectiveRotation,
+          closeTo(3 * math.pi / 2, 0.0001),
+        ); // 270 degrees
+      },
+    );
 
     test('arrow_big rotation works for all directions', () {
       const iconDown = NextIcon('arrow_big', direction: NextIconDirection.down);
@@ -56,9 +77,7 @@ void main() {
 
     test('copyWith updates direction property correctly', () {
       const icon = NextIcon('arrow_small');
-      final updated = icon.copyWith(
-        direction: NextIconDirection.down,
-      );
+      final updated = icon.copyWith(direction: NextIconDirection.down);
 
       expect(updated.direction, equals(NextIconDirection.down));
       expect(updated.effectiveRotation, closeTo(math.pi / 2, 0.0001));

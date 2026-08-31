@@ -52,6 +52,9 @@ jobs:
       - name: get deps
         run: flutter pub get
 
+      - name: check formatting
+        run: dart format --output=none --set-exit-if-changed .
+
       - name: run lint
         run: flutter analyze
 

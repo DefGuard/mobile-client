@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widget_previews.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:mobile/open/widgets/next/icons/next_icon.dart';
 import 'package:mobile/open/widgets/next/next_app_bar.dart';
 import 'package:mobile/open/widgets/next/next_button.dart';
 import 'package:mobile/open/widgets/next/next_icon_button.dart';
@@ -32,81 +33,91 @@ class NextCodeEntryLayout extends HookWidget {
     final isLoading = useState(false);
     final errorText = useState<String?>(null);
 
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      appBar: NextAppBar(
-        showLogo: false,
-        actionLeft: NextIconButton(
-          icon: 'arrow_small',
-          direction: NextIconDirection.left,
-          onTap: () => Navigator.of(context).maybePop(),
+    return Container(
+      decoration: const BoxDecoration(gradient: NextColor.gradientPrimary),
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: NextAppBar(
+          context: context,
+          showLogo: false,
+          actionLeft: NextIconButton(
+            icon: 'arrow_small',
+            direction: NextIconDirection.left,
+            onTap: () => Navigator.of(context).maybePop(),
+          ),
         ),
-      ),
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          return CustomScrollView(
-            physics: const ClampingScrollPhysics(),
-            slivers: [
-              SliverFillRemaining(
-                hasScrollBody: false,
-                child: Padding(
-                  padding: const EdgeInsets.only(
-                    top: 12,
-                    left: 20,
-                    right: 20,
-                    bottom: 20,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title,
-                        style: NextText.h4.copyWith(
-                          color: NextColor.fgWhite100,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+        body: LayoutBuilder(
+          builder: (context, constraints) {
+            return CustomScrollView(
+              physics: const ClampingScrollPhysics(),
+              slivers: [
+                SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: SafeArea(
+                    bottom: true,
+                    top: false,
+                    child: Padding(
+                      padding: const EdgeInsets.only(
+                        top: 12,
+                        left: 20,
+                        right: 20,
+                        bottom: 20,
                       ),
-                      const SizedBox(height: 8),
-                      Text(
-                        description,
-                        style: NextText.bodySm400.copyWith(
-                          color: NextColor.fgWhite60,
-                        ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            title,
+                            style: NextText.h4.copyWith(
+                              color: NextColor.fgWhite100,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            description,
+                            style: NextText.bodySm400.copyWith(
+                              color: NextColor.fgWhite60,
+                            ),
+                          ),
+                          const SizedBox(height: 32),
+                          NextTextFormField(
+                            required: true,
+                            size: .big,
+                            label: fieldLabel,
+                            controller: codeController,
+                            errorText: errorText.value,
+                            onChanged: (_) => errorText.value = null,
+                            keyboardType: TextInputType.number,
+                          ),
+                          const Spacer(),
+                          const SizedBox(height: 20),
+                          NextButton(
+                            text: 'Submit',
+                            loading: isLoading.value,
+                            width: double.infinity,
+                            onTap: () async {
+                              isLoading.value = true;
+                              try {
+                                await onSubmit(
+                                  codeController.text.trim(),
+                                  (error) => errorText.value = error,
+                                );
+                              } finally {
+                                isLoading.value = false;
+                              }
+                            },
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 32),
-                      NextTextFormField(
-                        label: fieldLabel,
-                        controller: codeController,
-                        errorText: errorText.value,
-                        onChanged: (_) => errorText.value = null,
-                        keyboardType: TextInputType.number,
-                      ),
-                      const Spacer(),
-                      const SizedBox(height: 20),
-                      NextButton(
-                        text: 'Submit',
-                        loading: isLoading.value,
-                        width: double.infinity,
-                        onTap: () async {
-                          isLoading.value = true;
-                          try {
-                            await onSubmit(
-                              codeController.text.trim(),
-                              (error) => errorText.value = error,
-                            );
-                          } finally {
-                            isLoading.value = false;
-                          }
-                        },
-                      ),
-                    ],
+                    ),
                   ),
                 ),
-              ),
-            ],
-          );
-        },
+              ],
+            );
+          },
+        ),
       ),
     );
   }

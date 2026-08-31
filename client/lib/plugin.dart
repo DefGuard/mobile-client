@@ -65,7 +65,8 @@ class PluginEventRouter extends Notifier<void> {
     flutterLocalNotificationsPlugin.show(
       id: 0,
       title: 'Connection Lost',
-      body: 'VPN gateway unreachable, MFA session expired. Reconnect to continue.',
+      body:
+          'VPN gateway unreachable, MFA session expired. Reconnect to continue.',
       notificationDetails: const NotificationDetails(
         android: AndroidNotificationDetails(
           'defguard_channel',

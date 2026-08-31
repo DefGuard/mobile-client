@@ -48,9 +48,9 @@ class NextConnectDialog extends HookConsumerWidget {
         return [MfaMethod.openid];
       }
       final methods = [MfaMethod.totp, MfaMethod.email];
-      // if (instance.mfaKeysStored && biometricsStatus.canOpenStorage) {
-      //   methods.insert(0, MfaMethod.biometric);
-      // }
+      if (instance.mfaKeysStored && biometricsStatus.canOpenStorage) {
+        methods.insert(0, MfaMethod.biometric);
+      }
       return methods;
     }, [instance, location, biometricsStatus]);
 
