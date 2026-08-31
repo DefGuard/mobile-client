@@ -84,7 +84,7 @@ class InstanceScreenRoute extends GoRouteData with $InstanceScreenRoute {
 
   @override
   Widget build(BuildContext context, GoRouterState state) {
-    return NextInstanceScreen(id: id);
+    return NextInstanceScreen(key: ValueKey(id), id: id);
   }
 }
 
