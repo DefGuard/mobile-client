@@ -12,6 +12,8 @@ import 'package:mobile/open/screens/add_instance/screens/name_device_screen.dart
 import 'package:mobile/open/screens/instances_list/next_instances_list_screen.dart';
 import 'package:mobile/open/screens/mfa/mfa_code_screen.dart';
 import 'package:mobile/open/screens/mfa/remote_mfa_qr_screen.dart';
+import 'package:mobile/enterprise/screens/mfa/next/next_mfa_openid_screen.dart';
+import 'package:mobile/enterprise/screens/mfa/next/next_mfa_openid_waiting_screen.dart';
 import 'package:mobile/open/screens/splash.dart';
 import 'package:talker_flutter/talker_flutter.dart';
 
@@ -140,7 +142,7 @@ class OpenIdMfaScreenRoute extends GoRouteData with $OpenIdMfaScreenRoute {
 
   @override
   Widget build(BuildContext context, GoRouterState state) {
-    return OpenIdMfaScreen(screenData: $extra);
+    return NextOpenIdMfaScreen(screenData: $extra);
   }
 }
 
@@ -154,7 +156,7 @@ class OpenIdMfaWaitingScreenRoute extends GoRouteData
 
   @override
   Widget build(BuildContext context, GoRouterState state) {
-    return OpenIdMfaWaitingScreen(screenData: $extra);
+    return NextOpenIdMfaWaitingScreen(screenData: $extra);
   }
 }
 

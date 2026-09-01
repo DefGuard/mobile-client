@@ -111,7 +111,9 @@ class NextConnectDialog extends HookConsumerWidget {
             ),
             headerBuilder: (context, animation) => GestureDetector(
               behavior: HitTestBehavior.opaque,
-              onTap: () => mfaController.toggle(),
+              onTap: availableMfaMethods.length > 1
+                  ? () => mfaController.toggle()
+                  : null,
               child: ConstrainedBox(
                 constraints: const BoxConstraints(minHeight: 44),
                 child: Row(
@@ -145,13 +147,15 @@ class NextConnectDialog extends HookConsumerWidget {
                         ),
                       ),
                     ),
-                    const SizedBox(width: 4),
-                    NextIcon(
-                      "arrow_small",
-                      size: 20,
-                      color: NextColor.fgWhite100,
-                      rotation: animation.value * (math.pi / 2),
-                    ),
+                    if (availableMfaMethods.length > 1) ...[
+                      const SizedBox(width: 4),
+                      NextIcon(
+                        "arrow_small",
+                        size: 20,
+                        color: NextColor.fgWhite100,
+                        rotation: animation.value * (math.pi / 2),
+                      ),
+                    ],
                   ],
                 ),
               ),

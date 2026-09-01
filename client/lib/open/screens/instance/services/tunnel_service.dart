@@ -14,6 +14,7 @@ import 'package:mobile/open/riverpod/biometrics_state.dart';
 import 'package:mobile/open/screens/instance/widgets/mfa_method_dialog.dart';
 import 'package:mobile/open/screens/instance/widgets/routing_method_dialog.dart';
 import 'package:mobile/open/screens/next/mfa/next_mfa_email_screen.dart';
+import 'package:mobile/enterprise/screens/mfa/next/next_mfa_openid_screen.dart';
 import 'package:mobile/open/screens/next/mfa/next_mfa_totp_screen.dart';
 import 'package:mobile/open/services/snackbar_service.dart';
 import 'package:mobile/open/widgets/dg_snackbar.dart';
@@ -354,7 +355,7 @@ class TunnelService {
   }) async {
     final presharedKey = await Navigator.of(navigator.context).push<String?>(
       MaterialPageRoute(
-        builder: (context) => OpenIdMfaScreen(
+        builder: (context) => NextOpenIdMfaScreen(
           screenData: OpenIdMfaScreenData(
             proxyUrl: proxyUrl,
             token: token,
