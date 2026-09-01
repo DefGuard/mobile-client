@@ -12,7 +12,7 @@ import 'package:mobile/router/routes.dart';
 import 'package:mobile/utils/secure_storage.dart';
 
 import '../../../logging.dart';
-import '../../services/snackbar_service.dart';
+import 'package:mobile/open/widgets/toaster/toast_manager.dart';
 
 class RemoteMfaQrScreenData {
   final DefguardInstance instance;
@@ -29,6 +29,7 @@ class RemoteMfaQrScreen extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final isLoading = useState(false);
     final instance = screenData.instance;
+    final toaster = ref.read(toastManagerProvider.notifier);
 
     const description =
         "Open the desktop app, select this instance, connect using biometry, and scan the QR code.";
@@ -51,12 +52,10 @@ class RemoteMfaQrScreen extends HookConsumerWidget {
         onScan: (data, controller) async {
           isLoading.value = true;
           if (instance.uuid != data.instanceId) {
-            talker.error("Remote MFA failed! Instance mismatch");
-            if (context.mounted) {
-              SnackbarService.showError(
-                "Scanned QR belongs to an different instance.",
-              );
-            }
+            toaster.showError(
+              message: "Scanned QR belongs to an different instance.",
+              logMessage: "Remote MFA failed! Instance mismatch",
+            );
             isLoading.value = false;
             await controller.resume();
             return;
@@ -73,12 +72,11 @@ class RemoteMfaQrScreen extends HookConsumerWidget {
               );
             } on PlatformException catch (e) {
               final message = getErrorMessageFromBiometricsException(e);
-              talker.error("Failed biometric auth! Reason: $message");
-              if (context.mounted) {
-                SnackbarService.showError(
-                  "Biometric authentication failed! Reason: $message",
-                );
-              }
+              toaster.showError(
+                message: "Biometric authentication failed.",
+                logMessage: "Failed biometric auth! Reason: $message",
+                error: e,
+              );
               isLoading.value = false;
               await controller.resume();
               return;
@@ -102,14 +100,14 @@ class RemoteMfaQrScreen extends HookConsumerWidget {
             talker.info(
               "Successfully authorized instance ${instance.logName}.",
             );
-            SnackbarService.show("Desktop client authorized successfully.");
+            toaster.show(message: "Desktop client authorized successfully.");
 
             if (context.mounted) {
               InstanceScreenRoute(id: instance.id.toString()).go(context);
             }
           } catch (e, st) {
-            SnackbarService.showError(
-              "Failed to authenticate desktop client.",
+            toaster.showError(
+              message: "Failed to authenticate desktop client.",
               error: e,
               stackTrace: st,
             );

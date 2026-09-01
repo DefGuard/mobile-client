@@ -15,7 +15,7 @@ import 'package:mobile/theme/next/text.dart';
 import '../openid_mfa_waiting_screen.dart';
 import '../../../../../logging.dart';
 import '../../../../../utils/error_handler.dart';
-import '../../../../open/services/snackbar_service.dart';
+import 'package:mobile/open/widgets/toaster/toast_manager.dart';
 
 class NextOpenIdMfaWaitingScreen extends HookConsumerWidget {
   final OpenIdMfaWaitingScreenData screenData;
@@ -62,16 +62,14 @@ class NextOpenIdMfaWaitingScreen extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final navigator = Navigator.of(context);
+    final toaster = ref.read(toastManagerProvider.notifier);
 
     useEffect(() {
       _pollOpenidMfa()
           .then((finishMfaResponse) {
             if (finishMfaResponse == null) {
-              SnackbarService.show(
-                "Authentication timed out. Please try again.",
-                textColor:
-                    NextColor.fgWhite100, // Adjusted color for Next theme
-                dismissable: true,
+              toaster.showError(
+                message: "Authentication timed out. Please try again.",
               );
               if (context.mounted) navigator.pop();
             } else {
@@ -81,12 +79,10 @@ class NextOpenIdMfaWaitingScreen extends HookConsumerWidget {
             }
           })
           .catchError((error) {
-            talker.error("OpenID MFA polling error: $error");
-            final message = ErrorHandler.getHumanReadableError(error);
-            SnackbarService.show(
-              message,
-              textColor: NextColor.fgWhite100,
-              dismissable: true,
+            toaster.showError(
+              message: ErrorHandler.getHumanReadableError(error),
+              logMessage: "OpenID MFA polling error!",
+              error: error,
             );
             if (context.mounted) navigator.pop();
           });

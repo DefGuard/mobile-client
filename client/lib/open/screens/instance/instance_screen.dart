@@ -37,6 +37,7 @@ import 'package:tuple/tuple.dart';
 import '../../../data/db/enums.dart';
 import '../../../logging.dart';
 import '../../services/snackbar_service.dart';
+import '../../widgets/toaster/toast_manager.dart';
 
 part 'instance_screen.g.dart';
 
@@ -580,6 +581,7 @@ class _LocationItem extends HookConsumerWidget {
                         if (context.mounted) {
                           await TunnelService.connect(
                             context: context,
+                            toaster: ref.read(toastManagerProvider.notifier),
                             instance: instance,
                             location: location,
                             wireguardPlugin: wireguardPlugin,

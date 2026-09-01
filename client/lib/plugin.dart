@@ -82,7 +82,7 @@ class PluginEventRouter extends Notifier<void> {
     // show in-app toast
     ref
         .read(toastManagerProvider.notifier)
-        .showInfo(
+        .show(
           message:
               'Connection Lost: VPN gateway unreachable, MFA session expired',
         );

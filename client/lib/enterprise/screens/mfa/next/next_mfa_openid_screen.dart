@@ -12,7 +12,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../openid_mfa_screen.dart';
 import '../openid_mfa_waiting_screen.dart';
 import '../../../../logging.dart';
-import '../../../../open/services/snackbar_service.dart';
+import 'package:mobile/open/widgets/toaster/toast_manager.dart';
 import 'next_mfa_openid_waiting_screen.dart';
 
 class NextOpenIdMfaScreen extends HookConsumerWidget {
@@ -31,6 +31,7 @@ class NextOpenIdMfaScreen extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final String title = "Two-factor authentication";
     final String providerName = screenData.openidDisplayName ?? 'OpenID';
+    final toaster = ref.read(toastManagerProvider.notifier);
 
     return Container(
       decoration: const BoxDecoration(gradient: NextColor.gradientPrimary),
@@ -86,8 +87,8 @@ class NextOpenIdMfaScreen extends HookConsumerWidget {
                     try {
                       final launched = await _launchUrl();
                       if (!launched) {
-                        SnackbarService.showError(
-                          "Failed to open the browser.",
+                        toaster.showError(
+                          message: "Failed to open the browser.",
                         );
                       } else {
                         // Navigate to waiting screen and await result
@@ -109,7 +110,9 @@ class NextOpenIdMfaScreen extends HookConsumerWidget {
                       }
                     } catch (e) {
                       talker.error("Failed to open browser! Reason: $e");
-                      SnackbarService.showError("Failed to open the browser.");
+                      toaster.showError(
+                        message: "Failed to open the browser.",
+                      );
                     }
                   },
                 ),

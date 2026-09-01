@@ -1,7 +1,6 @@
 import "dart:async";
 
 import "package:flutter/widget_previews.dart";
-import "package:flutter_hooks/flutter_hooks.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:material_ui/material_ui.dart";
 import "package:mobile/open/widgets/next/next_button.dart";
@@ -34,50 +33,72 @@ const _animationDuration = Duration(milliseconds: 200);
 
 @Riverpod(keepAlive: true)
 class ToastManager extends _$ToastManager {
+  Timer? _timer;
+
   @override
   ToastData? build() {
+    ref.onDispose(_cancelTimer);
     return null;
   }
 
-  void showInfo({
-    required String message,
-    ToastVariant variant = ToastVariant.primary,
-    String? id,
-  }) {
-    if (state != null) return;
-
-    String innerId;
-    if (id != null) {
-      innerId = id;
-    } else {
-      final uuid = Uuid();
-      innerId = uuid.v4();
-    }
-    state = ToastData(id: innerId, message: message, variant: variant);
+  /// Default variant, use it for normal notices.
+  void show({required String message, String? id}) {
+    _show(message: message, variant: ToastVariant.primary, id: id);
   }
 
-  void remove() {
+  /// Reserved for an instance being added successfully.
+  void showSuccess({required String message, String? id}) {
+    _show(message: message, variant: ToastVariant.success, id: id);
+  }
+
+  /// Reserved for errors. [message] is the only part shown to the user, pass
+  /// [error] and [stackTrace] separately, those are logged, never displayed.
+  void showError({
+    required String message,
+    String? logMessage,
+    Object? error,
+    StackTrace? stackTrace,
+    String? id,
+  }) {
+    talker.error(logMessage ?? message, error, stackTrace);
+    _show(message: message, variant: ToastVariant.critical, id: id);
+  }
+
+  void _show({
+    required String message,
+    required ToastVariant variant,
+    String? id,
+  }) {
+    // only one toast at a time, further calls are dropped
+    if (state != null) return;
+
+    _cancelTimer();
+    final innerId = id ?? Uuid().v4();
+    talker.debug("Showing toast: $innerId");
+    state = ToastData(id: innerId, message: message, variant: variant);
+    _timer = Timer(_toastDuration, () => remove(id: innerId));
+  }
+
+  /// With [id] given the toast is only removed if it is still the one on
+  /// screen, so a stale dismiss cannot clear a newer toast.
+  void remove({String? id}) {
+    if (id != null && state?.id != id) return;
+    _cancelTimer();
     state = null;
+  }
+
+  void _cancelTimer() {
+    _timer?.cancel();
+    _timer = null;
   }
 }
 
-class ToastPositioner extends HookConsumerWidget {
+class ToastPositioner extends ConsumerWidget {
   const ToastPositioner({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final toast = ref.watch(toastManagerProvider);
-
-    useEffect(() {
-      if (toast != null) {
-        talker.debug("Positioner shows toast: ${toast.id}");
-        final timer = Timer(_toastDuration, () {
-          ref.read(toastManagerProvider.notifier).remove();
-        });
-        return timer.cancel;
-      }
-      return null;
-    }, [toast]);
 
     return Align(
       alignment: Alignment.topCenter,
@@ -110,8 +131,9 @@ class ToastPositioner extends HookConsumerWidget {
                 : GestureDetector(
                     key: ValueKey(toast.id),
                     behavior: HitTestBehavior.opaque,
-                    onTap: () =>
-                        ref.read(toastManagerProvider.notifier).remove(),
+                    onTap: () => ref
+                        .read(toastManagerProvider.notifier)
+                        .remove(id: toast.id),
                     child: NextToast(
                       message: toast.message,
                       variant: toast.variant,
@@ -131,7 +153,7 @@ Widget previewToastManager() {
   );
 }
 
-class _ToastManagerPreview extends HookConsumerWidget {
+class _ToastManagerPreview extends ConsumerWidget {
   const _ToastManagerPreview();
 
   @override
@@ -154,30 +176,27 @@ class _ToastManagerPreview extends HookConsumerWidget {
                     NextButton(
                       text: 'Spawn Primary',
                       style: NextButtonStyle.secondary,
-                      onTap: () => toastManager.showInfo(
+                      onTap: () => toastManager.show(
                         message:
                             'Primary Toast: This is a primary toast message',
-                        variant: ToastVariant.primary,
                       ),
                     ),
                     const SizedBox(height: NextSpacing.md),
                     NextButton(
                       text: 'Spawn Success',
                       style: NextButtonStyle.primary,
-                      onTap: () => toastManager.showInfo(
+                      onTap: () => toastManager.showSuccess(
                         message:
                             'Success Toast: This is a success toast message',
-                        variant: ToastVariant.success,
                       ),
                     ),
                     const SizedBox(height: NextSpacing.md),
                     NextButton(
                       text: 'Spawn Critical',
                       style: NextButtonStyle.critical,
-                      onTap: () => toastManager.showInfo(
+                      onTap: () => toastManager.showError(
                         message:
                             'Critical Toast: This is a critical toast message',
-                        variant: ToastVariant.critical,
                       ),
                     ),
                   ],

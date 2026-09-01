@@ -1,19 +1,21 @@
 import 'package:material_ui/material_ui.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mobile/open/screens/add_instance/screens/biometry/widgets/biometry_skip_dialog.dart';
 import 'package:mobile/open/widgets/next/next_button.dart';
 import 'package:mobile/open/widgets/rive_asset_animation.dart';
+import 'package:mobile/open/widgets/toaster/toast_manager.dart';
 import 'package:mobile/router/routes.dart';
 import 'package:mobile/theme/next/color.dart';
 import 'package:mobile/theme/next/spacing.dart';
 import 'package:mobile/theme/next/text.dart';
 
-class NextBiometrySetupFailedScreen extends StatelessWidget {
+class NextBiometrySetupFailedScreen extends ConsumerWidget {
   final String instanceId;
 
   const NextBiometrySetupFailedScreen({super.key, required this.instanceId});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(gradient: NextColor.gradientPrimary),
@@ -90,6 +92,11 @@ class NextBiometrySetupFailedScreen extends StatelessWidget {
                           barrierColor: Colors.transparent,
                           builder: (context) => BiometrySkipDialog(
                             onSkip: () {
+                              ref
+                                  .read(toastManagerProvider.notifier)
+                                  .showSuccess(
+                                    message: "Instance added successfully",
+                                  );
                               InstanceScreenRoute(id: instanceId).go(context);
                             },
                             onCancel: () => Navigator.of(context).pop(),

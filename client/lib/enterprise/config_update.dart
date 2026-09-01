@@ -115,7 +115,7 @@ class ConfigurationUpdater extends HookConsumerWidget {
                   instance.name,
                   updateResult,
                 );
-                toaster.showInfo(
+                toaster.show(
                   message: "Instance ${instance.name} updated: $message",
                 );
               }
@@ -137,7 +137,7 @@ class ConfigurationUpdater extends HookConsumerWidget {
                   "- ${instance['name']}: Defguard Core ${instance['coreVersion']} (expected >=$supportedCoreVersion), Defguard Proxy ${instance['proxyVersion']} (expected >=$supportedProxyVersion)\n";
             }
             message += "\nPlease contact your administrator.";
-            toaster.showInfo(
+            toaster.show(
               message: "Version mismatch detected: ${message.trim()}",
             );
             hasShown.value = true;

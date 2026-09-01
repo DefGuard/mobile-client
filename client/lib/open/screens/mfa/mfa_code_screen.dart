@@ -15,7 +15,7 @@ import 'package:mobile/utils/error_handler.dart';
 import 'package:mobile/utils/screen_padding.dart';
 
 import '../../../../../data/db/enums.dart';
-import '../../services/snackbar_service.dart';
+import 'package:mobile/open/widgets/toaster/toast_manager.dart';
 
 class MfaCodeScreenData {
   final String token;
@@ -108,6 +108,7 @@ class _CodeForm extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final toaster = ref.read(toastManagerProvider.notifier);
     final formKey = useMemoized(() => GlobalKey<FormState>());
     final codeController = useTextEditingController(text: "");
     final isLoading = useState(false);
@@ -153,13 +154,17 @@ class _CodeForm extends HookConsumerWidget {
                         codeInvalid.value = true;
                         formKey.currentState?.validate();
                       } else {
-                        SnackbarService.showError(
-                          ErrorHandler.getHumanReadableError(e),
+                        toaster.showError(
+                          message: ErrorHandler.getHumanReadableError(e),
+                          logMessage: "MFA code submit failed!",
+                          error: e,
                         );
                       }
                     } catch (e) {
-                      SnackbarService.showError(
-                        ErrorHandler.getHumanReadableError(e),
+                      toaster.showError(
+                        message: ErrorHandler.getHumanReadableError(e),
+                        logMessage: "MFA code submit failed!",
+                        error: e,
                       );
                     } finally {
                       isLoading.value = false;

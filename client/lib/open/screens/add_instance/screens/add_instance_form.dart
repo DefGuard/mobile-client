@@ -16,7 +16,7 @@ import 'package:mobile/theme/next/color.dart';
 import 'package:mobile/theme/next/spacing.dart';
 import 'package:mobile/theme/next/text.dart';
 
-import '../../../services/snackbar_service.dart';
+import 'package:mobile/open/widgets/toaster/toast_manager.dart';
 
 class AddInstanceFormScreen extends HookConsumerWidget {
   const AddInstanceFormScreen({super.key});
@@ -49,6 +49,7 @@ class _AddInstanceFormContent extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final db = ref.read(databaseProvider);
+    final toaster = ref.read(toastManagerProvider.notifier);
     final formKey = useMemoized(() => GlobalKey<FormState>());
     final urlController = useTextEditingController();
     final tokenController = useTextEditingController();
@@ -128,12 +129,15 @@ class _AddInstanceFormContent extends HookConsumerWidget {
                         await _handleSubmit(
                           context,
                           db,
+                          toaster,
                           urlController.text.trim(),
                           tokenController.text.trim(),
                         );
                       } catch (e, st) {
-                        SnackbarService.showError(
-                          "Device registration failed! Error $e",
+                        toaster.showError(
+                          message:
+                              "Device registration failed. Please try again.",
+                          logMessage: "Device registration failed!",
                           error: e,
                           stackTrace: st,
                         );
@@ -164,6 +168,7 @@ bool _isValidUri(String value) {
 Future<void> _handleSubmit(
   BuildContext context,
   AppDatabase db,
+  ToastManager toaster,
   String url,
   String token,
 ) async {
@@ -175,7 +180,7 @@ Future<void> _handleSubmit(
       .filter((row) => row.uuid.equals(instanceId))
       .getSingleOrNull();
   if (dbInstance != null) {
-    SnackbarService.showError("Instance is already registered!");
+    toaster.showError(message: "Instance is already registered!");
     return;
   }
   final routeData = NameDeviceScreenData(

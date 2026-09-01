@@ -10,6 +10,7 @@ import 'package:mobile/open/screens/add_instance/screens/biometry/widgets/biomet
 import 'package:mobile/open/widgets/loading_screen.dart';
 import 'package:mobile/open/widgets/next/next_button.dart';
 import 'package:mobile/open/widgets/rive_asset_animation.dart';
+import 'package:mobile/open/widgets/toaster/toast_manager.dart';
 import 'package:mobile/router/routes.dart';
 import 'package:mobile/theme/next/color.dart';
 import 'package:mobile/theme/next/spacing.dart';
@@ -220,6 +221,11 @@ class _ScreenContent extends HookConsumerWidget {
                       barrierColor: Colors.transparent,
                       builder: (context) => BiometrySkipDialog(
                         onSkip: () {
+                          ref
+                              .read(toastManagerProvider.notifier)
+                              .showSuccess(
+                                message: "Instance added successfully",
+                              );
                           InstanceScreenRoute(
                             id: instanceId.toString(),
                           ).go(context);
