@@ -293,7 +293,7 @@ class _NextTextFormFieldContent extends HookWidget {
 @Preview(name: 'Default', group: 'Primary')
 Widget previewPrimaryDefault() {
   return NextPreviewWrapper(
-    width: 320,
+    maxWidth: 320,
     child: NextTextFormField(
       size: NextTextFormFieldSize.primary,
       hintText: 'Enter text...',
@@ -304,7 +304,7 @@ Widget previewPrimaryDefault() {
 @Preview(name: 'With Label & Required', group: 'Primary')
 Widget previewPrimaryWithLabel() {
   return NextPreviewWrapper(
-    width: 320,
+    maxWidth: 320,
     child: NextTextFormField(
       size: NextTextFormFieldSize.primary,
       label: 'Email address',
@@ -317,7 +317,7 @@ Widget previewPrimaryWithLabel() {
 @Preview(name: 'With Text', group: 'Primary')
 Widget previewPrimaryWithText() {
   return NextPreviewWrapper(
-    width: 320,
+    maxWidth: 320,
     child: NextTextFormField(
       size: NextTextFormFieldSize.primary,
       label: 'Username',
@@ -329,7 +329,7 @@ Widget previewPrimaryWithText() {
 @Preview(name: 'Disabled', group: 'Primary')
 Widget previewPrimaryDisabled() {
   return NextPreviewWrapper(
-    width: 320,
+    maxWidth: 320,
     child: NextTextFormField(
       size: NextTextFormFieldSize.primary,
       label: 'Role',
@@ -342,7 +342,7 @@ Widget previewPrimaryDisabled() {
 @Preview(name: 'With Error', group: 'Primary')
 Widget previewPrimaryWithError() {
   return NextPreviewWrapper(
-    width: 320,
+    maxWidth: 320,
     child: NextTextFormField(
       size: NextTextFormFieldSize.primary,
       label: 'Password',
@@ -357,7 +357,7 @@ Widget previewPrimaryWithError() {
 @Preview(name: 'Default', group: 'Big')
 Widget previewBigDefault() {
   return NextPreviewWrapper(
-    width: 320,
+    maxWidth: 320,
     child: NextTextFormField(
       size: NextTextFormFieldSize.big,
       hintText: 'Search location...',
@@ -368,7 +368,7 @@ Widget previewBigDefault() {
 @Preview(name: 'With Label & Required', group: 'Big')
 Widget previewBigWithLabel() {
   return NextPreviewWrapper(
-    width: 320,
+    maxWidth: 320,
     child: NextTextFormField(
       size: NextTextFormFieldSize.big,
       label: 'Server Name',
@@ -381,7 +381,7 @@ Widget previewBigWithLabel() {
 @Preview(name: 'Disabled', group: 'Big')
 Widget previewBigDisabled() {
   return NextPreviewWrapper(
-    width: 320,
+    maxWidth: 320,
     child: NextTextFormField(
       size: NextTextFormFieldSize.big,
       label: 'Server Name',
@@ -394,7 +394,7 @@ Widget previewBigDisabled() {
 @Preview(name: 'With Error', group: 'Big')
 Widget previewBigWithError() {
   return NextPreviewWrapper(
-    width: 320,
+    maxWidth: 320,
     child: NextTextFormField(
       size: NextTextFormFieldSize.big,
       label: 'Port',

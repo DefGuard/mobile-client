@@ -152,10 +152,8 @@ class NextInstanceScreen extends HookConsumerWidget {
             talker.info("${instances.length} instances left, going to list.");
             const InstancesListScreenRoute().go(context);
           }
-          isDeleting.value = false;
-        } else {
-          isDeleting.value = false;
         }
+        isDeleting.value = false;
       } catch (e, st) {
         isDeleting.value = false;
         talker.error("Error during instance deletion routing", e, st);

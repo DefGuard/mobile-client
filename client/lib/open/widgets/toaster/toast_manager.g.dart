@@ -41,7 +41,7 @@ final class ToastManagerProvider
   }
 }
 
-String _$toastManagerHash() => r'a8480fc36ce7faf240dbbac3c7e9817e438e2548';
+String _$toastManagerHash() => r'3375fc0b90ca81b3d78289a8f4b99dc370daad38';
 
 abstract class _$ToastManager extends $Notifier<ToastData?> {
   ToastData? build();

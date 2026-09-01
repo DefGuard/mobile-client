@@ -134,7 +134,7 @@ Future<T?> showNextBottomSheet<T>({
 @Preview(name: 'NextBottomSheet Default', group: 'NextBottomSheet')
 Widget previewNextBottomSheetDefault() {
   return NextPreviewWrapper(
-    width: 375,
+    maxWidth: 375,
     child: NextBottomSheet(
       child: Column(
         mainAxisSize: MainAxisSize.min,

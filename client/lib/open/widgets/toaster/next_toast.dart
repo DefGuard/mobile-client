@@ -28,7 +28,7 @@ class NextToast extends StatelessWidget {
   Color get _textColor {
     return switch (variant) {
       ToastVariant.primary => NextColor.fgFaded,
-      ToastVariant.success => const Color(0xff141517),
+      ToastVariant.success => NextColor.fgBlack,
       ToastVariant.critical => NextColor.fgWhite100,
     };
   }
@@ -68,7 +68,7 @@ class NextToast extends StatelessWidget {
             child: Text(
               message,
               style: NextText.bodySm400.copyWith(color: _textColor),
-              maxLines: 2,
+              maxLines: 4,
               overflow: TextOverflow.ellipsis,
             ),
           ),

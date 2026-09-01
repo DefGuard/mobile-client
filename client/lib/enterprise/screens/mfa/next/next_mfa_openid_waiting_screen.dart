@@ -22,7 +22,10 @@ class NextOpenIdMfaWaitingScreen extends HookConsumerWidget {
 
   const NextOpenIdMfaWaitingScreen({super.key, required this.screenData});
 
-  Future<FinishMfaResponse?> _pollOpenidMfa() async {
+  /// Polls the proxy until the user finishes the browser login, [isCancelled]
+  /// returns true or the 2 minute timeout elapses. Returns null unless a
+  /// preshared key came back.
+  Future<FinishMfaResponse?> _pollOpenidMfa(bool Function() isCancelled) async {
     final request = FinishMfaRequest(token: screenData.token);
     final uri = Uri.parse(screenData.proxyUrl);
 
@@ -30,6 +33,11 @@ class NextOpenIdMfaWaitingScreen extends HookConsumerWidget {
     const timeoutDuration = Duration(minutes: 2);
 
     while (true) {
+      if (isCancelled()) {
+        talker.debug("OpenID MFA polling cancelled");
+        return null;
+      }
+
       if (DateTime.now().difference(startTime) >= timeoutDuration) {
         talker.warning("OpenID MFA polling timed out after 2 minutes");
         return null;
@@ -62,30 +70,38 @@ class NextOpenIdMfaWaitingScreen extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final navigator = Navigator.of(context);
+    final route = ModalRoute.of(context);
     final toaster = ref.read(toastManagerProvider.notifier);
 
     useEffect(() {
-      _pollOpenidMfa()
+      // `isActive` goes false synchronously inside `pop()`, so this covers the
+      // Cancel button, the back arrow and a swipe back. It both stops the
+      // polling loop and keeps a late result from popping the screen
+      // underneath this one while the pop transition is still running.
+      bool isGone() => route != null && !route.isActive;
+
+      _pollOpenidMfa(isGone)
           .then((finishMfaResponse) {
+            if (isGone()) return;
             if (finishMfaResponse == null) {
               toaster.showError(
                 message: "Authentication timed out. Please try again.",
               );
-              if (context.mounted) navigator.pop();
+              navigator.pop();
             } else {
-              if (context.mounted) {
-                navigator.pop(finishMfaResponse.presharedKey);
-              }
+              navigator.pop(finishMfaResponse.presharedKey);
             }
           })
           .catchError((error) {
+            if (isGone()) return;
             toaster.showError(
               message: ErrorHandler.getHumanReadableError(error),
               logMessage: "OpenID MFA polling error!",
               error: error,
             );
-            if (context.mounted) navigator.pop();
+            navigator.pop();
           });
+
       return null;
     }, []);
 

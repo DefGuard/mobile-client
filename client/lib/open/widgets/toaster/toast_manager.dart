@@ -72,8 +72,7 @@ class ToastManager extends _$ToastManager {
     // only one toast at a time, further calls are dropped
     if (state != null) return;
 
-    _cancelTimer();
-    final innerId = id ?? Uuid().v4();
+    final innerId = id ?? const Uuid().v4();
     talker.debug("Showing toast: $innerId");
     state = ToastData(id: innerId, message: message, variant: variant);
     _timer = Timer(_toastDuration, () => remove(id: innerId));
