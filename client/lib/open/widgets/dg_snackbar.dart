@@ -1,5 +1,7 @@
+import 'package:flutter/widget_previews.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:mobile/open/widgets/buttons/dg_text_button.dart';
+import 'package:mobile/open/widgets/next/next_preview_wrapper.dart';
 import 'package:mobile/theme/color.dart';
 import 'package:mobile/theme/spacing.dart';
 import 'package:mobile/theme/text.dart';
@@ -66,5 +68,45 @@ SnackBar dgSnackBar({
         ),
       ),
     ),
+  );
+}
+
+@Preview(name: 'Default', group: 'dgSnackBar')
+Widget previewDgSnackBarDefault() {
+  return NextPreviewWrapper(
+    child: dgSnackBar(
+      text: "This is a default snackbar message.",
+    ).content,
+  );
+}
+
+@Preview(name: 'Error', group: 'dgSnackBar')
+Widget previewDgSnackBarError() {
+  return NextPreviewWrapper(
+    child: dgSnackBar(
+      text: "An error occurred while processing your request.",
+      textColor: DgColor.textAlert,
+    ).content,
+  );
+}
+
+@Preview(name: 'With Close Action', group: 'dgSnackBar')
+Widget previewDgSnackBarWithClose() {
+  return NextPreviewWrapper(
+    child: dgSnackBar(
+      text: "This snackbar has a close button.",
+      onDismiss: () {},
+    ).content,
+  );
+}
+
+@Preview(name: 'Long Text', group: 'dgSnackBar')
+Widget previewDgSnackBarLongText() {
+  return NextPreviewWrapper(
+    child: dgSnackBar(
+      text:
+          "This is a very long snackbar message to see how it handles multiple lines of text and if the layout remains consistent.",
+      onDismiss: () {},
+    ).content,
   );
 }
