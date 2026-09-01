@@ -1,10 +1,9 @@
 import "dart:async";
 
-import "package:material_ui/material_ui.dart";
 import "package:flutter/widget_previews.dart";
-import "package:flutter_animate/flutter_animate.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
+import "package:material_ui/material_ui.dart";
 import "package:mobile/open/widgets/next/next_button.dart";
 import "package:mobile/open/widgets/toaster/next_toast.dart";
 import "package:mobile/theme/next/color.dart";
@@ -80,8 +79,6 @@ class ToastPositioner extends HookConsumerWidget {
       return null;
     }, [toast]);
 
-    if (toast == null) return const SizedBox.shrink();
-
     return Align(
       alignment: Alignment.topCenter,
       child: SafeArea(
@@ -90,22 +87,36 @@ class ToastPositioner extends HookConsumerWidget {
             horizontal: NextSpacing.md,
             vertical: NextSpacing.md,
           ),
-          child: GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTap: () => ref.read(toastManagerProvider.notifier).remove(),
-            child:
-                NextToast(
+          child: AnimatedSwitcher(
+            duration: _animationDuration,
+            transitionBuilder: (Widget child, Animation<double> animation) {
+              final curvedAnimation = CurvedAnimation(
+                parent: animation,
+                curve: Curves.easeOut,
+              );
+              return FadeTransition(
+                opacity: curvedAnimation,
+                child: SlideTransition(
+                  position: Tween<Offset>(
+                    begin: const Offset(0, -1),
+                    end: Offset.zero,
+                  ).animate(curvedAnimation),
+                  child: child,
+                ),
+              );
+            },
+            child: toast == null
+                ? const SizedBox.shrink()
+                : GestureDetector(
+                    key: ValueKey(toast.id),
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () =>
+                        ref.read(toastManagerProvider.notifier).remove(),
+                    child: NextToast(
                       message: toast.message,
                       variant: toast.variant,
-                    )
-                    .animate()
-                    .fadeIn(duration: _animationDuration)
-                    .slideY(
-                      begin: -1,
-                      end: 0,
-                      duration: _animationDuration,
-                      curve: Curves.easeOut,
                     ),
+                  ),
           ),
         ),
       ),
@@ -128,6 +139,8 @@ class _ToastManagerPreview extends HookConsumerWidget {
     final toastManager = ref.read(toastManagerProvider.notifier);
     return Scaffold(
       body: Container(
+        width: double.infinity,
+        height: double.infinity,
         decoration: const BoxDecoration(gradient: NextColor.gradientPrimary),
         child: Stack(
           children: [
@@ -135,6 +148,7 @@ class _ToastManagerPreview extends HookConsumerWidget {
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(20, 60, 20, 20),
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     const Spacer(),
                     NextButton(
