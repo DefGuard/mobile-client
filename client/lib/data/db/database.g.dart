@@ -1803,10 +1803,7 @@ final class $$DefguardInstancesTableReferences
   static MultiTypedResultKey<$LocationsTable, List<Location>>
   _locationsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
     db.locations,
-    aliasName: $_aliasNameGenerator(
-      db.defguardInstances.id,
-      db.locations.instance,
-    ),
+    aliasName: 'defguard_instances__id__locations__instance',
   );
 
   $$LocationsTableProcessedTableManager get locationsRefs {
@@ -2292,10 +2289,9 @@ final class $$LocationsTableReferences
     extends BaseReferences<_$AppDatabase, $LocationsTable, Location> {
   $$LocationsTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
-  static $DefguardInstancesTable _instanceTable(_$AppDatabase db) =>
-      db.defguardInstances.createAlias(
-        $_aliasNameGenerator(db.locations.instance, db.defguardInstances.id),
-      );
+  static $DefguardInstancesTable _instanceTable(_$AppDatabase db) => db
+      .defguardInstances
+      .createAlias('locations__instance__defguard_instances__id');
 
   $$DefguardInstancesTableProcessedTableManager get instance {
     final $_column = $_itemColumn<int>('instance')!;

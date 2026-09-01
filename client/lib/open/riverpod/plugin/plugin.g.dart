@@ -49,7 +49,7 @@ abstract class _$PluginActiveTunnelState
   PluginTunnelEventData? build();
   @$mustCallSuper
   @override
-  void runBuild() {
+  WhenComplete runBuild() {
     final ref =
         this.ref as $Ref<PluginTunnelEventData?, PluginTunnelEventData?>;
     final element =
@@ -60,6 +60,6 @@ abstract class _$PluginActiveTunnelState
               Object?,
               Object?
             >;
-    element.handleCreate(ref, build);
+    return element.handleCreate(ref, build);
   }
 }

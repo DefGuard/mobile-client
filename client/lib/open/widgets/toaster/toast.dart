@@ -7,18 +7,6 @@ import 'package:mobile/theme/color.dart';
 import 'package:mobile/theme/spacing.dart';
 import 'package:mobile/theme/text.dart';
 
-class ToastData {
-  final String id;
-  final String title;
-  final String message;
-
-  const ToastData({
-    required this.id,
-    required this.title,
-    required this.message,
-  });
-}
-
 class Toast extends HookConsumerWidget {
   final String title;
   final String message;
@@ -36,7 +24,7 @@ class Toast extends HookConsumerWidget {
     final toasterNotifier = ref.read(toastManagerProvider.notifier);
 
     return ConstrainedBox(
-      constraints: BoxConstraints(maxWidth: 500),
+      constraints: const BoxConstraints(maxWidth: 500),
       child: Container(
         width: double.infinity,
         decoration: BoxDecoration(boxShadow: [dgBoxShadow]),
@@ -56,7 +44,7 @@ class Toast extends HookConsumerWidget {
               children: [
                 IntrinsicHeight(
                   child: Row(
-                    mainAxisSize: MainAxisSize.max,
+                    mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     spacing: DgSpacing.xs,
                     children: [
@@ -67,7 +55,7 @@ class Toast extends HookConsumerWidget {
                           size: 12,
                         ),
                       ),
-                      Expanded(
+                      Flexible(
                         child: Text(
                           title,
                           style: DgText.modal1,
@@ -79,13 +67,13 @@ class Toast extends HookConsumerWidget {
                 ),
                 Text(message, style: DgText.modal2, textAlign: TextAlign.left),
                 Row(
-                  mainAxisSize: MainAxisSize.max,
+                  mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    Expanded(child: SizedBox(height: 1)),
+                    const Spacer(),
                     DgTextButton(
                       onTap: () {
-                        toasterNotifier.remove(id);
+                        toasterNotifier.remove();
                       },
                       text: "Dismiss",
                       textStyle: DgText.copyright,

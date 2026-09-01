@@ -13,7 +13,7 @@ part of 'toast_manager.dart';
 final toastManagerProvider = ToastManagerProvider._();
 
 final class ToastManagerProvider
-    extends $NotifierProvider<ToastManager, List<ToastData>> {
+    extends $NotifierProvider<ToastManager, ToastData?> {
   ToastManagerProvider._()
     : super(
         from: null,
@@ -33,30 +33,30 @@ final class ToastManagerProvider
   ToastManager create() => ToastManager();
 
   /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(List<ToastData> value) {
+  Override overrideWithValue(ToastData? value) {
     return $ProviderOverride(
       origin: this,
-      providerOverride: $SyncValueProvider<List<ToastData>>(value),
+      providerOverride: $SyncValueProvider<ToastData?>(value),
     );
   }
 }
 
-String _$toastManagerHash() => r'74289bbdb571bc6704c109ff8277a455d0815c55';
+String _$toastManagerHash() => r'3e48c9ad150ddbd84fadacdb7cf9967b2b4911d0';
 
-abstract class _$ToastManager extends $Notifier<List<ToastData>> {
-  List<ToastData> build();
+abstract class _$ToastManager extends $Notifier<ToastData?> {
+  ToastData? build();
   @$mustCallSuper
   @override
-  void runBuild() {
-    final ref = this.ref as $Ref<List<ToastData>, List<ToastData>>;
+  WhenComplete runBuild() {
+    final ref = this.ref as $Ref<ToastData?, ToastData?>;
     final element =
         ref.element
             as $ClassProviderElement<
-              AnyNotifier<List<ToastData>, List<ToastData>>,
-              List<ToastData>,
+              AnyNotifier<ToastData?, ToastData?>,
+              ToastData?,
               Object?,
               Object?
             >;
-    element.handleCreate(ref, build);
+    return element.handleCreate(ref, build);
   }
 }

@@ -463,18 +463,13 @@ Map<String, dynamic> _$AppInfoResponseToJson(AppInfoResponse instance) =>
 
 WireguardEncodedKeyPair _$WireguardEncodedKeyPairFromJson(
   Map<String, dynamic> json,
-) => $checkedCreate(
-  'WireguardEncodedKeyPair',
-  json,
-  ($checkedConvert) {
-    final val = WireguardEncodedKeyPair(
-      pubKey: $checkedConvert('pub_key', (v) => v as String),
-      privKey: $checkedConvert('priv_key', (v) => v as String),
-    );
-    return val;
-  },
-  fieldKeyMap: const {'pubKey': 'pub_key', 'privKey': 'priv_key'},
-);
+) => $checkedCreate('WireguardEncodedKeyPair', json, ($checkedConvert) {
+  final val = WireguardEncodedKeyPair(
+    pubKey: $checkedConvert('pub_key', (v) => v as String),
+    privKey: $checkedConvert('priv_key', (v) => v as String),
+  );
+  return val;
+}, fieldKeyMap: const {'pubKey': 'pub_key', 'privKey': 'priv_key'});
 
 const _$WireguardEncodedKeyPairFieldMap = <String, String>{
   'pubKey': 'pub_key',

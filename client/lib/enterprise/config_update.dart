@@ -116,8 +116,7 @@ class ConfigurationUpdater extends HookConsumerWidget {
                   updateResult,
                 );
                 toaster.showInfo(
-                  title: "Instance ${instance.name} update",
-                  message: message,
+                  message: "Instance ${instance.name} updated: $message",
                 );
               }
             }
@@ -139,8 +138,7 @@ class ConfigurationUpdater extends HookConsumerWidget {
             }
             message += "\nPlease contact your administrator.";
             toaster.showInfo(
-              title: "Version mismatch detected",
-              message: message.trim(),
+              message: "Version mismatch detected: ${message.trim()}",
             );
             hasShown.value = true;
           }

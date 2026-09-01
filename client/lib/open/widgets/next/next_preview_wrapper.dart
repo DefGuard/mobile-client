@@ -15,11 +15,22 @@ class NextPreviewWrapper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(gradient: NextColor.previewGradient),
-      padding: padding,
-      child: Center(
-        child: width != null ? SizedBox(width: width, child: child) : child,
+    return Material(
+      color: Colors.transparent,
+      child: Directionality(
+        textDirection: TextDirection.ltr,
+        child: Container(
+          decoration: const BoxDecoration(gradient: NextColor.previewGradient),
+          padding: padding,
+          child: Center(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxWidth: width ?? 500,
+              ),
+              child: child,
+            ),
+          ),
+        ),
       ),
     );
   }

@@ -49,8 +49,7 @@ class RefreshInstanceDialog extends HookConsumerWidget {
       if (updateResult != null && updateResult.didChange) {
         final message = getInstanceUpdateMessage(instance.name, updateResult);
         toaster.showInfo(
-          title: "Instance ${instance.name} updated",
-          message: message,
+          message: "Instance ${instance.name} updated: $message",
         );
       }
       talker.info("Instance information refreshed successfully");
