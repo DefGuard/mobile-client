@@ -79,6 +79,8 @@ dependencies:
   protobuf: ^6.0.0
   rive: ^0.14.11
 
+  material_ui: ^1.1.0
+  cupertino_ui: ^1.0.1
 dev_dependencies:
   flutter_test:
     sdk: flutter

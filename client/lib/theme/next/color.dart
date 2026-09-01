@@ -1,5 +1,5 @@
 // ignore_for_file: unused_field
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 class _Primitive {
   _Primitive._();

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mobile/open/widgets/icons/openid_open.dart';
 import 'package:mobile/open/widgets/next/icons/next_icon.dart';

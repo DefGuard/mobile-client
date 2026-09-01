@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:mobile/open/widgets/next/images/dg_logo.dart';
 import 'package:mobile/theme/next/spacing.dart';
 
