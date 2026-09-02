@@ -1,19 +1,20 @@
 import 'package:material_ui/material_ui.dart';
-import 'package:mobile/open/widgets/next/next_code_entry_layout.dart';
+import 'package:mobile/open/screens/next/mfa/next_mfa_code_screen.dart';
 
 class NextMfaTotpScreen extends StatelessWidget {
-  final NextCodeEntrySubmit onSubmit;
+  final NextMfaCodeScreenData screenData;
 
-  const NextMfaTotpScreen({super.key, required this.onSubmit});
+  const NextMfaTotpScreen({super.key, required this.screenData});
 
   @override
   Widget build(BuildContext context) {
-    return NextCodeEntryLayout(
+    return NextMfaCodeScreen(
+      screenData: screenData,
       title: 'Two-factor authentication',
       description:
           'Paste the authentication code from your Authenticator Application.',
       fieldLabel: 'Authentication Code',
-      onSubmit: onSubmit,
+      logLabel: 'TOTP',
     );
   }
 }

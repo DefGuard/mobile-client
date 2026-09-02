@@ -1,30 +1,26 @@
 import 'package:dio/dio.dart';
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:mobile/data/proxy/mfa.dart';
 import 'package:mobile/open/api.dart';
-import 'package:mobile/open/widgets/icons/openid_wait.dart';
 import 'package:mobile/open/widgets/next/icons/next_icon.dart';
 import 'package:mobile/open/widgets/next/next_app_bar.dart';
 import 'package:mobile/open/widgets/next/next_button.dart';
 import 'package:mobile/open/widgets/next/next_icon_button.dart';
+import 'package:mobile/open/widgets/toaster/toast_manager.dart';
 import 'package:mobile/theme/next/color.dart';
 import 'package:mobile/theme/next/text.dart';
 
-import '../openid_mfa_waiting_screen.dart';
 import '../../../../../logging.dart';
 import '../../../../../utils/error_handler.dart';
-import 'package:mobile/open/widgets/toaster/toast_manager.dart';
+import '../openid_mfa_waiting_screen.dart';
 
 class NextOpenIdMfaWaitingScreen extends HookConsumerWidget {
   final OpenIdMfaWaitingScreenData screenData;
 
   const NextOpenIdMfaWaitingScreen({super.key, required this.screenData});
 
-  /// Polls the proxy until the user finishes the browser login, [isCancelled]
-  /// returns true or the 2 minute timeout elapses. Returns null unless a
-  /// preshared key came back.
   Future<FinishMfaResponse?> _pollOpenidMfa(bool Function() isCancelled) async {
     final request = FinishMfaRequest(token: screenData.token);
     final uri = Uri.parse(screenData.proxyUrl);
@@ -74,10 +70,6 @@ class NextOpenIdMfaWaitingScreen extends HookConsumerWidget {
     final toaster = ref.read(toastManagerProvider.notifier);
 
     useEffect(() {
-      // `isActive` goes false synchronously inside `pop()`, so this covers the
-      // Cancel button, the back arrow and a swipe back. It both stops the
-      // polling loop and keeps a late result from popping the screen
-      // underneath this one while the pop transition is still running.
       bool isGone() => route != null && !route.isActive;
 
       _pollOpenidMfa(isGone)
@@ -120,10 +112,7 @@ class NextOpenIdMfaWaitingScreen extends HookConsumerWidget {
         ),
         body: SafeArea(
           child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 20,
-              vertical: 20,
-            ),
+            padding: .fromLTRB(20, 4, 20, 20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -136,14 +125,11 @@ class NextOpenIdMfaWaitingScreen extends HookConsumerWidget {
                 const SizedBox(height: 8),
                 Text(
                   "Waiting for authentication in your browser...",
-                  style: NextText.bodySm400.copyWith(
+                  style: NextText.bodyXs400.copyWith(
                     color: NextColor.fgWhite60,
                   ),
                 ),
                 const Spacer(),
-                Center(child: DgIconOpenidWait(size: 160)),
-                const Spacer(),
-                const SizedBox(height: 20),
                 NextButton(
                   text: 'Cancel',
                   style: NextButtonStyle.outlined,

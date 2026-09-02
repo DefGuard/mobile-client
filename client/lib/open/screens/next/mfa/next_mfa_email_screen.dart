@@ -1,18 +1,19 @@
 import 'package:material_ui/material_ui.dart';
-import 'package:mobile/open/widgets/next/next_code_entry_layout.dart';
+import 'package:mobile/open/screens/next/mfa/next_mfa_code_screen.dart';
 
 class NextMfaEmailScreen extends StatelessWidget {
-  final NextCodeEntrySubmit onSubmit;
+  final NextMfaCodeScreenData screenData;
 
-  const NextMfaEmailScreen({super.key, required this.onSubmit});
+  const NextMfaEmailScreen({super.key, required this.screenData});
 
   @override
   Widget build(BuildContext context) {
-    return NextCodeEntryLayout(
+    return NextMfaCodeScreen(
+      screenData: screenData,
       title: 'Two-factor authentication',
       description: 'Paste the authentication code you received in the email.',
       fieldLabel: 'Authentication Code',
-      onSubmit: onSubmit,
+      logLabel: 'Email',
     );
   }
 }

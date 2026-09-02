@@ -1,8 +1,8 @@
 import 'package:drift/drift.dart' as drift;
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:mobile/data/db/database.dart';
 import 'package:mobile/data/plugin/plugin.dart';
 import 'package:mobile/open/api.dart';
@@ -444,7 +444,6 @@ class _LocationItem extends HookConsumerWidget {
       }
     }, []);
 
-    // set connected flag
     useEffect(() {
       final connected = checkConnected(activeTunnel);
       isConnected.value = connected;
@@ -542,18 +541,15 @@ class _LocationItem extends HookConsumerWidget {
                   onTap: () async {
                     print("Location traffic pref: ${location.trafficMethod}");
                     isLoading.value = true;
-                    // check if there is active tunnel if so ask user if he want to change the active connection
                     if (activeTunnel != null) {
                       if (!isConnected.value) {
                         talker.debug("Connection change started");
-                        // connection is on another location so ask if user want to change active to this one
                         final bool? changeConnection = await showDialog<bool>(
                           context: context,
                           builder: (BuildContext context) {
                             return ConnectionConflictDialog();
                           },
                         );
-                        // user cancelled the operation
                         if (changeConnection == null ||
                             changeConnection == false) {
                           talker.debug("Connection change cancelled");
@@ -567,27 +563,33 @@ class _LocationItem extends HookConsumerWidget {
                           talker.debug("Previous connection closed");
                         }
                       } else {
-                        // active connection is the current location means disconnect
                         await disconnect();
                         isLoading.value = false;
                         return;
                       }
                     }
-                    // connect
                     try {
                       final permissionsGranted = await wireguardPlugin
                           .requestPermissions();
                       if (permissionsGranted) {
                         if (context.mounted) {
-                          await TunnelService.connect(
+                          final result = await TunnelService.connect(
                             context: context,
-                            toaster: ref.read(toastManagerProvider.notifier),
                             instance: instance,
                             location: location,
                             wireguardPlugin: wireguardPlugin,
                             biometricsStatus: biometricStatus,
                             db: ref.read(databaseProvider),
                           );
+                          if (result.status == ConnectStatus.failed) {
+                            ref
+                                .read(toastManagerProvider.notifier)
+                                .showError(
+                                  message: result.message!,
+                                  logMessage: result.logMessage,
+                                  error: result.error,
+                                );
+                          }
                           talker.debug(
                             "Location ${location.name} (${location.id}) connected",
                           );
