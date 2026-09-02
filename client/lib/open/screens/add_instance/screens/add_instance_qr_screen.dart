@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mobile/data/db/database.dart';
@@ -12,7 +12,7 @@ import 'package:mobile/open/widgets/next/next_qr_scanner.dart';
 import 'package:mobile/router/routes.dart';
 
 import '../../../../logging.dart';
-import '../../../services/snackbar_service.dart';
+import 'package:mobile/open/widgets/toaster/toast_manager.dart';
 
 class AddInstanceQrScreen extends HookConsumerWidget {
   const AddInstanceQrScreen({super.key});
@@ -20,6 +20,7 @@ class AddInstanceQrScreen extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final db = ref.read(databaseProvider);
+    final toaster = ref.read(toastManagerProvider.notifier);
     final isLoading = useState(false);
 
     const description = "Scan QR Code to add instance\non your phone";
@@ -57,7 +58,9 @@ class AddInstanceQrScreen extends HookConsumerWidget {
               talker.error(
                 "Register Instance failed! Instance is already registered.",
               );
-              SnackbarService.showError("Instance is already registered!");
+              toaster.showError(
+                message: "Instance is already registered!",
+              );
               isLoading.value = false;
               await controller.resume();
               return;
@@ -73,8 +76,8 @@ class AddInstanceQrScreen extends HookConsumerWidget {
             }
           } catch (e, st) {
             if (context.mounted) {
-              SnackbarService.showError(
-                "Something went wrong. Try again.",
+              toaster.showError(
+                message: "Something went wrong. Try again.",
                 logMessage: "Enrollment via QR start failed!",
                 error: e,
                 stackTrace: st,

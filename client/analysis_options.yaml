@@ -9,6 +9,17 @@
 # packages, and plugins designed to encourage good coding practices.
 include: package:flutter_lints/flutter.yaml
 
+# riverpod_lint >=3.1 moved off the (now archived) custom_lint onto the
+# first-party analysis_server_plugin, so it is declared here instead of in
+# pubspec.yaml dev_dependencies -- `pub add riverpod_lint` is no longer how it
+# is wired up. Restart the analysis server after editing this block.
+#
+# Two gotchas as of Dart 3.13 / Flutter 3.47: `flutter analyze` does NOT run
+# analyzer plugins, and neither does `dart analyze <path>`. Only a bare
+# `dart analyze` from this directory reports these rules.
+plugins:
+  riverpod_lint: ^3.1.8
+
 linter:
   # The lint rules applied to this project can be customized in the
   # section below to disable rules from the `package:flutter_lints/flutter.yaml`
@@ -42,8 +53,6 @@ analyzer:
     - windows/**
     - macos/**
     - linux/**
-  plugins:
-    - custom_lint
 
 # Additional information about this file can be found at
 # https://dart.dev/guides/language/analysis-options

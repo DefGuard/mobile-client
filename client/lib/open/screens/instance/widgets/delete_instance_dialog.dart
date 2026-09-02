@@ -1,8 +1,7 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mobile/data/db/database.dart';
-import 'package:mobile/logging.dart';
-import 'package:mobile/open/services/snackbar_service.dart';
+import 'package:mobile/open/widgets/toaster/toast_manager.dart';
 import 'package:mobile/open/widgets/next/icons/next_icon.dart';
 import 'package:mobile/open/widgets/next/next_button.dart';
 import 'package:mobile/open/widgets/next/next_dialog.dart';
@@ -22,6 +21,7 @@ class DeleteInstanceDialog extends HookConsumerWidget {
         "Are you sure you want to delete this instance ${instance.name}. This action can’t be undone and you will be disconnected from all locations from this instance.";
 
     final db = ref.watch(databaseProvider);
+    final toaster = ref.read(toastManagerProvider.notifier);
 
     Future<void> deleteInstance(BuildContext context) async {
       try {
@@ -32,12 +32,15 @@ class DeleteInstanceDialog extends HookConsumerWidget {
             .filter((row) => row.id.equals(instance.id))
             .delete();
         if (context.mounted) {
-          SnackbarService.show("Instance deleted");
+          toaster.show(message: "Instance deleted");
           Navigator.of(context).pop(true);
         }
-      } catch (e) {
-        talker.error(
-          "Failed to delete instance ${instance.logName}! Reason: \n $e",
+      } catch (e, st) {
+        toaster.showError(
+          message: "Failed to delete instance. Please try again.",
+          logMessage: "Failed to delete instance ${instance.logName}!",
+          error: e,
+          stackTrace: st,
         );
       }
     }

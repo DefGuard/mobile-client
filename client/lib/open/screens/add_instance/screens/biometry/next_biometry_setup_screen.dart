@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -10,6 +10,7 @@ import 'package:mobile/open/screens/add_instance/screens/biometry/widgets/biomet
 import 'package:mobile/open/widgets/loading_screen.dart';
 import 'package:mobile/open/widgets/next/next_button.dart';
 import 'package:mobile/open/widgets/rive_asset_animation.dart';
+import 'package:mobile/open/widgets/toaster/toast_manager.dart';
 import 'package:mobile/router/routes.dart';
 import 'package:mobile/theme/next/color.dart';
 import 'package:mobile/theme/next/spacing.dart';
@@ -162,7 +163,6 @@ class _ScreenContent extends HookConsumerWidget {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.start,
                   crossAxisAlignment: CrossAxisAlignment.center,
-                  spacing: NextSpacing.md,
                   children: [
                     SizedBox(height: 70),
                     _getRiveAnimation(biometryStatus),
@@ -221,6 +221,11 @@ class _ScreenContent extends HookConsumerWidget {
                       barrierColor: Colors.transparent,
                       builder: (context) => BiometrySkipDialog(
                         onSkip: () {
+                          ref
+                              .read(toastManagerProvider.notifier)
+                              .showSuccess(
+                                message: "Instance added successfully",
+                              );
                           InstanceScreenRoute(
                             id: instanceId.toString(),
                           ).go(context);

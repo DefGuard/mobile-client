@@ -3,7 +3,7 @@ import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:drift/drift.dart' as drift;
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:mobile/data/db/database.dart';
 import 'package:mobile/data/plugin/plugin.dart';
 import 'package:mobile/data/proxy/mfa.dart';
@@ -14,10 +14,9 @@ import 'package:mobile/open/riverpod/biometrics_state.dart';
 import 'package:mobile/open/screens/instance/widgets/mfa_method_dialog.dart';
 import 'package:mobile/open/screens/instance/widgets/routing_method_dialog.dart';
 import 'package:mobile/open/screens/next/mfa/next_mfa_email_screen.dart';
+import 'package:mobile/enterprise/screens/mfa/next/next_mfa_openid_screen.dart';
 import 'package:mobile/open/screens/next/mfa/next_mfa_totp_screen.dart';
-import 'package:mobile/open/services/snackbar_service.dart';
-import 'package:mobile/open/widgets/dg_snackbar.dart';
-import 'package:mobile/theme/color.dart';
+import 'package:mobile/open/widgets/toaster/toast_manager.dart';
 import 'package:mobile/utils/error_handler.dart';
 import 'package:mobile/utils/secure_storage.dart';
 
@@ -31,6 +30,7 @@ class TunnelService {
   /// interface configuration and connection.
   static Future<void> connect({
     required BuildContext context,
+    required ToastManager toaster,
     required DefguardInstance instance,
     required Location location,
     required dynamic wireguardPlugin,
@@ -131,6 +131,7 @@ class TunnelService {
       // perform MFA to get the preshared key
       final presharedKey = await _performMfa(
         navigator: navigator,
+        toaster: toaster,
         proxyUrl: instance.proxyUrl,
         payload: payload,
         method: selectedMfaMethod,
@@ -145,7 +146,7 @@ class TunnelService {
       authorizedWith = selectedMfaMethod;
     } else if (payload.postureCheckRequired) {
       final presharedKey = await _performPostureCheck(
-        navigator: navigator,
+        toaster: toaster,
         proxyUrl: instance.proxyUrl,
         payload: payload,
         pollingToken: instance.poolingToken,
@@ -219,12 +220,11 @@ class TunnelService {
 
   /// Performs posture-only authorization and returns runtime preshared key.
   static Future<String?> _performPostureCheck({
-    required NavigatorState navigator,
+    required ToastManager toaster,
     required String proxyUrl,
     required PluginConnectPayload payload,
     required String pollingToken,
   }) async {
-    final messenger = ScaffoldMessenger.of(navigator.context);
     try {
       return await _authorizePostureOnly(
         proxyUrl,
@@ -233,19 +233,22 @@ class TunnelService {
         pollingToken,
       );
     } on PostureCheckException catch (e) {
-      talker.error('Posture check failed', e);
-      messenger.showSnackBar(
-        dgSnackBar(text: e.toString(), textColor: DgColor.textAlert),
+      toaster.showError(
+        message: e.message,
+        logMessage: 'Posture check failed',
+        error: e,
       );
     } on HttpException catch (e) {
-      talker.error('Posture check request failed', e);
-      messenger.showSnackBar(
-        dgSnackBar(text: 'Error: ${e.message}', textColor: DgColor.textAlert),
+      toaster.showError(
+        message: 'Posture check request failed. Please try again.',
+        logMessage: 'Posture check request failed',
+        error: e,
       );
     } catch (e) {
-      talker.error('Posture-only connect failed: $e');
-      messenger.showSnackBar(
-        dgSnackBar(text: 'Error: $e', textColor: DgColor.textAlert),
+      toaster.showError(
+        message: 'Posture check failed. Please try again.',
+        logMessage: 'Posture-only connect failed!',
+        error: e,
       );
     }
     return null;
@@ -255,14 +258,13 @@ class TunnelService {
   /// Returns preshared key.
   static Future<String?> _performMfa({
     required NavigatorState navigator,
+    required ToastManager toaster,
     required String proxyUrl,
     required PluginConnectPayload payload,
     required MfaMethod method,
     String? secureStorageKey,
     String? openidDisplayName,
   }) async {
-    // prepare messenger to avoid "context use across async gaps"
-    final messenger = ScaffoldMessenger.of(navigator.context);
     try {
       // get session token
       final startMfaResponse = await _startMfa(
@@ -310,35 +312,33 @@ class TunnelService {
       // perform email or totp MFA
       return await _handleCodeInput(
         navigator: navigator,
+        toaster: toaster,
         token: startMfaResponse.token,
         proxyUrl: proxyUrl,
         method: method,
       );
     } on MfaMethodNotAvailableException catch (e) {
       final methodString = e.method.toReadableString();
-      talker.error(
-        "MFA method $methodString was not configured on the account. Connect Failed.",
-      );
-      messenger.showSnackBar(
-        dgSnackBar(
-          text:
-              "You do not have $methodString method configured. Please either select a different MFA method or configure it on your account.",
-          onDismiss: () {
-            messenger.hideCurrentSnackBar();
-          },
-        ),
+      toaster.showError(
+        message:
+            "$methodString is not configured on your account. Select a different MFA method.",
+        logMessage:
+            "MFA method $methodString was not configured on the account. Connect Failed.",
+        error: e,
       );
       return null;
     } on HttpException catch (e) {
-      talker.error("Connect MFA failed!", e);
-      messenger.showSnackBar(
-        dgSnackBar(text: "Error: ${e.message}", textColor: DgColor.textAlert),
+      toaster.showError(
+        message: "MFA request failed. Please try again.",
+        logMessage: "Connect MFA failed!",
+        error: e,
       );
       return null;
     } catch (e) {
-      talker.error("MFA flow error: $e");
-      messenger.showSnackBar(
-        dgSnackBar(text: "Error: $e", textColor: DgColor.textAlert),
+      toaster.showError(
+        message: "MFA failed. Please try again.",
+        logMessage: "MFA flow error!",
+        error: e,
       );
       return null;
     }
@@ -354,7 +354,7 @@ class TunnelService {
   }) async {
     final presharedKey = await Navigator.of(navigator.context).push<String?>(
       MaterialPageRoute(
-        builder: (context) => OpenIdMfaScreen(
+        builder: (context) => NextOpenIdMfaScreen(
           screenData: OpenIdMfaScreenData(
             proxyUrl: proxyUrl,
             token: token,
@@ -372,6 +372,7 @@ class TunnelService {
   /// Handles non-openid MFA flows (totp, email)
   static Future<String?> _handleCodeInput({
     required NavigatorState navigator,
+    required ToastManager toaster,
     required String token,
     required String proxyUrl,
     required MfaMethod method,
@@ -394,12 +395,18 @@ class TunnelService {
               if (e.response?.statusCode == 401) {
                 setError('Enter valid code');
               } else {
-                SnackbarService.showError(
-                  ErrorHandler.getHumanReadableError(e),
+                toaster.showError(
+                  message: ErrorHandler.getHumanReadableError(e),
+                  logMessage: "Email MFA code submit failed!",
+                  error: e,
                 );
               }
             } catch (e) {
-              SnackbarService.showError(ErrorHandler.getHumanReadableError(e));
+              toaster.showError(
+                message: ErrorHandler.getHumanReadableError(e),
+                logMessage: "Email MFA code submit failed!",
+                error: e,
+              );
             }
           },
         );
@@ -419,12 +426,18 @@ class TunnelService {
               if (e.response?.statusCode == 401) {
                 setError('Enter valid code');
               } else {
-                SnackbarService.showError(
-                  ErrorHandler.getHumanReadableError(e),
+                toaster.showError(
+                  message: ErrorHandler.getHumanReadableError(e),
+                  logMessage: "TOTP MFA code submit failed!",
+                  error: e,
                 );
               }
             } catch (e) {
-              SnackbarService.showError(ErrorHandler.getHumanReadableError(e));
+              toaster.showError(
+                message: ErrorHandler.getHumanReadableError(e),
+                logMessage: "TOTP MFA code submit failed!",
+                error: e,
+              );
             }
           },
         );

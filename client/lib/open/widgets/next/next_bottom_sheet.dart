@@ -1,6 +1,6 @@
 import 'dart:ui';
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/widget_previews.dart';
 import 'package:mobile/open/widgets/next/next_preview_wrapper.dart';
 import 'package:mobile/theme/next/color.dart';
@@ -57,6 +57,7 @@ class NextBottomSheet extends StatelessWidget {
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
         child: Container(
+          width: double.infinity,
           color: backgroundColor ?? NextColor.bgDarkBlue80,
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -133,6 +134,7 @@ Future<T?> showNextBottomSheet<T>({
 @Preview(name: 'NextBottomSheet Default', group: 'NextBottomSheet')
 Widget previewNextBottomSheetDefault() {
   return NextPreviewWrapper(
+    maxWidth: 375,
     child: NextBottomSheet(
       child: Column(
         mainAxisSize: MainAxisSize.min,

@@ -1,6 +1,6 @@
 import 'package:mobile/theme/color.dart';
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import 'dg_icon.dart';
 

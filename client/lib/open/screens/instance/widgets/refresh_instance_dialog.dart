@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mobile/data/db/database.dart';
@@ -48,9 +48,8 @@ class RefreshInstanceDialog extends HookConsumerWidget {
       );
       if (updateResult != null && updateResult.didChange) {
         final message = getInstanceUpdateMessage(instance.name, updateResult);
-        toaster.showInfo(
-          title: "Instance ${instance.name} updated",
-          message: message,
+        toaster.show(
+          message: "Instance ${instance.name} updated: $message",
         );
       }
       talker.info("Instance information refreshed successfully");

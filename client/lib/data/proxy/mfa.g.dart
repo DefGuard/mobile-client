@@ -112,18 +112,13 @@ Map<String, dynamic> _$FinishMfaResponseToJson(FinishMfaResponse instance) =>
 
 SecureInstanceStorage _$SecureInstanceStorageFromJson(
   Map<String, dynamic> json,
-) => $checkedCreate(
-  'SecureInstanceStorage',
-  json,
-  ($checkedConvert) {
-    final val = SecureInstanceStorage(
-      privateKey: $checkedConvert('private_key', (v) => v as String),
-      publicKey: $checkedConvert('public_key', (v) => v as String),
-    );
-    return val;
-  },
-  fieldKeyMap: const {'privateKey': 'private_key', 'publicKey': 'public_key'},
-);
+) => $checkedCreate('SecureInstanceStorage', json, ($checkedConvert) {
+  final val = SecureInstanceStorage(
+    privateKey: $checkedConvert('private_key', (v) => v as String),
+    publicKey: $checkedConvert('public_key', (v) => v as String),
+  );
+  return val;
+}, fieldKeyMap: const {'privateKey': 'private_key', 'publicKey': 'public_key'});
 
 const _$SecureInstanceStorageFieldMap = <String, String>{
   'privateKey': 'private_key',

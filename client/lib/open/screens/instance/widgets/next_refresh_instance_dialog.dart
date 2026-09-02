@@ -1,11 +1,11 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mobile/data/db/database.dart';
 import 'package:mobile/data/proxy/enrollment.dart';
 import 'package:mobile/logging.dart';
 import 'package:mobile/open/api.dart';
-import 'package:mobile/open/services/snackbar_service.dart';
+import 'package:mobile/open/widgets/toaster/toast_manager.dart';
 import 'package:mobile/open/widgets/next/next_button.dart';
 import 'package:mobile/open/widgets/next/next_dialog.dart';
 import 'package:mobile/open/widgets/next/next_text_form_field.dart';
@@ -20,6 +20,7 @@ class NextRefreshInstanceDialog extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final db = ref.read(databaseProvider);
+    final toaster = ref.read(toastManagerProvider.notifier);
     final proxyUrlController = useTextEditingController(
       text: instance.proxyUrl,
     );
@@ -50,17 +51,21 @@ class NextRefreshInstanceDialog extends HookConsumerWidget {
         );
         if (updateResult != null && updateResult.didChange) {
           final message = getInstanceUpdateMessage(instance.name, updateResult);
-          SnackbarService.show("Instance ${instance.name} updated: $message");
+          toaster.show(
+            message: "Instance ${instance.name} updated: $message",
+          );
         } else {
-          SnackbarService.show("Instance information refreshed");
+          toaster.show(message: "Instance information refreshed");
         }
         talker.info("Instance information refreshed successfully");
       } catch (e) {
-        talker.error("Failed to refresh instance information", e);
-        SnackbarService.showError("Failed to refresh instance information");
+        toaster.showError(
+          message: "Failed to refresh instance information",
+          error: e,
+        );
         rethrow;
       }
-    }, [db, proxyUrlController, tokenController, isLoading]);
+    }, [db, toaster, proxyUrlController, tokenController, isLoading]);
 
     return NextDialog(
       onClose: () => Navigator.of(context).pop(),

@@ -187,17 +187,12 @@ Map<String, dynamic> _$PostureConnectRequestToJson(
 
 PostureConnectResponse _$PostureConnectResponseFromJson(
   Map<String, dynamic> json,
-) => $checkedCreate(
-  'PostureConnectResponse',
-  json,
-  ($checkedConvert) {
-    final val = PostureConnectResponse(
-      presharedKey: $checkedConvert('preshared_key', (v) => v as String),
-    );
-    return val;
-  },
-  fieldKeyMap: const {'presharedKey': 'preshared_key'},
-);
+) => $checkedCreate('PostureConnectResponse', json, ($checkedConvert) {
+  final val = PostureConnectResponse(
+    presharedKey: $checkedConvert('preshared_key', (v) => v as String),
+  );
+  return val;
+}, fieldKeyMap: const {'presharedKey': 'preshared_key'});
 
 const _$PostureConnectResponseFieldMap = <String, String>{
   'presharedKey': 'preshared_key',

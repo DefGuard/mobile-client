@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:collection/collection.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:drift/drift.dart' as drift;
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mobile/data/db/database.dart';
@@ -22,7 +22,7 @@ import 'package:mobile/theme/next/text.dart';
 
 import '../../../../logging.dart';
 import '../../../api.dart';
-import '../../../services/snackbar_service.dart';
+import 'package:mobile/open/widgets/toaster/toast_manager.dart';
 
 class NameDeviceScreenData {
   final EnrollmentStartResponse startResponse;
@@ -85,6 +85,7 @@ class NameDeviceScreen extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final db = ref.read(databaseProvider);
+    final toaster = ref.read(toastManagerProvider.notifier);
     final formKey = useMemoized(() => GlobalKey<FormState>());
     final nameController = useTextEditingController();
     final isLoading = useState(false);
@@ -211,8 +212,9 @@ class NameDeviceScreen extends HookConsumerWidget {
                                 ).go(context);
                               }
                             } catch (e, st) {
-                              SnackbarService.showError(
-                                "Something went wrong. Please try again.",
+                              toaster.showError(
+                                message:
+                                    "Something went wrong. Please try again.",
                                 error: e,
                                 stackTrace: st,
                               );

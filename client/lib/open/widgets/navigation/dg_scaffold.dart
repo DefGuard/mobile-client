@@ -1,7 +1,6 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:mobile/theme/color.dart';
 
-import '../toaster/toast_manager.dart';
 import 'dg_app_bar.dart';
 import 'dg_drawer.dart';
 
@@ -28,7 +27,7 @@ class DgScaffold extends StatelessWidget {
       floatingActionButtonLocation: floatingActionButtonLocation,
       body: Container(
         decoration: BoxDecoration(color: DgColor.frameBg),
-        child: Stack(children: [child, ToastPositioner()]),
+        child: child,
       ),
     );
   }

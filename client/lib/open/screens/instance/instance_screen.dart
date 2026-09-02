@@ -1,5 +1,5 @@
 import 'package:drift/drift.dart' as drift;
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -37,6 +37,7 @@ import 'package:tuple/tuple.dart';
 import '../../../data/db/enums.dart';
 import '../../../logging.dart';
 import '../../services/snackbar_service.dart';
+import '../../widgets/toaster/toast_manager.dart';
 
 part 'instance_screen.g.dart';
 
@@ -580,6 +581,7 @@ class _LocationItem extends HookConsumerWidget {
                         if (context.mounted) {
                           await TunnelService.connect(
                             context: context,
+                            toaster: ref.read(toastManagerProvider.notifier),
                             instance: instance,
                             location: location,
                             wireguardPlugin: wireguardPlugin,

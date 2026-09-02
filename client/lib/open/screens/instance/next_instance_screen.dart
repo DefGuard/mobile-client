@@ -1,6 +1,6 @@
 import 'package:collection/collection.dart';
 import 'package:drift/drift.dart' as drift;
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mobile/data/db/database.dart';
@@ -30,7 +30,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:wireguard_plugin/wireguard_plugin.dart';
 
 import '../../../logging.dart';
-import '../../services/snackbar_service.dart';
+import 'package:mobile/open/widgets/toaster/toast_manager.dart';
 import '../../widgets/next/next_icon_button.dart';
 
 part 'next_instance_screen.g.dart';
@@ -90,6 +90,7 @@ class NextInstanceScreen extends HookConsumerWidget {
     final biometricStatus = ref.watch(biometricsCapabilityProvider);
     final isSingleAsync = ref.watch(isSingleInstanceProvider);
     final isDeleting = useState(false);
+    final toaster = ref.read(toastManagerProvider.notifier);
 
     final onRefresh = useCallback(() async {
       try {
@@ -98,11 +99,10 @@ class NextInstanceScreen extends HookConsumerWidget {
         final (responseData, responseStatus, _) = await proxyApi
             .pollConfiguration(instance.proxyUrl, instance.poolingToken);
         if (responseData == null) {
-          SnackbarService.showError(
-            "Failed to get new information for instance.",
-          );
-          talker.error(
-            "Failed to pull refresh instance data. Proxy response status: $responseStatus",
+          toaster.showError(
+            message: "Failed to get new information for instance.",
+            logMessage:
+                "Failed to pull refresh instance data. Proxy response status: $responseStatus",
           );
           return;
         }
@@ -113,12 +113,13 @@ class NextInstanceScreen extends HookConsumerWidget {
           info: responseData.instance,
           token: responseData.token,
         );
-        SnackbarService.show("Instance information updated");
+        toaster.show(message: "Instance information updated");
       } catch (e) {
-        SnackbarService.showError(
-          "Failed to get new information for instance.",
+        toaster.showError(
+          message: "Failed to get new information for instance.",
+          logMessage: "Failed pull refresh instance data.",
+          error: e,
         );
-        talker.error("Failed pull refresh instance data.", e);
       }
     }, [screenDataAsync.value, ref]);
 
@@ -151,9 +152,8 @@ class NextInstanceScreen extends HookConsumerWidget {
             talker.info("${instances.length} instances left, going to list.");
             const InstancesListScreenRoute().go(context);
           }
-        } else {
-          isDeleting.value = false;
         }
+        isDeleting.value = false;
       } catch (e, st) {
         isDeleting.value = false;
         talker.error("Error during instance deletion routing", e, st);
@@ -268,7 +268,7 @@ class NextInstanceScreen extends HookConsumerWidget {
   }
 }
 
-class _InstanceAppBar extends StatelessWidget implements PreferredSizeWidget {
+class _InstanceAppBar extends ConsumerWidget implements PreferredSizeWidget {
   final String id;
   final AsyncValue<_ScreenData?> screenDataAsync;
   final PluginTunnelEventData? activeTunnel;
@@ -292,7 +292,8 @@ class _InstanceAppBar extends StatelessWidget implements PreferredSizeWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final toaster = ref.read(toastManagerProvider.notifier);
     return NextAppBar(
       context: context,
       showLogo: isSingleAsync.value == true,
@@ -337,8 +338,10 @@ class _InstanceAppBar extends StatelessWidget implements PreferredSizeWidget {
                         await wireguardPlugin.closeTunnel();
                         talker.debug("Disconnected all locations");
                       } catch (e) {
-                        talker.error("Failed to disconnect all", e);
-                        SnackbarService.showError("Failed to disconnect all");
+                        toaster.showError(
+                          message: "Failed to disconnect all",
+                          error: e,
+                        );
                       }
                     },
                   ),
@@ -399,14 +402,14 @@ class _LocationList extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final loadingLocationId = useState<int?>(null);
+    final toaster = ref.read(toastManagerProvider.notifier);
 
     Future<void> onDisconnect(Location location) async {
       try {
         await wireguardPlugin.closeTunnel();
         talker.debug("Disconnected from ${location.name}");
       } catch (e) {
-        talker.error("Failed to disconnect", e);
-        SnackbarService.showError("Failed to disconnect");
+        toaster.showError(message: "Failed to disconnect", error: e);
       }
     }
 
@@ -442,6 +445,7 @@ class _LocationList extends HookConsumerWidget {
                   if (context.mounted) {
                     await TunnelService.connect(
                       context: context,
+                      toaster: toaster,
                       instance: data.instance,
                       location: location,
                       wireguardPlugin: wireguardPlugin,
@@ -458,8 +462,7 @@ class _LocationList extends HookConsumerWidget {
           talker.debug("Connected to ${location.name}");
         }
       } catch (e) {
-        talker.error("Failed to connect", e);
-        SnackbarService.showError("Failed to connect");
+        toaster.showError(message: "Failed to connect", error: e);
       } finally {
         loadingLocationId.value = null;
       }

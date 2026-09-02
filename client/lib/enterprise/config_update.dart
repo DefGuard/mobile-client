@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mobile/data/db/database.dart';
@@ -115,9 +115,8 @@ class ConfigurationUpdater extends HookConsumerWidget {
                   instance.name,
                   updateResult,
                 );
-                toaster.showInfo(
-                  title: "Instance ${instance.name} update",
-                  message: message,
+                toaster.show(
+                  message: "Instance ${instance.name} updated: $message",
                 );
               }
             }
@@ -138,9 +137,8 @@ class ConfigurationUpdater extends HookConsumerWidget {
                   "- ${instance['name']}: Defguard Core ${instance['coreVersion']} (expected >=$supportedCoreVersion), Defguard Proxy ${instance['proxyVersion']} (expected >=$supportedProxyVersion)\n";
             }
             message += "\nPlease contact your administrator.";
-            toaster.showInfo(
-              title: "Version mismatch detected",
-              message: message.trim(),
+            toaster.show(
+              message: "Version mismatch detected: ${message.trim()}",
             );
             hasShown.value = true;
           }
