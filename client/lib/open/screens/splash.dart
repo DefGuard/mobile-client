@@ -5,7 +5,10 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mobile/data/db/database.dart';
 import 'package:mobile/router/routes.dart';
-import 'package:mobile/theme/next/color.dart';
+
+const _splashBackground = Color(0xFF4F79FA);
+
+const _splashCanvasSize = 288.0;
 
 class AppSplash extends HookConsumerWidget {
   const AppSplash({super.key});
@@ -44,10 +47,10 @@ class AppSplash extends HookConsumerWidget {
       return null;
     }, [instancesAsync.data, timerDone.value]);
 
-    return Container(
-      decoration: const BoxDecoration(gradient: NextColor.gradientPrimary),
-      child: SafeArea(
-        child: Center(child: Image.asset("assets/splash/logo.png", width: 160)),
+    return ColoredBox(
+      color: _splashBackground,
+      child: Center(
+        child: Image.asset("assets/splash/logo.png", width: _splashCanvasSize),
       ),
     );
   }
