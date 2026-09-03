@@ -3,13 +3,9 @@ import 'package:mobile/utils/keychain.dart';
 
 import '../logging.dart';
 
-/// Per-instance secrets kept in the platform keychain instead of the database:
-/// the device WireGuard private key, the proxy (polling) token and the
-/// biometric MFA key pair.
-///
-/// Items are keyed by the instance UUID and device id, so they stay addressable
-/// without a database row - which is what enrollment (the row does not exist
-/// yet) and the 4 -> 5 migration (the row is not mapped yet) need.
+/// Per-instance secrets (WireGuard key, proxy token, MFA key pair) stored in
+/// platform keychain keyed by instance UUID and device ID, allowing access
+/// without database rows during enrollment or migration.
 
 String wireguardKeyStorageKey(String uuid, int deviceId) =>
     'wg-key-$uuid-$deviceId';
@@ -18,7 +14,6 @@ String tokenStorageKey(String uuid, int deviceId) => 'token-$uuid-$deviceId';
 
 String mfaStorageKey(String uuid, int deviceId) => 'mfa-$uuid-$deviceId';
 
-/// Stores the secrets of a newly enrolled instance.
 Future<void> storeInstanceSecrets({
   required String uuid,
   required int deviceId,
@@ -35,7 +30,6 @@ Future<void> storeInstanceSecrets({
   );
 }
 
-/// Removes every secret of an instance, including its biometric MFA key pair.
 Future<void> removeInstanceSecrets({
   required String uuid,
   required int deviceId,
@@ -45,19 +39,12 @@ Future<void> removeInstanceSecrets({
   await secureStorage.delete(key: mfaStorageKey(uuid, deviceId));
 }
 
-/// Message shown when an instance has a database row but no secrets.
-///
-/// Secrets are stored `ThisDeviceOnly`, so a database restored from a backup
-/// onto another device (or one restored after the keychain was reset) keeps its
-/// instances while the key material is gone. Such an instance cannot connect
-/// and has to be enrolled again.
+/// Shown when a restored database lacks `ThisDeviceOnly` keychain secrets,
+/// requiring re-enrollment.
 const missingSecretsMessage =
     "This instance is missing its credentials. Please delete it and add it again.";
 
-/// Reports an instance whose secrets are gone.
-///
-/// Background work (configuration polling) passes `notifyUser: false`: it runs
-/// without the user asking for anything, so it only logs.
+/// Reports missing secrets. Pass `notifyUser: false` for background tasks to log without alerting.
 void reportMissingSecret(
   String logName,
   String what, {

@@ -41,7 +41,7 @@ Future<UpdateInstanceResult?> updateInstance({
   );
 
   try {
-    // store the rotated token before anything else, it is the only copy
+    // Store rotated token first as it is the only copy
     if (token != null) {
       await instance.storeToken(token);
       talker.debug("${instance.logName} token updated");
@@ -51,7 +51,6 @@ Future<UpdateInstanceResult?> updateInstance({
         .filter((row) => row.instance.id.equals(instance.id))
         .get();
     await db.transaction(() async {
-      // check if instance should update
       if (info != null && !info.matchesDefguardInstance(instance)) {
         final companion = info.toCompanion(instance: instance);
         await db.managers.defguardInstances
@@ -60,7 +59,7 @@ Future<UpdateInstanceResult?> updateInstance({
         result.instanceChanged = true;
       }
 
-      // remove locations not included in update (ware deleted or device have no longer granted access)
+      // Remove deleted/revoked locations
       final existingConfigs = configs.map((c) => c.networkId);
       final List<int> toDelete = locations
           .where((location) => !existingConfigs.contains(location.networkId))
@@ -74,12 +73,10 @@ Future<UpdateInstanceResult?> updateInstance({
         talker.debug("$toDelete Locations will be removed");
       }
 
-      // update locations
       for (final config in configs) {
         final Location? location = locations.firstWhereOrNull(
           (l) => l.networkId == config.networkId,
         );
-        // should add new
         if (location == null) {
           final companion = config.toCompanion(instanceId: instance.id);
           await db.managers.locations.create((_) => companion);
@@ -87,7 +84,6 @@ Future<UpdateInstanceResult?> updateInstance({
           result.locationsAdded++;
           continue;
         }
-        // update bcs it changed
         if (!config.matchesLocation(location)) {
           final companion = config.toCompanion(
             instanceId: instance.id,

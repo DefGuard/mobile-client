@@ -98,17 +98,9 @@ dev_dependencies:
 
 # The following section is specific to Flutter packages.
 flutter:
-  # iOS/macOS plugins are consumed via Swift Package Manager; the Podfile was
-  # removed with that migration. Pinned here rather than left to the tool
-  # default because project config outranks the global `flutter config` state,
-  # so a machine that once ran `--no-enable-swift-package-manager` cannot send
-  # the build looking for the deleted Podfile.
   config:
     enable-swift-package-manager: true
 
-  # The following line ensures that the Material Icons font is
-  # included with your application, so that you can use the icons in
-  # the material Icons class.
   uses-material-design: true
 
   assets:

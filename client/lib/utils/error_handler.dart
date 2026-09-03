@@ -28,7 +28,7 @@ class ErrorHandler {
         case DioExceptionType.cancel:
           return "Request was cancelled.";
         default:
-          // Handle specific iOS error -1005 (Network connection lost)
+          // iOS error -1005: Network connection lost
           final errorString = e.error?.toString() ?? "";
           final messageString = e.message ?? "";
           if (errorString.contains("-1005") ||
