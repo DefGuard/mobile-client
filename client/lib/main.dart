@@ -7,11 +7,13 @@ import 'package:mobile/open/services/snackbar_service.dart';
 import 'package:mobile/open/widgets/toaster/toaster_provider.dart';
 import 'package:mobile/plugin.dart';
 import 'package:mobile/theme.dart';
+import 'package:mobile/utils/keychain.dart';
 import 'package:mobile/utils/notifications.dart';
 import 'package:rive/rive.dart' as rive;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await initSecureStorage();
   await initNotifications();
   await rive.RiveNative.init();
   runApp(

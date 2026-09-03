@@ -31,6 +31,15 @@ jobs:
           channel: stable
           flutter-version: 3.47.2
 
+      # The Podfile is gone since the SPM migration. A stale
+      # `--no-enable-swift-package-manager` in this self-hosted runner's global
+      # config would silently override the on-by-default and send the build
+      # looking for it, so pin the choice explicitly before `pub get` generates
+      # the package manifest. `client/pubspec.yaml` pins it too, at higher
+      # precedence; this step keeps the intent visible in the job.
+      - name: Enable Swift Package Manager
+        run: flutter config --enable-swift-package-manager
+
       - name: Install deps
         run: flutter pub get
 
@@ -172,6 +181,9 @@ jobs:
         with:
           channel: stable
           flutter-version: 3.47.2
+
+      - name: Configure Flutter JDK
+        run: flutter config --jdk-dir "$JAVA_HOME"
 
       - name: Accept licenses
         run: yes | flutter doctor --android-licenses

@@ -292,8 +292,6 @@ class InstanceInfo {
     return DefguardInstancesCompanion(
       id: d.Value.absentIfNull(instance?.id),
       pubKey: d.Value.absentIfNull(instance?.pubKey),
-      privateKey: d.Value.absentIfNull(instance?.privateKey),
-      poolingToken: d.Value.absentIfNull(instance?.poolingToken),
       mfaKeysStored: d.Value.absentIfNull(instance?.mfaKeysStored),
       name: d.Value(name),
       url: d.Value(url),

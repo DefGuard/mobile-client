@@ -78,6 +78,9 @@ jobs:
   #         channel: stable
   #         flutter-version: 3.47.2
 
+  #     - name: Enable Swift Package Manager
+  #       run: flutter config --enable-swift-package-manager
+
   #     - name: get deps
   #       run: flutter pub get
 

@@ -17,6 +17,7 @@ import 'package:mobile/open/screens/next/mfa/next_mfa_biometric_screen.dart';
 import 'package:mobile/open/screens/next/mfa/next_mfa_code_screen.dart';
 import 'package:mobile/open/screens/next/mfa/next_mfa_email_screen.dart';
 import 'package:mobile/open/screens/next/mfa/next_mfa_totp_screen.dart';
+import 'package:mobile/utils/instance_secrets.dart';
 
 import '../../../../data/db/enums.dart';
 import '../../../../logging.dart';
@@ -114,10 +115,21 @@ class TunnelService {
       }
     }
 
+    // prepare wireguard plugin payload
+    final privateKey = await instance.wireguardPrivateKey();
+    if (privateKey == null) {
+      reportMissingSecret(
+        instance.logName,
+        "WireGuard private key",
+        notifyUser: false,
+      );
+      return const ConnectResult.failed(message: missingSecretsMessage);
+    }
     PluginConnectPayload payload = _makePayload(
       instance,
       location,
       selectedTrafficMethod,
+      privateKey,
     );
 
     MfaMethod? authorizedWith;
@@ -169,10 +181,19 @@ class TunnelService {
       payload.presharedKey = mfaOutcome.presharedKey;
       authorizedWith = selectedMfaMethod;
     } else if (payload.postureCheckRequired) {
+      final poolingToken = await instance.poolingToken();
+      if (poolingToken == null) {
+        reportMissingSecret(
+          instance.logName,
+          "Proxy token",
+          notifyUser: false,
+        );
+        return const ConnectResult.failed(message: missingSecretsMessage);
+      }
       final postureOutcome = await _performPostureCheck(
         proxyUrl: instance.proxyUrl,
         payload: payload,
-        pollingToken: instance.poolingToken,
+        pollingToken: poolingToken,
       );
       if (postureOutcome.failure != null) {
         return postureOutcome.failure!;
@@ -482,11 +503,12 @@ class TunnelService {
     DefguardInstance instance,
     Location location,
     RoutingMethod trafficMethod,
+    String privateKey,
   ) {
     return PluginConnectPayload(
       publicKey: location.pubKey,
       devicePublicKey: instance.pubKey,
-      privateKey: instance.privateKey,
+      privateKey: privateKey,
       address: location.address,
       dns: location.dns,
       endpoint: location.endpoint,

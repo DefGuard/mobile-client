@@ -5,6 +5,7 @@ import 'package:mobile/data/db/database.dart';
 import 'package:mobile/data/db/enums.dart';
 import 'package:mobile/open/api.dart';
 import 'package:mobile/open/widgets/toaster/toast_manager.dart';
+import 'package:mobile/utils/instance_secrets.dart';
 import 'package:mobile/utils/update_instance.dart';
 import 'package:pub_semver/pub_semver.dart';
 
@@ -46,8 +47,17 @@ class ConfigurationUpdater extends HookConsumerWidget {
           talker.debug(
             "Auto configuration update started for ${instance.name} (${instance.id})",
           );
+          final token = await instance.poolingToken();
+          if (token == null) {
+            reportMissingSecret(
+              instance.logName,
+              "Proxy token",
+              notifyUser: false,
+            );
+            continue;
+          }
           final (responseData, responseStatus, headers) = await proxyApi
-              .pollConfiguration(instance.proxyUrl, instance.poolingToken);
+              .pollConfiguration(instance.proxyUrl, token);
           talker.debug("Headers: $headers");
           // Check versions
           try {
