@@ -1,8 +1,8 @@
 import 'package:collection/collection.dart';
 import 'package:drift/drift.dart' as drift;
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:mobile/data/db/database.dart';
 import 'package:mobile/data/plugin/plugin.dart';
 import 'package:mobile/open/api.dart';
@@ -20,6 +20,7 @@ import 'package:mobile/open/widgets/next/next_bottom_sheet.dart';
 import 'package:mobile/open/widgets/next/next_drawer.dart';
 import 'package:mobile/open/widgets/next/next_location_card.dart';
 import 'package:mobile/open/widgets/next/next_menu.dart';
+import 'package:mobile/open/widgets/toaster/toast_manager.dart';
 import 'package:mobile/plugin.dart';
 import 'package:mobile/router/routes.dart';
 import 'package:mobile/theme/next/color.dart';
@@ -30,7 +31,6 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:wireguard_plugin/wireguard_plugin.dart';
 
 import '../../../logging.dart';
-import 'package:mobile/open/widgets/toaster/toast_manager.dart';
 import '../../widgets/next/next_icon_button.dart';
 
 part 'next_instance_screen.g.dart';
@@ -433,7 +433,7 @@ class _LocationList extends HookConsumerWidget {
         }
 
         if (context.mounted) {
-          await showNextBottomSheet(
+          final result = await showNextBottomSheet<ConnectResult>(
             context: context,
             child: NextConnectDialog(
               instance: data.instance,
@@ -441,25 +441,37 @@ class _LocationList extends HookConsumerWidget {
               onConnect: (traffic, mfa) async {
                 final permissionsGranted = await wireguardPlugin
                     .requestPermissions();
-                if (permissionsGranted) {
-                  if (context.mounted) {
-                    await TunnelService.connect(
-                      context: context,
-                      toaster: toaster,
-                      instance: data.instance,
-                      location: location,
-                      wireguardPlugin: wireguardPlugin,
-                      biometricsStatus: biometricStatus,
-                      db: ref.read(databaseProvider),
-                      trafficMethod: traffic,
-                      mfaMethod: mfa,
-                    );
-                  }
+                if (!permissionsGranted || !context.mounted) {
+                  return const ConnectResult.cancelled();
                 }
+                return await TunnelService.connect(
+                  context: context,
+                  instance: data.instance,
+                  location: location,
+                  wireguardPlugin: wireguardPlugin,
+                  biometricsStatus: biometricStatus,
+                  db: ref.read(databaseProvider),
+                  trafficMethod: traffic,
+                  mfaMethod: mfa,
+                );
               },
             ),
           );
-          talker.debug("Connected to ${location.name}");
+
+          switch (result?.status) {
+            case ConnectStatus.connected:
+              talker.debug("Connected to ${location.name}");
+              toaster.show(message: "${location.name} connected");
+            case ConnectStatus.failed:
+              toaster.showError(
+                message: result!.message!,
+                logMessage: result.logMessage,
+                error: result.error,
+              );
+            case ConnectStatus.cancelled:
+            case null:
+              break;
+          }
         }
       } catch (e) {
         toaster.showError(message: "Failed to connect", error: e);
@@ -503,8 +515,6 @@ class _LocationList extends HookConsumerWidget {
             location: connectedLocation,
             isConnected: true,
             routingMethod: activeTunnel?.traffic,
-            // gated so a stored preference never renders an MFA chip on a
-            // location whose MFA has since been disabled server-side
             mfaMethod: TunnelService.checkMfaEnabled(connectedLocation)
                 ? connectedLocation.mfaMethod
                 : null,

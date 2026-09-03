@@ -1,36 +1,78 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:dio/dio.dart';
 import 'package:drift/drift.dart' as drift;
 import 'package:material_ui/material_ui.dart';
 import 'package:mobile/data/db/database.dart';
 import 'package:mobile/data/plugin/plugin.dart';
 import 'package:mobile/data/proxy/mfa.dart';
 import 'package:mobile/enterprise/postures.dart';
+import 'package:mobile/enterprise/screens/mfa/next/next_mfa_openid_screen.dart';
 import 'package:mobile/enterprise/screens/mfa/openid_mfa_screen.dart';
 import 'package:mobile/open/api.dart';
 import 'package:mobile/open/riverpod/biometrics_state.dart';
 import 'package:mobile/open/screens/instance/widgets/mfa_method_dialog.dart';
 import 'package:mobile/open/screens/instance/widgets/routing_method_dialog.dart';
+import 'package:mobile/open/screens/next/mfa/next_mfa_biometric_screen.dart';
+import 'package:mobile/open/screens/next/mfa/next_mfa_code_screen.dart';
 import 'package:mobile/open/screens/next/mfa/next_mfa_email_screen.dart';
-import 'package:mobile/enterprise/screens/mfa/next/next_mfa_openid_screen.dart';
 import 'package:mobile/open/screens/next/mfa/next_mfa_totp_screen.dart';
-import 'package:mobile/open/widgets/toaster/toast_manager.dart';
-import 'package:mobile/utils/error_handler.dart';
-import 'package:mobile/utils/secure_storage.dart';
 
 import '../../../../data/db/enums.dart';
 import '../../../../logging.dart';
 import '../../../../utils/notifications.dart';
 
+/// How a connect attempt ended. Reporting it - a toast, a snackbar, nothing at
+/// all - is the caller's business, the service only states what happened.
+enum ConnectStatus { connected, cancelled, failed }
+
+class ConnectResult {
+  final ConnectStatus status;
+
+  /// Safe, user facing text. Set only when [status] is [ConnectStatus.failed].
+  final String? message;
+
+  /// Detail for the log, never displayed.
+  final String? logMessage;
+  final Object? error;
+
+  const ConnectResult.connected()
+    : status = ConnectStatus.connected,
+      message = null,
+      logMessage = null,
+      error = null;
+
+  const ConnectResult.cancelled()
+    : status = ConnectStatus.cancelled,
+      message = null,
+      logMessage = null,
+      error = null;
+
+  const ConnectResult.failed({
+    required this.message,
+    this.logMessage,
+    this.error,
+  }) : status = ConnectStatus.failed;
+}
+
+/// Outcome of a single pre-connect step (MFA, posture check). [presharedKey] is
+/// set when the step succeeded and [failure] when it failed with something the
+/// user should be told about; both stay null when the user simply backed out.
+class _StepOutcome {
+  final String? presharedKey;
+  final ConnectResult? failure;
+
+  const _StepOutcome.success(this.presharedKey) : failure = null;
+  const _StepOutcome.failed(this.failure) : presharedKey = null;
+  const _StepOutcome.cancelled() : presharedKey = null, failure = null;
+}
+
 /// Handles MFA flows and tunnel connection
 class TunnelService {
   /// Main service method - displays traffic & MFA dialogs, handles
   /// interface configuration and connection.
-  static Future<void> connect({
+  static Future<ConnectResult> connect({
     required BuildContext context,
-    required ToastManager toaster,
     required DefguardInstance instance,
     required Location location,
     required dynamic wireguardPlugin,
@@ -39,27 +81,21 @@ class TunnelService {
     RoutingMethod? trafficMethod,
     MfaMethod? mfaMethod,
   }) async {
-    // prepare navigator to avoid "context use across async gaps"
     final navigator = Navigator.of(context);
 
-    // handle traffic type selection if necessary
     late RoutingMethod selectedTrafficMethod;
     if (trafficMethod != null) {
       selectedTrafficMethod = trafficMethod;
     } else if (instance.clientTrafficPolicy ==
         ClientTrafficPolicy.disableAllTraffic) {
-      // instance enforces predefined traffic
       selectedTrafficMethod = RoutingMethod.predefined;
     } else if (instance.clientTrafficPolicy ==
         ClientTrafficPolicy.forceAllTraffic) {
-      // instance enforces all traffic
       selectedTrafficMethod = RoutingMethod.all;
     } else {
-      // instance allows traffic type selection - use stored method or display selection dialog
       if (location.trafficMethod != null) {
         selectedTrafficMethod = location.trafficMethod!;
       } else {
-        // no pre selected traffic choice available, ask user
         RoutingMethodDialogIntention dialogIntention = checkMfaEnabled(location)
             ? RoutingMethodDialogIntention.next
             : RoutingMethodDialogIntention.connect;
@@ -71,42 +107,31 @@ class TunnelService {
             clientTrafficPolicy: instance.clientTrafficPolicy,
           ),
         );
-        // smth went wrong or user canceled the operation
         if (userSelection == null) {
-          return;
+          return const ConnectResult.cancelled();
         }
         selectedTrafficMethod = userSelection;
       }
     }
 
-    // prepare wireguard plugin payload
     PluginConnectPayload payload = _makePayload(
       instance,
       location,
       selectedTrafficMethod,
     );
 
-    // the method that actually authorized this connection - stays null when no
-    // MFA was performed, which is what keeps non-MFA locations from having a
-    // phantom method remembered for them
     MfaMethod? authorizedWith;
 
-    // handle MFA if configured
     if (checkMfaEnabled(location)) {
-      // Request notification permissions for MFA session expiry alerts
       await requestNotificationPermissions();
       late MfaMethod selectedMfaMethod;
       if (location.locationMfaMode == LocationMfaMode.external) {
-        // location setup for openid mfa login - the server dictates the method,
-        // so this stays ahead of any caller-supplied choice
         selectedMfaMethod = MfaMethod.openid;
       } else if (mfaMethod != null &&
           !(mfaMethod == MfaMethod.biometric &&
               !biometricsStatus.canOpenStorage)) {
-        // caller already collected the choice from the user
         selectedMfaMethod = mfaMethod;
       } else {
-        // non-openid mfa setup, use stored method or show method choice dialog
         if (location.mfaMethod == null ||
             (location.mfaMethod == MfaMethod.biometric &&
                 !biometricsStatus.canOpenStorage)) {
@@ -119,8 +144,7 @@ class TunnelService {
             ),
           );
           if (userSelection == null) {
-            // dialog dismissed
-            return;
+            return const ConnectResult.cancelled();
           }
           selectedMfaMethod = userSelection;
         } else {
@@ -128,40 +152,36 @@ class TunnelService {
         }
       }
 
-      // perform MFA to get the preshared key
-      final presharedKey = await _performMfa(
+      final mfaOutcome = await _performMfa(
         navigator: navigator,
-        toaster: toaster,
         proxyUrl: instance.proxyUrl,
         payload: payload,
         method: selectedMfaMethod,
         secureStorageKey: instance.secureStorageKey,
         openidDisplayName: instance.openidDisplayName,
       );
-      if (presharedKey == null) {
-        // user dismissed the dialog
-        return;
+      if (mfaOutcome.failure != null) {
+        return mfaOutcome.failure!;
       }
-      payload.presharedKey = presharedKey;
+      if (mfaOutcome.presharedKey == null) {
+        return const ConnectResult.cancelled();
+      }
+      payload.presharedKey = mfaOutcome.presharedKey;
       authorizedWith = selectedMfaMethod;
     } else if (payload.postureCheckRequired) {
-      final presharedKey = await _performPostureCheck(
-        toaster: toaster,
+      final postureOutcome = await _performPostureCheck(
         proxyUrl: instance.proxyUrl,
         payload: payload,
         pollingToken: instance.poolingToken,
       );
-      if (presharedKey == null) {
-        return;
+      if (postureOutcome.failure != null) {
+        return postureOutcome.failure!;
       }
-      payload.presharedKey = presharedKey;
+      payload.presharedKey = postureOutcome.presharedKey;
     }
 
-    // start the tunnel
     await wireguardPlugin.startTunnel(jsonEncode(payload.toJson()));
 
-    // only remember what the caller explicitly collected from the user - the
-    // legacy dialogs keep owning their own "Remember my choice" checkbox
     await _rememberPreferences(
       db,
       instance,
@@ -169,6 +189,8 @@ class TunnelService {
       trafficMethod: trafficMethod,
       mfaMethod: mfaMethod != null ? authorizedWith : null,
     );
+
+    return const ConnectResult.connected();
   }
 
   /// Stores the connection preferences on the location row so the next connect
@@ -184,8 +206,6 @@ class TunnelService {
     RoutingMethod? trafficMethod,
     MfaMethod? mfaMethod,
   }) async {
-    // only the "none" policy leaves the routing choice to the user - under an
-    // enforced policy the value is the server's, not a preference
     final traffic =
         instance.clientTrafficPolicy == ClientTrafficPolicy.none &&
             trafficMethod != null
@@ -219,46 +239,50 @@ class TunnelService {
   }
 
   /// Performs posture-only authorization and returns runtime preshared key.
-  static Future<String?> _performPostureCheck({
-    required ToastManager toaster,
+  static Future<_StepOutcome> _performPostureCheck({
     required String proxyUrl,
     required PluginConnectPayload payload,
     required String pollingToken,
   }) async {
     try {
-      return await _authorizePostureOnly(
+      final presharedKey = await _authorizePostureOnly(
         proxyUrl,
         payload.devicePublicKey,
         payload.networkId,
         pollingToken,
       );
+      return _StepOutcome.success(presharedKey);
     } on PostureCheckException catch (e) {
-      toaster.showError(
-        message: e.message,
-        logMessage: 'Posture check failed',
-        error: e,
+      return _StepOutcome.failed(
+        ConnectResult.failed(
+          message: e.message,
+          logMessage: 'Posture check failed',
+          error: e,
+        ),
       );
     } on HttpException catch (e) {
-      toaster.showError(
-        message: 'Posture check request failed. Please try again.',
-        logMessage: 'Posture check request failed',
-        error: e,
+      return _StepOutcome.failed(
+        ConnectResult.failed(
+          message: 'Posture check request failed. Please try again.',
+          logMessage: 'Posture check request failed',
+          error: e,
+        ),
       );
     } catch (e) {
-      toaster.showError(
-        message: 'Posture check failed. Please try again.',
-        logMessage: 'Posture-only connect failed!',
-        error: e,
+      return _StepOutcome.failed(
+        ConnectResult.failed(
+          message: 'Posture check failed. Please try again.',
+          logMessage: 'Posture-only connect failed!',
+          error: e,
+        ),
       );
     }
-    return null;
   }
 
   /// Performs MFA using specified method.
-  /// Returns preshared key.
-  static Future<String?> _performMfa({
+  /// Returns the runtime preshared key on success.
+  static Future<_StepOutcome> _performMfa({
     required NavigatorState navigator,
-    required ToastManager toaster,
     required String proxyUrl,
     required PluginConnectPayload payload,
     required MfaMethod method,
@@ -266,7 +290,6 @@ class TunnelService {
     String? openidDisplayName,
   }) async {
     try {
-      // get session token
       final startMfaResponse = await _startMfa(
         proxyUrl,
         payload.devicePublicKey,
@@ -274,73 +297,69 @@ class TunnelService {
         method,
         payload.postureCheckRequired,
       );
+
+      String? presharedKey;
       if (method == MfaMethod.openid) {
-        // perform openid-based MFA
-        return await _handleOpenid(
+        presharedKey = await _handleOpenid(
           navigator: navigator,
           token: startMfaResponse.token,
           proxyUrl: proxyUrl,
           method: method,
           openidDisplayName: openidDisplayName,
         );
-      }
-      if (method == MfaMethod.biometric) {
+      } else if (method == MfaMethod.biometric) {
         if (startMfaResponse.challenge == null) {
           throw "Challenge not found in start response";
         }
         if (secureStorageKey == null) {
           throw "Storage key not provided";
         }
-        final secureStorage = await getBiometricInstanceStorage(
-          secureStorageKey,
-          prompt: "Confirm to connect",
-        );
-        final signed = signChallenge(
-          startMfaResponse.challenge!,
-          secureStorage.privateKey,
-        );
-        final finishData = FinishMfaRequest(
+        presharedKey = await _handleBiometric(
+          navigator: navigator,
+          proxyUrl: proxyUrl,
           token: startMfaResponse.token,
-          code: signed,
+          challenge: startMfaResponse.challenge!,
+          secureStorageKey: secureStorageKey,
         );
-        final response = await proxyApi.finishMfa(
-          Uri.parse(proxyUrl),
-          finishData,
+      } else {
+        presharedKey = await _handleCodeInput(
+          navigator: navigator,
+          token: startMfaResponse.token,
+          proxyUrl: proxyUrl,
+          method: method,
         );
-        return response.presharedKey;
       }
-      // perform email or totp MFA
-      return await _handleCodeInput(
-        navigator: navigator,
-        toaster: toaster,
-        token: startMfaResponse.token,
-        proxyUrl: proxyUrl,
-        method: method,
-      );
+
+      return presharedKey == null
+          ? const _StepOutcome.cancelled()
+          : _StepOutcome.success(presharedKey);
     } on MfaMethodNotAvailableException catch (e) {
       final methodString = e.method.toReadableString();
-      toaster.showError(
-        message:
-            "$methodString is not configured on your account. Select a different MFA method.",
-        logMessage:
-            "MFA method $methodString was not configured on the account. Connect Failed.",
-        error: e,
+      return _StepOutcome.failed(
+        ConnectResult.failed(
+          message:
+              "$methodString is not configured on your account. Select a different MFA method.",
+          logMessage:
+              "MFA method $methodString was not configured on the account. Connect Failed.",
+          error: e,
+        ),
       );
-      return null;
     } on HttpException catch (e) {
-      toaster.showError(
-        message: "MFA request failed. Please try again.",
-        logMessage: "Connect MFA failed!",
-        error: e,
+      return _StepOutcome.failed(
+        ConnectResult.failed(
+          message: "MFA request failed. Please try again.",
+          logMessage: "Connect MFA failed!",
+          error: e,
+        ),
       );
-      return null;
     } catch (e) {
-      toaster.showError(
-        message: "MFA failed. Please try again.",
-        logMessage: "MFA flow error!",
-        error: e,
+      return _StepOutcome.failed(
+        ConnectResult.failed(
+          message: "MFA failed. Please try again.",
+          logMessage: "MFA flow error!",
+          error: e,
+        ),
       );
-      return null;
     }
   }
 
@@ -369,91 +388,51 @@ class TunnelService {
     return presharedKey;
   }
 
-  /// Handles non-openid MFA flows (totp, email)
+  /// Handles biometric MFA flow
+  static Future<String?> _handleBiometric({
+    required NavigatorState navigator,
+    required String proxyUrl,
+    required String token,
+    required String challenge,
+    required String secureStorageKey,
+  }) async {
+    final presharedKey = await Navigator.of(navigator.context).push<String?>(
+      MaterialPageRoute(
+        builder: (context) => NextMfaBiometricScreen(
+          screenData: NextMfaBiometricScreenData(
+            proxyUrl: proxyUrl,
+            token: token,
+            challenge: challenge,
+            secureStorageKey: secureStorageKey,
+          ),
+        ),
+      ),
+    );
+    if (presharedKey != null) {
+      talker.info("Biometric authentication successful");
+    }
+    return presharedKey;
+  }
+
+  /// Handles code based MFA flows (totp, email)
   static Future<String?> _handleCodeInput({
     required NavigatorState navigator,
-    required ToastManager toaster,
     required String token,
     required String proxyUrl,
     required MfaMethod method,
   }) async {
-    try {
-      Widget screen;
-      if (method == MfaMethod.email) {
-        screen = NextMfaEmailScreen(
-          onSubmit: (code, setError) async {
-            try {
-              final finishData = FinishMfaRequest(token: token, code: code);
-              final response = await proxyApi.finishMfa(
-                Uri.parse(proxyUrl),
-                finishData,
-              );
-              if (navigator.mounted) {
-                Navigator.of(navigator.context).pop(response.presharedKey);
-              }
-            } on DioException catch (e) {
-              if (e.response?.statusCode == 401) {
-                setError('Enter valid code');
-              } else {
-                toaster.showError(
-                  message: ErrorHandler.getHumanReadableError(e),
-                  logMessage: "Email MFA code submit failed!",
-                  error: e,
-                );
-              }
-            } catch (e) {
-              toaster.showError(
-                message: ErrorHandler.getHumanReadableError(e),
-                logMessage: "Email MFA code submit failed!",
-                error: e,
-              );
-            }
-          },
-        );
-      } else {
-        screen = NextMfaTotpScreen(
-          onSubmit: (code, setError) async {
-            try {
-              final finishData = FinishMfaRequest(token: token, code: code);
-              final response = await proxyApi.finishMfa(
-                Uri.parse(proxyUrl),
-                finishData,
-              );
-              if (navigator.mounted) {
-                Navigator.of(navigator.context).pop(response.presharedKey);
-              }
-            } on DioException catch (e) {
-              if (e.response?.statusCode == 401) {
-                setError('Enter valid code');
-              } else {
-                toaster.showError(
-                  message: ErrorHandler.getHumanReadableError(e),
-                  logMessage: "TOTP MFA code submit failed!",
-                  error: e,
-                );
-              }
-            } catch (e) {
-              toaster.showError(
-                message: ErrorHandler.getHumanReadableError(e),
-                logMessage: "TOTP MFA code submit failed!",
-                error: e,
-              );
-            }
-          },
-        );
-      }
+    final screenData = NextMfaCodeScreenData(proxyUrl: proxyUrl, token: token);
+    final Widget screen = method == MfaMethod.email
+        ? NextMfaEmailScreen(screenData: screenData)
+        : NextMfaTotpScreen(screenData: screenData);
 
-      final presharedKey = await Navigator.of(
-        navigator.context,
-      ).push<String?>(MaterialPageRoute(builder: (context) => screen));
-      if (presharedKey != null) {
-        talker.info("Code authentication successful");
-      }
-      return presharedKey;
-    } catch (e) {
-      talker.error("MFA code input error: $e");
-      return null;
+    final presharedKey = await Navigator.of(
+      navigator.context,
+    ).push<String?>(MaterialPageRoute(builder: (context) => screen));
+    if (presharedKey != null) {
+      talker.info("Code authentication successful");
     }
+    return presharedKey;
   }
 
   /// Calls `/client-mfa/start` endpoint, returns `StartMfaResponse` with session token.

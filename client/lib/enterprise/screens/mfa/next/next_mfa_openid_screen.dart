@@ -1,18 +1,17 @@
-import 'package:material_ui/material_ui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:mobile/open/widgets/icons/openid_open.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:mobile/open/widgets/next/icons/next_icon.dart';
 import 'package:mobile/open/widgets/next/next_app_bar.dart';
 import 'package:mobile/open/widgets/next/next_button.dart';
 import 'package:mobile/open/widgets/next/next_icon_button.dart';
+import 'package:mobile/open/widgets/toaster/toast_manager.dart';
 import 'package:mobile/theme/next/color.dart';
 import 'package:mobile/theme/next/text.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../../../logging.dart';
 import '../openid_mfa_screen.dart';
 import '../openid_mfa_waiting_screen.dart';
-import '../../../../logging.dart';
-import 'package:mobile/open/widgets/toaster/toast_manager.dart';
 import 'next_mfa_openid_waiting_screen.dart';
 
 class NextOpenIdMfaScreen extends HookConsumerWidget {
@@ -29,7 +28,7 @@ class NextOpenIdMfaScreen extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final String title = "Two-factor authentication";
+    final String title = "Continue with OpenID";
     final String providerName = screenData.openidDisplayName ?? 'OpenID';
     final toaster = ref.read(toastManagerProvider.notifier);
 
@@ -48,10 +47,7 @@ class NextOpenIdMfaScreen extends HookConsumerWidget {
         ),
         body: SafeArea(
           child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 20,
-              vertical: 20,
-            ),
+            padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -63,24 +59,14 @@ class NextOpenIdMfaScreen extends HookConsumerWidget {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  "In order to connect to VPN please login with $providerName. To do so, please click \"Authenticate with $providerName\" button below.",
-                  style: NextText.bodySm400.copyWith(
-                    color: NextColor.fgWhite60,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  "This will open a new window in your Web Browser and automatically redirect you to the $providerName login page. After authenticating with $providerName please get back here.",
-                  style: NextText.bodySm400.copyWith(
+                  "Confirm your identity to continue. You'll be redirected to your identity provider to complete verification.",
+                  style: NextText.bodyXs400.copyWith(
                     color: NextColor.fgWhite60,
                   ),
                 ),
                 const Spacer(),
-                Center(child: DgIconOpenidOpen(size: 160)),
-                const Spacer(),
-                const SizedBox(height: 20),
                 NextButton(
-                  text: 'Authenticate with $providerName',
+                  text: 'Continue with $providerName',
                   width: double.infinity,
                   onTap: () async {
                     final navigator = Navigator.of(context);
@@ -91,7 +77,6 @@ class NextOpenIdMfaScreen extends HookConsumerWidget {
                           message: "Failed to open the browser.",
                         );
                       } else {
-                        // Navigate to waiting screen and await result
                         final result = await navigator.push<String?>(
                           MaterialPageRoute(
                             builder: (context) => NextOpenIdMfaWaitingScreen(
@@ -103,7 +88,6 @@ class NextOpenIdMfaScreen extends HookConsumerWidget {
                           ),
                         );
 
-                        // Return the result to the tunnel service
                         if (context.mounted) {
                           navigator.pop(result);
                         }
@@ -115,13 +99,6 @@ class NextOpenIdMfaScreen extends HookConsumerWidget {
                       );
                     }
                   },
-                ),
-                const SizedBox(height: 12),
-                NextButton(
-                  text: 'Cancel',
-                  style: NextButtonStyle.outlined,
-                  width: double.infinity,
-                  onTap: () => Navigator.of(context).pop(),
                 ),
               ],
             ),

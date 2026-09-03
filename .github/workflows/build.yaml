@@ -29,12 +29,7 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: stable
-          flutter-version: 3.47.0
-
-      - name: Use homebrew ruby
-        run: |
-          echo "/opt/homebrew/opt/ruby/bin" >> $GITHUB_PATH
-          echo "/opt/homebrew/bin" >> $GITHUB_PATH
+          flutter-version: 3.47.2
 
       - name: Install deps
         run: flutter pub get
@@ -47,9 +42,6 @@ jobs:
 
       - name: Generate boringtun bindings
         run: cd ios/boringtun && ./bindings.sh
-
-      - name: Update CocoaPods
-        run: pod repo update
 
       - name: Build iOS
         run: flutter build ipa --release --obfuscate --split-debug-info=build/debug-info --build-number=${{ github.run_number }}
@@ -106,7 +98,7 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: stable
-          flutter-version: 3.47.0
+          flutter-version: 3.47.2
 
       - name: Configure Flutter JDK
         run: flutter config --jdk-dir "$JAVA_HOME"
@@ -179,7 +171,7 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: stable
-          flutter-version: 3.47.0
+          flutter-version: 3.47.2
 
       - name: Accept licenses
         run: yes | flutter doctor --android-licenses

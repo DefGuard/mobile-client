@@ -1,5 +1,5 @@
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter/widget_previews.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:mobile/open/widgets/next/icons/next_icon.dart';
 import 'package:mobile/open/widgets/next/next_preview_wrapper.dart';
 import 'package:mobile/open/widgets/toaster/toast_manager.dart';
@@ -49,30 +49,33 @@ class NextToast extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      constraints: const BoxConstraints(maxWidth: 400),
-      padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
-      decoration: BoxDecoration(
-        color: _backgroundColor,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        mainAxisAlignment: MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          _icon,
-          const SizedBox(width: NextSpacing.md),
-          Flexible(
-            child: Text(
-              message,
-              style: NextText.bodySm400.copyWith(color: _textColor),
-              maxLines: 4,
-              overflow: TextOverflow.ellipsis,
+    return Material(
+      type: MaterialType.transparency,
+      child: Container(
+        width: double.infinity,
+        constraints: const BoxConstraints(maxWidth: 400),
+        padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+        decoration: BoxDecoration(
+          color: _backgroundColor,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            _icon,
+            const SizedBox(width: NextSpacing.md),
+            Flexible(
+              child: Text(
+                message,
+                style: NextText.bodySm400.copyWith(color: _textColor),
+                maxLines: 4,
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

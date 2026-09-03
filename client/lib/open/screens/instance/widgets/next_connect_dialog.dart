@@ -1,8 +1,8 @@
 import 'dart:math' as math;
 
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:mobile/data/db/database.dart';
 import 'package:mobile/data/db/enums.dart';
 import 'package:mobile/open/riverpod/biometrics_state.dart';
@@ -18,7 +18,8 @@ import 'package:mobile/theme/next/text.dart';
 class NextConnectDialog extends HookConsumerWidget {
   final DefguardInstance instance;
   final Location location;
-  final Future<void> Function(RoutingMethod traffic, MfaMethod? mfa) onConnect;
+  final Future<ConnectResult> Function(RoutingMethod traffic, MfaMethod? mfa)
+  onConnect;
 
   const NextConnectDialog({
     super.key,
@@ -30,8 +31,6 @@ class NextConnectDialog extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final biometricsStatus = ref.watch(biometricsCapabilityProvider);
-    // must stay the same predicate TunnelService branches on, otherwise the
-    // sheet offers a factor the connect flow never asks for
     final isMfaEnabled = TunnelService.checkMfaEnabled(location);
 
     final bool canChangeTraffic =
@@ -139,9 +138,7 @@ class NextConnectDialog extends HookConsumerWidget {
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        selectedMfaMethod.value.toUiString(
-                          openidDisplayName: instance.openidDisplayName,
-                        ),
+                        selectedMfaMethod.value.toUiString(),
                         style: NextText.bodySm400.copyWith(
                           color: NextColor.fgWhite100,
                         ),
@@ -197,9 +194,9 @@ class NextConnectDialog extends HookConsumerWidget {
                   : RoutingMethod.predefined;
               final mfa = isMfaEnabled ? selectedMfaMethod.value : null;
 
-              await onConnect(traffic, mfa);
+              final result = await onConnect(traffic, mfa);
               if (context.mounted) {
-                Navigator.of(context).pop();
+                Navigator.of(context).pop(result);
               }
             } finally {
               isLoading.value = false;
