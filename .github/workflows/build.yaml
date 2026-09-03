@@ -31,6 +31,9 @@ jobs:
           channel: stable
           flutter-version: 3.47.2
 
+      - name: Enable Swift Package Manager
+        run: flutter config --enable-swift-package-manager
+
       - name: Install deps
         run: flutter pub get
 
@@ -99,9 +102,6 @@ jobs:
         with:
           channel: stable
           flutter-version: 3.47.2
-
-      - name: Configure Flutter JDK
-        run: flutter config --jdk-dir "$JAVA_HOME"
 
       - name: Accept licenses
         run: yes | flutter doctor --android-licenses
@@ -172,6 +172,9 @@ jobs:
         with:
           channel: stable
           flutter-version: 3.47.2
+
+      - name: Configure Flutter JDK
+        run: flutter config --jdk-dir "$JAVA_HOME"
 
       - name: Accept licenses
         run: yes | flutter doctor --android-licenses

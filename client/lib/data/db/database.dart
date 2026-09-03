@@ -1,7 +1,10 @@
 import "package:drift/drift.dart";
 import "package:drift_flutter/drift_flutter.dart";
 import "package:mobile/data/db/database.steps.dart";
+import "package:mobile/data/db/db_file.dart";
 import "package:mobile/data/db/enums.dart";
+import "package:mobile/utils/instance_secrets.dart";
+import "package:mobile/utils/keychain.dart";
 import "package:path_provider/path_provider.dart";
 
 export 'database_provider.dart';
@@ -27,8 +30,6 @@ class DefguardInstances extends Table with AutoIncrementingPrimaryKey {
 
   TextColumn get username => text()();
 
-  TextColumn get poolingToken => text()();
-
   @JsonKey('client_traffic_policy')
   IntColumn get clientTrafficPolicy => integer()
       .withDefault(const Constant(0))
@@ -39,9 +40,6 @@ class DefguardInstances extends Table with AutoIncrementingPrimaryKey {
 
   // user public key
   TextColumn get pubKey => text()();
-
-  // user private key
-  TextColumn get privateKey => text()();
 
   // tells if the secure biometric storage exists for this instance
   BoolColumn get mfaKeysStored => boolean()();
@@ -120,13 +118,22 @@ class AppDatabase extends _$AppDatabase {
   }
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration {
     return MigrationStrategy(
       beforeOpen: (details) async {
         await customStatement('PRAGMA foreign_keys = ON');
+        // Overwrite deleted content instead of leaving it in freed pages.
+        await customStatement('PRAGMA secure_delete = ON');
+        if (details.hadUpgrade && details.versionBefore! < 5) {
+          // Rebuild the database file so the pages that held the secrets moved
+          // to the keychain in the 4 -> 5 migration are gone for good. Cannot
+          // run inside the migration itself, VACUUM is not allowed in a
+          // transaction.
+          await customStatement('VACUUM');
+        }
       },
       onUpgrade: stepByStep(
         from1To2: (m, schema) async {
@@ -157,13 +164,34 @@ class AppDatabase extends _$AppDatabase {
             schema.locations.postureCheckRequired,
           );
         },
+        from4To5: (m, schema) async {
+          // Move the WireGuard private keys and the proxy tokens out of the
+          // database and into the platform keychain. Any failure here aborts
+          // the migration so it is retried on the next launch with the columns
+          // still in place.
+          await customStatement('PRAGMA secure_delete = ON');
+          final instances = await customSelect(
+            'SELECT uuid, device_id, private_key, pooling_token '
+            'FROM defguard_instances',
+          ).get();
+          for (final instance in instances) {
+            await storeInstanceSecrets(
+              uuid: instance.read<String>('uuid'),
+              deviceId: instance.read<int>('device_id'),
+              privateKey: instance.read<String>('private_key'),
+              poolingToken: instance.read<String>('pooling_token'),
+            );
+          }
+          await m.dropColumn(schema.defguardInstances, 'private_key');
+          await m.dropColumn(schema.defguardInstances, 'pooling_token');
+        },
       ),
     );
   }
 
   static QueryExecutor _openConnection() {
     return driftDatabase(
-      name: 'defguard',
+      name: databaseName,
       native: const DriftNativeOptions(
         databaseDirectory: getApplicationSupportDirectory,
       ),
@@ -178,7 +206,24 @@ extension DefguardInstanceLogName on DefguardInstance {
 }
 
 extension DefguardInstanceStorageKey on DefguardInstance {
-  String get secureStorageKey => 'mfa-$uuid-$deviceId';
+  String get secureStorageKey => mfaStorageKey(uuid, deviceId);
+}
+
+/// Secrets of an instance are kept in the platform keychain, not in the
+/// database. They can be absent (see [reportMissingSecret]), callers have to
+/// handle a `null`.
+extension DefguardInstanceSecrets on DefguardInstance {
+  Future<String?> wireguardPrivateKey() =>
+      secureStorage.read(key: wireguardKeyStorageKey(uuid, deviceId));
+
+  Future<String?> poolingToken() =>
+      secureStorage.read(key: tokenStorageKey(uuid, deviceId));
+
+  Future<void> storeToken(String token) =>
+      secureStorage.write(key: tokenStorageKey(uuid, deviceId), value: token);
+
+  Future<void> removeSecrets() =>
+      removeInstanceSecrets(uuid: uuid, deviceId: deviceId);
 }
 
 extension LocationLogName on Location {

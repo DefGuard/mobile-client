@@ -19,6 +19,7 @@ import 'package:mobile/router/routes.dart';
 import 'package:mobile/theme/next/color.dart';
 import 'package:mobile/theme/next/spacing.dart';
 import 'package:mobile/theme/next/text.dart';
+import 'package:mobile/utils/instance_secrets.dart';
 
 import '../../../../logging.dart';
 import '../../../api.dart';
@@ -53,33 +54,46 @@ class NameDeviceScreen extends HookConsumerWidget {
       screenData.proxyUrl,
       createDeviceData,
     );
-    final instance = await db.managers.defguardInstances.createReturning(
-      (o) => o(
-        id: drift.Value.absent(),
-        pubKey: keyPair.pubKey,
-        privateKey: keyPair.privKey,
-        name: createResponse.instance.name,
-        uuid: createResponse.instance.id,
-        deviceId: createResponse.device.id,
-        enterpriseEnabled: createResponse.instance.enterpriseEnabled,
-        clientTrafficPolicy: drift.Value(createResponse.instance.getPolicy()),
-        proxyUrl: createResponse.instance.proxyUrl,
-        url: screenData.startResponse.instance.url,
-        username: createResponse.instance.username,
-        poolingToken: createResponse.token,
-        mfaKeysStored: false,
-        openidDisplayName: drift.Value(
-          createResponse.instance.openidDisplayName,
+    final uuid = createResponse.instance.id;
+    final deviceId = createResponse.device.id;
+    // secrets live in the keychain, not in the database
+    await storeInstanceSecrets(
+      uuid: uuid,
+      deviceId: deviceId,
+      privateKey: keyPair.privKey,
+      poolingToken: createResponse.token,
+    );
+    try {
+      final instance = await db.managers.defguardInstances.createReturning(
+        (o) => o(
+          id: drift.Value.absent(),
+          pubKey: keyPair.pubKey,
+          name: createResponse.instance.name,
+          uuid: uuid,
+          deviceId: deviceId,
+          enterpriseEnabled: createResponse.instance.enterpriseEnabled,
+          clientTrafficPolicy: drift.Value(createResponse.instance.getPolicy()),
+          proxyUrl: createResponse.instance.proxyUrl,
+          url: screenData.startResponse.instance.url,
+          username: createResponse.instance.username,
+          mfaKeysStored: false,
+          openidDisplayName: drift.Value(
+            createResponse.instance.openidDisplayName,
+          ),
         ),
-      ),
-      mode: drift.InsertMode.insertOrFail,
-    );
-    await db.managers.locations.bulkCreate(
-      (o) => createResponse.configs.map(
-        (config) => config.toCompanion(instanceId: instance.id),
-      ),
-    );
-    return instance;
+        mode: drift.InsertMode.insertOrFail,
+      );
+      await db.managers.locations.bulkCreate(
+        (o) => createResponse.configs.map(
+          (config) => config.toCompanion(instanceId: instance.id),
+        ),
+      );
+      return instance;
+    } catch (e) {
+      // do not leave secrets of an instance that was never stored
+      await removeInstanceSecrets(uuid: uuid, deviceId: deviceId);
+      rethrow;
+    }
   }
 
   @override

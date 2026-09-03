@@ -4,6 +4,7 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:mobile/data/db/database.dart';
+import 'package:mobile/utils/instance_secrets.dart';
 import 'package:mobile/data/plugin/plugin.dart';
 import 'package:mobile/open/api.dart';
 import 'package:mobile/open/riverpod/biometrics_state.dart';
@@ -96,8 +97,19 @@ class NextInstanceScreen extends HookConsumerWidget {
       try {
         final instance = screenDataAsync.value?.instance;
         if (instance == null) return;
+        // the proxy token lives in the keychain, not on the instance row
+        final token = await instance.poolingToken();
+        if (token == null) {
+          reportMissingSecret(
+            instance.logName,
+            "Proxy token",
+            notifyUser: false,
+          );
+          toaster.showError(message: missingSecretsMessage);
+          return;
+        }
         final (responseData, responseStatus, _) = await proxyApi
-            .pollConfiguration(instance.proxyUrl, instance.poolingToken);
+            .pollConfiguration(instance.proxyUrl, token);
         if (responseData == null) {
           toaster.showError(
             message: "Failed to get new information for instance.",

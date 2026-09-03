@@ -29,6 +29,7 @@ import 'package:mobile/theme/color.dart';
 import 'package:mobile/theme/spacing.dart';
 import 'package:mobile/theme/text.dart';
 import 'package:mobile/utils/position.dart';
+import 'package:mobile/utils/instance_secrets.dart';
 import 'package:mobile/utils/update_instance.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:rxdart/rxdart.dart';
@@ -180,8 +181,13 @@ class _PullWrapper extends HookConsumerWidget {
       onRefresh: () async {
         try {
           final instance = screenData.instance;
+          final token = await instance.poolingToken();
+          if (token == null) {
+            reportMissingSecret(instance.logName, "Proxy token");
+            return;
+          }
           final (responseData, responseStatus, responseHeaders) = await proxyApi
-              .pollConfiguration(instance.proxyUrl, instance.poolingToken);
+              .pollConfiguration(instance.proxyUrl, token);
           if (responseData == null) {
             SnackbarService.showError(
               "Failed to get new information for instance.",

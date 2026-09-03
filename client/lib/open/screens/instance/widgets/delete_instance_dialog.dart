@@ -6,7 +6,6 @@ import 'package:mobile/open/widgets/next/icons/next_icon.dart';
 import 'package:mobile/open/widgets/next/next_button.dart';
 import 'package:mobile/open/widgets/next/next_dialog.dart';
 import 'package:mobile/theme/next/spacing.dart';
-import 'package:mobile/utils/secure_storage.dart';
 
 import '../../../../theme/next/color.dart';
 
@@ -25,9 +24,7 @@ class DeleteInstanceDialog extends HookConsumerWidget {
 
     Future<void> deleteInstance(BuildContext context) async {
       try {
-        if (instance.mfaKeysStored) {
-          await removeInstanceStorage(instance.secureStorageKey);
-        }
+        await instance.removeSecrets();
         await db.managers.defguardInstances
             .filter((row) => row.id.equals(instance.id))
             .delete();

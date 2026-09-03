@@ -17,9 +17,7 @@ class DefguardInstances extends Table
     hasAutoIncrement: true,
     type: DriftSqlType.int,
     requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'PRIMARY KEY AUTOINCREMENT',
-    ),
+    $customConstraints: 'NOT NULL PRIMARY KEY AUTOINCREMENT',
   );
   late final GeneratedColumn<String> name = GeneratedColumn<String>(
     'name',
@@ -27,6 +25,7 @@ class DefguardInstances extends Table
     false,
     type: DriftSqlType.string,
     requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
   );
   late final GeneratedColumn<String> uuid = GeneratedColumn<String>(
     'uuid',
@@ -34,6 +33,7 @@ class DefguardInstances extends Table
     false,
     type: DriftSqlType.string,
     requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
   );
   late final GeneratedColumn<String> url = GeneratedColumn<String>(
     'url',
@@ -41,6 +41,7 @@ class DefguardInstances extends Table
     false,
     type: DriftSqlType.string,
     requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
   );
   late final GeneratedColumn<int> deviceId = GeneratedColumn<int>(
     'device_id',
@@ -48,6 +49,7 @@ class DefguardInstances extends Table
     false,
     type: DriftSqlType.int,
     requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
   );
   late final GeneratedColumn<String> proxyUrl = GeneratedColumn<String>(
     'proxy_url',
@@ -55,6 +57,7 @@ class DefguardInstances extends Table
     false,
     type: DriftSqlType.string,
     requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
   );
   late final GeneratedColumn<String> username = GeneratedColumn<String>(
     'username',
@@ -62,13 +65,7 @@ class DefguardInstances extends Table
     false,
     type: DriftSqlType.string,
     requiredDuringInsert: true,
-  );
-  late final GeneratedColumn<String> poolingToken = GeneratedColumn<String>(
-    'pooling_token',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
   );
   late final GeneratedColumn<int> clientTrafficPolicy = GeneratedColumn<int>(
     'client_traffic_policy',
@@ -76,17 +73,16 @@ class DefguardInstances extends Table
     false,
     type: DriftSqlType.int,
     requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL DEFAULT 0',
     defaultValue: const CustomExpression('0'),
   );
-  late final GeneratedColumn<bool> enterpriseEnabled = GeneratedColumn<bool>(
+  late final GeneratedColumn<int> enterpriseEnabled = GeneratedColumn<int>(
     'enterprise_enabled',
     aliasedName,
     false,
-    type: DriftSqlType.bool,
+    type: DriftSqlType.int,
     requiredDuringInsert: true,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'CHECK ("enterprise_enabled" IN (0, 1))',
-    ),
+    $customConstraints: 'NOT NULL CHECK (enterprise_enabled IN (0, 1))',
   );
   late final GeneratedColumn<String> pubKey = GeneratedColumn<String>(
     'pub_key',
@@ -94,24 +90,25 @@ class DefguardInstances extends Table
     false,
     type: DriftSqlType.string,
     requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
   );
-  late final GeneratedColumn<String> privateKey = GeneratedColumn<String>(
-    'private_key',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-  );
-  late final GeneratedColumn<bool> mfaKeysStored = GeneratedColumn<bool>(
+  late final GeneratedColumn<int> mfaKeysStored = GeneratedColumn<int>(
     'mfa_keys_stored',
     aliasedName,
     false,
-    type: DriftSqlType.bool,
+    type: DriftSqlType.int,
     requiredDuringInsert: true,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'CHECK ("mfa_keys_stored" IN (0, 1))',
-    ),
+    $customConstraints: 'NOT NULL CHECK (mfa_keys_stored IN (0, 1))',
   );
+  late final GeneratedColumn<String> openidDisplayName =
+      GeneratedColumn<String>(
+        'openid_display_name',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+        $customConstraints: 'NULL',
+      );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -121,12 +118,11 @@ class DefguardInstances extends Table
     deviceId,
     proxyUrl,
     username,
-    poolingToken,
     clientTrafficPolicy,
     enterpriseEnabled,
     pubKey,
-    privateKey,
     mfaKeysStored,
+    openidDisplayName,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -167,30 +163,26 @@ class DefguardInstances extends Table
         DriftSqlType.string,
         data['${effectivePrefix}username'],
       )!,
-      poolingToken: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}pooling_token'],
-      )!,
       clientTrafficPolicy: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}client_traffic_policy'],
       )!,
       enterpriseEnabled: attachedDatabase.typeMapping.read(
-        DriftSqlType.bool,
+        DriftSqlType.int,
         data['${effectivePrefix}enterprise_enabled'],
       )!,
       pubKey: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}pub_key'],
       )!,
-      privateKey: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}private_key'],
-      )!,
       mfaKeysStored: attachedDatabase.typeMapping.read(
-        DriftSqlType.bool,
+        DriftSqlType.int,
         data['${effectivePrefix}mfa_keys_stored'],
       )!,
+      openidDisplayName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}openid_display_name'],
+      ),
     );
   }
 
@@ -198,6 +190,9 @@ class DefguardInstances extends Table
   DefguardInstances createAlias(String alias) {
     return DefguardInstances(attachedDatabase, alias);
   }
+
+  @override
+  bool get dontWriteConstraints => true;
 }
 
 class DefguardInstancesData extends DataClass
@@ -209,12 +204,11 @@ class DefguardInstancesData extends DataClass
   final int deviceId;
   final String proxyUrl;
   final String username;
-  final String poolingToken;
   final int clientTrafficPolicy;
-  final bool enterpriseEnabled;
+  final int enterpriseEnabled;
   final String pubKey;
-  final String privateKey;
-  final bool mfaKeysStored;
+  final int mfaKeysStored;
+  final String? openidDisplayName;
   const DefguardInstancesData({
     required this.id,
     required this.name,
@@ -223,12 +217,11 @@ class DefguardInstancesData extends DataClass
     required this.deviceId,
     required this.proxyUrl,
     required this.username,
-    required this.poolingToken,
     required this.clientTrafficPolicy,
     required this.enterpriseEnabled,
     required this.pubKey,
-    required this.privateKey,
     required this.mfaKeysStored,
+    this.openidDisplayName,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -240,12 +233,13 @@ class DefguardInstancesData extends DataClass
     map['device_id'] = Variable<int>(deviceId);
     map['proxy_url'] = Variable<String>(proxyUrl);
     map['username'] = Variable<String>(username);
-    map['pooling_token'] = Variable<String>(poolingToken);
     map['client_traffic_policy'] = Variable<int>(clientTrafficPolicy);
-    map['enterprise_enabled'] = Variable<bool>(enterpriseEnabled);
+    map['enterprise_enabled'] = Variable<int>(enterpriseEnabled);
     map['pub_key'] = Variable<String>(pubKey);
-    map['private_key'] = Variable<String>(privateKey);
-    map['mfa_keys_stored'] = Variable<bool>(mfaKeysStored);
+    map['mfa_keys_stored'] = Variable<int>(mfaKeysStored);
+    if (!nullToAbsent || openidDisplayName != null) {
+      map['openid_display_name'] = Variable<String>(openidDisplayName);
+    }
     return map;
   }
 
@@ -258,12 +252,13 @@ class DefguardInstancesData extends DataClass
       deviceId: Value(deviceId),
       proxyUrl: Value(proxyUrl),
       username: Value(username),
-      poolingToken: Value(poolingToken),
       clientTrafficPolicy: Value(clientTrafficPolicy),
       enterpriseEnabled: Value(enterpriseEnabled),
       pubKey: Value(pubKey),
-      privateKey: Value(privateKey),
       mfaKeysStored: Value(mfaKeysStored),
+      openidDisplayName: openidDisplayName == null && nullToAbsent
+          ? const Value.absent()
+          : Value(openidDisplayName),
     );
   }
 
@@ -280,14 +275,15 @@ class DefguardInstancesData extends DataClass
       deviceId: serializer.fromJson<int>(json['deviceId']),
       proxyUrl: serializer.fromJson<String>(json['proxyUrl']),
       username: serializer.fromJson<String>(json['username']),
-      poolingToken: serializer.fromJson<String>(json['poolingToken']),
       clientTrafficPolicy: serializer.fromJson<int>(
         json['clientTrafficPolicy'],
       ),
-      enterpriseEnabled: serializer.fromJson<bool>(json['enterpriseEnabled']),
+      enterpriseEnabled: serializer.fromJson<int>(json['enterpriseEnabled']),
       pubKey: serializer.fromJson<String>(json['pubKey']),
-      privateKey: serializer.fromJson<String>(json['privateKey']),
-      mfaKeysStored: serializer.fromJson<bool>(json['mfaKeysStored']),
+      mfaKeysStored: serializer.fromJson<int>(json['mfaKeysStored']),
+      openidDisplayName: serializer.fromJson<String?>(
+        json['openidDisplayName'],
+      ),
     );
   }
   @override
@@ -301,12 +297,11 @@ class DefguardInstancesData extends DataClass
       'deviceId': serializer.toJson<int>(deviceId),
       'proxyUrl': serializer.toJson<String>(proxyUrl),
       'username': serializer.toJson<String>(username),
-      'poolingToken': serializer.toJson<String>(poolingToken),
       'clientTrafficPolicy': serializer.toJson<int>(clientTrafficPolicy),
-      'enterpriseEnabled': serializer.toJson<bool>(enterpriseEnabled),
+      'enterpriseEnabled': serializer.toJson<int>(enterpriseEnabled),
       'pubKey': serializer.toJson<String>(pubKey),
-      'privateKey': serializer.toJson<String>(privateKey),
-      'mfaKeysStored': serializer.toJson<bool>(mfaKeysStored),
+      'mfaKeysStored': serializer.toJson<int>(mfaKeysStored),
+      'openidDisplayName': serializer.toJson<String?>(openidDisplayName),
     };
   }
 
@@ -318,12 +313,11 @@ class DefguardInstancesData extends DataClass
     int? deviceId,
     String? proxyUrl,
     String? username,
-    String? poolingToken,
     int? clientTrafficPolicy,
-    bool? enterpriseEnabled,
+    int? enterpriseEnabled,
     String? pubKey,
-    String? privateKey,
-    bool? mfaKeysStored,
+    int? mfaKeysStored,
+    Value<String?> openidDisplayName = const Value.absent(),
   }) => DefguardInstancesData(
     id: id ?? this.id,
     name: name ?? this.name,
@@ -332,12 +326,13 @@ class DefguardInstancesData extends DataClass
     deviceId: deviceId ?? this.deviceId,
     proxyUrl: proxyUrl ?? this.proxyUrl,
     username: username ?? this.username,
-    poolingToken: poolingToken ?? this.poolingToken,
     clientTrafficPolicy: clientTrafficPolicy ?? this.clientTrafficPolicy,
     enterpriseEnabled: enterpriseEnabled ?? this.enterpriseEnabled,
     pubKey: pubKey ?? this.pubKey,
-    privateKey: privateKey ?? this.privateKey,
     mfaKeysStored: mfaKeysStored ?? this.mfaKeysStored,
+    openidDisplayName: openidDisplayName.present
+        ? openidDisplayName.value
+        : this.openidDisplayName,
   );
   DefguardInstancesData copyWithCompanion(DefguardInstancesCompanion data) {
     return DefguardInstancesData(
@@ -348,9 +343,6 @@ class DefguardInstancesData extends DataClass
       deviceId: data.deviceId.present ? data.deviceId.value : this.deviceId,
       proxyUrl: data.proxyUrl.present ? data.proxyUrl.value : this.proxyUrl,
       username: data.username.present ? data.username.value : this.username,
-      poolingToken: data.poolingToken.present
-          ? data.poolingToken.value
-          : this.poolingToken,
       clientTrafficPolicy: data.clientTrafficPolicy.present
           ? data.clientTrafficPolicy.value
           : this.clientTrafficPolicy,
@@ -358,12 +350,12 @@ class DefguardInstancesData extends DataClass
           ? data.enterpriseEnabled.value
           : this.enterpriseEnabled,
       pubKey: data.pubKey.present ? data.pubKey.value : this.pubKey,
-      privateKey: data.privateKey.present
-          ? data.privateKey.value
-          : this.privateKey,
       mfaKeysStored: data.mfaKeysStored.present
           ? data.mfaKeysStored.value
           : this.mfaKeysStored,
+      openidDisplayName: data.openidDisplayName.present
+          ? data.openidDisplayName.value
+          : this.openidDisplayName,
     );
   }
 
@@ -377,12 +369,11 @@ class DefguardInstancesData extends DataClass
           ..write('deviceId: $deviceId, ')
           ..write('proxyUrl: $proxyUrl, ')
           ..write('username: $username, ')
-          ..write('poolingToken: $poolingToken, ')
           ..write('clientTrafficPolicy: $clientTrafficPolicy, ')
           ..write('enterpriseEnabled: $enterpriseEnabled, ')
           ..write('pubKey: $pubKey, ')
-          ..write('privateKey: $privateKey, ')
-          ..write('mfaKeysStored: $mfaKeysStored')
+          ..write('mfaKeysStored: $mfaKeysStored, ')
+          ..write('openidDisplayName: $openidDisplayName')
           ..write(')'))
         .toString();
   }
@@ -396,12 +387,11 @@ class DefguardInstancesData extends DataClass
     deviceId,
     proxyUrl,
     username,
-    poolingToken,
     clientTrafficPolicy,
     enterpriseEnabled,
     pubKey,
-    privateKey,
     mfaKeysStored,
+    openidDisplayName,
   );
   @override
   bool operator ==(Object other) =>
@@ -414,12 +404,11 @@ class DefguardInstancesData extends DataClass
           other.deviceId == this.deviceId &&
           other.proxyUrl == this.proxyUrl &&
           other.username == this.username &&
-          other.poolingToken == this.poolingToken &&
           other.clientTrafficPolicy == this.clientTrafficPolicy &&
           other.enterpriseEnabled == this.enterpriseEnabled &&
           other.pubKey == this.pubKey &&
-          other.privateKey == this.privateKey &&
-          other.mfaKeysStored == this.mfaKeysStored);
+          other.mfaKeysStored == this.mfaKeysStored &&
+          other.openidDisplayName == this.openidDisplayName);
 }
 
 class DefguardInstancesCompanion
@@ -431,12 +420,11 @@ class DefguardInstancesCompanion
   final Value<int> deviceId;
   final Value<String> proxyUrl;
   final Value<String> username;
-  final Value<String> poolingToken;
   final Value<int> clientTrafficPolicy;
-  final Value<bool> enterpriseEnabled;
+  final Value<int> enterpriseEnabled;
   final Value<String> pubKey;
-  final Value<String> privateKey;
-  final Value<bool> mfaKeysStored;
+  final Value<int> mfaKeysStored;
+  final Value<String?> openidDisplayName;
   const DefguardInstancesCompanion({
     this.id = const Value.absent(),
     this.name = const Value.absent(),
@@ -445,12 +433,11 @@ class DefguardInstancesCompanion
     this.deviceId = const Value.absent(),
     this.proxyUrl = const Value.absent(),
     this.username = const Value.absent(),
-    this.poolingToken = const Value.absent(),
     this.clientTrafficPolicy = const Value.absent(),
     this.enterpriseEnabled = const Value.absent(),
     this.pubKey = const Value.absent(),
-    this.privateKey = const Value.absent(),
     this.mfaKeysStored = const Value.absent(),
+    this.openidDisplayName = const Value.absent(),
   });
   DefguardInstancesCompanion.insert({
     this.id = const Value.absent(),
@@ -460,22 +447,19 @@ class DefguardInstancesCompanion
     required int deviceId,
     required String proxyUrl,
     required String username,
-    required String poolingToken,
     this.clientTrafficPolicy = const Value.absent(),
-    required bool enterpriseEnabled,
+    required int enterpriseEnabled,
     required String pubKey,
-    required String privateKey,
-    required bool mfaKeysStored,
+    required int mfaKeysStored,
+    this.openidDisplayName = const Value.absent(),
   }) : name = Value(name),
        uuid = Value(uuid),
        url = Value(url),
        deviceId = Value(deviceId),
        proxyUrl = Value(proxyUrl),
        username = Value(username),
-       poolingToken = Value(poolingToken),
        enterpriseEnabled = Value(enterpriseEnabled),
        pubKey = Value(pubKey),
-       privateKey = Value(privateKey),
        mfaKeysStored = Value(mfaKeysStored);
   static Insertable<DefguardInstancesData> custom({
     Expression<int>? id,
@@ -485,12 +469,11 @@ class DefguardInstancesCompanion
     Expression<int>? deviceId,
     Expression<String>? proxyUrl,
     Expression<String>? username,
-    Expression<String>? poolingToken,
     Expression<int>? clientTrafficPolicy,
-    Expression<bool>? enterpriseEnabled,
+    Expression<int>? enterpriseEnabled,
     Expression<String>? pubKey,
-    Expression<String>? privateKey,
-    Expression<bool>? mfaKeysStored,
+    Expression<int>? mfaKeysStored,
+    Expression<String>? openidDisplayName,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -500,13 +483,12 @@ class DefguardInstancesCompanion
       if (deviceId != null) 'device_id': deviceId,
       if (proxyUrl != null) 'proxy_url': proxyUrl,
       if (username != null) 'username': username,
-      if (poolingToken != null) 'pooling_token': poolingToken,
       if (clientTrafficPolicy != null)
         'client_traffic_policy': clientTrafficPolicy,
       if (enterpriseEnabled != null) 'enterprise_enabled': enterpriseEnabled,
       if (pubKey != null) 'pub_key': pubKey,
-      if (privateKey != null) 'private_key': privateKey,
       if (mfaKeysStored != null) 'mfa_keys_stored': mfaKeysStored,
+      if (openidDisplayName != null) 'openid_display_name': openidDisplayName,
     });
   }
 
@@ -518,12 +500,11 @@ class DefguardInstancesCompanion
     Value<int>? deviceId,
     Value<String>? proxyUrl,
     Value<String>? username,
-    Value<String>? poolingToken,
     Value<int>? clientTrafficPolicy,
-    Value<bool>? enterpriseEnabled,
+    Value<int>? enterpriseEnabled,
     Value<String>? pubKey,
-    Value<String>? privateKey,
-    Value<bool>? mfaKeysStored,
+    Value<int>? mfaKeysStored,
+    Value<String?>? openidDisplayName,
   }) {
     return DefguardInstancesCompanion(
       id: id ?? this.id,
@@ -533,12 +514,11 @@ class DefguardInstancesCompanion
       deviceId: deviceId ?? this.deviceId,
       proxyUrl: proxyUrl ?? this.proxyUrl,
       username: username ?? this.username,
-      poolingToken: poolingToken ?? this.poolingToken,
       clientTrafficPolicy: clientTrafficPolicy ?? this.clientTrafficPolicy,
       enterpriseEnabled: enterpriseEnabled ?? this.enterpriseEnabled,
       pubKey: pubKey ?? this.pubKey,
-      privateKey: privateKey ?? this.privateKey,
       mfaKeysStored: mfaKeysStored ?? this.mfaKeysStored,
+      openidDisplayName: openidDisplayName ?? this.openidDisplayName,
     );
   }
 
@@ -566,23 +546,20 @@ class DefguardInstancesCompanion
     if (username.present) {
       map['username'] = Variable<String>(username.value);
     }
-    if (poolingToken.present) {
-      map['pooling_token'] = Variable<String>(poolingToken.value);
-    }
     if (clientTrafficPolicy.present) {
       map['client_traffic_policy'] = Variable<int>(clientTrafficPolicy.value);
     }
     if (enterpriseEnabled.present) {
-      map['enterprise_enabled'] = Variable<bool>(enterpriseEnabled.value);
+      map['enterprise_enabled'] = Variable<int>(enterpriseEnabled.value);
     }
     if (pubKey.present) {
       map['pub_key'] = Variable<String>(pubKey.value);
     }
-    if (privateKey.present) {
-      map['private_key'] = Variable<String>(privateKey.value);
-    }
     if (mfaKeysStored.present) {
-      map['mfa_keys_stored'] = Variable<bool>(mfaKeysStored.value);
+      map['mfa_keys_stored'] = Variable<int>(mfaKeysStored.value);
+    }
+    if (openidDisplayName.present) {
+      map['openid_display_name'] = Variable<String>(openidDisplayName.value);
     }
     return map;
   }
@@ -597,12 +574,11 @@ class DefguardInstancesCompanion
           ..write('deviceId: $deviceId, ')
           ..write('proxyUrl: $proxyUrl, ')
           ..write('username: $username, ')
-          ..write('poolingToken: $poolingToken, ')
           ..write('clientTrafficPolicy: $clientTrafficPolicy, ')
           ..write('enterpriseEnabled: $enterpriseEnabled, ')
           ..write('pubKey: $pubKey, ')
-          ..write('privateKey: $privateKey, ')
-          ..write('mfaKeysStored: $mfaKeysStored')
+          ..write('mfaKeysStored: $mfaKeysStored, ')
+          ..write('openidDisplayName: $openidDisplayName')
           ..write(')'))
         .toString();
   }
@@ -620,9 +596,7 @@ class Locations extends Table with TableInfo<Locations, LocationsData> {
     hasAutoIncrement: true,
     type: DriftSqlType.int,
     requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'PRIMARY KEY AUTOINCREMENT',
-    ),
+    $customConstraints: 'NOT NULL PRIMARY KEY AUTOINCREMENT',
   );
   late final GeneratedColumn<int> instance = GeneratedColumn<int>(
     'instance',
@@ -630,9 +604,8 @@ class Locations extends Table with TableInfo<Locations, LocationsData> {
     false,
     type: DriftSqlType.int,
     requiredDuringInsert: true,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'REFERENCES defguard_instances (id) ON DELETE CASCADE',
-    ),
+    $customConstraints:
+        'NOT NULL REFERENCES defguard_instances(id)ON DELETE CASCADE',
   );
   late final GeneratedColumn<int> networkId = GeneratedColumn<int>(
     'network_id',
@@ -640,6 +613,7 @@ class Locations extends Table with TableInfo<Locations, LocationsData> {
     false,
     type: DriftSqlType.int,
     requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
   );
   late final GeneratedColumn<String> name = GeneratedColumn<String>(
     'name',
@@ -647,6 +621,7 @@ class Locations extends Table with TableInfo<Locations, LocationsData> {
     false,
     type: DriftSqlType.string,
     requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
   );
   late final GeneratedColumn<String> address = GeneratedColumn<String>(
     'address',
@@ -654,6 +629,7 @@ class Locations extends Table with TableInfo<Locations, LocationsData> {
     false,
     type: DriftSqlType.string,
     requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
   );
   late final GeneratedColumn<String> pubKey = GeneratedColumn<String>(
     'pub_key',
@@ -661,6 +637,7 @@ class Locations extends Table with TableInfo<Locations, LocationsData> {
     false,
     type: DriftSqlType.string,
     requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
   );
   late final GeneratedColumn<String> endpoint = GeneratedColumn<String>(
     'endpoint',
@@ -668,6 +645,7 @@ class Locations extends Table with TableInfo<Locations, LocationsData> {
     false,
     type: DriftSqlType.string,
     requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
   );
   late final GeneratedColumn<String> allowedIps = GeneratedColumn<String>(
     'allowed_ips',
@@ -675,6 +653,7 @@ class Locations extends Table with TableInfo<Locations, LocationsData> {
     false,
     type: DriftSqlType.string,
     requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
   );
   late final GeneratedColumn<String> dns = GeneratedColumn<String>(
     'dns',
@@ -682,16 +661,15 @@ class Locations extends Table with TableInfo<Locations, LocationsData> {
     true,
     type: DriftSqlType.string,
     requiredDuringInsert: false,
+    $customConstraints: 'NULL',
   );
-  late final GeneratedColumn<bool> mfaEnabled = GeneratedColumn<bool>(
+  late final GeneratedColumn<int> mfaEnabled = GeneratedColumn<int>(
     'mfa_enabled',
     aliasedName,
     true,
-    type: DriftSqlType.bool,
+    type: DriftSqlType.int,
     requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'CHECK ("mfa_enabled" IN (0, 1))',
-    ),
+    $customConstraints: 'NULL CHECK (mfa_enabled IN (0, 1))',
   );
   late final GeneratedColumn<String> trafficMethod = GeneratedColumn<String>(
     'traffic_method',
@@ -699,6 +677,7 @@ class Locations extends Table with TableInfo<Locations, LocationsData> {
     true,
     type: DriftSqlType.string,
     requiredDuringInsert: false,
+    $customConstraints: 'NULL',
   );
   late final GeneratedColumn<int> mfaMethod = GeneratedColumn<int>(
     'mfa_method',
@@ -706,6 +685,7 @@ class Locations extends Table with TableInfo<Locations, LocationsData> {
     true,
     type: DriftSqlType.int,
     requiredDuringInsert: false,
+    $customConstraints: 'NULL',
   );
   late final GeneratedColumn<int> keepAliveInterval = GeneratedColumn<int>(
     'keep_alive_interval',
@@ -713,6 +693,7 @@ class Locations extends Table with TableInfo<Locations, LocationsData> {
     false,
     type: DriftSqlType.int,
     requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
   );
   late final GeneratedColumn<int> locationMfaMode = GeneratedColumn<int>(
     'location_mfa_mode',
@@ -720,6 +701,15 @@ class Locations extends Table with TableInfo<Locations, LocationsData> {
     true,
     type: DriftSqlType.int,
     requiredDuringInsert: false,
+    $customConstraints: 'NULL',
+  );
+  late final GeneratedColumn<int> postureCheckRequired = GeneratedColumn<int>(
+    'posture_check_required',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'NULL CHECK (posture_check_required IN (0, 1))',
   );
   @override
   List<GeneratedColumn> get $columns => [
@@ -737,6 +727,7 @@ class Locations extends Table with TableInfo<Locations, LocationsData> {
     mfaMethod,
     keepAliveInterval,
     locationMfaMode,
+    postureCheckRequired,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -786,7 +777,7 @@ class Locations extends Table with TableInfo<Locations, LocationsData> {
         data['${effectivePrefix}dns'],
       ),
       mfaEnabled: attachedDatabase.typeMapping.read(
-        DriftSqlType.bool,
+        DriftSqlType.int,
         data['${effectivePrefix}mfa_enabled'],
       ),
       trafficMethod: attachedDatabase.typeMapping.read(
@@ -805,6 +796,10 @@ class Locations extends Table with TableInfo<Locations, LocationsData> {
         DriftSqlType.int,
         data['${effectivePrefix}location_mfa_mode'],
       ),
+      postureCheckRequired: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}posture_check_required'],
+      ),
     );
   }
 
@@ -812,6 +807,9 @@ class Locations extends Table with TableInfo<Locations, LocationsData> {
   Locations createAlias(String alias) {
     return Locations(attachedDatabase, alias);
   }
+
+  @override
+  bool get dontWriteConstraints => true;
 }
 
 class LocationsData extends DataClass implements Insertable<LocationsData> {
@@ -824,11 +822,12 @@ class LocationsData extends DataClass implements Insertable<LocationsData> {
   final String endpoint;
   final String allowedIps;
   final String? dns;
-  final bool? mfaEnabled;
+  final int? mfaEnabled;
   final String? trafficMethod;
   final int? mfaMethod;
   final int keepAliveInterval;
   final int? locationMfaMode;
+  final int? postureCheckRequired;
   const LocationsData({
     required this.id,
     required this.instance,
@@ -844,6 +843,7 @@ class LocationsData extends DataClass implements Insertable<LocationsData> {
     this.mfaMethod,
     required this.keepAliveInterval,
     this.locationMfaMode,
+    this.postureCheckRequired,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -860,7 +860,7 @@ class LocationsData extends DataClass implements Insertable<LocationsData> {
       map['dns'] = Variable<String>(dns);
     }
     if (!nullToAbsent || mfaEnabled != null) {
-      map['mfa_enabled'] = Variable<bool>(mfaEnabled);
+      map['mfa_enabled'] = Variable<int>(mfaEnabled);
     }
     if (!nullToAbsent || trafficMethod != null) {
       map['traffic_method'] = Variable<String>(trafficMethod);
@@ -871,6 +871,9 @@ class LocationsData extends DataClass implements Insertable<LocationsData> {
     map['keep_alive_interval'] = Variable<int>(keepAliveInterval);
     if (!nullToAbsent || locationMfaMode != null) {
       map['location_mfa_mode'] = Variable<int>(locationMfaMode);
+    }
+    if (!nullToAbsent || postureCheckRequired != null) {
+      map['posture_check_required'] = Variable<int>(postureCheckRequired);
     }
     return map;
   }
@@ -899,6 +902,9 @@ class LocationsData extends DataClass implements Insertable<LocationsData> {
       locationMfaMode: locationMfaMode == null && nullToAbsent
           ? const Value.absent()
           : Value(locationMfaMode),
+      postureCheckRequired: postureCheckRequired == null && nullToAbsent
+          ? const Value.absent()
+          : Value(postureCheckRequired),
     );
   }
 
@@ -917,11 +923,14 @@ class LocationsData extends DataClass implements Insertable<LocationsData> {
       endpoint: serializer.fromJson<String>(json['endpoint']),
       allowedIps: serializer.fromJson<String>(json['allowedIps']),
       dns: serializer.fromJson<String?>(json['dns']),
-      mfaEnabled: serializer.fromJson<bool?>(json['mfaEnabled']),
+      mfaEnabled: serializer.fromJson<int?>(json['mfaEnabled']),
       trafficMethod: serializer.fromJson<String?>(json['trafficMethod']),
       mfaMethod: serializer.fromJson<int?>(json['mfaMethod']),
       keepAliveInterval: serializer.fromJson<int>(json['keepAliveInterval']),
       locationMfaMode: serializer.fromJson<int?>(json['locationMfaMode']),
+      postureCheckRequired: serializer.fromJson<int?>(
+        json['postureCheckRequired'],
+      ),
     );
   }
   @override
@@ -937,11 +946,12 @@ class LocationsData extends DataClass implements Insertable<LocationsData> {
       'endpoint': serializer.toJson<String>(endpoint),
       'allowedIps': serializer.toJson<String>(allowedIps),
       'dns': serializer.toJson<String?>(dns),
-      'mfaEnabled': serializer.toJson<bool?>(mfaEnabled),
+      'mfaEnabled': serializer.toJson<int?>(mfaEnabled),
       'trafficMethod': serializer.toJson<String?>(trafficMethod),
       'mfaMethod': serializer.toJson<int?>(mfaMethod),
       'keepAliveInterval': serializer.toJson<int>(keepAliveInterval),
       'locationMfaMode': serializer.toJson<int?>(locationMfaMode),
+      'postureCheckRequired': serializer.toJson<int?>(postureCheckRequired),
     };
   }
 
@@ -955,11 +965,12 @@ class LocationsData extends DataClass implements Insertable<LocationsData> {
     String? endpoint,
     String? allowedIps,
     Value<String?> dns = const Value.absent(),
-    Value<bool?> mfaEnabled = const Value.absent(),
+    Value<int?> mfaEnabled = const Value.absent(),
     Value<String?> trafficMethod = const Value.absent(),
     Value<int?> mfaMethod = const Value.absent(),
     int? keepAliveInterval,
     Value<int?> locationMfaMode = const Value.absent(),
+    Value<int?> postureCheckRequired = const Value.absent(),
   }) => LocationsData(
     id: id ?? this.id,
     instance: instance ?? this.instance,
@@ -979,6 +990,9 @@ class LocationsData extends DataClass implements Insertable<LocationsData> {
     locationMfaMode: locationMfaMode.present
         ? locationMfaMode.value
         : this.locationMfaMode,
+    postureCheckRequired: postureCheckRequired.present
+        ? postureCheckRequired.value
+        : this.postureCheckRequired,
   );
   LocationsData copyWithCompanion(LocationsCompanion data) {
     return LocationsData(
@@ -1006,6 +1020,9 @@ class LocationsData extends DataClass implements Insertable<LocationsData> {
       locationMfaMode: data.locationMfaMode.present
           ? data.locationMfaMode.value
           : this.locationMfaMode,
+      postureCheckRequired: data.postureCheckRequired.present
+          ? data.postureCheckRequired.value
+          : this.postureCheckRequired,
     );
   }
 
@@ -1025,7 +1042,8 @@ class LocationsData extends DataClass implements Insertable<LocationsData> {
           ..write('trafficMethod: $trafficMethod, ')
           ..write('mfaMethod: $mfaMethod, ')
           ..write('keepAliveInterval: $keepAliveInterval, ')
-          ..write('locationMfaMode: $locationMfaMode')
+          ..write('locationMfaMode: $locationMfaMode, ')
+          ..write('postureCheckRequired: $postureCheckRequired')
           ..write(')'))
         .toString();
   }
@@ -1046,6 +1064,7 @@ class LocationsData extends DataClass implements Insertable<LocationsData> {
     mfaMethod,
     keepAliveInterval,
     locationMfaMode,
+    postureCheckRequired,
   );
   @override
   bool operator ==(Object other) =>
@@ -1064,7 +1083,8 @@ class LocationsData extends DataClass implements Insertable<LocationsData> {
           other.trafficMethod == this.trafficMethod &&
           other.mfaMethod == this.mfaMethod &&
           other.keepAliveInterval == this.keepAliveInterval &&
-          other.locationMfaMode == this.locationMfaMode);
+          other.locationMfaMode == this.locationMfaMode &&
+          other.postureCheckRequired == this.postureCheckRequired);
 }
 
 class LocationsCompanion extends UpdateCompanion<LocationsData> {
@@ -1077,11 +1097,12 @@ class LocationsCompanion extends UpdateCompanion<LocationsData> {
   final Value<String> endpoint;
   final Value<String> allowedIps;
   final Value<String?> dns;
-  final Value<bool?> mfaEnabled;
+  final Value<int?> mfaEnabled;
   final Value<String?> trafficMethod;
   final Value<int?> mfaMethod;
   final Value<int> keepAliveInterval;
   final Value<int?> locationMfaMode;
+  final Value<int?> postureCheckRequired;
   const LocationsCompanion({
     this.id = const Value.absent(),
     this.instance = const Value.absent(),
@@ -1097,6 +1118,7 @@ class LocationsCompanion extends UpdateCompanion<LocationsData> {
     this.mfaMethod = const Value.absent(),
     this.keepAliveInterval = const Value.absent(),
     this.locationMfaMode = const Value.absent(),
+    this.postureCheckRequired = const Value.absent(),
   });
   LocationsCompanion.insert({
     this.id = const Value.absent(),
@@ -1113,6 +1135,7 @@ class LocationsCompanion extends UpdateCompanion<LocationsData> {
     this.mfaMethod = const Value.absent(),
     required int keepAliveInterval,
     this.locationMfaMode = const Value.absent(),
+    this.postureCheckRequired = const Value.absent(),
   }) : instance = Value(instance),
        networkId = Value(networkId),
        name = Value(name),
@@ -1131,11 +1154,12 @@ class LocationsCompanion extends UpdateCompanion<LocationsData> {
     Expression<String>? endpoint,
     Expression<String>? allowedIps,
     Expression<String>? dns,
-    Expression<bool>? mfaEnabled,
+    Expression<int>? mfaEnabled,
     Expression<String>? trafficMethod,
     Expression<int>? mfaMethod,
     Expression<int>? keepAliveInterval,
     Expression<int>? locationMfaMode,
+    Expression<int>? postureCheckRequired,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -1152,6 +1176,8 @@ class LocationsCompanion extends UpdateCompanion<LocationsData> {
       if (mfaMethod != null) 'mfa_method': mfaMethod,
       if (keepAliveInterval != null) 'keep_alive_interval': keepAliveInterval,
       if (locationMfaMode != null) 'location_mfa_mode': locationMfaMode,
+      if (postureCheckRequired != null)
+        'posture_check_required': postureCheckRequired,
     });
   }
 
@@ -1165,11 +1191,12 @@ class LocationsCompanion extends UpdateCompanion<LocationsData> {
     Value<String>? endpoint,
     Value<String>? allowedIps,
     Value<String?>? dns,
-    Value<bool?>? mfaEnabled,
+    Value<int?>? mfaEnabled,
     Value<String?>? trafficMethod,
     Value<int?>? mfaMethod,
     Value<int>? keepAliveInterval,
     Value<int?>? locationMfaMode,
+    Value<int?>? postureCheckRequired,
   }) {
     return LocationsCompanion(
       id: id ?? this.id,
@@ -1186,6 +1213,7 @@ class LocationsCompanion extends UpdateCompanion<LocationsData> {
       mfaMethod: mfaMethod ?? this.mfaMethod,
       keepAliveInterval: keepAliveInterval ?? this.keepAliveInterval,
       locationMfaMode: locationMfaMode ?? this.locationMfaMode,
+      postureCheckRequired: postureCheckRequired ?? this.postureCheckRequired,
     );
   }
 
@@ -1220,7 +1248,7 @@ class LocationsCompanion extends UpdateCompanion<LocationsData> {
       map['dns'] = Variable<String>(dns.value);
     }
     if (mfaEnabled.present) {
-      map['mfa_enabled'] = Variable<bool>(mfaEnabled.value);
+      map['mfa_enabled'] = Variable<int>(mfaEnabled.value);
     }
     if (trafficMethod.present) {
       map['traffic_method'] = Variable<String>(trafficMethod.value);
@@ -1233,6 +1261,9 @@ class LocationsCompanion extends UpdateCompanion<LocationsData> {
     }
     if (locationMfaMode.present) {
       map['location_mfa_mode'] = Variable<int>(locationMfaMode.value);
+    }
+    if (postureCheckRequired.present) {
+      map['posture_check_required'] = Variable<int>(postureCheckRequired.value);
     }
     return map;
   }
@@ -1253,14 +1284,15 @@ class LocationsCompanion extends UpdateCompanion<LocationsData> {
           ..write('trafficMethod: $trafficMethod, ')
           ..write('mfaMethod: $mfaMethod, ')
           ..write('keepAliveInterval: $keepAliveInterval, ')
-          ..write('locationMfaMode: $locationMfaMode')
+          ..write('locationMfaMode: $locationMfaMode, ')
+          ..write('postureCheckRequired: $postureCheckRequired')
           ..write(')'))
         .toString();
   }
 }
 
-class DatabaseAtV2 extends GeneratedDatabase {
-  DatabaseAtV2(QueryExecutor e) : super(e);
+class DatabaseAtV5 extends GeneratedDatabase {
+  DatabaseAtV5(QueryExecutor e) : super(e);
   late final DefguardInstances defguardInstances = DefguardInstances(this);
   late final Locations locations = Locations(this);
   @override
@@ -1272,5 +1304,15 @@ class DatabaseAtV2 extends GeneratedDatabase {
     locations,
   ];
   @override
-  int get schemaVersion => 2;
+  StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'defguard_instances',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('locations', kind: UpdateKind.delete)],
+    ),
+  ]);
+  @override
+  int get schemaVersion => 5;
 }
