@@ -1,5 +1,6 @@
 name: "Build app"
 on:
+  workflow_dispatch:
   push:
     branches:
       - main
@@ -203,7 +204,7 @@ jobs:
 
       - name: Upload Android Artifact
         uses: actions/upload-artifact@v4
-        if: startsWith(github.ref, 'refs/tags/')
+        if: startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/dev' || github.event_name == 'workflow_dispatch'
         with:
           name: android-app-apk
           path: "client/Defguard.apk"
