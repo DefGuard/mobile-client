@@ -22,12 +22,12 @@ jobs:
         working-directory: ./client
     steps:
       - name: Checkout main repo
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           submodules: "recursive"
 
       - name: Setup flutter
-        uses: subosito/flutter-action@v2
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
         with:
           channel: stable
           flutter-version: 3.47.2
@@ -88,18 +88,18 @@ jobs:
       run:
         working-directory: ./client
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           submodules: "recursive"
 
       - name: Set up Java
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@e9fbacdec3bb3b6036605a3e6f7995d66773a8c6 # v3
         with:
           distribution: "temurin"
           java-version: "17"
 
       - name: Setup flutter
-        uses: subosito/flutter-action@v2
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
         with:
           channel: stable
           flutter-version: 3.47.2
@@ -118,7 +118,7 @@ jobs:
 
       - name: Sign AAB
         id: sign_aab
-        uses: r0adkll/sign-android-release@v1
+        uses: r0adkll/sign-android-release@349ebdef58775b1e0d8099458af0816dc79b6407 # v1
         with:
           releaseDirectory: client/build/app/outputs/bundle/release
           signingKeyBase64: "${{ secrets.ANDROID_SIGNING_KEY_BASE64 }}"
@@ -127,7 +127,7 @@ jobs:
           keyPassword: "${{ secrets.ANDROID_KEYSTORE_PASSWORD }}"
 
       - name: Publish to Play Store
-        uses: r0adkll/upload-google-play@v1
+        uses: r0adkll/upload-google-play@e738b9dd8f2476ea806d921b64aacd24f34515a5 # v1
         # Mobile applications are published to the Play Store manually, with release tags applied
         # post-publication. To avoid redundant uploads, this step executes only for non-tagged
         # builds, ensuring tagged releases are distributed exclusively to GitHub.
@@ -142,7 +142,7 @@ jobs:
         run: cp "$GITHUB_WORKSPACE/${{ steps.sign_aab.outputs.signedReleaseFile }}" Defguard.aab
 
       - name: Upload Android Artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         if: startsWith(github.ref, 'refs/tags/')
         with:
           name: android-app
@@ -158,18 +158,18 @@ jobs:
       run:
         working-directory: ./client
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           submodules: "recursive"
 
       - name: Set up Java
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@e9fbacdec3bb3b6036605a3e6f7995d66773a8c6 # v3
         with:
           distribution: "temurin"
           java-version: "17"
 
       - name: Setup flutter
-        uses: subosito/flutter-action@v2
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
         with:
           channel: stable
           flutter-version: 3.47.2
@@ -191,7 +191,7 @@ jobs:
 
       - name: Sign APK
         id: sign_apk
-        uses: r0adkll/sign-android-release@v1
+        uses: r0adkll/sign-android-release@349ebdef58775b1e0d8099458af0816dc79b6407 # v1
         with:
           releaseDirectory: client/build/app/outputs/flutter-apk
           signingKeyBase64: "${{ secrets.ANDROID_SIGNING_KEY_BASE64 }}"
@@ -203,7 +203,7 @@ jobs:
         run: cp "$GITHUB_WORKSPACE/${{ steps.sign_apk.outputs.signedReleaseFile }}" Defguard.apk
 
       - name: Upload Android Artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         if: startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/dev' || github.event_name == 'workflow_dispatch'
         with:
           name: android-app-apk
