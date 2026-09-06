@@ -58,10 +58,10 @@ dependencies:
   permission_handler: ^13.0.0
   mobile_scanner: ^7.0.1
   rxdart: ^0.28.0
-  talker: ^4.9.1
-  talker_flutter: ^4.9.1
-  talker_dio_logger: ^4.9.1
-  package_info_plus: ^9.0.1
+  talker: ^5.0.0
+  talker_flutter: ^5.0.0
+  talker_dio_logger: ^5.0.0
+  package_info_plus: ^10.0.0
   flutter_animate: ^4.5.2
   collection: ^1.19.1
   url_launcher: ^6.3.2
@@ -74,8 +74,8 @@ dependencies:
   local_auth: ^3.0.2
   pub_semver: ^2.2.0
   shared_preferences: ^2.5.3
-  flutter_secure_storage: ^10.3.1
-  device_info_plus: ^12.4.0
+  flutter_secure_storage: ^11.0.0
+  device_info_plus: ^13.0.0
   protobuf: ^6.0.0
   rive: ^0.14.11
 
