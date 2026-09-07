@@ -49,11 +49,7 @@ class ConfigurationUpdater extends HookConsumerWidget {
           );
           final token = await instance.poolingToken();
           if (token == null) {
-            reportMissingSecret(
-              instance.logName,
-              "Proxy token",
-              notifyUser: false,
-            );
+            reportMissingSecret(instance.logName, "Proxy token");
             continue;
           }
           final (responseData, responseStatus, headers) = await proxyApi

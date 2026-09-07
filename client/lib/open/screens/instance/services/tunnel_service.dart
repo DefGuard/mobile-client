@@ -7,20 +7,17 @@ import 'package:mobile/data/db/database.dart';
 import 'package:mobile/data/plugin/plugin.dart';
 import 'package:mobile/data/proxy/mfa.dart';
 import 'package:mobile/enterprise/postures.dart';
-import 'package:mobile/enterprise/screens/mfa/next/next_mfa_openid_screen.dart';
 import 'package:mobile/enterprise/screens/mfa/openid_mfa_screen.dart';
 import 'package:mobile/open/api.dart';
 import 'package:mobile/open/riverpod/biometrics_state.dart';
-import 'package:mobile/open/screens/instance/widgets/mfa_method_dialog.dart';
-import 'package:mobile/open/screens/instance/widgets/routing_method_dialog.dart';
-import 'package:mobile/open/screens/next/mfa/next_mfa_biometric_screen.dart';
-import 'package:mobile/open/screens/next/mfa/next_mfa_code_screen.dart';
-import 'package:mobile/open/screens/next/mfa/next_mfa_email_screen.dart';
-import 'package:mobile/open/screens/next/mfa/next_mfa_totp_screen.dart';
+import 'package:mobile/open/screens/mfa/mfa_biometric_screen.dart';
+import 'package:mobile/open/screens/mfa/mfa_code_screen.dart';
+import 'package:mobile/open/screens/mfa/mfa_email_screen.dart';
+import 'package:mobile/open/screens/mfa/mfa_totp_screen.dart';
 import 'package:mobile/utils/instance_secrets.dart';
 
 import '../../../../data/db/enums.dart';
-import '../../../../logging.dart';
+import 'package:mobile/logging.dart';
 import '../../../../utils/notifications.dart';
 
 /// How a connect attempt ended. Reporting it - a toast, a snackbar, nothing at
@@ -70,8 +67,11 @@ class _StepOutcome {
 
 /// Handles MFA flows and tunnel connection
 class TunnelService {
-  /// Main service method - displays traffic & MFA dialogs, handles
-  /// interface configuration and connection.
+  /// Main service method - handles MFA, interface configuration and connection.
+  ///
+  /// The caller collects the user's traffic and MFA choices up front (the
+  /// connect bottom sheet does), so this method never puts UI of its own in
+  /// front of the user except the MFA step screens.
   static Future<ConnectResult> connect({
     required BuildContext context,
     required DefguardInstance instance,
@@ -79,50 +79,24 @@ class TunnelService {
     required dynamic wireguardPlugin,
     required BiometricsState biometricsStatus,
     required AppDatabase db,
-    RoutingMethod? trafficMethod,
+    required RoutingMethod trafficMethod,
     MfaMethod? mfaMethod,
   }) async {
     final navigator = Navigator.of(context);
 
-    late RoutingMethod selectedTrafficMethod;
-    if (trafficMethod != null) {
-      selectedTrafficMethod = trafficMethod;
-    } else if (instance.clientTrafficPolicy ==
-        ClientTrafficPolicy.disableAllTraffic) {
-      selectedTrafficMethod = RoutingMethod.predefined;
-    } else if (instance.clientTrafficPolicy ==
-        ClientTrafficPolicy.forceAllTraffic) {
-      selectedTrafficMethod = RoutingMethod.all;
-    } else {
-      if (location.trafficMethod != null) {
-        selectedTrafficMethod = location.trafficMethod!;
-      } else {
-        RoutingMethodDialogIntention dialogIntention = checkMfaEnabled(location)
-            ? RoutingMethodDialogIntention.next
-            : RoutingMethodDialogIntention.connect;
-        RoutingMethod? userSelection = await _showDialog(
-          navigator: navigator,
-          builder: (_) => RoutingMethodDialog(
-            location: location,
-            intention: dialogIntention,
-            clientTrafficPolicy: instance.clientTrafficPolicy,
-          ),
-        );
-        if (userSelection == null) {
-          return const ConnectResult.cancelled();
-        }
-        selectedTrafficMethod = userSelection;
-      }
-    }
+    // The instance policy outranks whatever the caller asked for - it is the
+    // administrator's setting, not a user preference.
+    final RoutingMethod selectedTrafficMethod =
+        switch (instance.clientTrafficPolicy) {
+          ClientTrafficPolicy.disableAllTraffic => RoutingMethod.predefined,
+          ClientTrafficPolicy.forceAllTraffic => RoutingMethod.all,
+          ClientTrafficPolicy.none => trafficMethod,
+        };
 
     // prepare wireguard plugin payload
     final privateKey = await instance.wireguardPrivateKey();
     if (privateKey == null) {
-      reportMissingSecret(
-        instance.logName,
-        "WireGuard private key",
-        notifyUser: false,
-      );
+      reportMissingSecret(instance.logName, "WireGuard private key");
       return const ConnectResult.failed(message: missingSecretsMessage);
     }
     PluginConnectPayload payload = _makePayload(
@@ -144,24 +118,14 @@ class TunnelService {
               !biometricsStatus.canOpenStorage)) {
         selectedMfaMethod = mfaMethod;
       } else {
-        if (location.mfaMethod == null ||
-            (location.mfaMethod == MfaMethod.biometric &&
-                !biometricsStatus.canOpenStorage)) {
-          final userSelection = await _showDialog<MfaMethod?>(
-            navigator: navigator,
-            builder: (_) => MfaMethodDialog(
-              instance: instance,
-              location: location,
-              intention: MfaMethodDialogIntention.connect,
-            ),
-          );
-          if (userSelection == null) {
-            return const ConnectResult.cancelled();
-          }
-          selectedMfaMethod = userSelection;
-        } else {
-          selectedMfaMethod = location.mfaMethod!;
-        }
+        // The caller only offers methods that are actually usable, so getting
+        // here means its capability snapshot went stale mid-connect. Bail out
+        // and let the user pick again rather than guessing a method.
+        return const ConnectResult.failed(
+          message: "Select an MFA method to connect.",
+          logMessage:
+              "Connect called without a usable MFA method for an MFA location",
+        );
       }
 
       final mfaOutcome = await _performMfa(
@@ -183,11 +147,7 @@ class TunnelService {
     } else if (payload.postureCheckRequired) {
       final poolingToken = await instance.poolingToken();
       if (poolingToken == null) {
-        reportMissingSecret(
-          instance.logName,
-          "Proxy token",
-          notifyUser: false,
-        );
+        reportMissingSecret(instance.logName, "Proxy token");
         return const ConnectResult.failed(message: missingSecretsMessage);
       }
       final postureOutcome = await _performPostureCheck(
@@ -208,7 +168,8 @@ class TunnelService {
       instance,
       location,
       trafficMethod: trafficMethod,
-      mfaMethod: mfaMethod != null ? authorizedWith : null,
+      // null unless an MFA step actually ran
+      mfaMethod: authorizedWith,
     );
 
     return const ConnectResult.connected();
@@ -224,12 +185,12 @@ class TunnelService {
     AppDatabase db,
     DefguardInstance instance,
     Location location, {
-    RoutingMethod? trafficMethod,
+    required RoutingMethod trafficMethod,
     MfaMethod? mfaMethod,
   }) async {
-    final traffic =
-        instance.clientTrafficPolicy == ClientTrafficPolicy.none &&
-            trafficMethod != null
+    // Under a forced policy the routing was not the user's choice, so there is
+    // nothing worth remembering.
+    final traffic = instance.clientTrafficPolicy == ClientTrafficPolicy.none
         ? drift.Value(trafficMethod)
         : const drift.Value<RoutingMethod?>.absent();
     final mfa = mfaMethod != null
@@ -394,7 +355,7 @@ class TunnelService {
   }) async {
     final presharedKey = await Navigator.of(navigator.context).push<String?>(
       MaterialPageRoute(
-        builder: (context) => NextOpenIdMfaScreen(
+        builder: (context) => OpenIdMfaScreen(
           screenData: OpenIdMfaScreenData(
             proxyUrl: proxyUrl,
             token: token,
@@ -419,8 +380,8 @@ class TunnelService {
   }) async {
     final presharedKey = await Navigator.of(navigator.context).push<String?>(
       MaterialPageRoute(
-        builder: (context) => NextMfaBiometricScreen(
-          screenData: NextMfaBiometricScreenData(
+        builder: (context) => MfaBiometricScreen(
+          screenData: MfaBiometricScreenData(
             proxyUrl: proxyUrl,
             token: token,
             challenge: challenge,
@@ -442,10 +403,10 @@ class TunnelService {
     required String proxyUrl,
     required MfaMethod method,
   }) async {
-    final screenData = NextMfaCodeScreenData(proxyUrl: proxyUrl, token: token);
+    final screenData = MfaCodeScreenData(proxyUrl: proxyUrl, token: token);
     final Widget screen = method == MfaMethod.email
-        ? NextMfaEmailScreen(screenData: screenData)
-        : NextMfaTotpScreen(screenData: screenData);
+        ? MfaEmailScreen(screenData: screenData)
+        : MfaTotpScreen(screenData: screenData);
 
     final presharedKey = await Navigator.of(
       navigator.context,
@@ -521,13 +482,5 @@ class TunnelService {
       traffic: trafficMethod,
       postureCheckRequired: location.postureCheckRequired == true,
     );
-  }
-
-  /// Helper function to show dialog using captured NavigatorState
-  static Future<T?> _showDialog<T>({
-    required NavigatorState navigator,
-    required Widget Function(BuildContext) builder,
-  }) {
-    return showDialog<T>(context: navigator.context, builder: builder);
   }
 }

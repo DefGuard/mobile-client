@@ -2,19 +2,19 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:mobile/open/screens/add_instance/data_gathering_dialog.dart';
-import 'package:mobile/open/widgets/next/icons/next_icon.dart';
-import 'package:mobile/open/widgets/next/next_app_bar.dart';
-import 'package:mobile/open/widgets/next/next_button.dart';
-import 'package:mobile/open/widgets/next/next_drawer.dart';
-import 'package:mobile/open/widgets/next/next_icon_button.dart';
+import 'package:mobile/open/widgets/icons/dg_icon.dart';
+import 'package:mobile/open/widgets/dg_app_bar.dart';
+import 'package:mobile/open/widgets/dg_button.dart';
+import 'package:mobile/open/widgets/dg_drawer.dart';
+import 'package:mobile/open/widgets/dg_icon_button.dart';
 import 'package:mobile/open/widgets/rive_asset_animation.dart';
 import 'package:mobile/router/routes.dart';
-import 'package:mobile/theme/next/text.dart';
+import 'package:mobile/theme/text.dart';
 import 'package:rive/rive.dart' as rive;
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../../theme/next/color.dart';
-import '../../../theme/next/spacing.dart';
+import 'package:mobile/theme/color.dart';
+import 'package:mobile/theme/spacing.dart';
 
 class AddInstanceScreen extends HookConsumerWidget {
   const AddInstanceScreen({super.key});
@@ -25,21 +25,21 @@ class AddInstanceScreen extends HookConsumerWidget {
     final canPop = Navigator.of(context).canPop();
 
     return Scaffold(
-      drawer: const NextDrawer(),
-      appBar: NextAppBar(
+      drawer: const DgDrawer(),
+      appBar: DgAppBar(
         context: context,
         showLogo: true,
         actionLeft: canPop
-            ? NextIconButton(
+            ? DgIconButton(
                 icon: "arrow_big",
-                direction: NextIconDirection.left,
+                direction: DgIconDirection.left,
                 onTap: () => Navigator.of(context).pop(),
               )
             : null,
       ),
       extendBodyBehindAppBar: true,
       body: Container(
-        decoration: const BoxDecoration(gradient: NextColor.gradientPrimary),
+        decoration: const BoxDecoration(gradient: DgColor.gradientPrimary),
         child: SafeArea(
           child: CustomScrollView(
             physics: const ClampingScrollPhysics(),
@@ -49,19 +49,19 @@ class AddInstanceScreen extends HookConsumerWidget {
                 sliver: SliverList(
                   delegate: SliverChildListDelegate([
                     Padding(
-                      padding: const EdgeInsets.only(bottom: NextSpacing.xs),
+                      padding: const EdgeInsets.only(bottom: DgSpacing.xs),
                       child: Text(
                         "Add instance",
-                        style: NextText.h3.copyWith(
-                          color: NextColor.fgWhite100,
+                        style: DgText.h3.copyWith(
+                          color: DgColor.fgWhite100,
                         ),
                         textAlign: TextAlign.center,
                       ),
                     ),
                     Text(
                       "Scan QR code or add it manually.",
-                      style: NextText.bodySm400.copyWith(
-                        color: NextColor.fgWhite80,
+                      style: DgText.bodySm400.copyWith(
+                        color: DgColor.fgWhite80,
                       ),
                       textAlign: TextAlign.center,
                     ),
@@ -96,17 +96,17 @@ class AddInstanceScreen extends HookConsumerWidget {
                           padding: const EdgeInsets.symmetric(horizontal: 13),
                           child: Text(
                             "To connect this device to your Defguard instance, you need to add it to your Defguard profile, or if you are enrolling, the instance details should already be shown",
-                            style: NextText.bodyXs400.copyWith(
-                              color: NextColor.fgWhite60,
+                            style: DgText.bodyXs400.copyWith(
+                              color: DgColor.fgWhite60,
                             ),
                             textAlign: TextAlign.center,
                           ),
                         ),
-                        const SizedBox(height: NextSpacing.xl3),
-                        NextButton(
+                        const SizedBox(height: DgSpacing.xl3),
+                        DgButton(
                           text: "Scan QR Code",
-                          style: NextButtonStyle.primary,
-                          size: NextButtonSize.big,
+                          style: DgButtonStyle.primary,
+                          size: DgButtonSize.big,
                           width: double.infinity,
                           onTap: () async {
                             final isAgreed = await asyncPrefs.getBool(
@@ -137,11 +137,11 @@ class AddInstanceScreen extends HookConsumerWidget {
                             }
                           },
                         ),
-                        const SizedBox(height: NextSpacing.md),
-                        NextButton(
+                        const SizedBox(height: DgSpacing.md),
+                        DgButton(
                           text: "Add instance Manually",
-                          style: NextButtonStyle.secondary,
-                          size: NextButtonSize.big,
+                          style: DgButtonStyle.secondary,
+                          size: DgButtonSize.big,
                           width: double.infinity,
                           onTap: () async {
                             final isAgreed = await asyncPrefs.getBool(

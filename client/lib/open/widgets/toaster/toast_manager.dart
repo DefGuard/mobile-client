@@ -3,10 +3,10 @@ import "dart:async";
 import "package:flutter/widget_previews.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:material_ui/material_ui.dart";
-import "package:mobile/open/widgets/next/next_button.dart";
-import "package:mobile/open/widgets/toaster/next_toast.dart";
-import "package:mobile/theme/next/color.dart";
-import "package:mobile/theme/next/spacing.dart";
+import "package:mobile/open/widgets/dg_button.dart";
+import "package:mobile/open/widgets/toaster/dg_toast.dart";
+import "package:mobile/theme/color.dart";
+import "package:mobile/theme/spacing.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:uuid/uuid.dart";
 
@@ -104,8 +104,8 @@ class ToastPositioner extends ConsumerWidget {
       child: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(
-            horizontal: NextSpacing.md,
-            vertical: NextSpacing.md,
+            horizontal: DgSpacing.md,
+            vertical: DgSpacing.md,
           ),
           child: AnimatedSwitcher(
             duration: _animationDuration,
@@ -133,7 +133,7 @@ class ToastPositioner extends ConsumerWidget {
                     onTap: () => ref
                         .read(toastManagerProvider.notifier)
                         .remove(id: toast.id),
-                    child: NextToast(
+                    child: DgToast(
                       message: toast.message,
                       variant: toast.variant,
                     ),
@@ -162,7 +162,7 @@ class _ToastManagerPreview extends ConsumerWidget {
       body: Container(
         width: double.infinity,
         height: double.infinity,
-        decoration: const BoxDecoration(gradient: NextColor.gradientPrimary),
+        decoration: const BoxDecoration(gradient: DgColor.gradientPrimary),
         child: Stack(
           children: [
             SafeArea(
@@ -172,27 +172,27 @@ class _ToastManagerPreview extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     const Spacer(),
-                    NextButton(
+                    DgButton(
                       text: 'Spawn Primary',
-                      style: NextButtonStyle.secondary,
+                      style: DgButtonStyle.secondary,
                       onTap: () => toastManager.show(
                         message:
                             'Primary Toast: This is a primary toast message',
                       ),
                     ),
-                    const SizedBox(height: NextSpacing.md),
-                    NextButton(
+                    const SizedBox(height: DgSpacing.md),
+                    DgButton(
                       text: 'Spawn Success',
-                      style: NextButtonStyle.primary,
+                      style: DgButtonStyle.primary,
                       onTap: () => toastManager.showSuccess(
                         message:
                             'Success Toast: This is a success toast message',
                       ),
                     ),
-                    const SizedBox(height: NextSpacing.md),
-                    NextButton(
+                    const SizedBox(height: DgSpacing.md),
+                    DgButton(
                       text: 'Spawn Critical',
-                      style: NextButtonStyle.critical,
+                      style: DgButtonStyle.critical,
                       onTap: () => toastManager.showError(
                         message:
                             'Critical Toast: This is a critical toast message',

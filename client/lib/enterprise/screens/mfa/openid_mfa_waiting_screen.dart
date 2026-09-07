@@ -1,19 +1,19 @@
 import 'package:dio/dio.dart';
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:mobile/data/proxy/mfa.dart';
 import 'package:mobile/open/api.dart';
-import 'package:mobile/open/widgets/buttons/dg_button.dart';
-import 'package:mobile/open/widgets/icons/openid_wait.dart';
-import 'package:mobile/open/widgets/navigation/dg_scaffold.dart';
+import 'package:mobile/open/widgets/icons/dg_icon.dart';
+import 'package:mobile/open/widgets/dg_app_bar.dart';
+import 'package:mobile/open/widgets/dg_button.dart';
+import 'package:mobile/open/widgets/dg_icon_button.dart';
+import 'package:mobile/open/widgets/toaster/toast_manager.dart';
 import 'package:mobile/theme/color.dart';
-import 'package:mobile/theme/spacing.dart';
 import 'package:mobile/theme/text.dart';
 
-import '../../../../../logging.dart';
-import '../../../open/services/snackbar_service.dart';
-import '../../../utils/error_handler.dart';
+import 'package:mobile/logging.dart';
+import 'package:mobile/utils/error_handler.dart';
 
 class OpenIdMfaWaitingScreenData {
   final String proxyUrl;
@@ -25,24 +25,24 @@ class OpenIdMfaWaitingScreenData {
   });
 }
 
-final String _title = "Two-factor authentication";
-final String _mfaMsg = "Waiting for authentication in your browser...";
-final String _cancelMsg = "Cancel";
-final timeoutDuration = Duration(minutes: 2);
-
 class OpenIdMfaWaitingScreen extends HookConsumerWidget {
   final OpenIdMfaWaitingScreenData screenData;
 
   const OpenIdMfaWaitingScreen({super.key, required this.screenData});
 
-  Future<FinishMfaResponse?> _pollOpenidMfa() async {
+  Future<FinishMfaResponse?> _pollOpenidMfa(bool Function() isCancelled) async {
     final request = FinishMfaRequest(token: screenData.token);
     final uri = Uri.parse(screenData.proxyUrl);
 
     final startTime = DateTime.now();
+    const timeoutDuration = Duration(minutes: 2);
 
     while (true) {
-      // Check if timeout has been reached
+      if (isCancelled()) {
+        talker.debug("OpenID MFA polling cancelled");
+        return null;
+      }
+
       if (DateTime.now().difference(startTime) >= timeoutDuration) {
         talker.warning("OpenID MFA polling timed out after 2 minutes");
         return null;
@@ -64,7 +64,7 @@ class OpenIdMfaWaitingScreen extends HookConsumerWidget {
           } else {
             talker.debug("User did not complete openid browser login, waiting");
           }
-          await Future.delayed(Duration(seconds: 2));
+          await Future.delayed(const Duration(seconds: 2));
         } else {
           rethrow;
         }
@@ -75,82 +75,78 @@ class OpenIdMfaWaitingScreen extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final navigator = Navigator.of(context);
-    // Start polling automatically when screen opens
+    final route = ModalRoute.of(context);
+    final toaster = ref.read(toastManagerProvider.notifier);
+
     useEffect(() {
-      _pollOpenidMfa()
+      bool isGone() => route != null && !route.isActive;
+
+      _pollOpenidMfa(isGone)
           .then((finishMfaResponse) {
+            if (isGone()) return;
             if (finishMfaResponse == null) {
-              // Timeout occurred
-              SnackbarService.show(
-                "Authentication timed out. Please try again.",
-                textColor: DgColor.textAlert,
-                dismissable: true,
+              toaster.showError(
+                message: "Authentication timed out. Please try again.",
               );
               navigator.pop();
             } else {
-              // Return the preshared key when polling completes
               navigator.pop(finishMfaResponse.presharedKey);
             }
           })
           .catchError((error) {
-            talker.error("OpenID MFA polling error: $error");
-            final message = ErrorHandler.getHumanReadableError(error);
-            SnackbarService.show(
-              message,
-              textColor: DgColor.textAlert,
-              dismissable: true,
+            if (isGone()) return;
+            toaster.showError(
+              message: ErrorHandler.getHumanReadableError(error),
+              logMessage: "OpenID MFA polling error!",
+              error: error,
             );
             navigator.pop();
           });
+
       return null;
     }, []);
 
-    return DgScaffold(
-      title: _title,
-      child: SafeArea(
-        child: Padding(
-          padding: EdgeInsets.all(DgSpacing.l),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Expanded(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Center(
-                      child: Text(
-                        _title,
-                        style: DgText.body1,
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                    SizedBox(height: 32),
-                    Center(child: DgIconOpenidWait(size: 128)),
-                    SizedBox(height: 32),
-                    Text(
-                      _mfaMsg,
-                      style: DgText.modal1.copyWith(
-                        color: DgColor.textBodySecondary,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
+    return Container(
+      decoration: const BoxDecoration(gradient: DgColor.gradientPrimary),
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: DgAppBar(
+          context: context,
+          showLogo: false,
+          actionLeft: DgIconButton(
+            icon: 'arrow_small',
+            direction: DgIconDirection.left,
+            onTap: () => Navigator.of(context).maybePop(),
+          ),
+        ),
+        body: SafeArea(
+          child: Padding(
+            padding: .fromLTRB(20, 4, 20, 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "Two-factor authentication",
+                  style: DgText.h4.copyWith(color: DgColor.fgWhite100),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
-              ),
-              Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  DgButton(
-                    text: _cancelMsg,
-                    size: DgButtonSize.big,
-                    width: double.infinity,
-                    onTap: () {
-                      Navigator.of(context).pop();
-                    },
+                const SizedBox(height: 8),
+                Text(
+                  "Waiting for authentication in your browser...",
+                  style: DgText.bodyXs400.copyWith(
+                    color: DgColor.fgWhite60,
                   ),
-                ],
-              ),
-            ],
+                ),
+                const Spacer(),
+                DgButton(
+                  text: 'Cancel',
+                  style: DgButtonStyle.outlined,
+                  width: double.infinity,
+                  onTap: () => Navigator.of(context).pop(),
+                ),
+              ],
+            ),
           ),
         ),
       ),

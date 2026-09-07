@@ -5,16 +5,16 @@ import 'package:mobile/data/db/database.dart';
 import 'package:mobile/data/proxy/enrollment.dart';
 import 'package:mobile/open/api.dart';
 import 'package:mobile/open/screens/add_instance/screens/name_device_screen.dart';
-import 'package:mobile/open/widgets/next/icons/next_icon.dart';
-import 'package:mobile/open/widgets/next/next_app_bar.dart';
-import 'package:mobile/open/widgets/next/next_button.dart';
-import 'package:mobile/open/widgets/next/next_drawer.dart';
-import 'package:mobile/open/widgets/next/next_icon_button.dart';
-import 'package:mobile/open/widgets/next/next_text_form_field.dart';
+import 'package:mobile/open/widgets/icons/dg_icon.dart';
+import 'package:mobile/open/widgets/dg_app_bar.dart';
+import 'package:mobile/open/widgets/dg_button.dart';
+import 'package:mobile/open/widgets/dg_drawer.dart';
+import 'package:mobile/open/widgets/dg_icon_button.dart';
+import 'package:mobile/open/widgets/dg_text_form_field.dart';
 import 'package:mobile/router/routes.dart';
-import 'package:mobile/theme/next/color.dart';
-import 'package:mobile/theme/next/spacing.dart';
-import 'package:mobile/theme/next/text.dart';
+import 'package:mobile/theme/color.dart';
+import 'package:mobile/theme/spacing.dart';
+import 'package:mobile/theme/text.dart';
 
 import 'package:mobile/open/widgets/toaster/toast_manager.dart';
 
@@ -24,19 +24,19 @@ class AddInstanceFormScreen extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
-      drawer: const NextDrawer(),
+      drawer: const DgDrawer(),
       extendBodyBehindAppBar: true,
-      appBar: NextAppBar(
+      appBar: DgAppBar(
         context: context,
         showLogo: false,
-        actionLeft: NextIconButton(
+        actionLeft: DgIconButton(
           icon: "arrow_big",
-          direction: NextIconDirection.left,
+          direction: DgIconDirection.left,
           onTap: () => Navigator.of(context).pop(),
         ),
       ),
       body: Container(
-        decoration: const BoxDecoration(gradient: NextColor.gradientPrimary),
+        decoration: const BoxDecoration(gradient: DgColor.gradientPrimary),
         child: const SafeArea(child: _AddInstanceFormContent()),
       ),
     );
@@ -75,19 +75,19 @@ class _AddInstanceFormContent extends HookConsumerWidget {
               delegate: SliverChildListDelegate([
                 Text(
                   "Add Instance Manually",
-                  style: NextText.h4.copyWith(color: NextColor.fgWhite100),
+                  style: DgText.h4.copyWith(color: DgColor.fgWhite100),
                   textAlign: TextAlign.left,
                 ),
-                const SizedBox(height: NextSpacing.sm),
+                const SizedBox(height: DgSpacing.sm),
                 Text(
                   "Enter the token and URL provided by your system administrator. These details are required to securely connect your system and complete the setup.",
-                  style: NextText.bodySm400.copyWith(
-                    color: NextColor.fgWhite60,
+                  style: DgText.bodySm400.copyWith(
+                    color: DgColor.fgWhite60,
                   ),
                   textAlign: TextAlign.left,
                 ),
-                const SizedBox(height: NextSpacing.xl3),
-                NextTextFormField(
+                const SizedBox(height: DgSpacing.xl3),
+                DgTextFormField(
                   size: .big,
                   controller: urlController,
                   label: "URL",
@@ -96,8 +96,8 @@ class _AddInstanceFormContent extends HookConsumerWidget {
                   keyboardType: TextInputType.url,
                   validator: validateUrl,
                 ),
-                const SizedBox(height: NextSpacing.xl),
-                NextTextFormField(
+                const SizedBox(height: DgSpacing.xl),
+                DgTextFormField(
                   size: .big,
                   controller: tokenController,
                   label: "Token",
@@ -116,10 +116,10 @@ class _AddInstanceFormContent extends HookConsumerWidget {
               padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
               child: Align(
                 alignment: Alignment.bottomCenter,
-                child: NextButton(
+                child: DgButton(
                   text: "Continue",
-                  style: NextButtonStyle.primary,
-                  size: NextButtonSize.big,
+                  style: DgButtonStyle.primary,
+                  size: DgButtonSize.big,
                   width: double.infinity,
                   loading: isLoading.value,
                   onTap: () async {

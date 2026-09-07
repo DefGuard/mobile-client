@@ -13,8 +13,13 @@ part of 'instance_screen.dart';
 final _screenDataProvider = _ScreenDataFamily._();
 
 final class _ScreenDataProvider
-    extends $FunctionalProvider<AsyncValue<dynamic>, dynamic, Stream<dynamic>>
-    with $FutureModifier<dynamic>, $StreamProvider<dynamic> {
+    extends
+        $FunctionalProvider<
+          AsyncValue<_ScreenData?>,
+          _ScreenData?,
+          Stream<_ScreenData?>
+        >
+    with $FutureModifier<_ScreenData?>, $StreamProvider<_ScreenData?> {
   _ScreenDataProvider._({
     required _ScreenDataFamily super.from,
     required String super.argument,
@@ -38,11 +43,12 @@ final class _ScreenDataProvider
 
   @$internal
   @override
-  $StreamProviderElement<dynamic> $createElement($ProviderPointer pointer) =>
-      $StreamProviderElement(pointer);
+  $StreamProviderElement<_ScreenData?> $createElement(
+    $ProviderPointer pointer,
+  ) => $StreamProviderElement(pointer);
 
   @override
-  Stream<dynamic> create(Ref ref) {
+  Stream<_ScreenData?> create(Ref ref) {
     final argument = this.argument as String;
     return _screenData(ref, argument);
   }
@@ -58,10 +64,10 @@ final class _ScreenDataProvider
   }
 }
 
-String _$_screenDataHash() => r'79d7705496a191283ceebc7ee61560a7bdbc2fe4';
+String _$_screenDataHash() => r'9c86575e1095600075039e7ccebd8ddee491141b';
 
 final class _ScreenDataFamily extends $Family
-    with $FunctionalFamilyOverride<Stream<dynamic>, String> {
+    with $FunctionalFamilyOverride<Stream<_ScreenData?>, String> {
   _ScreenDataFamily._()
     : super(
         retry: null,
@@ -77,3 +83,36 @@ final class _ScreenDataFamily extends $Family
   @override
   String toString() => r'_screenDataProvider';
 }
+
+@ProviderFor(isSingleInstance)
+final isSingleInstanceProvider = IsSingleInstanceProvider._();
+
+final class IsSingleInstanceProvider
+    extends $FunctionalProvider<AsyncValue<bool>, bool, Stream<bool>>
+    with $FutureModifier<bool>, $StreamProvider<bool> {
+  IsSingleInstanceProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'isSingleInstanceProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$isSingleInstanceHash();
+
+  @$internal
+  @override
+  $StreamProviderElement<bool> $createElement($ProviderPointer pointer) =>
+      $StreamProviderElement(pointer);
+
+  @override
+  Stream<bool> create(Ref ref) {
+    return isSingleInstance(ref);
+  }
+}
+
+String _$isSingleInstanceHash() => r'42cc4e762c350ed0b350e02bdea373f52f40a1cb';

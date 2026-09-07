@@ -7,11 +7,11 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mobile/data/db/database.dart';
 import 'package:mobile/data/proxy/mfa.dart';
 import 'package:mobile/open/api.dart';
-import 'package:mobile/open/widgets/next/next_qr_scanner.dart';
+import 'package:mobile/open/widgets/dg_qr_scanner.dart';
 import 'package:mobile/router/routes.dart';
 import 'package:mobile/utils/secure_storage.dart';
 
-import '../../../logging.dart';
+import 'package:mobile/logging.dart';
 import 'package:mobile/open/widgets/toaster/toast_manager.dart';
 
 class RemoteMfaQrScreenData {
@@ -36,7 +36,7 @@ class RemoteMfaQrScreen extends HookConsumerWidget {
 
     return Scaffold(
       backgroundColor: Colors.black,
-      body: NextQrScanner<RemoteMfaQr>(
+      body: DgQrScanner<RemoteMfaQr>(
         description: description,
         loading: isLoading.value,
         onCancel: () => Navigator.of(context).pop(),
