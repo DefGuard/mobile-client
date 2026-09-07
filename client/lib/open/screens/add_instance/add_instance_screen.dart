@@ -1,6 +1,6 @@
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:mobile/open/screens/add_instance/data_gathering_dialog.dart';
 import 'package:mobile/open/widgets/next/icons/next_icon.dart';
 import 'package:mobile/open/widgets/next/next_app_bar.dart';
@@ -15,8 +15,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../theme/next/color.dart';
 import '../../../theme/next/spacing.dart';
-
-final agreementPrefsKey = "DATA_GATHERING_AGREEMENT";
 
 class AddInstanceScreen extends HookConsumerWidget {
   const AddInstanceScreen({super.key});

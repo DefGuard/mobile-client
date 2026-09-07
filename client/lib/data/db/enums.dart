@@ -13,7 +13,7 @@ enum RoutingMethod {
       case RoutingMethod.all:
         return "All Traffic";
       case RoutingMethod.predefined:
-        return "Predefined Traffic";
+        return "Predefined";
     }
   }
 }
