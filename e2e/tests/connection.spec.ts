@@ -11,6 +11,7 @@ import {
 	disconnect,
 	waitForInstanceScreen,
 } from "../helpers/instance.js";
+import { gatewayVpnIp, pingGateway } from "../helpers/tunnel.js";
 
 describe("vpn connection", () => {
 	let core: CoreApi;
@@ -30,7 +31,8 @@ describe("vpn connection", () => {
 		}
 	});
 
-	it("connects to a location and disconnects again", async () => {
+	it("connects to a location and reaches the gateway through the tunnel", async () => {
+		const gateway = gatewayVpnIp();
 		previousMfaMode = await core.setLocationMfaMode(networkId, "disabled");
 		fixture = await core.createEnrollmentFixture();
 
@@ -39,8 +41,10 @@ describe("vpn connection", () => {
 
 		await connectFirstLocation();
 		await expect($("~location_disconnect_button")).toBeDisplayed();
+		await expect(await pingGateway(gateway)).toBe(true);
 
 		await disconnect();
 		await expect($("~location_connect_button")).toBeDisplayed();
+		await expect(await pingGateway(gateway)).toBe(false);
 	});
 });

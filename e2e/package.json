@@ -4,6 +4,7 @@
 	"version": "1.0.0",
 	"type": "module",
 	"scripts": {
+		"build:ios": "cd ../client && flutter build ipa --export-method development --dart-define=E2E=true",
 		"test:ios": "wdio run ./wdio.ios.conf.ts",
 		"appium:setup": "APPIUM_HOME=$HOME/.appium appium driver install xcuitest",
 		"appium:doctor": "APPIUM_HOME=$HOME/.appium appium driver doctor xcuitest"

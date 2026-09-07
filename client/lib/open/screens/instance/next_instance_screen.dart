@@ -20,6 +20,7 @@ import 'package:mobile/open/widgets/next/next_app_bar.dart';
 import 'package:mobile/open/widgets/next/next_bottom_sheet.dart';
 import 'package:mobile/open/widgets/next/next_drawer.dart';
 import 'package:mobile/open/widgets/next/next_location_card.dart';
+import 'package:mobile/e2e/ping_tool.dart';
 import 'package:mobile/open/widgets/next/next_menu.dart';
 import 'package:mobile/open/widgets/toaster/toast_manager.dart';
 import 'package:mobile/plugin.dart';
@@ -577,6 +578,7 @@ class _LocationList extends HookConsumerWidget {
             ),
           ),
         ],
+        if (e2eToolsEnabled) const E2ePingTool(),
       ],
     );
   }
