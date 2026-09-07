@@ -121,10 +121,14 @@ class NextLocationCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: NextSpacing.lg),
-          NextMainCta(
-            text: "Disconnect",
-            connected: false,
-            onTap: onDisconnectTap,
+          Semantics(
+            identifier: "location_disconnect_button",
+            container: true,
+            child: NextMainCta(
+              text: "Disconnect",
+              connected: false,
+              onTap: onDisconnectTap,
+            ),
           ),
         ],
       ),
@@ -179,13 +183,17 @@ class NextLocationCard extends StatelessWidget {
               ],
             ),
           ),
-          NextButton(
-            text: "Connect",
-            onTap: onConnectTap,
-            loading: loading,
-            size: NextButtonSize.big,
-            style: NextButtonStyle.secondary,
-            height: 36,
+          Semantics(
+            identifier: "location_connect_button",
+            container: true,
+            child: NextButton(
+              text: "Connect",
+              onTap: onConnectTap,
+              loading: loading,
+              size: NextButtonSize.big,
+              style: NextButtonStyle.secondary,
+              height: 36,
+            ),
           ),
         ],
       ),

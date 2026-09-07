@@ -80,9 +80,12 @@ class NextInstancesListScreen extends HookConsumerWidget {
           ),
         ),
         actionRight: [
-          NextIconButton(
-            icon: "plus",
-            onTap: () => const AddInstanceScreenRoute().push(context),
+          Semantics(
+            identifier: "add_instance_button",
+            child: NextIconButton(
+              icon: "plus",
+              onTap: () => const AddInstanceScreenRoute().push(context),
+            ),
           ),
         ],
       ),

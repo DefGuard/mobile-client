@@ -386,9 +386,12 @@ class _InstanceAppBar extends ConsumerWidget implements PreferredSizeWidget {
           },
           child: CompositedTransformTarget(
             link: actionsLayerLink,
-            child: NextIconButton(
-              icon: "menu",
-              onTap: actionsController.toggle,
+            child: Semantics(
+              identifier: "instance_actions_menu",
+              child: NextIconButton(
+                icon: "menu",
+                onTap: actionsController.toggle,
+              ),
             ),
           ),
         ),
