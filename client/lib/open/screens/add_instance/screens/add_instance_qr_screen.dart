@@ -8,10 +8,10 @@ import 'package:mobile/data/proxy/enrollment.dart';
 import 'package:mobile/data/proxy/qr_register.dart';
 import 'package:mobile/open/api.dart';
 import 'package:mobile/open/screens/add_instance/screens/name_device_screen.dart';
-import 'package:mobile/open/widgets/next/next_qr_scanner.dart';
+import 'package:mobile/open/widgets/dg_qr_scanner.dart';
 import 'package:mobile/router/routes.dart';
 
-import '../../../../logging.dart';
+import 'package:mobile/logging.dart';
 import 'package:mobile/open/widgets/toaster/toast_manager.dart';
 
 class AddInstanceQrScreen extends HookConsumerWidget {
@@ -27,7 +27,7 @@ class AddInstanceQrScreen extends HookConsumerWidget {
 
     return Scaffold(
       backgroundColor: Colors.black,
-      body: NextQrScanner<QrInstanceRegistration>(
+      body: DgQrScanner<QrInstanceRegistration>(
         description: description,
         loading: isLoading.value,
         onCancel: () => Navigator.of(context).pop(),

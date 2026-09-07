@@ -2,12 +2,11 @@ import 'package:material_ui/material_ui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mobile/data/db/database.dart';
 import 'package:mobile/open/widgets/toaster/toast_manager.dart';
-import 'package:mobile/open/widgets/next/icons/next_icon.dart';
-import 'package:mobile/open/widgets/next/next_button.dart';
-import 'package:mobile/open/widgets/next/next_dialog.dart';
-import 'package:mobile/theme/next/spacing.dart';
-
-import '../../../../theme/next/color.dart';
+import 'package:mobile/open/widgets/icons/dg_icon.dart';
+import 'package:mobile/open/widgets/dg_button.dart';
+import 'package:mobile/open/widgets/dg_dialog.dart';
+import 'package:mobile/theme/color.dart';
+import 'package:mobile/theme/spacing.dart';
 
 class DeleteInstanceDialog extends HookConsumerWidget {
   final DefguardInstance instance;
@@ -42,25 +41,25 @@ class DeleteInstanceDialog extends HookConsumerWidget {
       }
     }
 
-    return NextDialog(
+    return DgDialog(
       onClose: () => Navigator.of(context).pop(),
       children: [
-        NextIcon("dialog_warning", size: 40, color: NextColor.fgWhite100),
-        const SizedBox(height: NextSpacing.xl2),
-        const NextDialogTitle("Delete instance"),
-        NextDialogDescription(warningText),
-        NextButton(
+        DgIcon("dialog_warning", size: 40, color: DgColor.fgWhite100),
+        const SizedBox(height: DgSpacing.xl2),
+        const DgDialogTitle("Delete instance"),
+        DgDialogDescription(warningText),
+        DgButton(
           text: "Delete instance",
-          style: NextButtonStyle.critical,
-          size: NextButtonSize.big,
+          style: DgButtonStyle.critical,
+          size: DgButtonSize.big,
           width: double.infinity,
           onTap: () => deleteInstance(context),
         ),
-        const SizedBox(height: NextSpacing.md),
-        NextButton(
+        const SizedBox(height: DgSpacing.md),
+        DgButton(
           text: "Cancel",
-          style: NextButtonStyle.secondary,
-          size: NextButtonSize.big,
+          style: DgButtonStyle.secondary,
+          size: DgButtonSize.big,
           width: double.infinity,
           onTap: () => Navigator.of(context).pop(),
         ),

@@ -1,24 +1,19 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:go_router/go_router.dart';
-import 'package:mobile/enterprise/screens/mfa/openid_mfa_screen.dart';
-import 'package:mobile/enterprise/screens/mfa/openid_mfa_waiting_screen.dart';
 import 'package:mobile/open/screens/add_instance/add_instance_screen.dart';
 import 'package:mobile/open/screens/add_instance/screens/add_instance_form.dart';
 import 'package:mobile/open/screens/add_instance/screens/add_instance_qr_screen.dart';
-import 'package:mobile/open/screens/add_instance/screens/biometry/next_biometry_finish_screen.dart';
-import 'package:mobile/open/screens/add_instance/screens/biometry/next_biometry_setup_failed_screen.dart';
-import 'package:mobile/open/screens/add_instance/screens/biometry/next_biometry_setup_screen.dart';
+import 'package:mobile/open/screens/add_instance/screens/biometry/biometry_finish_screen.dart';
+import 'package:mobile/open/screens/add_instance/screens/biometry/biometry_setup_failed_screen.dart';
+import 'package:mobile/open/screens/add_instance/screens/biometry/biometry_setup_screen.dart';
 import 'package:mobile/open/screens/add_instance/screens/name_device_screen.dart';
-import 'package:mobile/open/screens/instances_list/next_instances_list_screen.dart';
-import 'package:mobile/open/screens/mfa/mfa_code_screen.dart';
+import 'package:mobile/open/screens/instances_list/instances_list_screen.dart';
 import 'package:mobile/open/screens/mfa/remote_mfa_qr_screen.dart';
-import 'package:mobile/enterprise/screens/mfa/next/next_mfa_openid_screen.dart';
-import 'package:mobile/enterprise/screens/mfa/next/next_mfa_openid_waiting_screen.dart';
 import 'package:mobile/open/screens/splash.dart';
 import 'package:talker_flutter/talker_flutter.dart';
 
 import '../logging.dart';
-import '../open/screens/instance/next_instance_screen.dart';
+import 'package:mobile/open/screens/instance/instance_screen.dart';
 
 part 'routes.g.dart';
 
@@ -41,7 +36,7 @@ class InstancesListScreenRoute extends GoRouteData
 
   @override
   Widget build(BuildContext context, GoRouterState state) {
-    return const NextInstancesListScreen();
+    return const InstancesListScreen();
   }
 }
 
@@ -86,7 +81,7 @@ class InstanceScreenRoute extends GoRouteData with $InstanceScreenRoute {
 
   @override
   Widget build(BuildContext context, GoRouterState state) {
-    return NextInstanceScreen(key: ValueKey(id), id: id);
+    return InstanceScreen(key: ValueKey(id), id: id);
   }
 }
 
@@ -133,46 +128,6 @@ class TalkerScreenRoute extends GoRouteData with $TalkerScreenRoute {
   }
 }
 
-@TypedGoRoute<OpenIdMfaScreenRoute>(path: "/mfa/openid")
-@immutable
-class OpenIdMfaScreenRoute extends GoRouteData with $OpenIdMfaScreenRoute {
-  const OpenIdMfaScreenRoute(this.$extra);
-
-  final OpenIdMfaScreenData $extra;
-
-  @override
-  Widget build(BuildContext context, GoRouterState state) {
-    return NextOpenIdMfaScreen(screenData: $extra);
-  }
-}
-
-@TypedGoRoute<OpenIdMfaWaitingScreenRoute>(path: "/mfa/openid/waiting")
-@immutable
-class OpenIdMfaWaitingScreenRoute extends GoRouteData
-    with $OpenIdMfaWaitingScreenRoute {
-  const OpenIdMfaWaitingScreenRoute(this.$extra);
-
-  final OpenIdMfaWaitingScreenData $extra;
-
-  @override
-  Widget build(BuildContext context, GoRouterState state) {
-    return NextOpenIdMfaWaitingScreen(screenData: $extra);
-  }
-}
-
-@TypedGoRoute<MfaCodeScreenRoute>(path: "/mfa/code")
-@immutable
-class MfaCodeScreenRoute extends GoRouteData with $MfaCodeScreenRoute {
-  const MfaCodeScreenRoute(this.$extra);
-
-  final MfaCodeScreenData $extra;
-
-  @override
-  Widget build(BuildContext context, GoRouterState state) {
-    return MfaCodeScreen(screenData: $extra);
-  }
-}
-
 @immutable
 class BiometrySetupScreenRoute extends GoRouteData
     with $BiometrySetupScreenRoute {
@@ -182,7 +137,7 @@ class BiometrySetupScreenRoute extends GoRouteData
 
   @override
   Widget build(BuildContext context, GoRouterState state) {
-    return NextBiometrySetupScreen(instanceId: int.parse(id));
+    return BiometrySetupScreen(instanceId: int.parse(id));
   }
 }
 
@@ -195,7 +150,7 @@ class BiometrySetupFailedScreenRoute extends GoRouteData
 
   @override
   Widget build(BuildContext context, GoRouterState state) {
-    return NextBiometrySetupFailedScreen(instanceId: id);
+    return BiometrySetupFailedScreen(instanceId: id);
   }
 }
 
@@ -208,6 +163,6 @@ class BiometryFinishScreenRoute extends GoRouteData
 
   @override
   Widget build(BuildContext context, GoRouterState state) {
-    return NextBiometryFinishScreen(instanceId: id);
+    return BiometryFinishScreen(instanceId: id);
   }
 }

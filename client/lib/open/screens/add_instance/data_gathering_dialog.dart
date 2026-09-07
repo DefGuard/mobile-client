@@ -1,7 +1,7 @@
 import 'package:material_ui/material_ui.dart';
-import 'package:mobile/open/widgets/next/next_button.dart';
-import 'package:mobile/open/widgets/next/next_dialog.dart';
-import 'package:mobile/theme/next/spacing.dart';
+import 'package:mobile/open/widgets/dg_button.dart';
+import 'package:mobile/open/widgets/dg_dialog.dart';
+import 'package:mobile/theme/spacing.dart';
 
 const agreementPrefsKey = "DATA_GATHERING_AGREEMENT";
 
@@ -13,25 +13,25 @@ class DataGatheringDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return NextDialog(
+    return DgDialog(
       onClose: () => Navigator.of(context).pop(false),
       children: [
-        const NextDialogTitle("Data gathering"),
-        const NextDialogDescription(noticeMessage),
-        NextButton(
+        const DgDialogTitle("Data gathering"),
+        const DgDialogDescription(noticeMessage),
+        DgButton(
           text: "I Understand",
-          style: NextButtonStyle.primary,
-          size: NextButtonSize.big,
+          style: DgButtonStyle.primary,
+          size: DgButtonSize.big,
           width: double.infinity,
           onTap: () {
             Navigator.of(context).pop(true);
           },
         ),
-        const SizedBox(height: NextSpacing.md),
-        NextButton(
+        const SizedBox(height: DgSpacing.md),
+        DgButton(
           text: "Decline",
-          style: NextButtonStyle.secondary,
-          size: NextButtonSize.big,
+          style: DgButtonStyle.secondary,
+          size: DgButtonSize.big,
           width: double.infinity,
           onTap: () {
             Navigator.of(context).pop(false);

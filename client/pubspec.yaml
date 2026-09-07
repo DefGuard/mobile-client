@@ -36,32 +36,32 @@ dependencies:
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
-  go_router: ^18.0.0
-  flutter_riverpod: ^3.4.2
-  riverpod_annotation: ^4.0.6
-  hooks_riverpod: ^3.4.2
+  go_router: ^18.0.1
+  flutter_riverpod: ^3.4.3
+  riverpod_annotation: ^4.0.7
+  hooks_riverpod: ^3.4.3
   flutter_hooks: ^0.21.2
-  json_annotation: ^4.9.0
-  drift: ^2.26.1
+  json_annotation: ^4.12.0
+  drift: ^2.34.4
   drift_flutter: ^0.3.1
   path_provider: ^2.1.5
   http: ^1.4.0
   path: ^1.9.1
   cookie_jar: ^4.0.8
-  dio: ^5.8.0+1
+  dio: ^5.11.1
   dio_cookie_manager: ^3.2.0
   native_dio_adapter: ^1.3.0
   flutter_native_splash: ^2.4.6
   flutter_launcher_icons: ^0.14.4
   flutter_svg: ^2.1.0
   app_links: ^7.0.0
-  permission_handler: ^13.0.0
+  permission_handler: ^13.0.2
   mobile_scanner: ^7.0.1
   rxdart: ^0.28.0
-  talker: ^4.9.1
-  talker_flutter: ^4.9.1
-  talker_dio_logger: ^4.9.1
-  package_info_plus: ^9.0.1
+  talker: ^5.1.20
+  talker_flutter: ^5.1.20
+  talker_dio_logger: ^5.1.20
+  package_info_plus: ^10.2.1
   flutter_animate: ^4.5.2
   collection: ^1.19.1
   url_launcher: ^6.3.2
@@ -74,24 +74,24 @@ dependencies:
   local_auth: ^3.0.2
   pub_semver: ^2.2.0
   shared_preferences: ^2.5.3
-  flutter_secure_storage: ^10.3.1
-  device_info_plus: ^12.4.0
+  flutter_secure_storage: ^11.0.0
+  device_info_plus: ^13.2.0
   protobuf: ^6.0.0
   rive: ^0.14.11
 
-  material_ui: ^1.1.0
-  cupertino_ui: ^1.0.1
+  material_ui: ^1.1.1
+  cupertino_ui: ^1.0.2
 dev_dependencies:
   flutter_test:
     sdk: flutter
 
   flutter_lints: ^6.0.0
-  go_router_builder: ^4.4.0
-  build_runner: ^2.15.1
+  go_router_builder: ^4.5.0
+  build_runner: ^2.16.1
   build_verify: ^3.1.0
-  riverpod_generator: ^4.0.8
+  riverpod_generator: ^4.0.9
   json_serializable: ^6.11.2
-  drift_dev: ^2.26.1
+  drift_dev: ^2.34.6
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -104,31 +104,12 @@ flutter:
   uses-material-design: true
 
   assets:
-    - assets/icons/
     - assets/next/icons/
     - assets/next/img/
     - assets/next/rive/
     - assets/splash/
 
   fonts:
-    - family: Roboto
-      fonts:
-        - asset: assets/fonts/roboto-400.ttf
-          weight: 400
-        - asset: assets/fonts/roboto-500.ttf
-          weight: 500
-        - asset: assets/fonts/roboto-600.ttf
-          weight: 600
-    - family: Poppins
-      fonts:
-        - asset: assets/fonts/poppins-300.ttf
-          weight: 300
-        - asset: assets/fonts/poppins-400.ttf
-          weight: 400
-        - asset: assets/fonts/poppins-500.ttf
-          weight: 500
-        - asset: assets/fonts/poppins-600.ttf
-          weight: 600
     - family: Geist
       fonts:
         - asset: assets/fonts/geist-300.ttf
@@ -139,9 +120,16 @@ flutter:
           weight: 500
         - asset: assets/fonts/geist-600.ttf
           weight: 600
-    - family: JetBrainsMono
+    # Roboto is kept even though no Dart code names it: Flutter's Android
+    # typography asks for "Roboto" by name for default-styled text.
+    - family: Roboto
       fonts:
-        - asset: assets/fonts/jetbrains-regular.ttf
+        - asset: assets/fonts/roboto-400.ttf
+          weight: 400
+        - asset: assets/fonts/roboto-500.ttf
+          weight: 500
+        - asset: assets/fonts/roboto-600.ttf
+          weight: 600
   # To add assets to your application, add an assets section, like this:
   # assets:
   #   - images/a_dot_burr.jpeg

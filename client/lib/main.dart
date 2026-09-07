@@ -1,9 +1,10 @@
-import 'package:material_ui/material_ui.dart';
+import 'package:flutter/cupertino.dart' as flutter_cupertino;
+import 'package:flutter/material.dart' as flutter_material;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:mobile/enterprise/config_update.dart';
 import 'package:mobile/open/riverpod/biometrics_state.dart';
 import 'package:mobile/open/riverpod/router/router.dart';
-import 'package:mobile/open/services/snackbar_service.dart';
 import 'package:mobile/open/widgets/toaster/toaster_provider.dart';
 import 'package:mobile/plugin.dart';
 import 'package:mobile/theme.dart';
@@ -30,10 +31,14 @@ class _App extends ConsumerWidget {
     final router = ref.watch(routerProvider);
 
     return MaterialApp.router(
-      scaffoldMessengerKey: SnackbarService.messengerKey,
       routerConfig: router,
       theme: defguardThemeData,
       debugShowCheckedModeBanner: false,
+      localizationsDelegates: const [
+        flutter_material.DefaultMaterialLocalizations.delegate,
+        flutter_cupertino.DefaultCupertinoLocalizations.delegate,
+        flutter_material.DefaultWidgetsLocalizations.delegate,
+      ],
       builder: (context, child) => ToasterProvider(child: child),
     );
   }
