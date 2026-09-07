@@ -1,64 +1,43 @@
 import 'package:material_ui/material_ui.dart';
-import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:mobile/open/widgets/buttons/dg_button.dart';
-import 'package:mobile/open/widgets/dg_dialog.dart';
-import 'package:mobile/theme/text.dart';
+import 'package:mobile/open/widgets/next/next_button.dart';
+import 'package:mobile/open/widgets/next/next_dialog.dart';
+import 'package:mobile/theme/next/spacing.dart';
 
-final noticeMessage =
+const agreementPrefsKey = "DATA_GATHERING_AGREEMENT";
+
+const noticeMessage =
     "This app connects your device to your organisation’s private Defguard instance. Defguard (the app developer) does not collect or store your data - only your organisation controls it. Diagnostic logs stay on your device only.";
 
-class DataGatheringDialog extends HookConsumerWidget {
+class DataGatheringDialog extends StatelessWidget {
   const DataGatheringDialog({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return DgDialog(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Center(
-            child: Text(
-              "Data gathering",
-              style: DgText.sideBar,
-              textAlign: TextAlign.center,
-            ),
-          ),
-          SizedBox(height: 8),
-          Text(
-            noticeMessage,
-            style: DgText.copyright,
-            textAlign: TextAlign.center,
-          ),
-          SizedBox(height: 20),
-          Padding(
-            padding: EdgeInsetsGeometry.symmetric(vertical: 0, horizontal: 20),
-            child: DgButton(
-              text: "I Understand",
-              textStyle: DgText.buttonXS,
-              size: DgButtonSize.standard,
-              variant: DgButtonVariant.primary,
-              width: double.infinity,
-              onTap: () {
-                Navigator.of(context).pop(true);
-              },
-            ),
-          ),
-          SizedBox(height: 12),
-          Padding(
-            padding: EdgeInsetsGeometry.symmetric(vertical: 0, horizontal: 20),
-            child: DgButton(
-              text: "Decline",
-              textStyle: DgText.buttonXS,
-              size: DgButtonSize.standard,
-              variant: DgButtonVariant.primary,
-              width: double.infinity,
-              onTap: () {
-                Navigator.of(context).pop(false);
-              },
-            ),
-          ),
-        ],
-      ),
+  Widget build(BuildContext context) {
+    return NextDialog(
+      onClose: () => Navigator.of(context).pop(false),
+      children: [
+        const NextDialogTitle("Data gathering"),
+        const NextDialogDescription(noticeMessage),
+        NextButton(
+          text: "I Understand",
+          style: NextButtonStyle.primary,
+          size: NextButtonSize.big,
+          width: double.infinity,
+          onTap: () {
+            Navigator.of(context).pop(true);
+          },
+        ),
+        const SizedBox(height: NextSpacing.md),
+        NextButton(
+          text: "Decline",
+          style: NextButtonStyle.secondary,
+          size: NextButtonSize.big,
+          width: double.infinity,
+          onTap: () {
+            Navigator.of(context).pop(false);
+          },
+        ),
+      ],
     );
   }
 }

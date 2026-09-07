@@ -4,11 +4,11 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:mobile/data/db/database.dart';
-import 'package:mobile/utils/instance_secrets.dart';
 import 'package:mobile/data/plugin/plugin.dart';
 import 'package:mobile/open/api.dart';
 import 'package:mobile/open/riverpod/biometrics_state.dart';
 import 'package:mobile/open/riverpod/plugin/plugin.dart';
+import 'package:mobile/open/screens/add_instance/data_gathering_dialog.dart';
 import 'package:mobile/open/screens/instance/services/tunnel_service.dart';
 import 'package:mobile/open/screens/instance/widgets/connection_conflict_dialog.dart';
 import 'package:mobile/open/screens/instance/widgets/delete_instance_dialog.dart';
@@ -27,8 +27,10 @@ import 'package:mobile/router/routes.dart';
 import 'package:mobile/theme/next/color.dart';
 import 'package:mobile/theme/next/spacing.dart';
 import 'package:mobile/theme/next/text.dart';
+import 'package:mobile/utils/instance_secrets.dart';
 import 'package:mobile/utils/update_instance.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wireguard_plugin/wireguard_plugin.dart';
 
 import '../../../logging.dart';
@@ -415,6 +417,7 @@ class _LocationList extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final loadingLocationId = useState<int?>(null);
     final toaster = ref.read(toastManagerProvider.notifier);
+    final asyncPrefs = useMemoized(() => SharedPreferencesAsync(), []);
 
     Future<void> onDisconnect(Location location) async {
       try {
@@ -428,6 +431,22 @@ class _LocationList extends HookConsumerWidget {
     Future<void> onConnect(BuildContext context, Location location) async {
       loadingLocationId.value = location.id;
       try {
+        final isAgreed = await asyncPrefs.getBool(agreementPrefsKey);
+        if (!context.mounted) return;
+        if (!(isAgreed ?? false)) {
+          final dialogResult = await showDialog<bool>(
+            context: context,
+            builder: (_) => const DataGatheringDialog(),
+          );
+          if (dialogResult ?? false) {
+            await asyncPrefs.setBool(agreementPrefsKey, true);
+          } else {
+            return;
+          }
+        }
+
+        if (!context.mounted) return;
+
         if (activeTunnel != null) {
           final bool? changeConnection = await showDialog<bool>(
             context: context,
