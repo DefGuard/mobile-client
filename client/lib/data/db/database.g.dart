@@ -2050,7 +2050,7 @@ class $$DefguardInstancesTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<$DefguardInstancesTable, DefguardInstance>(table),
                   $$DefguardInstancesTableReferences(db, table, e),
                 ),
               )
@@ -2559,7 +2559,7 @@ class $$LocationsTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<$LocationsTable, Location>(table),
                   $$LocationsTableReferences(db, table, e),
                 ),
               )
