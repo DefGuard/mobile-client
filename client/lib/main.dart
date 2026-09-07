@@ -1,5 +1,7 @@
-import 'package:material_ui/material_ui.dart';
+import 'package:flutter/cupertino.dart' as flutter_cupertino;
+import 'package:flutter/material.dart' as flutter_material;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:mobile/enterprise/config_update.dart';
 import 'package:mobile/open/riverpod/biometrics_state.dart';
 import 'package:mobile/open/riverpod/router/router.dart';
@@ -32,6 +34,11 @@ class _App extends ConsumerWidget {
       routerConfig: router,
       theme: defguardThemeData,
       debugShowCheckedModeBanner: false,
+      localizationsDelegates: const [
+        flutter_material.DefaultMaterialLocalizations.delegate,
+        flutter_cupertino.DefaultCupertinoLocalizations.delegate,
+        flutter_material.DefaultWidgetsLocalizations.delegate,
+      ],
       builder: (context, child) => ToasterProvider(child: child),
     );
   }
