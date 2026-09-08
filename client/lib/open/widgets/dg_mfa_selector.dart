@@ -1,9 +1,9 @@
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter/widget_previews.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:mobile/data/db/enums.dart';
-import 'package:mobile/open/widgets/icons/dg_icon.dart';
 import 'package:mobile/open/widgets/dg_preview_wrapper.dart';
 import 'package:mobile/open/widgets/dg_radio_indicator.dart';
+import 'package:mobile/open/widgets/icons/dg_icon.dart';
 import 'package:mobile/theme/color.dart';
 import 'package:mobile/theme/spacing.dart';
 import 'package:mobile/theme/text.dart';
@@ -104,7 +104,7 @@ class DgMfaSelector extends StatelessWidget {
         duration: duration,
         curve: curve,
         constraints: BoxConstraints(minHeight: 44),
-        padding: const EdgeInsets.fromLTRB(16, 8, 12, 8),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
           color: active ? DgColor.bgWhite10 : Colors.transparent,
           borderRadius: BorderRadius.circular(12),
@@ -117,20 +117,28 @@ class DgMfaSelector extends StatelessWidget {
           builder: (context, color, child) {
             final effectiveColor = color ?? contentColor;
             return Row(
-              mainAxisSize: MainAxisSize.min,
               spacing: DgSpacing.md,
               children: [
                 DgIcon(getIcon, size: 20, color: effectiveColor),
-                Flexible(
-                  child: Text(
-                    getLabel,
-                    style: DgText.bodySm400.copyWith(color: effectiveColor),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                Expanded(
+                  child: Row(
+                    spacing: DgSpacing.md,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Flexible(
+                        child: Text(
+                          getLabel,
+                          style: DgText.bodySm400.copyWith(
+                            color: effectiveColor,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      if (isDefault) const _DefaultBadge(),
+                    ],
                   ),
                 ),
-                if (isDefault) const _DefaultBadge(),
-                const Spacer(),
                 _Trailing(trailing: trailing, active: active),
               ],
             );
