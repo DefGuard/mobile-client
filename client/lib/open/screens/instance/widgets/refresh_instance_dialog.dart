@@ -108,7 +108,6 @@ class RefreshInstanceDialog extends HookConsumerWidget {
                     if (context.mounted) {
                       Navigator.of(context).pop();
                     }
-                  } catch (e) {
                   } finally {
                     isLoading.value = false;
                   }
