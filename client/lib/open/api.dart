@@ -5,6 +5,7 @@ import 'package:cookie_jar/cookie_jar.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:dio/dio.dart';
 import 'package:dio_cookie_manager/dio_cookie_manager.dart';
+import 'package:flutter/foundation.dart';
 import 'package:mobile/data/db/enums.dart';
 import 'package:mobile/data/proto/client_platform_info.pb.dart';
 import 'package:mobile/data/proxy/config.dart';
@@ -13,7 +14,7 @@ import 'package:mobile/data/proxy/mfa.dart';
 import 'package:mobile/enterprise/postures.dart';
 import 'package:native_dio_adapter/native_dio_adapter.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import 'package:talker_dio_logger/talker_dio_logger_interceptor.dart';
+import 'package:talker_dio_logger/talker_dio_logger.dart';
 
 import '../logging.dart';
 
@@ -59,7 +60,15 @@ class _ProxyApi {
     _dio.httpClientAdapter = NativeAdapter();
     final cookieJar = CookieJar();
     _dio.interceptors.add(CookieManager(cookieJar));
-    _dio.interceptors.add(TalkerDioLogger(talker: talker));
+    _dio.interceptors.add(
+      TalkerDioLogger(
+        talker: talker,
+        settings: TalkerDioLoggerSettings(
+          printResponseData: !kReleaseMode,
+          printErrorData: !kReleaseMode,
+        ),
+      ),
+    );
     _initHeaders();
   }
 

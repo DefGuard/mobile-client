@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:collection/collection.dart';
 import 'package:drift/drift.dart';
 import 'package:mobile/data/db/enums.dart';
 import 'package:mobile/data/mfa/mfa_method_api.dart';
@@ -53,10 +54,12 @@ class MfaStep {
 
   @override
   bool operator ==(Object other) =>
-      other is MfaStep && encodeMfaSteps([other]) == encodeMfaSteps([this]);
+      identical(this, other) ||
+      (other is MfaStep &&
+          const ListEquality<MfaStepMethod>().equals(methods, other.methods));
 
   @override
-  int get hashCode => encodeMfaSteps([this]).hashCode;
+  int get hashCode => const ListEquality<MfaStepMethod>().hash(methods);
 }
 
 /// Both sides of every steps comparison come from this encoder, so its output

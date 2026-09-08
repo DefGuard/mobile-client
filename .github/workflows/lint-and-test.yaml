@@ -58,6 +58,32 @@ jobs:
       - name: run lint
         run: flutter analyze
 
+  flutter-test:
+    name: Run Flutter tests
+    runs-on: [self-hosted, Linux, X64]
+    needs: lint
+    defaults:
+      run:
+        working-directory: ./client
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          submodules: "recursive"
+
+      - name: setup flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.47.2
+
+      - name: get deps
+        run: flutter pub get
+
+      - name: run tests
+        run: flutter test
+
   # test-ios:
   #   name: Run iOS tests
   #   runs-on: [self-hosted, macOS, native]
