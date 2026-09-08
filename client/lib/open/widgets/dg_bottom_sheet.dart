@@ -59,6 +59,9 @@ class DgBottomSheet extends StatelessWidget {
         child: Container(
           width: double.infinity,
           color: backgroundColor ?? DgColor.bgDarkBlue80,
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.sizeOf(context).height * 0.9,
+          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -77,9 +80,14 @@ class DgBottomSheet extends StatelessWidget {
                     ),
                   ),
                 ),
-              Padding(
-                padding: effectivePadding,
-                child: builder?.call(context) ?? child!,
+              // Content taller than the sheet scrolls rather than overflowing.
+              Flexible(
+                child: SingleChildScrollView(
+                  child: Padding(
+                    padding: effectivePadding,
+                    child: builder?.call(context) ?? child!,
+                  ),
+                ),
               ),
             ],
           ),

@@ -3,6 +3,7 @@ import 'package:flutter/widget_previews.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:mobile/open/widgets/icons/dg_icon.dart';
 import 'package:mobile/open/widgets/dg_app_bar.dart';
+import 'package:mobile/open/widgets/dg_mfa_step_label.dart';
 import 'package:mobile/open/widgets/dg_button.dart';
 import 'package:mobile/open/widgets/dg_icon_button.dart';
 import 'package:mobile/open/widgets/dg_preview_wrapper.dart';
@@ -22,12 +23,19 @@ class DgCodeEntryLayout extends HookWidget {
   final String fieldLabel;
   final DgCodeEntrySubmit onSubmit;
 
+  /// Set only for a flow with more than one step.
+  final String? stepLabel;
+
+  final VoidCallback? onBack;
+
   const DgCodeEntryLayout({
     super.key,
     required this.title,
     required this.description,
     required this.fieldLabel,
     required this.onSubmit,
+    this.stepLabel,
+    this.onBack,
   });
 
   /// Local checks, so an obviously incomplete code never costs a round trip.
@@ -60,7 +68,7 @@ class DgCodeEntryLayout extends HookWidget {
           actionLeft: DgIconButton(
             icon: 'arrow_small',
             direction: DgIconDirection.left,
-            onTap: () => Navigator.of(context).maybePop(),
+            onTap: onBack ?? () => Navigator.of(context).maybePop(),
           ),
         ),
         body: LayoutBuilder(
@@ -85,6 +93,7 @@ class DgCodeEntryLayout extends HookWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
+                            DgMfaStepLabel(stepLabel),
                             Text(
                               title,
                               style: DgText.h4.copyWith(

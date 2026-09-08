@@ -2,10 +2,11 @@ import 'package:dio/dio.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:mobile/data/proxy/mfa.dart';
-import 'package:mobile/open/api.dart';
+import 'package:mobile/data/mfa/mfa_flow.dart';
+import 'package:mobile/open/screens/mfa/mfa_step_chrome.dart';
 import 'package:mobile/open/widgets/icons/dg_icon.dart';
 import 'package:mobile/open/widgets/dg_app_bar.dart';
+import 'package:mobile/open/widgets/dg_mfa_step_label.dart';
 import 'package:mobile/open/widgets/dg_button.dart';
 import 'package:mobile/open/widgets/dg_icon_button.dart';
 import 'package:mobile/open/widgets/toaster/toast_manager.dart';
@@ -15,25 +16,15 @@ import 'package:mobile/theme/text.dart';
 import 'package:mobile/logging.dart';
 import 'package:mobile/utils/error_handler.dart';
 
-class OpenIdMfaWaitingScreenData {
-  final String proxyUrl;
-  final String token;
-
-  const OpenIdMfaWaitingScreenData({
-    required this.proxyUrl,
-    required this.token,
-  });
-}
-
 class OpenIdMfaWaitingScreen extends HookConsumerWidget {
-  final OpenIdMfaWaitingScreenData screenData;
+  final MfaStepHost host;
 
-  const OpenIdMfaWaitingScreen({super.key, required this.screenData});
+  const OpenIdMfaWaitingScreen({super.key, required this.host});
 
-  Future<FinishMfaResponse?> _pollOpenidMfa(bool Function() isCancelled) async {
-    final request = FinishMfaRequest(token: screenData.token);
-    final uri = Uri.parse(screenData.proxyUrl);
-
+  /// Polls until the browser hop resolves. An unresolved factor comes back
+  /// either as an `awaitingExternal` outcome or, from a pre-2.2 proxy, as a 428
+  /// that the api layer normalizes into the same thing.
+  Future<MfaStepProgress?> _pollOpenidMfa(bool Function() isCancelled) async {
     final startTime = DateTime.now();
     const timeoutDuration = Duration(minutes: 2);
 
@@ -49,8 +40,12 @@ class OpenIdMfaWaitingScreen extends HookConsumerWidget {
       }
 
       try {
-        final response = await proxyApi.finishMfa(uri, request);
-        return response;
+        final progress = await host.controller.submit();
+        if (progress is! MfaStepAwaiting) {
+          return progress;
+        }
+        talker.debug("User did not complete openid browser login, waiting");
+        await Future.delayed(const Duration(seconds: 2));
       } on DioException catch (e) {
         final isNetworkError =
             e.type == DioExceptionType.connectionError ||
@@ -58,94 +53,88 @@ class OpenIdMfaWaitingScreen extends HookConsumerWidget {
             (e.error?.toString().contains("-1005") ?? false) ||
             (e.message?.contains("-1005") ?? false);
 
-        if (e.response?.statusCode == 428 || isNetworkError) {
-          if (isNetworkError) {
-            talker.warning("Network error during MFA polling, retrying: $e");
-          } else {
-            talker.debug("User did not complete openid browser login, waiting");
-          }
-          await Future.delayed(const Duration(seconds: 2));
-        } else {
-          rethrow;
-        }
+        if (!isNetworkError) rethrow;
+        talker.warning("Network error during MFA polling, retrying: $e");
+        await Future.delayed(const Duration(seconds: 2));
       }
     }
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final navigator = Navigator.of(context);
     final route = ModalRoute.of(context);
     final toaster = ref.read(toastManagerProvider.notifier);
 
     useEffect(() {
-      bool isGone() => route != null && !route.isActive;
+      bool isGone() =>
+          host.controller.isCancelled || (route != null && !route.isActive);
 
       _pollOpenidMfa(isGone)
-          .then((finishMfaResponse) {
+          .then((progress) {
             if (isGone()) return;
-            if (finishMfaResponse == null) {
+            if (progress == null) {
               toaster.showError(
                 message: "Authentication timed out. Please try again.",
               );
-              navigator.pop();
+              host.abort();
             } else {
-              navigator.pop(finishMfaResponse.presharedKey);
+              host.reportProgress(progress);
             }
           })
           .catchError((error) {
             if (isGone()) return;
-            toaster.showError(
+            host.reportFailure(
               message: ErrorHandler.getHumanReadableError(error),
               logMessage: "OpenID MFA polling error!",
               error: error,
             );
-            navigator.pop();
           });
 
       return null;
     }, []);
 
-    return Container(
-      decoration: const BoxDecoration(gradient: DgColor.gradientPrimary),
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        appBar: DgAppBar(
-          context: context,
-          showLogo: false,
-          actionLeft: DgIconButton(
-            icon: 'arrow_small',
-            direction: DgIconDirection.left,
-            onTap: () => Navigator.of(context).maybePop(),
+    return MfaStepScope(
+      host: host,
+      child: Container(
+        decoration: const BoxDecoration(gradient: DgColor.gradientPrimary),
+        child: Scaffold(
+          backgroundColor: Colors.transparent,
+          appBar: DgAppBar(
+            context: context,
+            showLogo: false,
+            actionLeft: DgIconButton(
+              icon: 'arrow_small',
+              direction: DgIconDirection.left,
+              onTap: host.abort,
+            ),
           ),
-        ),
-        body: SafeArea(
-          child: Padding(
-            padding: .fromLTRB(20, 4, 20, 20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  "Two-factor authentication",
-                  style: DgText.h4.copyWith(color: DgColor.fgWhite100),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  "Waiting for authentication in your browser...",
-                  style: DgText.bodyXs400.copyWith(
-                    color: DgColor.fgWhite60,
+          body: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  DgMfaStepLabel(host.controller.stepLabel),
+                  Text(
+                    "Two-factor authentication",
+                    style: DgText.h4.copyWith(color: DgColor.fgWhite100),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                ),
-                const Spacer(),
-                DgButton(
-                  text: 'Cancel',
-                  style: DgButtonStyle.outlined,
-                  width: double.infinity,
-                  onTap: () => Navigator.of(context).pop(),
-                ),
-              ],
+                  const SizedBox(height: 8),
+                  Text(
+                    "Waiting for authentication in your browser...",
+                    style: DgText.bodyXs400.copyWith(color: DgColor.fgWhite60),
+                  ),
+                  const Spacer(),
+                  DgButton(
+                    text: 'Cancel',
+                    style: DgButtonStyle.outlined,
+                    width: double.infinity,
+                    onTap: host.abort,
+                  ),
+                ],
+              ),
             ),
           ),
         ),

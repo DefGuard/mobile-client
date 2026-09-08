@@ -5,6 +5,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:mobile/data/db/database.dart';
+import 'package:mobile/data/mfa/mfa_plan.dart';
 import 'package:mobile/data/plugin/plugin.dart';
 import 'package:mobile/open/api.dart';
 import 'package:mobile/open/riverpod/biometrics_state.dart';
@@ -397,6 +398,12 @@ class _InstanceAppBar extends ConsumerWidget implements PreferredSizeWidget {
   Size get preferredSize => Size.fromHeight(DgAppBar.baseHeight + topPadding);
 }
 
+/// A multi-step flow is named by its step count; no single method describes it.
+String? _mfaStepsLabel(Location location) {
+  final count = mfaStepCount(location);
+  return count > 1 ? mfaStepsToText(count) : null;
+}
+
 class _LocationList extends HookConsumerWidget {
   final _ScreenData data;
   final PluginTunnelEventData? activeTunnel;
@@ -465,10 +472,13 @@ class _LocationList extends HookConsumerWidget {
         if (context.mounted) {
           final result = await showDgBottomSheet<ConnectResult>(
             context: context,
+            // The MFA section can be several steps tall, and the sheet's
+            // content does not scroll at the default height.
+            isScrollControlled: true,
             child: ConnectDialog(
               instance: data.instance,
               location: location,
-              onConnect: (traffic, mfa) async {
+              onConnect: (traffic, mfaPlan) async {
                 final permissionsGranted = await wireguardPlugin
                     .requestPermissions();
                 if (!permissionsGranted || !context.mounted) {
@@ -482,7 +492,7 @@ class _LocationList extends HookConsumerWidget {
                   biometricsStatus: biometricStatus,
                   db: ref.read(databaseProvider),
                   trafficMethod: traffic,
-                  mfaMethod: mfa,
+                  mfaPlan: mfaPlan,
                 );
               },
             ),
@@ -575,6 +585,7 @@ class _LocationList extends HookConsumerWidget {
             mfaMethod: TunnelService.checkMfaEnabled(connectedLocation)
                 ? connectedLocation.mfaMethod
                 : null,
+            mfaLabel: _mfaStepsLabel(connectedLocation),
             onDisconnectTap: () => onDisconnect(connectedLocation),
           ),
           const SizedBox(height: DgSpacing.xl),
@@ -595,6 +606,7 @@ class _LocationList extends HookConsumerWidget {
                 mfaMethod: TunnelService.checkMfaEnabled(location)
                     ? location.mfaMethod
                     : null,
+                mfaLabel: _mfaStepsLabel(location),
                 onConnectTap: () => onConnect(context, location),
               ),
             ),

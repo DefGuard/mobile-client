@@ -18,6 +18,12 @@ StartMfaRequest _$StartMfaRequestFromJson(Map<String, dynamic> json) =>
             'method',
             (v) => $enumDecode(_$MfaMethodEnumMap, v),
           ),
+          selectedMethods: $checkedConvert(
+            'selected_methods',
+            (v) => (v as List<dynamic>)
+                .map((e) => $enumDecode(_$MfaMethodEnumMap, e))
+                .toList(),
+          ),
           postureData: $checkedConvert(
             'posture_data',
             (v) => v == null
@@ -29,6 +35,7 @@ StartMfaRequest _$StartMfaRequestFromJson(Map<String, dynamic> json) =>
       },
       fieldKeyMap: const {
         'locationId': 'location_id',
+        'selectedMethods': 'selected_methods',
         'postureData': 'posture_data',
       },
     );
@@ -38,6 +45,7 @@ const _$StartMfaRequestFieldMap = <String, String>{
   'locationId': 'location_id',
   'method': 'method',
   'postureData': 'posture_data',
+  'selectedMethods': 'selected_methods',
 };
 
 Map<String, dynamic> _$StartMfaRequestToJson(StartMfaRequest instance) =>
@@ -46,6 +54,9 @@ Map<String, dynamic> _$StartMfaRequestToJson(StartMfaRequest instance) =>
       'location_id': instance.locationId,
       'method': _$MfaMethodEnumMap[instance.method]!,
       'posture_data': instance.postureData,
+      'selected_methods': instance.selectedMethods
+          .map((e) => _$MfaMethodEnumMap[e]!)
+          .toList(),
     };
 
 const _$MfaMethodEnumMap = {
@@ -60,6 +71,16 @@ StartMfaResponse _$StartMfaResponseFromJson(Map<String, dynamic> json) =>
       final val = StartMfaResponse(
         token: $checkedConvert('token', (v) => v as String),
         challenge: $checkedConvert('challenge', (v) => v as String?),
+        rejections: $checkedConvert(
+          'rejections',
+          (v) =>
+              (v as List<dynamic>?)
+                  ?.map(
+                    (e) => MfaStepRejection.fromJson(e as Map<String, dynamic>),
+                  )
+                  .toList() ??
+              [],
+        ),
       );
       return val;
     });
@@ -67,25 +88,43 @@ StartMfaResponse _$StartMfaResponseFromJson(Map<String, dynamic> json) =>
 const _$StartMfaResponseFieldMap = <String, String>{
   'token': 'token',
   'challenge': 'challenge',
+  'rejections': 'rejections',
 };
 
 Map<String, dynamic> _$StartMfaResponseToJson(StartMfaResponse instance) =>
-    <String, dynamic>{'token': instance.token, 'challenge': instance.challenge};
+    <String, dynamic>{
+      'token': instance.token,
+      'challenge': instance.challenge,
+      'rejections': instance.rejections,
+    };
 
 FinishMfaRequest _$FinishMfaRequestFromJson(Map<String, dynamic> json) =>
-    $checkedCreate('FinishMfaRequest', json, ($checkedConvert) {
-      final val = FinishMfaRequest(
-        token: $checkedConvert('token', (v) => v as String),
-        code: $checkedConvert('code', (v) => v as String?),
-        authPubKey: $checkedConvert('auth_pub_key', (v) => v as String?),
-      );
-      return val;
-    }, fieldKeyMap: const {'authPubKey': 'auth_pub_key'});
+    $checkedCreate(
+      'FinishMfaRequest',
+      json,
+      ($checkedConvert) {
+        final val = FinishMfaRequest(
+          token: $checkedConvert('token', (v) => v as String),
+          code: $checkedConvert('code', (v) => v as String?),
+          authPubKey: $checkedConvert('auth_pub_key', (v) => v as String?),
+          stepAttemptId: $checkedConvert(
+            'step_attempt_id',
+            (v) => v as String?,
+          ),
+        );
+        return val;
+      },
+      fieldKeyMap: const {
+        'authPubKey': 'auth_pub_key',
+        'stepAttemptId': 'step_attempt_id',
+      },
+    );
 
 const _$FinishMfaRequestFieldMap = <String, String>{
   'token': 'token',
   'code': 'code',
   'authPubKey': 'auth_pub_key',
+  'stepAttemptId': 'step_attempt_id',
 };
 
 Map<String, dynamic> _$FinishMfaRequestToJson(FinishMfaRequest instance) =>
@@ -93,22 +132,8 @@ Map<String, dynamic> _$FinishMfaRequestToJson(FinishMfaRequest instance) =>
       'token': instance.token,
       'code': instance.code,
       'auth_pub_key': instance.authPubKey,
+      'step_attempt_id': ?instance.stepAttemptId,
     };
-
-FinishMfaResponse _$FinishMfaResponseFromJson(Map<String, dynamic> json) =>
-    $checkedCreate('FinishMfaResponse', json, ($checkedConvert) {
-      final val = FinishMfaResponse(
-        presharedKey: $checkedConvert('preshared_key', (v) => v as String?),
-      );
-      return val;
-    }, fieldKeyMap: const {'presharedKey': 'preshared_key'});
-
-const _$FinishMfaResponseFieldMap = <String, String>{
-  'presharedKey': 'preshared_key',
-};
-
-Map<String, dynamic> _$FinishMfaResponseToJson(FinishMfaResponse instance) =>
-    <String, dynamic>{'preshared_key': instance.presharedKey};
 
 SecureInstanceStorage _$SecureInstanceStorageFromJson(
   Map<String, dynamic> json,
@@ -154,3 +179,83 @@ Map<String, dynamic> _$RemoteMfaQrToJson(RemoteMfaQr instance) =>
       'token': instance.token,
       'challenge': instance.challenge,
     };
+
+MfaStepRejection _$MfaStepRejectionFromJson(Map<String, dynamic> json) =>
+    $checkedCreate('MfaStepRejection', json, ($checkedConvert) {
+      final val = MfaStepRejection(
+        step: $checkedConvert('step', (v) => (v as num).toInt()),
+        reason: $checkedConvert(
+          'reason',
+          (v) => $enumDecode(
+            _$MfaStartRejectionReasonEnumMap,
+            v,
+            unknownValue: MfaStartRejectionReason.unspecified,
+          ),
+        ),
+      );
+      return val;
+    });
+
+const _$MfaStepRejectionFieldMap = <String, String>{
+  'step': 'step',
+  'reason': 'reason',
+};
+
+Map<String, dynamic> _$MfaStepRejectionToJson(MfaStepRejection instance) =>
+    <String, dynamic>{
+      'step': instance.step,
+      'reason': _$MfaStartRejectionReasonEnumMap[instance.reason]!,
+    };
+
+const _$MfaStartRejectionReasonEnumMap = {
+  MfaStartRejectionReason.unspecified: 0,
+  MfaStartRejectionReason.methodNotInStep: 1,
+  MfaStartRejectionReason.stepEmptyAfterLicense: 2,
+  MfaStartRejectionReason.stepUnavailable: 3,
+};
+
+StepStartMfaRequest _$StepStartMfaRequestFromJson(Map<String, dynamic> json) =>
+    $checkedCreate('StepStartMfaRequest', json, ($checkedConvert) {
+      final val = StepStartMfaRequest(
+        token: $checkedConvert('token', (v) => v as String),
+        method: $checkedConvert(
+          'method',
+          (v) => $enumDecode(_$MfaMethodEnumMap, v),
+        ),
+      );
+      return val;
+    });
+
+const _$StepStartMfaRequestFieldMap = <String, String>{
+  'token': 'token',
+  'method': 'method',
+};
+
+Map<String, dynamic> _$StepStartMfaRequestToJson(
+  StepStartMfaRequest instance,
+) => <String, dynamic>{
+  'token': instance.token,
+  'method': _$MfaMethodEnumMap[instance.method]!,
+};
+
+StepStartMfaResponse _$StepStartMfaResponseFromJson(
+  Map<String, dynamic> json,
+) => $checkedCreate('StepStartMfaResponse', json, ($checkedConvert) {
+  final val = StepStartMfaResponse(
+    stepAttemptId: $checkedConvert('step_attempt_id', (v) => v as String),
+    challenge: $checkedConvert('challenge', (v) => v as String?),
+  );
+  return val;
+}, fieldKeyMap: const {'stepAttemptId': 'step_attempt_id'});
+
+const _$StepStartMfaResponseFieldMap = <String, String>{
+  'stepAttemptId': 'step_attempt_id',
+  'challenge': 'challenge',
+};
+
+Map<String, dynamic> _$StepStartMfaResponseToJson(
+  StepStartMfaResponse instance,
+) => <String, dynamic>{
+  'step_attempt_id': instance.stepAttemptId,
+  'challenge': instance.challenge,
+};

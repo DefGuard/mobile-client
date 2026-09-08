@@ -3,6 +3,7 @@ import "package:drift_flutter/drift_flutter.dart";
 import "package:mobile/data/db/database.steps.dart";
 import "package:mobile/data/db/db_file.dart";
 import "package:mobile/data/db/enums.dart";
+import "package:mobile/data/mfa/mfa_steps.dart";
 import "package:mobile/utils/instance_secrets.dart";
 import "package:mobile/utils/keychain.dart";
 import "package:path_provider/path_provider.dart";
@@ -94,6 +95,19 @@ class Locations extends Table with AutoIncrementingPrimaryKey {
       integer().nullable().map(const LocationMfaModeConverter())();
   @JsonKey('posture_check_required')
   BoolColumn get postureCheckRequired => boolean().nullable()();
+
+  /// Server-resolved MFA flow. Empty means the server did not send one, and
+  /// `effectiveMfaSteps` synthesizes it from [locationMfaMode] instead.
+  @JsonKey('mfa_steps')
+  TextColumn get mfaSteps =>
+      text().withDefault(const Constant('[]')).map(const MfaStepsConverter())();
+
+  /// The user's default method per step, positional. Owned by the MFA settings
+  /// screen and by `sanitizeMfaStepPlan`.
+  @JsonKey('mfa_step_plan')
+  TextColumn get mfaStepPlan => text()
+      .withDefault(const Constant('[]'))
+      .map(const MfaStepPlanConverter())();
 }
 
 @DriftDatabase(tables: [DefguardInstances, Locations])
@@ -118,7 +132,7 @@ class AppDatabase extends _$AppDatabase {
   }
 
   @override
-  int get schemaVersion => 5;
+  int get schemaVersion => 6;
 
   @override
   MigrationStrategy get migration {
@@ -184,6 +198,16 @@ class AppDatabase extends _$AppDatabase {
           }
           await m.dropColumn(schema.defguardInstances, 'private_key');
           await m.dropColumn(schema.defguardInstances, 'pooling_token');
+        },
+        from5To6: (m, schema) async {
+          await m.addColumn(schema.locations, schema.locations.mfaSteps);
+          await m.addColumn(schema.locations, schema.locations.mfaStepPlan);
+          // Seed step 0 from the single remembered method so an upgrade does
+          // not reset the user's choice. Both columns hold MfaMethod.value.
+          await customStatement(
+            "UPDATE locations SET mfa_step_plan = '[' || mfa_method || ']' "
+            'WHERE mfa_method IS NOT NULL',
+          );
         },
       ),
     );
