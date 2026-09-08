@@ -1,27 +1,37 @@
 import { $, driver } from "@wdio/globals";
+import { requireEnv } from "./env.js";
 
-const PING_TIMEOUT = 30_000;
+const probeGateway = async () => {
+	const target = requireEnv("GATEWAY_VPN_IP");
+	const result = $("~e2e_ping_result");
 
-export const gatewayVpnIp = (): string => {
-	const value = process.env.GATEWAY_VPN_IP;
-	if (!value) {
-		throw new Error("Missing required environment variable GATEWAY_VPN_IP");
-	}
-	return value;
-};
-
-export const pingGateway = async (target: string) => {
 	await $("~e2e_ping_target").setValue(target);
 	await $("~e2e_ping_button").click();
 
 	await driver.waitUntil(
-		async () => (await $("~e2e_ping_result").getText()) !== "pinging",
+		async () => ["ok", "fail"].includes(await result.getText()),
 		{
-			timeout: PING_TIMEOUT,
+			timeout: 30_000,
 			interval: 1_000,
 			timeoutMsg: `The E2E ping tool did not report a result for ${target}`,
 		},
 	);
 
-	return (await $("~e2e_ping_result").getText()) === "ok";
+	return (await result.getText()) === "ok";
+};
+
+export const expectGatewayReachable = async () => {
+	await driver.waitUntil(probeGateway, {
+		timeout: 60_000,
+		interval: 1_000,
+		timeoutMsg: `The gateway ${requireEnv("GATEWAY_VPN_IP")} is not reachable through the tunnel`,
+	});
+};
+
+export const expectGatewayUnreachable = async () => {
+	if (await probeGateway()) {
+		throw new Error(
+			`The gateway ${requireEnv("GATEWAY_VPN_IP")} is reachable without the tunnel`,
+		);
+	}
 };

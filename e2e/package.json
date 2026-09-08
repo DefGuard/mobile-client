@@ -7,9 +7,12 @@
 		"build:ios": "cd ../client && flutter build ipa --export-method development --dart-define=E2E=true",
 		"test:ios": "wdio run ./wdio.ios.conf.ts",
 		"appium:setup": "APPIUM_HOME=$HOME/.appium appium driver install xcuitest",
-		"appium:doctor": "APPIUM_HOME=$HOME/.appium appium driver doctor xcuitest"
+		"appium:doctor": "APPIUM_HOME=$HOME/.appium appium driver doctor xcuitest",
+		"fix": "biome check --fix",
+		"lint": "biome check"
 	},
 	"devDependencies": {
+		"@biomejs/biome": "2.4.16",
 		"@types/node": "^25.9.2",
 		"@wdio/appium-service": "^9.31.0",
 		"@wdio/cli": "^9.31.0",
@@ -19,6 +22,7 @@
 		"@wdio/spec-reporter": "^9.31.0",
 		"@wdio/types": "^9.31.0",
 		"appium": "^3.7.0",
+		"otpauth": "^9.5.2",
 		"tsx": "^4.20.6",
 		"typescript": "^5.9.3"
 	}

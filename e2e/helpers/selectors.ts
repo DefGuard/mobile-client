@@ -1,5 +1,8 @@
 import { $$, driver } from "@wdio/globals";
 
+export const textFields = () =>
+	$$("-ios class chain:**/XCUIElementTypeTextField");
+
 export const containsText = (text: string) =>
 	`-ios predicate string:name CONTAINS "${text}"`;
 
@@ -10,19 +13,13 @@ export const tapLowestMatch = async (selector: string, timeout = 15_000) => {
 		timeoutMsg: `Element not found: ${selector}`,
 	});
 
-	const elements = [...(await $$(selector))];
-	let target = elements[0];
-	let lowest = (await target.getLocation()).y;
+	const positions = await $$(selector).map(async (element) => ({
+		element,
+		y: (await element.getLocation()).y,
+	}));
+	positions.sort((first, second) => second.y - first.y);
 
-	for (const element of elements.slice(1)) {
-		const { y } = await element.getLocation();
-		if (y > lowest) {
-			lowest = y;
-			target = element;
-		}
-	}
-
-	await target.click();
+	await positions[0].element.click();
 };
 
 export const waitUntilGone = async (selector: string, timeout = 15_000) => {

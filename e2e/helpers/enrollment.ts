@@ -1,8 +1,11 @@
-import { $, $$, driver, expect } from "@wdio/globals";
+import { $, driver, expect } from "@wdio/globals";
 import type { EnrollmentFixture } from "./coreApi.js";
-import { containsText, tapLowestMatch, waitUntilGone } from "./selectors.js";
-
-const textFields = () => $$("-ios class chain:**/XCUIElementTypeTextField");
+import {
+	containsText,
+	tapLowestMatch,
+	textFields,
+	waitUntilGone,
+} from "./selectors.js";
 
 const openManualForm = async () => {
 	await $("~Add instance Manually").click();
@@ -28,11 +31,6 @@ const submitInstanceDetails = async (fixture: EnrollmentFixture) => {
 	await $("~Continue").click();
 };
 
-const addInstance = async (fixture: EnrollmentFixture) => {
-	await openManualForm();
-	await submitInstanceDetails(fixture);
-};
-
 const nameDevice = async (deviceName?: string) => {
 	const submit = $("~Submit");
 	await submit.waitForDisplayed({ timeout: 30_000 });
@@ -51,15 +49,16 @@ const skipBiometry = async () => {
 	await skip.click();
 
 	const confirm = "~Skip biometric configuration";
-	await tapLowestMatch(confirm, 15_000);
-	await waitUntilGone(confirm, 15_000);
+	await tapLowestMatch(confirm);
+	await waitUntilGone(confirm);
 };
 
 export const completeEnrollment = async (
 	fixture: EnrollmentFixture,
 	deviceName?: string,
 ) => {
-	await addInstance(fixture);
+	await openManualForm();
+	await submitInstanceDetails(fixture);
 	await nameDevice(deviceName);
 	await skipBiometry();
 };

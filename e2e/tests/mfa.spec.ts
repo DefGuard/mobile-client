@@ -10,12 +10,9 @@ import {
 	disconnect,
 	waitForInstanceScreen,
 } from "../helpers/instance.js";
-import {
-	expectGatewayReachable,
-	expectGatewayUnreachable,
-} from "../helpers/tunnel.js";
+import { expectGatewayReachable } from "../helpers/tunnel.js";
 
-describe("vpn connection", () => {
+describe("mfa connection", () => {
 	let core: CoreApi;
 	let networkId: number;
 	let previousMfaMode: LocationMfaMode | undefined;
@@ -35,20 +32,16 @@ describe("vpn connection", () => {
 		}
 	});
 
-	it("connects to a location with predefined and all traffic and reaches the gateway through the tunnel", async () => {
-		previousMfaMode = await core.setLocationMfaMode(networkId, "disabled");
+	it("connects to an mfa location with a totp code", async () => {
+		previousMfaMode = await core.setLocationMfaMode(networkId, "internal");
 		fixture = await core.createEnrollmentFixture();
 
 		await completeEnrollment(fixture);
 		await waitForInstanceScreen();
 
-		await connectLocation();
-		await expectGatewayReachable();
+		const totpSecret = await core.enableTotp(fixture.username);
 
-		await disconnect();
-		await expectGatewayUnreachable();
-
-		await connectLocation({ allTraffic: true });
+		await connectLocation({ totpSecret });
 		await expectGatewayReachable();
 
 		await disconnect();

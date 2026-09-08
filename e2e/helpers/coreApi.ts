@@ -1,34 +1,15 @@
+import { randomBytes } from "node:crypto";
+import { requireEnv } from "./env.js";
+import { totpCode } from "./totp.js";
+
 const MIN_PEER_DISCONNECT_THRESHOLD_WITH_MFA = 120;
 
-const requireEnv = (name: string): string => {
-	const value = process.env[name];
-	if (!value) {
-		throw new Error(`Missing required environment variable ${name}`);
-	}
-	return value;
-};
+const generatePassword = (): string =>
+	`${randomBytes(24).toString("base64url")}aA1!`;
 
 const coreUrl = (): string => requireEnv("CORE_URL");
-const proxyUrl = (): string => requireEnv("PROXY_URL");
 
 export type LocationMfaMode = "disabled" | "internal" | "external";
-
-export interface DeviceConfig {
-	network_id: number;
-	network_name: string;
-	config: string;
-	address: string[];
-	endpoint: string;
-	allowed_ips: string[];
-	pubkey: string;
-	dns: string | null;
-	keepalive_interval: number;
-}
-
-export interface AddedUserDevice {
-	deviceId: number;
-	configs: DeviceConfig[];
-}
 
 export interface EnrollmentFixture {
 	username: string;
@@ -67,10 +48,10 @@ export class CoreApi {
 		return response;
 	}
 
-	async login(): Promise<void> {
+	async login(username?: string, password?: string): Promise<void> {
 		const response = await this.request("POST", "/api/v1/auth", {
-			username: process.env.CORE_ADMIN_USER ?? "admin",
-			password: requireEnv("CORE_ADMIN_PASSWORD"),
+			username: username ?? process.env.CORE_ADMIN_USER ?? "admin",
+			password: password ?? requireEnv("CORE_ADMIN_PASSWORD"),
 		});
 		const setCookie = response.headers.get("set-cookie");
 		if (!setCookie) {
@@ -100,31 +81,18 @@ export class CoreApi {
 		await this.request("DELETE", `/api/v1/user/${username}`);
 	}
 
-	async listNetworks(): Promise<
-		Array<{ id: number; location_mfa_mode: LocationMfaMode }>
-	> {
+	async testNetworkId(): Promise<number> {
+		const name = requireEnv("NETWORK_NAME");
 		const response = await this.request("GET", "/api/v1/network");
-		return (await response.json()) as Array<{
+		const networks = (await response.json()) as Array<{
 			id: number;
-			location_mfa_mode: LocationMfaMode;
+			name: string;
 		}>;
-	}
-
-	async addUserDevice(name: string, pubkey: string): Promise<AddedUserDevice> {
-		const username = process.env.CORE_ADMIN_USER ?? "admin";
-		const response = await this.request("POST", `/api/v1/device/${username}`, {
-			name,
-			wireguard_pubkey: pubkey,
-		});
-		const data = (await response.json()) as {
-			configs: DeviceConfig[];
-			device: { id: number };
-		};
-		return { deviceId: data.device.id, configs: data.configs };
-	}
-
-	async deleteDevice(deviceId: number): Promise<void> {
-		await this.request("DELETE", `/api/v1/device/${deviceId}`);
+		const network = networks.find((candidate) => candidate.name === name);
+		if (!network) {
+			throw new Error(`The core has no location named ${name}`);
+		}
+		return network.id;
 	}
 
 	async setLocationMfaMode(
@@ -164,9 +132,25 @@ export class CoreApi {
 		return previous;
 	}
 
-	private async startEnrollment(
+	async enableTotp(username: string): Promise<string> {
+		const password = generatePassword();
+		await this.request("PUT", `/api/v1/user/${username}/password`, {
+			new_password: password,
+		});
+
+		const user = new CoreApi();
+		await user.login(username, password);
+		const response = await user.request("POST", "/api/v1/auth/totp/init");
+		const { secret } = (await response.json()) as { secret: string };
+		await user.request("POST", "/api/v1/auth/totp", {
+			code: totpCode(secret),
+		});
+		return secret;
+	}
+
+	async startEnrollment(
 		username: string,
-		ephemeral: boolean,
+		ephemeral = false,
 	): Promise<EnrollmentFixture> {
 		const response = await this.request(
 			"POST",
@@ -179,12 +163,11 @@ export class CoreApi {
 		return {
 			username,
 			enrollmentToken: data.enrollment_token,
-			enrollmentUrl: proxyUrl(),
+			enrollmentUrl: requireEnv("PROXY_URL"),
 			ephemeral,
 		};
 	}
 
-	// A user with a pending enrollment, always (re)created so it has not enrolled.
 	async createEnrollmentFixture(): Promise<EnrollmentFixture> {
 		const pinned = process.env.TEST_USERNAME;
 		const username = pinned ?? `e2e${Math.floor(Math.random() * 1_000_000)}`;
