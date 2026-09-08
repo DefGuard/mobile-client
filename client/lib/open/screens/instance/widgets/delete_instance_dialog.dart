@@ -50,6 +50,7 @@ class DeleteInstanceDialog extends HookConsumerWidget {
         const NextDialogTitle("Delete instance"),
         NextDialogDescription(warningText),
         NextButton(
+          identifier: "delete_instance_confirm",
           text: "Delete instance",
           style: NextButtonStyle.critical,
           size: NextButtonSize.big,

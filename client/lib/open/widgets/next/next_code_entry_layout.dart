@@ -83,6 +83,7 @@ class NextCodeEntryLayout extends HookWidget {
                           ),
                           const SizedBox(height: 32),
                           NextTextFormField(
+                            identifier: 'mfa_code_input',
                             required: true,
                             size: .big,
                             label: fieldLabel,
@@ -94,6 +95,7 @@ class NextCodeEntryLayout extends HookWidget {
                           const Spacer(),
                           const SizedBox(height: 20),
                           NextButton(
+                            identifier: 'mfa_code_submit',
                             text: 'Submit',
                             loading: isLoading.value,
                             width: double.infinity,

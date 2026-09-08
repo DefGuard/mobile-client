@@ -19,6 +19,7 @@ class NextButton extends StatelessWidget {
   final NextButtonSize size;
   final bool disabled;
   final double? width;
+  final String? identifier;
 
   // Internal properties
   final Color backgroundColor;
@@ -46,6 +47,7 @@ class NextButton extends StatelessWidget {
     this.disabled = false,
     this.icon,
     this.width,
+    this.identifier,
   });
 
   factory NextButton({
@@ -59,6 +61,7 @@ class NextButton extends StatelessWidget {
     Widget? icon,
     double? width,
     double? height,
+    String? identifier,
   }) {
     double heightInner;
     BorderRadius borderRadiusInner;
@@ -140,6 +143,7 @@ class NextButton extends StatelessWidget {
       disabled: disabled,
       icon: icon,
       width: width,
+      identifier: identifier,
     );
   }
 
@@ -149,7 +153,7 @@ class NextButton extends StatelessWidget {
     const duration = Duration(milliseconds: 160);
     const curve = Curves.easeOut;
 
-    return AnimatedContainer(
+    final button = AnimatedContainer(
       duration: duration,
       curve: curve,
       height: height,
@@ -199,6 +203,12 @@ class NextButton extends StatelessWidget {
         ),
       ),
     );
+
+    if (identifier == null) {
+      return button;
+    }
+
+    return Semantics(identifier: identifier, container: true, child: button);
   }
 
   List<Widget> _getRow() {

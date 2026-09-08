@@ -1,17 +1,12 @@
-import { $, driver, expect } from "@wdio/globals";
+import { $, expect } from "@wdio/globals";
 import type { EnrollmentFixture } from "./coreApi.js";
-import {
-	containsText,
-	tapLowestMatch,
-	textFields,
-	waitUntilGone,
-} from "./selectors.js";
+import { containsText } from "./selectors.js";
 
 const openManualForm = async () => {
 	await $("~Add instance Manually").click();
 
 	const consent = $("~I Understand");
-	if (await consent.isDisplayed().catch(() => false)) {
+	if (await consent.isDisplayed()) {
 		await consent.click();
 	}
 
@@ -19,27 +14,14 @@ const openManualForm = async () => {
 };
 
 const submitInstanceDetails = async (fixture: EnrollmentFixture) => {
-	await driver.waitUntil(async () => (await textFields().length) >= 2, {
-		timeout: 15_000,
-		timeoutMsg: "The form did not show the URL and token fields",
-	});
-
-	const [url, token] = await textFields();
-	await url.setValue(fixture.enrollmentUrl);
-	await token.setValue(fixture.enrollmentToken);
-
-	await $("~Continue").click();
+	await $("~add_instance_url").setValue(fixture.enrollmentUrl);
+	await $("~add_instance_token").setValue(fixture.enrollmentToken);
+	await $("~add_instance_submit").click();
 };
 
-const nameDevice = async (deviceName?: string) => {
-	const submit = $("~Submit");
+const nameDevice = async () => {
+	const submit = $("~device_name_submit");
 	await submit.waitForDisplayed({ timeout: 30_000 });
-
-	if (deviceName) {
-		const [field] = await textFields();
-		await field.setValue(deviceName);
-	}
-
 	await submit.click();
 };
 
@@ -48,17 +30,15 @@ const skipBiometry = async () => {
 	await skip.waitForDisplayed({ timeout: 30_000 });
 	await skip.click();
 
-	const confirm = "~Skip biometric configuration";
-	await tapLowestMatch(confirm);
-	await waitUntilGone(confirm);
+	const confirm = $("~skip_biometry_confirm");
+	await confirm.waitForDisplayed({ timeout: 15_000 });
+	await confirm.click();
+	await confirm.waitForExist({ timeout: 15_000, reverse: true });
 };
 
-export const completeEnrollment = async (
-	fixture: EnrollmentFixture,
-	deviceName?: string,
-) => {
+export const completeEnrollment = async (fixture: EnrollmentFixture) => {
 	await openManualForm();
 	await submitInstanceDetails(fixture);
-	await nameDevice(deviceName);
+	await nameDevice();
 	await skipBiometry();
 };

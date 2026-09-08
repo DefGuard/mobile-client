@@ -122,7 +122,7 @@ class NextLocationCard extends StatelessWidget {
           ),
           const SizedBox(height: NextSpacing.lg),
           Semantics(
-            identifier: "location_disconnect_button",
+            identifier: "location_disconnect_button_${location.name}",
             container: true,
             child: NextMainCta(
               text: "Disconnect",
@@ -184,7 +184,7 @@ class NextLocationCard extends StatelessWidget {
             ),
           ),
           Semantics(
-            identifier: "location_connect_button",
+            identifier: "location_connect_button_${location.name}",
             container: true,
             child: NextButton(
               text: "Connect",

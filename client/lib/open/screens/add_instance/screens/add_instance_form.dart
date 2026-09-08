@@ -88,6 +88,7 @@ class _AddInstanceFormContent extends HookConsumerWidget {
                 ),
                 const SizedBox(height: NextSpacing.xl3),
                 NextTextFormField(
+                  identifier: "add_instance_url",
                   size: .big,
                   controller: urlController,
                   label: "URL",
@@ -98,6 +99,7 @@ class _AddInstanceFormContent extends HookConsumerWidget {
                 ),
                 const SizedBox(height: NextSpacing.xl),
                 NextTextFormField(
+                  identifier: "add_instance_token",
                   size: .big,
                   controller: tokenController,
                   label: "Token",
@@ -117,6 +119,7 @@ class _AddInstanceFormContent extends HookConsumerWidget {
               child: Align(
                 alignment: Alignment.bottomCenter,
                 child: NextButton(
+                  identifier: "add_instance_submit",
                   text: "Continue",
                   style: NextButtonStyle.primary,
                   size: NextButtonSize.big,

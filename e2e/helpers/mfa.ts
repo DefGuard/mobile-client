@@ -1,24 +1,22 @@
 import { $ } from "@wdio/globals";
-import { textFields } from "./selectors.js";
 import { totpCode } from "./totp.js";
 
 const CODE_ATTEMPTS = 3;
 
 export const submitTotpCode = async (secret: string) => {
-	const submit = $("~Submit");
+	const submit = $("~mfa_code_submit");
 	await submit.waitForDisplayed({ timeout: 30_000 });
 
 	for (let attempt = 1; attempt <= CODE_ATTEMPTS; attempt++) {
-		const [field] = await textFields();
-		await field.setValue(totpCode(secret));
+		await $("~mfa_code_input").setValue(totpCode(secret));
 		await submit.click();
 
-		const rejected = await submit
-			.waitForDisplayed({ timeout: 10_000 })
+		const accepted = await submit
+			.waitForDisplayed({ timeout: 20_000, reverse: true })
 			.then(() => true)
 			.catch(() => false);
 
-		if (!rejected) {
+		if (accepted) {
 			return;
 		}
 	}

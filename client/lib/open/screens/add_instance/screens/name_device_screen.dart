@@ -206,6 +206,7 @@ class NameDeviceScreen extends HookConsumerWidget {
                     child: Align(
                       alignment: Alignment.bottomCenter,
                       child: NextButton(
+                        identifier: "device_name_submit",
                         text: "Submit",
                         style: NextButtonStyle.primary,
                         size: NextButtonSize.big,

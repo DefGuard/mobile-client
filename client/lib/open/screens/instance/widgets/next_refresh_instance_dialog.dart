@@ -75,12 +75,14 @@ class NextRefreshInstanceDialog extends HookConsumerWidget {
           "Enter your proxy URL and instance token to refresh the configuration.",
         ),
         NextTextFormField(
+          identifier: "refresh_instance_url",
           controller: proxyUrlController,
           label: "Proxy URL",
           hintText: "https://...",
         ),
         const SizedBox(height: NextSpacing.md),
         NextTextFormField(
+          identifier: "refresh_instance_token",
           controller: tokenController,
           label: "Instance Token",
           hintText: "Enter token",
@@ -98,6 +100,7 @@ class NextRefreshInstanceDialog extends HookConsumerWidget {
             ),
             Expanded(
               child: NextButton(
+                identifier: "refresh_instance_submit",
                 text: "Refresh",
                 style: NextButtonStyle.primary,
                 loading: isLoading.value,
