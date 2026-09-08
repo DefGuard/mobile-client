@@ -4,17 +4,17 @@ import 'dart:io';
 import 'package:drift/drift.dart' as drift;
 import 'package:material_ui/material_ui.dart';
 import 'package:mobile/data/db/database.dart';
-import 'package:mobile/data/mfa/mfa_plan.dart';
 import 'package:mobile/data/mfa/mfa_flow.dart';
+import 'package:mobile/data/mfa/mfa_plan.dart';
 import 'package:mobile/data/plugin/plugin.dart';
 import 'package:mobile/enterprise/postures.dart';
+import 'package:mobile/logging.dart';
 import 'package:mobile/open/api.dart';
 import 'package:mobile/open/riverpod/biometrics_state.dart';
 import 'package:mobile/open/screens/mfa/mfa_step_flow.dart';
 import 'package:mobile/utils/instance_secrets.dart';
 
 import '../../../../data/db/enums.dart';
-import 'package:mobile/logging.dart';
 import '../../../../utils/notifications.dart';
 
 /// How a connect attempt ended. Reporting it - a toast, a snackbar, nothing at
@@ -91,7 +91,6 @@ class TunnelService {
           ClientTrafficPolicy.none => trafficMethod,
         };
 
-    // prepare wireguard plugin payload
     final privateKey = await instance.wireguardPrivateKey();
     if (privateKey == null) {
       reportMissingSecret(instance.logName, "WireGuard private key");
@@ -301,7 +300,6 @@ class TunnelService {
     return response.presharedKey;
   }
 
-  /// Prepares wireguard plugin configuration
   static PluginConnectPayload _makePayload(
     DefguardInstance instance,
     Location location,

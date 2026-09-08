@@ -140,7 +140,6 @@ enum State {
         tunnel = nil
         keepAliveTimer?.cancel()
         keepAliveTimer = nil
-        // Cancel network monitor
         networkMonitor?.cancel()
         networkMonitor = nil
 
@@ -269,7 +268,6 @@ enum State {
                 }
             }
             if error == nil {
-                // continue receiving
                 self.receive()
             } else {
                 self.log.error("receive() error: \(String(describing: error))")
@@ -279,14 +277,12 @@ enum State {
 
     /// Read tunnel packets.
     private func readPackets() {
-        // Packets received to the tunnel's virtual interface.
         packetTunnelProvider?.packetFlow.readPacketObjects { [weak self] packets in
             guard let self = self else { return }
 
             self.ioQueue.async {
                 self.processTunnelPackets(packets)
 
-                // continue reading
                 self.readPackets()
             }
         }
@@ -313,13 +309,6 @@ enum State {
         switch state {
         case .ready:
             setupEndpoint()
-        //case .waiting(let error):
-        //    switch error {
-        //        case .posix(_):
-        //            connection?.restart()
-        //        default:
-        //            self.stop()
-        //    }
         case .failed(let error):
             log.error("Failed to establish endpoint connection: \(error)")
             // The correct way is to call the packet tunnel provider, if there is one.

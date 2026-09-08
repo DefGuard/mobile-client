@@ -1,7 +1,7 @@
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:mobile/data/db/database.dart';
 import 'package:mobile/logging.dart';
 import 'package:mobile/open/api.dart';
@@ -118,7 +118,6 @@ class _ScreenContent extends HookConsumerWidget {
           authSecret.publicKey,
           instance.pubKey,
         );
-        // update instance information
         var instanceDb = await db.managers.defguardInstances
             .filter((row) => row.id.equals(instanceId))
             .getSingle();

@@ -3,27 +3,27 @@ import 'dart:io';
 import 'package:collection/collection.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:drift/drift.dart' as drift;
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:mobile/data/db/database.dart';
 import 'package:mobile/data/proxy/enrollment.dart';
+import 'package:mobile/logging.dart';
 import 'package:mobile/open/screens/add_instance/generate_wireguard.dart';
-import 'package:mobile/open/widgets/icons/dg_icon.dart';
 import 'package:mobile/open/widgets/dg_app_bar.dart';
 import 'package:mobile/open/widgets/dg_button.dart';
 import 'package:mobile/open/widgets/dg_drawer.dart';
 import 'package:mobile/open/widgets/dg_icon_button.dart';
 import 'package:mobile/open/widgets/dg_text_form_field.dart';
+import 'package:mobile/open/widgets/icons/dg_icon.dart';
+import 'package:mobile/open/widgets/toaster/toast_manager.dart';
 import 'package:mobile/router/routes.dart';
 import 'package:mobile/theme/color.dart';
 import 'package:mobile/theme/spacing.dart';
 import 'package:mobile/theme/text.dart';
 import 'package:mobile/utils/instance_secrets.dart';
 
-import 'package:mobile/logging.dart';
 import '../../../api.dart';
-import 'package:mobile/open/widgets/toaster/toast_manager.dart';
 
 class NameDeviceScreenData {
   final EnrollmentStartResponse startResponse;
@@ -112,13 +112,10 @@ class NameDeviceScreen extends HookConsumerWidget {
 
           if (Platform.isAndroid) {
             final android = await deviceInfo.androidInfo;
-            // Combine manufacturer + model for readability
             suggestedName = "${android.manufacturer} ${android.model}";
-            // e.g. "Samsung Galaxy S22"
           } else if (Platform.isIOS) {
             final ios = await deviceInfo.iosInfo;
             suggestedName = ios.name;
-            // e.g. "John’s iPhone"
           } else {
             suggestedName = "";
           }

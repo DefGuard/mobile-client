@@ -39,7 +39,6 @@ class DefguardInstances extends Table with AutoIncrementingPrimaryKey {
   @JsonKey('enterprise_enabled')
   BoolColumn get enterpriseEnabled => boolean()();
 
-  // user public key
   TextColumn get pubKey => text()();
 
   // tells if the secure biometric storage exists for this instance
@@ -75,7 +74,6 @@ class Locations extends Table with AutoIncrementingPrimaryKey {
 
   TextColumn get dns => text().nullable()();
 
-  // deprecated, use locationMfaMode instead
   @Deprecated('1.5')
   @JsonKey('mfa_enabled')
   BoolColumn get mfaEnabled => boolean().nullable()();
@@ -222,8 +220,6 @@ class AppDatabase extends _$AppDatabase {
     );
   }
 }
-
-// database provider moved to database_provider.dart
 
 extension DefguardInstanceLogName on DefguardInstance {
   String get logName => '$name ($id)';

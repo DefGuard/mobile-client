@@ -135,7 +135,6 @@ class _ProxyApi {
         ),
       );
       final status = response.statusCode;
-      // return early, instance lost it's enterprise status
       if (status == 402) {
         return (null, 402, response.headers);
       }

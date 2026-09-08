@@ -6,7 +6,6 @@ part 'plugin.g.dart';
 
 @JsonSerializable()
 class PluginConnectPayload {
-  // config
   final String publicKey;
   final String devicePublicKey;
   final String privateKey;
@@ -17,7 +16,6 @@ class PluginConnectPayload {
   final int keepalive;
   String? presharedKey;
 
-  // context
   final String locationName;
   final int locationId;
   final int instanceId;

@@ -1,5 +1,5 @@
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter/widget_previews.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:mobile/open/widgets/dg_circular_progress.dart';
 import 'package:mobile/open/widgets/dg_preview_wrapper.dart';
 import 'package:mobile/theme/color.dart';
@@ -20,7 +20,6 @@ class DgButton extends StatelessWidget {
   final bool disabled;
   final double? width;
 
-  // Internal properties
   final Color backgroundColor;
   final TextStyle textStyle;
   final double height;
@@ -68,7 +67,6 @@ class DgButton extends StatelessWidget {
     Border? borderInner;
     double spacingInner = 8;
 
-    // Size variants
     switch (size) {
       case DgButtonSize.big:
         heightInner = height ?? 44;
@@ -86,7 +84,6 @@ class DgButton extends StatelessWidget {
 
     textStyleInner = textStyleInner.copyWith(color: DgColor.fgWhite100);
 
-    // Style variants (minimal styling for now as requested)
     switch (style) {
       case DgButtonStyle.primary:
         backgroundColorInner = DgColor.bgWhite100;
