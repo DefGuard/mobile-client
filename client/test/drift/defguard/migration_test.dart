@@ -4,6 +4,8 @@ import 'package:drift/drift.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:drift_dev/api/migrations_native.dart';
 import 'package:mobile/data/db/database.dart';
+import 'package:mobile/data/db/enums.dart';
+import 'package:mobile/data/mfa/mfa_plan.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'generated/schema.dart';
 
@@ -11,6 +13,7 @@ import 'generated/schema_v1.dart' as v1;
 import 'generated/schema_v2.dart' as v2;
 import 'generated/schema_v4.dart' as v4;
 import 'generated/schema_v5.dart' as v5;
+import 'generated/schema_v6.dart' as v6;
 
 void main() {
   driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
@@ -130,4 +133,152 @@ void main() {
       );
     },
   );
+
+  test(
+    'migration from v5 to v6 keeps MFA locations gated and seeds the plan',
+    () async {
+      final oldLocations = <v5.LocationsData>[
+        const v5.LocationsData(
+          id: 1,
+          instance: 1,
+          networkId: 11,
+          name: 'internal-with-remembered-method',
+          address: '10.0.0.1/24',
+          pubKey: 'pubkey-1',
+          endpoint: 'vpn.example:51820',
+          allowedIps: '0.0.0.0/0',
+          keepAliveInterval: 25,
+          locationMfaMode: 2,
+          mfaMethod: 1,
+        ),
+        const v5.LocationsData(
+          id: 2,
+          instance: 1,
+          networkId: 12,
+          name: 'legacy-mfa-enabled',
+          address: '10.0.0.2/24',
+          pubKey: 'pubkey-2',
+          endpoint: 'vpn.example:51820',
+          allowedIps: '0.0.0.0/0',
+          keepAliveInterval: 25,
+          mfaEnabled: 1,
+        ),
+        const v5.LocationsData(
+          id: 3,
+          instance: 1,
+          networkId: 13,
+          name: 'no-mfa',
+          address: '10.0.0.3/24',
+          pubKey: 'pubkey-3',
+          endpoint: 'vpn.example:51820',
+          allowedIps: '0.0.0.0/0',
+          keepAliveInterval: 25,
+          locationMfaMode: 1,
+        ),
+      ];
+
+      await verifier.testWithDataIntegrity(
+        oldVersion: 5,
+        newVersion: 6,
+        createOld: v5.DatabaseAtV5.new,
+        createNew: v6.DatabaseAtV6.new,
+        openTestedDatabase: AppDatabase.new,
+        createItems: (batch, oldDb) {
+          batch.insertAll(oldDb.defguardInstances, <v5.DefguardInstancesData>[
+            const v5.DefguardInstancesData(
+              id: 1,
+              name: 'instance',
+              uuid: 'instance-uuid',
+              url: 'https://defguard.example',
+              deviceId: 7,
+              proxyUrl: 'https://proxy.defguard.example',
+              username: 'user',
+              clientTrafficPolicy: 0,
+              enterpriseEnabled: 1,
+              pubKey: 'public-key',
+              mfaKeysStored: 0,
+            ),
+          ]);
+          batch.insertAll(oldDb.locations, oldLocations);
+        },
+        validateItems: (newDb) async {
+          final rows = await (newDb.select(
+            newDb.locations,
+          )..orderBy([(t) => OrderingTerm(expression: t.id)])).get();
+          expect(rows.map((r) => r.name), [
+            'internal-with-remembered-method',
+            'legacy-mfa-enabled',
+            'no-mfa',
+          ]);
+
+          // The remembered single method becomes the step 0 default.
+          expect(rows[0].mfaStepPlan, '[1]');
+          expect(rows[1].mfaStepPlan, '[]');
+          expect(rows[2].mfaStepPlan, '[]');
+          expect(rows.map((r) => r.mfaSteps), everyElement('[]'));
+        },
+      );
+    },
+  );
+
+  test('a migrated row still requires MFA before any config sync', () async {
+    final schema = await verifier.schemaAt(5);
+    final oldDb = v5.DatabaseAtV5(schema.newConnection());
+    await oldDb.batch((batch) {
+      batch.insertAll(oldDb.defguardInstances, <v5.DefguardInstancesData>[
+        const v5.DefguardInstancesData(
+          id: 1,
+          name: 'instance',
+          uuid: 'instance-uuid',
+          url: 'https://defguard.example',
+          deviceId: 7,
+          proxyUrl: 'https://proxy.defguard.example',
+          username: 'user',
+          clientTrafficPolicy: 0,
+          enterpriseEnabled: 1,
+          pubKey: 'public-key',
+          mfaKeysStored: 0,
+        ),
+      ]);
+      batch.insertAll(oldDb.locations, <v5.LocationsData>[
+        const v5.LocationsData(
+          id: 1,
+          instance: 1,
+          networkId: 11,
+          name: 'internal',
+          address: '10.0.0.1/24',
+          pubKey: 'pubkey-1',
+          endpoint: 'vpn.example:51820',
+          allowedIps: '0.0.0.0/0',
+          keepAliveInterval: 25,
+          locationMfaMode: 2,
+          mfaMethod: 1,
+        ),
+        const v5.LocationsData(
+          id: 2,
+          instance: 1,
+          networkId: 12,
+          name: 'disabled',
+          address: '10.0.0.2/24',
+          pubKey: 'pubkey-2',
+          endpoint: 'vpn.example:51820',
+          allowedIps: '0.0.0.0/0',
+          keepAliveInterval: 25,
+          locationMfaMode: 1,
+        ),
+      ]);
+    });
+    await oldDb.close();
+
+    final db = AppDatabase(schema.newConnection());
+    final locations = await (db.select(
+      db.locations,
+    )..orderBy([(t) => OrderingTerm(expression: t.id)])).get();
+
+    expect(locations[0].mfaSteps, isEmpty);
+    expect(shouldStartMfa(locations[0]), isTrue);
+    expect(locations[0].mfaStepPlan, [MfaMethod.email]);
+    expect(shouldStartMfa(locations[1]), isFalse);
+    await db.close();
+  });
 }

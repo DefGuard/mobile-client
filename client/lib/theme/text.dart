@@ -11,7 +11,6 @@ const String _defaultFontFamily = _FontFamily.geist;
 class DgText {
   DgText._();
 
-  // Body - XXS
   static const TextStyle bodyXxs600 = TextStyle(
     fontFamily: _defaultFontFamily,
     fontSize: 11,
@@ -31,7 +30,6 @@ class DgText {
     height: 14 / 11,
   );
 
-  // Body - XS
   static const TextStyle bodyXs600 = TextStyle(
     fontFamily: _defaultFontFamily,
     fontSize: 12,
@@ -51,7 +49,6 @@ class DgText {
     height: 16 / 12,
   );
 
-  // Body - SM
   static const TextStyle bodySm600 = TextStyle(
     fontFamily: _defaultFontFamily,
     fontSize: 14,
@@ -77,7 +74,6 @@ class DgText {
     height: 20 / 14,
   );
 
-  // Body - Primary
   static const TextStyle bodyPrimary600 = TextStyle(
     fontFamily: _defaultFontFamily,
     fontSize: 16,
@@ -97,7 +93,6 @@ class DgText {
     height: 24 / 16,
   );
 
-  // Titles
   static const TextStyle h1 = TextStyle(
     fontFamily: _defaultFontFamily,
     fontSize: 32,
@@ -129,7 +124,6 @@ class DgText {
     height: 28 / 18,
   );
 
-  // Inputs
   static const TextStyle inputTitle = TextStyle(
     fontFamily: _defaultFontFamily,
     fontSize: 12,
@@ -155,7 +149,6 @@ class DgText {
     height: 16 / 12,
   );
 
-  // Menu
   static const TextStyle menuTitle = TextStyle(
     fontFamily: _defaultFontFamily,
     fontSize: 12,
@@ -169,7 +162,6 @@ class DgText {
     height: 24 / 14,
   );
 
-  // Buttons
   static const TextStyle buttonLabelBig = TextStyle(
     fontFamily: _defaultFontFamily,
     fontSize: 14,

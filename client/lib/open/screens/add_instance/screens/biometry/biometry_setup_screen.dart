@@ -1,7 +1,7 @@
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:mobile/data/db/database.dart';
 import 'package:mobile/logging.dart';
 import 'package:mobile/open/api.dart';
@@ -103,6 +103,17 @@ class _ScreenContent extends HookConsumerWidget {
     final biometryStatus = ref.watch(biometricsCapabilityProvider);
     final isLoading = useState(false);
 
+    final handleSkip = useCallback(() {
+      ref
+          .read(toastManagerProvider.notifier)
+          .showSuccess(
+            message: "Instance added successfully",
+          );
+      InstanceScreenRoute(
+        id: instanceId.toString(),
+      ).go(context);
+    }, [instanceId]);
+
     final handleRegister = useCallback((
       DefguardInstance instance,
       BuildContext context,
@@ -118,7 +129,6 @@ class _ScreenContent extends HookConsumerWidget {
           authSecret.publicKey,
           instance.pubKey,
         );
-        // update instance information
         var instanceDb = await db.managers.defguardInstances
             .filter((row) => row.id.equals(instanceId))
             .getSingle();
@@ -207,15 +217,16 @@ class _ScreenContent extends HookConsumerWidget {
             Column(
               spacing: DgSpacing.md,
               children: [
-                // only a strong biometry can back the keystore entry, so
-                // there is nothing to offer otherwise - Skip stays available
-                if (biometryStatus.isStrong)
+                if (biometryStatus.isSupported &&
+                    (biometryStatus.isStrong ||
+                        biometryStatus.enrolledOptions.isEmpty))
                   DgButton(
                     text: "Enable",
                     size: .big,
                     width: .infinity,
                     loading: isLoading.value,
                     style: DgButtonStyle.primary,
+                    disabled: biometryStatus.enrolledOptions.isEmpty,
                     onTap: () => handleRegister(instance, context),
                   ),
                 DgButton(
@@ -225,24 +236,23 @@ class _ScreenContent extends HookConsumerWidget {
                   disabled: isLoading.value,
                   width: .infinity,
                   onTap: () {
-                    showDialog(
-                      context: context,
-                      useSafeArea: false,
-                      barrierColor: Colors.transparent,
-                      builder: (context) => BiometrySkipDialog(
-                        onSkip: () {
-                          ref
-                              .read(toastManagerProvider.notifier)
-                              .showSuccess(
-                                message: "Instance added successfully",
-                              );
-                          InstanceScreenRoute(
-                            id: instanceId.toString(),
-                          ).go(context);
-                        },
-                        onCancel: () => Navigator.of(context).pop(),
-                      ),
-                    );
+                    final cannotSetupBiometry =
+                        !biometryStatus.isSupported ||
+                        (biometryStatus.enrolledOptions.isNotEmpty &&
+                            biometryStatus.isWeak);
+                    if (cannotSetupBiometry) {
+                      handleSkip();
+                    } else {
+                      showDialog(
+                        context: context,
+                        useSafeArea: false,
+                        barrierColor: Colors.transparent,
+                        builder: (context) => BiometrySkipDialog(
+                          onSkip: handleSkip,
+                          onCancel: () => Navigator.of(context).pop(),
+                        ),
+                      );
+                    }
                   },
                 ),
               ],

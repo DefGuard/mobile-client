@@ -1,5 +1,5 @@
-import 'package:material_ui/material_ui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:mobile/data/db/database.dart';
 import 'package:mobile/open/riverpod/plugin/plugin.dart';
 import 'package:mobile/open/widgets/dg_app_bar.dart';
@@ -73,6 +73,7 @@ class InstancesListScreen extends HookConsumerWidget {
       extendBodyBehindAppBar: true,
       appBar: DgAppBar(
         context: context,
+        showLogo: true,
         actionLeft: Builder(
           builder: (context) => DgIconButton(
             icon: "hamburger",

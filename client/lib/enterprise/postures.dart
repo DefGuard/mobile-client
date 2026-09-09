@@ -139,7 +139,6 @@ Future<DevicePostureData> getPosture() async {
   final packageInfo = await PackageInfo.fromPlatform();
   final deviceInfo = DeviceInfoPlugin();
 
-  // Handle Android
   if (Platform.isAndroid) {
     final android = await deviceInfo.androidInfo;
     return DevicePostureData(
@@ -168,7 +167,6 @@ Future<DevicePostureData> getPosture() async {
     );
   }
 
-  // Handle iOS
   if (Platform.isIOS) {
     final ios = await deviceInfo.iosInfo;
     return DevicePostureData(

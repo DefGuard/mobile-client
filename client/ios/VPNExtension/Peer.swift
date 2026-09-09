@@ -6,7 +6,6 @@ final class Peer: Codable {
     var endpoint: Endpoint?
     var persistentKeepAlive: UInt16?
     var allowedIPs = [IpAddrMask]()
-    // Statistics
     var lastHandshake: Date?
     var txBytes: UInt64 = 0
     var rxBytes: UInt64 = 0

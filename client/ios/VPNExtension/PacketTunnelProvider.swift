@@ -86,12 +86,10 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
 
     override func sleep(completionHandler: @escaping () -> Void) {
         log.info("System going to sleep")
-        // Add code here to get ready to sleep.
         completionHandler()
     }
 
     override func wake() {
         log.info("System waking up")
-        // Add code here to wake up.
     }
 }

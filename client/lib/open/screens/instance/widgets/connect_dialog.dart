@@ -1,24 +1,27 @@
-import 'dart:math' as math;
-
+import 'package:drift/drift.dart' show Value;
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:mobile/data/db/database.dart';
 import 'package:mobile/data/db/enums.dart';
+import 'package:mobile/data/mfa/mfa_plan.dart';
 import 'package:mobile/open/riverpod/biometrics_state.dart';
 import 'package:mobile/open/screens/instance/services/tunnel_service.dart';
-import 'package:mobile/open/widgets/icons/dg_icon.dart';
-import 'package:mobile/open/widgets/dg_button.dart';
-import 'package:mobile/open/widgets/dg_toggle.dart';
-import 'package:mobile/open/widgets/dg_mfa_selector.dart';
-import 'package:mobile/theme/color.dart';
-import 'package:mobile/theme/spacing.dart';
-import 'package:mobile/theme/text.dart';
+import 'package:mobile/open/screens/instance/widgets/connect_pane.dart';
+import 'package:mobile/open/screens/instance/widgets/mfa_settings_pane.dart';
+import 'package:mobile/open/screens/instance/widgets/mfa_unavailable_dialog.dart';
+import 'package:mobile/open/widgets/toaster/toast_manager.dart';
+
+const _paneDuration = Duration(milliseconds: 250);
+const _paneCurve = Curves.easeOut;
 
 class ConnectDialog extends HookConsumerWidget {
   final DefguardInstance instance;
   final Location location;
-  final Future<ConnectResult> Function(RoutingMethod traffic, MfaMethod? mfa)
+  final Future<ConnectResult> Function(
+    RoutingMethod traffic,
+    List<MfaMethod?> mfaPlan,
+  )
   onConnect;
 
   const ConnectDialog({
@@ -31,7 +34,9 @@ class ConnectDialog extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final biometricsStatus = ref.watch(biometricsCapabilityProvider);
-    final isMfaEnabled = TunnelService.checkMfaEnabled(location);
+    final biometricAvailable =
+        instance.mfaKeysStored && biometricsStatus.canOpenStorage;
+    final steps = effectiveMfaSteps(location);
 
     final bool canChangeTraffic =
         instance.clientTrafficPolicy == ClientTrafficPolicy.none;
@@ -41,184 +46,205 @@ class ConnectDialog extends HookConsumerWidget {
 
     final allTraffic = useState(initialAllTraffic);
     final isLoading = useState(false);
+    final savedPlan = useState<List<MfaMethod?>>(location.mfaStepPlan);
+    final selection = useState<MfaMethod?>(null);
 
-    final availableMfaMethods = useMemoized(() {
-      if (location.locationMfaMode == LocationMfaMode.external) {
-        return [MfaMethod.openid];
-      }
-      final methods = [MfaMethod.totp, MfaMethod.email];
-      if (instance.mfaKeysStored && biometricsStatus.canOpenStorage) {
-        methods.insert(0, MfaMethod.biometric);
-      }
-      return methods;
-    }, [instance, location, biometricsStatus]);
-
-    // The remembered choice on the location row can have gone stale - the
-    // device lost its strong biometry, or the admin flipped the location
-    // between internal and external MFA. Fall back to the first offered
-    // method rather than pre-selecting something the list does not offer.
-    final selectedMfaMethod = useState<MfaMethod>(
-      availableMfaMethods.contains(location.mfaMethod)
-          ? location.mfaMethod!
-          : availableMfaMethods.first,
+    final plan = useMemoized(
+      () => resolveMfaStepPlan(
+        location.copyWith(mfaStepPlan: savedPlan.value),
+        oneOff: selection.value == null ? const [] : [selection.value],
+        biometricAvailable: biometricAvailable,
+      ),
+      [location, savedPlan.value, selection.value, biometricAvailable],
     );
 
-    // ...and re-clamp if the offer shrinks while the sheet is open, e.g. the
-    // user backgrounds the app and unenrolls their fingerprint.
-    useEffect(() {
-      if (!availableMfaMethods.contains(selectedMfaMethod.value)) {
-        selectedMfaMethod.value = availableMfaMethods.first;
+    final unpassable = plan.contains(null);
+    final canEditDefaults =
+        steps.length > 1 &&
+        steps.any(
+          (step) =>
+              usableMfaMethods(
+                step,
+                biometricAvailable: biometricAvailable,
+              ).length >
+              1,
+        );
+
+    List<MfaMethod?> mfaDefaults(List<MfaMethod?> saved) => resolveMfaStepPlan(
+      location.copyWith(mfaStepPlan: saved),
+      biometricAvailable: biometricAvailable,
+    );
+
+    final showingMfa = useState(false);
+    final paneController = useAnimationController(duration: _paneDuration);
+    final mfaWorking = useState<List<MfaMethod?>>(mfaDefaults(savedPlan.value));
+    final isSaving = useState(false);
+
+    void openMfaSettings() {
+      mfaWorking.value = mfaDefaults(savedPlan.value);
+      showingMfa.value = true;
+      paneController.forward();
+    }
+
+    void closeMfaSettings() {
+      showingMfa.value = false;
+      paneController.reverse();
+    }
+
+    Future<void> saveMfaPlan() async {
+      isSaving.value = true;
+      final db = ref.read(databaseProvider);
+      final edited = mfaWorking.value;
+      try {
+        await (db.update(db.locations)..where((t) => t.id.equals(location.id)))
+            .write(LocationsCompanion(mfaStepPlan: Value(edited)));
+        savedPlan.value = edited;
+        isSaving.value = false;
+        closeMfaSettings();
+      } catch (e) {
+        ref
+            .read(toastManagerProvider.notifier)
+            .showError(
+              message: "Failed to save the MFA settings.",
+              logMessage:
+                  "Failed to write mfaStepPlan for location ${location.id}",
+              error: e,
+            );
+        isSaving.value = false;
       }
-      return null;
-    }, [availableMfaMethods]);
+    }
 
-    final mfaController = useMemoized(() => ExpansibleController(), []);
-    useEffect(() => mfaController.dispose, [mfaController]);
+    Future<void> connect() async {
+      isLoading.value = true;
+      try {
+        final traffic = allTraffic.value
+            ? RoutingMethod.all
+            : RoutingMethod.predefined;
 
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Text(
-          "Connect ${location.name} location",
-          style: DgText.bodyPrimary600.copyWith(color: DgColor.fgWhite100),
-          textAlign: TextAlign.left,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
+        final result = await onConnect(traffic, plan);
+        if (context.mounted) {
+          Navigator.of(context).pop(result);
+        }
+      } finally {
+        isLoading.value = false;
+      }
+    }
+
+    final connectPane = ConnectPane(
+      locationName: location.name,
+      steps: steps,
+      plan: plan,
+      savedPlan: savedPlan.value,
+      biometricAvailable: biometricAvailable,
+      allTraffic: allTraffic.value,
+      canChangeTraffic: canChangeTraffic,
+      isLoading: isLoading.value,
+      canEditDefaults: canEditDefaults,
+      onToggleTraffic: () => allTraffic.value = !allTraffic.value,
+      onMethodSelected: (method) => selection.value = method,
+      onConnectTap: unpassable
+          ? () => showMfaUnavailableDialog(
+              context,
+              reason: unpassableStepReason(
+                location,
+                biometricAvailable: biometricAvailable,
+              ),
+              instanceId: instance.id,
+            )
+          : connect,
+      onOpenMfaSettings: openMfaSettings,
+    );
+
+    if (!canEditDefaults) return connectPane;
+
+    return PopScope(
+      canPop: !showingMfa.value,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) closeMfaSettings();
+      },
+      child: _PaneSwitcher(
+        animation: paneController,
+        showingSecond: showingMfa.value,
+        first: connectPane,
+        second: MfaSettingsPane(
+          steps: steps,
+          working: mfaWorking.value,
+          savedPlan: savedPlan.value,
+          biometricAvailable: biometricAvailable,
+          isSaving: isSaving.value,
+          onSelected: (index, method) {
+            final next = [...mfaWorking.value];
+            next[index] = method;
+            mfaWorking.value = next;
+          },
+          onBack: closeMfaSettings,
+          onSave: saveMfaPlan,
         ),
-        const Padding(
-          padding: EdgeInsets.only(top: 20, bottom: 16),
-          child: Divider(height: 1, color: DgColor.bgWhite10),
-        ),
-        GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onTap: canChangeTraffic
-              ? () => allTraffic.value = !allTraffic.value
-              : null,
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(minHeight: 44),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      ),
+    );
+  }
+}
+
+class _PaneSwitcher extends StatelessWidget {
+  final Animation<double> animation;
+  final bool showingSecond;
+  final Widget first;
+  final Widget second;
+
+  const _PaneSwitcher({
+    required this.animation,
+    required this.showingSecond,
+    required this.first,
+    required this.second,
+  });
+
+  Widget _pane({
+    required Offset offset,
+    required bool inactive,
+    required Widget child,
+  }) {
+    final shifted = FractionalTranslation(
+      translation: offset,
+      child: ExcludeSemantics(
+        excluding: inactive,
+        child: IgnorePointer(ignoring: inactive, child: child),
+      ),
+    );
+
+    return inactive
+        ? Positioned(top: 0, left: 0, right: 0, child: shifted)
+        : shifted;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRect(
+      child: AnimatedSize(
+        duration: _paneDuration,
+        curve: _paneCurve,
+        alignment: Alignment.topCenter,
+        child: AnimatedBuilder(
+          animation: animation,
+          builder: (context, _) {
+            final t = _paneCurve.transform(animation.value);
+            return Stack(
+              clipBehavior: Clip.none,
               children: [
-                Text(
-                  allTraffic.value ? "All traffic" : "Predefined traffic only",
-                  style: DgText.bodySm400.copyWith(
-                    color: DgColor.fgWhite100,
-                  ),
+                _pane(
+                  offset: Offset(-t, 0),
+                  inactive: showingSecond,
+                  child: first,
                 ),
-                DgToggle(value: allTraffic.value),
+                _pane(
+                  offset: Offset(1 - t, 0),
+                  inactive: !showingSecond,
+                  child: second,
+                ),
               ],
-            ),
-          ),
-        ),
-        if (isMfaEnabled) ...[
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 12),
-            child: Divider(color: DgColor.bgWhite10, height: 1),
-          ),
-          Expansible(
-            controller: mfaController,
-            expansibleBuilder: (context, header, body, animation) => Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [header, body],
-            ),
-            headerBuilder: (context, animation) => GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: availableMfaMethods.length > 1
-                  ? () => mfaController.toggle()
-                  : null,
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(minHeight: 44),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 4,
-                        vertical: 1,
-                      ),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(4),
-                        color: DgColor.bgWhite100,
-                      ),
-                      child: Text(
-                        "MFA",
-                        style: DgText.bodyXs500.copyWith(
-                          color: const Color(0xff061a74),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        selectedMfaMethod.value.toUiString(),
-                        style: DgText.bodySm400.copyWith(
-                          color: DgColor.fgWhite100,
-                        ),
-                      ),
-                    ),
-                    if (availableMfaMethods.length > 1) ...[
-                      const SizedBox(width: 4),
-                      DgIcon(
-                        "arrow_small",
-                        size: 20,
-                        color: DgColor.fgWhite100,
-                        rotation: animation.value * (math.pi / 2),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            ),
-            bodyBuilder: (context, animation) => Padding(
-              padding: const EdgeInsets.only(top: DgSpacing.md),
-              child: Column(
-                spacing: DgSpacing.md,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: availableMfaMethods
-                    .map(
-                      (method) => DgMfaSelector(
-                        active: selectedMfaMethod.value == method,
-                        factor: method,
-                        onTap: () {
-                          selectedMfaMethod.value = method;
-                        },
-                      ),
-                    )
-                    .toList(),
-              ),
-            ),
-          ),
-        ],
-        const Padding(
-          padding: EdgeInsets.symmetric(vertical: DgSpacing.xl2),
-          child: Divider(height: 1, color: DgColor.bgWhite10),
-        ),
-        DgButton(
-          text: "Connect VPN",
-          size: DgButtonSize.big,
-          style: DgButtonStyle.primary,
-          loading: isLoading.value,
-          onTap: () async {
-            isLoading.value = true;
-            try {
-              final traffic = allTraffic.value
-                  ? RoutingMethod.all
-                  : RoutingMethod.predefined;
-              final mfa = isMfaEnabled ? selectedMfaMethod.value : null;
-
-              final result = await onConnect(traffic, mfa);
-              if (context.mounted) {
-                Navigator.of(context).pop(result);
-              }
-            } finally {
-              isLoading.value = false;
-            }
+            );
           },
         ),
-      ],
+      ),
     );
   }
 }

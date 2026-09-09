@@ -1,14 +1,14 @@
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:mobile/data/db/database.dart';
 import 'package:mobile/data/proxy/enrollment.dart';
 import 'package:mobile/logging.dart';
 import 'package:mobile/open/api.dart';
-import 'package:mobile/open/widgets/toaster/toast_manager.dart';
 import 'package:mobile/open/widgets/dg_button.dart';
 import 'package:mobile/open/widgets/dg_dialog.dart';
 import 'package:mobile/open/widgets/dg_text_form_field.dart';
+import 'package:mobile/open/widgets/toaster/toast_manager.dart';
 import 'package:mobile/theme/spacing.dart';
 import 'package:mobile/utils/update_instance.dart';
 
@@ -108,8 +108,6 @@ class RefreshInstanceDialog extends HookConsumerWidget {
                     if (context.mounted) {
                       Navigator.of(context).pop();
                     }
-                  } catch (e) {
-                    // error handled in submit
                   } finally {
                     isLoading.value = false;
                   }

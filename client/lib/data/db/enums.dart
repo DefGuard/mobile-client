@@ -1,5 +1,7 @@
+import 'package:collection/collection.dart';
 import 'package:drift/drift.dart';
 import 'package:json_annotation/json_annotation.dart' as j;
+import 'package:mobile/logging.dart';
 
 @j.JsonEnum()
 enum RoutingMethod {
@@ -36,6 +38,9 @@ enum MfaMethod {
   static MfaMethod fromValue(int value) =>
       MfaMethod.values.firstWhere((e) => e.value == value);
 
+  static MfaMethod? tryFromValue(int value) =>
+      MfaMethod.values.where((e) => e.value == value).firstOrNull;
+
   String toReadableString() => _readableNames[this] ?? 'Unknown';
 
   static const Map<MfaMethod, String> _readableNames = {
@@ -64,7 +69,13 @@ class MfaMethodConverter extends TypeConverter<MfaMethod, int> {
 
   @override
   MfaMethod fromSql(int fromDb) {
-    return MfaMethod.fromValue(fromDb);
+    final method = MfaMethod.tryFromValue(fromDb);
+    if (method == null) {
+      // Throwing here would fail the whole locations query, not just this row.
+      talker.error("Unknown stored MfaMethod value $fromDb, reading as totp");
+      return MfaMethod.totp;
+    }
+    return method;
   }
 
   @override
@@ -90,6 +101,9 @@ enum LocationMfaMode {
 
   static LocationMfaMode fromValue(int value) =>
       LocationMfaMode.values.firstWhere((e) => e.value == value);
+
+  static LocationMfaMode? tryFromValue(int value) =>
+      LocationMfaMode.values.where((e) => e.value == value).firstOrNull;
 }
 
 class LocationMfaModeConverter extends TypeConverter<LocationMfaMode, int> {
@@ -97,7 +111,14 @@ class LocationMfaModeConverter extends TypeConverter<LocationMfaMode, int> {
 
   @override
   LocationMfaMode fromSql(int fromDb) {
-    return LocationMfaMode.fromValue(fromDb);
+    final mode = LocationMfaMode.tryFromValue(fromDb);
+    if (mode == null) {
+      talker.error(
+        "Unknown stored LocationMfaMode value $fromDb, reading as unspecified",
+      );
+      return LocationMfaMode.unspecified;
+    }
+    return mode;
   }
 
   @override

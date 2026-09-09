@@ -903,6 +903,26 @@ class $LocationsTable extends Locations
     ),
   );
   @override
+  late final GeneratedColumnWithTypeConverter<List<MfaStep>, String> mfaSteps =
+      GeneratedColumn<String>(
+        'mfa_steps',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+        defaultValue: const Constant('[]'),
+      ).withConverter<List<MfaStep>>($LocationsTable.$convertermfaSteps);
+  @override
+  late final GeneratedColumnWithTypeConverter<List<MfaMethod?>, String>
+  mfaStepPlan = GeneratedColumn<String>(
+    'mfa_step_plan',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('[]'),
+  ).withConverter<List<MfaMethod?>>($LocationsTable.$convertermfaStepPlan);
+  @override
   List<GeneratedColumn> get $columns => [
     id,
     instance,
@@ -919,6 +939,8 @@ class $LocationsTable extends Locations
     keepAliveInterval,
     locationMfaMode,
     postureCheckRequired,
+    mfaSteps,
+    mfaStepPlan,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1098,6 +1120,18 @@ class $LocationsTable extends Locations
         DriftSqlType.bool,
         data['${effectivePrefix}posture_check_required'],
       ),
+      mfaSteps: $LocationsTable.$convertermfaSteps.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}mfa_steps'],
+        )!,
+      ),
+      mfaStepPlan: $LocationsTable.$convertermfaStepPlan.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}mfa_step_plan'],
+        )!,
+      ),
     );
   }
 
@@ -1122,6 +1156,10 @@ class $LocationsTable extends Locations
       const LocationMfaModeConverter();
   static TypeConverter<LocationMfaMode?, int?> $converterlocationMfaModen =
       NullAwareTypeConverter.wrap($converterlocationMfaMode);
+  static TypeConverter<List<MfaStep>, String> $convertermfaSteps =
+      const MfaStepsConverter();
+  static TypeConverter<List<MfaMethod?>, String> $convertermfaStepPlan =
+      const MfaStepPlanConverter();
 }
 
 class Location extends DataClass implements Insertable<Location> {
@@ -1140,6 +1178,14 @@ class Location extends DataClass implements Insertable<Location> {
   final int keepAliveInterval;
   final LocationMfaMode? locationMfaMode;
   final bool? postureCheckRequired;
+
+  /// Server-resolved MFA flow. Empty means the server did not send one, and
+  /// `effectiveMfaSteps` synthesizes it from [locationMfaMode] instead.
+  final List<MfaStep> mfaSteps;
+
+  /// The user's default method per step, positional. Owned by the MFA settings
+  /// screen and by `sanitizeMfaStepPlan`.
+  final List<MfaMethod?> mfaStepPlan;
   const Location({
     required this.id,
     required this.instance,
@@ -1156,6 +1202,8 @@ class Location extends DataClass implements Insertable<Location> {
     required this.keepAliveInterval,
     this.locationMfaMode,
     this.postureCheckRequired,
+    required this.mfaSteps,
+    required this.mfaStepPlan,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1193,6 +1241,16 @@ class Location extends DataClass implements Insertable<Location> {
     if (!nullToAbsent || postureCheckRequired != null) {
       map['posture_check_required'] = Variable<bool>(postureCheckRequired);
     }
+    {
+      map['mfa_steps'] = Variable<String>(
+        $LocationsTable.$convertermfaSteps.toSql(mfaSteps),
+      );
+    }
+    {
+      map['mfa_step_plan'] = Variable<String>(
+        $LocationsTable.$convertermfaStepPlan.toSql(mfaStepPlan),
+      );
+    }
     return map;
   }
 
@@ -1223,6 +1281,8 @@ class Location extends DataClass implements Insertable<Location> {
       postureCheckRequired: postureCheckRequired == null && nullToAbsent
           ? const Value.absent()
           : Value(postureCheckRequired),
+      mfaSteps: Value(mfaSteps),
+      mfaStepPlan: Value(mfaStepPlan),
     );
   }
 
@@ -1253,6 +1313,8 @@ class Location extends DataClass implements Insertable<Location> {
       postureCheckRequired: serializer.fromJson<bool?>(
         json['posture_check_required'],
       ),
+      mfaSteps: serializer.fromJson<List<MfaStep>>(json['mfa_steps']),
+      mfaStepPlan: serializer.fromJson<List<MfaMethod?>>(json['mfa_step_plan']),
     );
   }
   @override
@@ -1276,6 +1338,8 @@ class Location extends DataClass implements Insertable<Location> {
       'keepalive_interval': serializer.toJson<int>(keepAliveInterval),
       'location_mfa_mode': serializer.toJson<LocationMfaMode?>(locationMfaMode),
       'posture_check_required': serializer.toJson<bool?>(postureCheckRequired),
+      'mfa_steps': serializer.toJson<List<MfaStep>>(mfaSteps),
+      'mfa_step_plan': serializer.toJson<List<MfaMethod?>>(mfaStepPlan),
     };
   }
 
@@ -1295,6 +1359,8 @@ class Location extends DataClass implements Insertable<Location> {
     int? keepAliveInterval,
     Value<LocationMfaMode?> locationMfaMode = const Value.absent(),
     Value<bool?> postureCheckRequired = const Value.absent(),
+    List<MfaStep>? mfaSteps,
+    List<MfaMethod?>? mfaStepPlan,
   }) => Location(
     id: id ?? this.id,
     instance: instance ?? this.instance,
@@ -1317,6 +1383,8 @@ class Location extends DataClass implements Insertable<Location> {
     postureCheckRequired: postureCheckRequired.present
         ? postureCheckRequired.value
         : this.postureCheckRequired,
+    mfaSteps: mfaSteps ?? this.mfaSteps,
+    mfaStepPlan: mfaStepPlan ?? this.mfaStepPlan,
   );
   Location copyWithCompanion(LocationsCompanion data) {
     return Location(
@@ -1347,6 +1415,10 @@ class Location extends DataClass implements Insertable<Location> {
       postureCheckRequired: data.postureCheckRequired.present
           ? data.postureCheckRequired.value
           : this.postureCheckRequired,
+      mfaSteps: data.mfaSteps.present ? data.mfaSteps.value : this.mfaSteps,
+      mfaStepPlan: data.mfaStepPlan.present
+          ? data.mfaStepPlan.value
+          : this.mfaStepPlan,
     );
   }
 
@@ -1367,7 +1439,9 @@ class Location extends DataClass implements Insertable<Location> {
           ..write('mfaMethod: $mfaMethod, ')
           ..write('keepAliveInterval: $keepAliveInterval, ')
           ..write('locationMfaMode: $locationMfaMode, ')
-          ..write('postureCheckRequired: $postureCheckRequired')
+          ..write('postureCheckRequired: $postureCheckRequired, ')
+          ..write('mfaSteps: $mfaSteps, ')
+          ..write('mfaStepPlan: $mfaStepPlan')
           ..write(')'))
         .toString();
   }
@@ -1389,6 +1463,8 @@ class Location extends DataClass implements Insertable<Location> {
     keepAliveInterval,
     locationMfaMode,
     postureCheckRequired,
+    mfaSteps,
+    mfaStepPlan,
   );
   @override
   bool operator ==(Object other) =>
@@ -1408,7 +1484,9 @@ class Location extends DataClass implements Insertable<Location> {
           other.mfaMethod == this.mfaMethod &&
           other.keepAliveInterval == this.keepAliveInterval &&
           other.locationMfaMode == this.locationMfaMode &&
-          other.postureCheckRequired == this.postureCheckRequired);
+          other.postureCheckRequired == this.postureCheckRequired &&
+          other.mfaSteps == this.mfaSteps &&
+          other.mfaStepPlan == this.mfaStepPlan);
 }
 
 class LocationsCompanion extends UpdateCompanion<Location> {
@@ -1427,6 +1505,8 @@ class LocationsCompanion extends UpdateCompanion<Location> {
   final Value<int> keepAliveInterval;
   final Value<LocationMfaMode?> locationMfaMode;
   final Value<bool?> postureCheckRequired;
+  final Value<List<MfaStep>> mfaSteps;
+  final Value<List<MfaMethod?>> mfaStepPlan;
   const LocationsCompanion({
     this.id = const Value.absent(),
     this.instance = const Value.absent(),
@@ -1443,6 +1523,8 @@ class LocationsCompanion extends UpdateCompanion<Location> {
     this.keepAliveInterval = const Value.absent(),
     this.locationMfaMode = const Value.absent(),
     this.postureCheckRequired = const Value.absent(),
+    this.mfaSteps = const Value.absent(),
+    this.mfaStepPlan = const Value.absent(),
   });
   LocationsCompanion.insert({
     this.id = const Value.absent(),
@@ -1460,6 +1542,8 @@ class LocationsCompanion extends UpdateCompanion<Location> {
     required int keepAliveInterval,
     this.locationMfaMode = const Value.absent(),
     this.postureCheckRequired = const Value.absent(),
+    this.mfaSteps = const Value.absent(),
+    this.mfaStepPlan = const Value.absent(),
   }) : instance = Value(instance),
        networkId = Value(networkId),
        name = Value(name),
@@ -1484,6 +1568,8 @@ class LocationsCompanion extends UpdateCompanion<Location> {
     Expression<int>? keepAliveInterval,
     Expression<int>? locationMfaMode,
     Expression<bool>? postureCheckRequired,
+    Expression<String>? mfaSteps,
+    Expression<String>? mfaStepPlan,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -1502,6 +1588,8 @@ class LocationsCompanion extends UpdateCompanion<Location> {
       if (locationMfaMode != null) 'location_mfa_mode': locationMfaMode,
       if (postureCheckRequired != null)
         'posture_check_required': postureCheckRequired,
+      if (mfaSteps != null) 'mfa_steps': mfaSteps,
+      if (mfaStepPlan != null) 'mfa_step_plan': mfaStepPlan,
     });
   }
 
@@ -1521,6 +1609,8 @@ class LocationsCompanion extends UpdateCompanion<Location> {
     Value<int>? keepAliveInterval,
     Value<LocationMfaMode?>? locationMfaMode,
     Value<bool?>? postureCheckRequired,
+    Value<List<MfaStep>>? mfaSteps,
+    Value<List<MfaMethod?>>? mfaStepPlan,
   }) {
     return LocationsCompanion(
       id: id ?? this.id,
@@ -1538,6 +1628,8 @@ class LocationsCompanion extends UpdateCompanion<Location> {
       keepAliveInterval: keepAliveInterval ?? this.keepAliveInterval,
       locationMfaMode: locationMfaMode ?? this.locationMfaMode,
       postureCheckRequired: postureCheckRequired ?? this.postureCheckRequired,
+      mfaSteps: mfaSteps ?? this.mfaSteps,
+      mfaStepPlan: mfaStepPlan ?? this.mfaStepPlan,
     );
   }
 
@@ -1597,6 +1689,16 @@ class LocationsCompanion extends UpdateCompanion<Location> {
         postureCheckRequired.value,
       );
     }
+    if (mfaSteps.present) {
+      map['mfa_steps'] = Variable<String>(
+        $LocationsTable.$convertermfaSteps.toSql(mfaSteps.value),
+      );
+    }
+    if (mfaStepPlan.present) {
+      map['mfa_step_plan'] = Variable<String>(
+        $LocationsTable.$convertermfaStepPlan.toSql(mfaStepPlan.value),
+      );
+    }
     return map;
   }
 
@@ -1617,7 +1719,9 @@ class LocationsCompanion extends UpdateCompanion<Location> {
           ..write('mfaMethod: $mfaMethod, ')
           ..write('keepAliveInterval: $keepAliveInterval, ')
           ..write('locationMfaMode: $locationMfaMode, ')
-          ..write('postureCheckRequired: $postureCheckRequired')
+          ..write('postureCheckRequired: $postureCheckRequired, ')
+          ..write('mfaSteps: $mfaSteps, ')
+          ..write('mfaStepPlan: $mfaStepPlan')
           ..write(')'))
         .toString();
   }
@@ -2120,6 +2224,8 @@ typedef $$LocationsTableCreateCompanionBuilder =
       required int keepAliveInterval,
       Value<LocationMfaMode?> locationMfaMode,
       Value<bool?> postureCheckRequired,
+      Value<List<MfaStep>> mfaSteps,
+      Value<List<MfaMethod?>> mfaStepPlan,
     });
 typedef $$LocationsTableUpdateCompanionBuilder =
     LocationsCompanion Function({
@@ -2138,6 +2244,8 @@ typedef $$LocationsTableUpdateCompanionBuilder =
       Value<int> keepAliveInterval,
       Value<LocationMfaMode?> locationMfaMode,
       Value<bool?> postureCheckRequired,
+      Value<List<MfaStep>> mfaSteps,
+      Value<List<MfaMethod?>> mfaStepPlan,
     });
 
 final class $$LocationsTableReferences
@@ -2245,6 +2353,18 @@ class $$LocationsTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnWithTypeConverterFilters<List<MfaStep>, List<MfaStep>, String>
+  get mfaSteps => $composableBuilder(
+    column: $table.mfaSteps,
+    builder: (column) => ColumnWithTypeConverterFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<List<MfaMethod?>, List<MfaMethod>, String>
+  get mfaStepPlan => $composableBuilder(
+    column: $table.mfaStepPlan,
+    builder: (column) => ColumnWithTypeConverterFilters(column),
+  );
+
   $$DefguardInstancesTableFilterComposer get instance {
     final $$DefguardInstancesTableFilterComposer composer = $composerBuilder(
       composer: this,
@@ -2348,6 +2468,16 @@ class $$LocationsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get mfaSteps => $composableBuilder(
+    column: $table.mfaSteps,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get mfaStepPlan => $composableBuilder(
+    column: $table.mfaStepPlan,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $$DefguardInstancesTableOrderingComposer get instance {
     final $$DefguardInstancesTableOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -2437,6 +2567,15 @@ class $$LocationsTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumnWithTypeConverter<List<MfaStep>, String> get mfaSteps =>
+      $composableBuilder(column: $table.mfaSteps, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<List<MfaMethod?>, String> get mfaStepPlan =>
+      $composableBuilder(
+        column: $table.mfaStepPlan,
+        builder: (column) => column,
+      );
+
   $$DefguardInstancesTableAnnotationComposer get instance {
     final $$DefguardInstancesTableAnnotationComposer composer =
         $composerBuilder(
@@ -2505,6 +2644,8 @@ class $$LocationsTableTableManager
                 Value<int> keepAliveInterval = const Value.absent(),
                 Value<LocationMfaMode?> locationMfaMode = const Value.absent(),
                 Value<bool?> postureCheckRequired = const Value.absent(),
+                Value<List<MfaStep>> mfaSteps = const Value.absent(),
+                Value<List<MfaMethod?>> mfaStepPlan = const Value.absent(),
               }) => LocationsCompanion(
                 id: id,
                 instance: instance,
@@ -2521,6 +2662,8 @@ class $$LocationsTableTableManager
                 keepAliveInterval: keepAliveInterval,
                 locationMfaMode: locationMfaMode,
                 postureCheckRequired: postureCheckRequired,
+                mfaSteps: mfaSteps,
+                mfaStepPlan: mfaStepPlan,
               ),
           createCompanionCallback:
               ({
@@ -2539,6 +2682,8 @@ class $$LocationsTableTableManager
                 required int keepAliveInterval,
                 Value<LocationMfaMode?> locationMfaMode = const Value.absent(),
                 Value<bool?> postureCheckRequired = const Value.absent(),
+                Value<List<MfaStep>> mfaSteps = const Value.absent(),
+                Value<List<MfaMethod?>> mfaStepPlan = const Value.absent(),
               }) => LocationsCompanion.insert(
                 id: id,
                 instance: instance,
@@ -2555,6 +2700,8 @@ class $$LocationsTableTableManager
                 keepAliveInterval: keepAliveInterval,
                 locationMfaMode: locationMfaMode,
                 postureCheckRequired: postureCheckRequired,
+                mfaSteps: mfaSteps,
+                mfaStepPlan: mfaStepPlan,
               ),
           withReferenceMapper: (p0) => p0
               .map(

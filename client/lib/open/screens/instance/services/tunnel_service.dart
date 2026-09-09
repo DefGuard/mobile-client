@@ -4,20 +4,17 @@ import 'dart:io';
 import 'package:drift/drift.dart' as drift;
 import 'package:material_ui/material_ui.dart';
 import 'package:mobile/data/db/database.dart';
+import 'package:mobile/data/mfa/mfa_flow.dart';
+import 'package:mobile/data/mfa/mfa_plan.dart';
 import 'package:mobile/data/plugin/plugin.dart';
-import 'package:mobile/data/proxy/mfa.dart';
 import 'package:mobile/enterprise/postures.dart';
-import 'package:mobile/enterprise/screens/mfa/openid_mfa_screen.dart';
+import 'package:mobile/logging.dart';
 import 'package:mobile/open/api.dart';
 import 'package:mobile/open/riverpod/biometrics_state.dart';
-import 'package:mobile/open/screens/mfa/mfa_biometric_screen.dart';
-import 'package:mobile/open/screens/mfa/mfa_code_screen.dart';
-import 'package:mobile/open/screens/mfa/mfa_email_screen.dart';
-import 'package:mobile/open/screens/mfa/mfa_totp_screen.dart';
+import 'package:mobile/open/screens/mfa/mfa_step_flow.dart';
 import 'package:mobile/utils/instance_secrets.dart';
 
 import '../../../../data/db/enums.dart';
-import 'package:mobile/logging.dart';
 import '../../../../utils/notifications.dart';
 
 /// How a connect attempt ended. Reporting it - a toast, a snackbar, nothing at
@@ -62,7 +59,6 @@ class _StepOutcome {
 
   const _StepOutcome.success(this.presharedKey) : failure = null;
   const _StepOutcome.failed(this.failure) : presharedKey = null;
-  const _StepOutcome.cancelled() : presharedKey = null, failure = null;
 }
 
 /// Handles MFA flows and tunnel connection
@@ -80,7 +76,9 @@ class TunnelService {
     required BiometricsState biometricsStatus,
     required AppDatabase db,
     required RoutingMethod trafficMethod,
-    MfaMethod? mfaMethod,
+
+    /// Overrides the saved default for the steps it covers, positionally.
+    List<MfaMethod?> mfaPlan = const [],
   }) async {
     final navigator = Navigator.of(context);
 
@@ -93,7 +91,6 @@ class TunnelService {
           ClientTrafficPolicy.none => trafficMethod,
         };
 
-    // prepare wireguard plugin payload
     final privateKey = await instance.wireguardPrivateKey();
     if (privateKey == null) {
       reportMissingSecret(instance.logName, "WireGuard private key");
@@ -108,42 +105,56 @@ class TunnelService {
 
     MfaMethod? authorizedWith;
 
-    if (checkMfaEnabled(location)) {
-      await requestNotificationPermissions();
-      late MfaMethod selectedMfaMethod;
-      if (location.locationMfaMode == LocationMfaMode.external) {
-        selectedMfaMethod = MfaMethod.openid;
-      } else if (mfaMethod != null &&
-          !(mfaMethod == MfaMethod.biometric &&
-              !biometricsStatus.canOpenStorage)) {
-        selectedMfaMethod = mfaMethod;
-      } else {
-        // The caller only offers methods that are actually usable, so getting
-        // here means its capability snapshot went stale mid-connect. Bail out
-        // and let the user pick again rather than guessing a method.
+    if (shouldStartMfa(location)) {
+      final biometricAvailable =
+          instance.mfaKeysStored && biometricsStatus.canOpenStorage;
+      final resolved = resolveMfaStepPlan(
+        location,
+        oneOff: mfaPlan,
+        biometricAvailable: biometricAvailable,
+      );
+      if (resolved.isEmpty || resolved.contains(null)) {
         return const ConnectResult.failed(
-          message: "Select an MFA method to connect.",
-          logMessage:
-              "Connect called without a usable MFA method for an MFA location",
+          message: "This location cannot be verified from the mobile app.",
+          logMessage: "Connect attempted on a location with an unpassable step",
         );
       }
+      final plan = resolved.cast<MfaMethod>();
+      talker.debug(
+        "Starting ${plan.length}-step MFA for networkId ${payload.networkId}: "
+        "${plan.map((m) => m.toReadableString()).join(', ')}",
+      );
 
-      final mfaOutcome = await _performMfa(
+      await requestNotificationPermissions();
+      final flow = MfaStepFlow(
         navigator: navigator,
+        controller: MfaFlowController(
+          transport: ProxyMfaTransport(Uri.parse(instance.proxyUrl)),
+          plan: plan,
+          devicePubkey: payload.devicePublicKey,
+          networkId: payload.networkId,
+          postureData: payload.postureCheckRequired ? await getPosture() : null,
+        ),
         proxyUrl: instance.proxyUrl,
-        payload: payload,
-        method: selectedMfaMethod,
         secureStorageKey: instance.secureStorageKey,
         openidDisplayName: instance.openidDisplayName,
       );
-      if (mfaOutcome.failure != null) {
-        return mfaOutcome.failure!;
+
+      switch (await flow.run()) {
+        case MfaFlowCancelled():
+          return const ConnectResult.cancelled();
+        case MfaFlowFailed(:final message, :final logMessage, :final error):
+          return ConnectResult.failed(
+            message: message,
+            logMessage: logMessage,
+            error: error,
+          );
+        case MfaFlowConnected():
+          payload.presharedKey = flow.controller.takePresharedKey();
       }
-      if (mfaOutcome.presharedKey == null) {
-        return const ConnectResult.cancelled();
-      }
-      payload.presharedKey = mfaOutcome.presharedKey;
-      authorizedWith = selectedMfaMethod;
+      // Only meaningful for a single-step flow; a multi-step one is described
+      // by its step count instead.
+      authorizedWith = plan.length == 1 ? plan.single : null;
     } else if (payload.postureCheckRequired) {
       final poolingToken = await instance.poolingToken();
       if (poolingToken == null) {
@@ -196,14 +207,27 @@ class TunnelService {
     final mfa = mfaMethod != null
         ? drift.Value(mfaMethod)
         : const drift.Value<MfaMethod?>.absent();
+    // Set only for a single-step flow, where the sheet's picker is also how the
+    // step's default changes. A multi-step plan is owned by the MFA settings
+    // screen and left alone here.
+    final plan = mfaMethod != null
+        ? drift.Value<List<MfaMethod?>>([mfaMethod])
+        : const drift.Value<List<MfaMethod?>>.absent();
 
     if (!traffic.present && !mfa.present) {
       return;
     }
 
     try {
-      await (db.update(db.locations)..where((t) => t.id.equals(location.id)))
-          .write(LocationsCompanion(trafficMethod: traffic, mfaMethod: mfa));
+      await (db.update(
+        db.locations,
+      )..where((t) => t.id.equals(location.id))).write(
+        LocationsCompanion(
+          trafficMethod: traffic,
+          mfaMethod: mfa,
+          mfaStepPlan: plan,
+        ),
+      );
     } catch (e) {
       talker.error(
         "Failed to remember connection preferences for location ${location.id}",
@@ -212,13 +236,9 @@ class TunnelService {
     }
   }
 
-  /// Checks if MFA is enabled for specified location taking into account
-  /// the deprecated `mfaEnabled` option.
-  static bool checkMfaEnabled(Location location) {
-    return location.mfaEnabled == true ||
-        location.locationMfaMode == LocationMfaMode.internal ||
-        location.locationMfaMode == LocationMfaMode.external;
-  }
+  /// Whether the location has an MFA flow to satisfy. Legacy single-mode
+  /// locations are normalized into a one-step flow by `effectiveMfaSteps`.
+  static bool checkMfaEnabled(Location location) => shouldStartMfa(location);
 
   /// Performs posture-only authorization and returns runtime preshared key.
   static Future<_StepOutcome> _performPostureCheck({
@@ -261,185 +281,6 @@ class TunnelService {
     }
   }
 
-  /// Performs MFA using specified method.
-  /// Returns the runtime preshared key on success.
-  static Future<_StepOutcome> _performMfa({
-    required NavigatorState navigator,
-    required String proxyUrl,
-    required PluginConnectPayload payload,
-    required MfaMethod method,
-    String? secureStorageKey,
-    String? openidDisplayName,
-  }) async {
-    try {
-      final startMfaResponse = await _startMfa(
-        proxyUrl,
-        payload.devicePublicKey,
-        payload.networkId,
-        method,
-        payload.postureCheckRequired,
-      );
-
-      String? presharedKey;
-      if (method == MfaMethod.openid) {
-        presharedKey = await _handleOpenid(
-          navigator: navigator,
-          token: startMfaResponse.token,
-          proxyUrl: proxyUrl,
-          method: method,
-          openidDisplayName: openidDisplayName,
-        );
-      } else if (method == MfaMethod.biometric) {
-        if (startMfaResponse.challenge == null) {
-          throw "Challenge not found in start response";
-        }
-        if (secureStorageKey == null) {
-          throw "Storage key not provided";
-        }
-        presharedKey = await _handleBiometric(
-          navigator: navigator,
-          proxyUrl: proxyUrl,
-          token: startMfaResponse.token,
-          challenge: startMfaResponse.challenge!,
-          secureStorageKey: secureStorageKey,
-        );
-      } else {
-        presharedKey = await _handleCodeInput(
-          navigator: navigator,
-          token: startMfaResponse.token,
-          proxyUrl: proxyUrl,
-          method: method,
-        );
-      }
-
-      return presharedKey == null
-          ? const _StepOutcome.cancelled()
-          : _StepOutcome.success(presharedKey);
-    } on MfaMethodNotAvailableException catch (e) {
-      final methodString = e.method.toReadableString();
-      return _StepOutcome.failed(
-        ConnectResult.failed(
-          message:
-              "$methodString is not configured on your account. Select a different MFA method.",
-          logMessage:
-              "MFA method $methodString was not configured on the account. Connect Failed.",
-          error: e,
-        ),
-      );
-    } on HttpException catch (e) {
-      return _StepOutcome.failed(
-        ConnectResult.failed(
-          message: "MFA request failed. Please try again.",
-          logMessage: "Connect MFA failed!",
-          error: e,
-        ),
-      );
-    } catch (e) {
-      return _StepOutcome.failed(
-        ConnectResult.failed(
-          message: "MFA failed. Please try again.",
-          logMessage: "MFA flow error!",
-          error: e,
-        ),
-      );
-    }
-  }
-
-  /// Handles OpenID MFA flow
-  static Future<String?> _handleOpenid({
-    required NavigatorState navigator,
-    required String token,
-    required String proxyUrl,
-    required MfaMethod method,
-    String? openidDisplayName,
-  }) async {
-    final presharedKey = await Navigator.of(navigator.context).push<String?>(
-      MaterialPageRoute(
-        builder: (context) => OpenIdMfaScreen(
-          screenData: OpenIdMfaScreenData(
-            proxyUrl: proxyUrl,
-            token: token,
-            openidDisplayName: openidDisplayName,
-          ),
-        ),
-      ),
-    );
-    if (presharedKey != null) {
-      talker.info("Code authentication successful");
-    }
-    return presharedKey;
-  }
-
-  /// Handles biometric MFA flow
-  static Future<String?> _handleBiometric({
-    required NavigatorState navigator,
-    required String proxyUrl,
-    required String token,
-    required String challenge,
-    required String secureStorageKey,
-  }) async {
-    final presharedKey = await Navigator.of(navigator.context).push<String?>(
-      MaterialPageRoute(
-        builder: (context) => MfaBiometricScreen(
-          screenData: MfaBiometricScreenData(
-            proxyUrl: proxyUrl,
-            token: token,
-            challenge: challenge,
-            secureStorageKey: secureStorageKey,
-          ),
-        ),
-      ),
-    );
-    if (presharedKey != null) {
-      talker.info("Biometric authentication successful");
-    }
-    return presharedKey;
-  }
-
-  /// Handles code based MFA flows (totp, email)
-  static Future<String?> _handleCodeInput({
-    required NavigatorState navigator,
-    required String token,
-    required String proxyUrl,
-    required MfaMethod method,
-  }) async {
-    final screenData = MfaCodeScreenData(proxyUrl: proxyUrl, token: token);
-    final Widget screen = method == MfaMethod.email
-        ? MfaEmailScreen(screenData: screenData)
-        : MfaTotpScreen(screenData: screenData);
-
-    final presharedKey = await Navigator.of(
-      navigator.context,
-    ).push<String?>(MaterialPageRoute(builder: (context) => screen));
-    if (presharedKey != null) {
-      talker.info("Code authentication successful");
-    }
-    return presharedKey;
-  }
-
-  /// Calls `/client-mfa/start` endpoint, returns `StartMfaResponse` with session token.
-  static Future<StartMfaResponse> _startMfa(
-    String url,
-    String pubkey,
-    int networkId,
-    MfaMethod method,
-    bool postureCheckRequired,
-  ) async {
-    talker.debug(
-      "Starting MFA for networkId: $networkId, method: ${method.toReadableString()}",
-    );
-    final postureData = postureCheckRequired ? await getPosture() : null;
-    final request = StartMfaRequest(
-      pubkey: pubkey,
-      locationId: networkId,
-      method: method,
-      postureData: postureData,
-    );
-
-    final uri = Uri.parse(url);
-    return await proxyApi.startMfa(uri, request);
-  }
-
   /// Calls `/posture/connect` endpoint and returns runtime preshared key.
   static Future<String> _authorizePostureOnly(
     String url,
@@ -459,7 +300,6 @@ class TunnelService {
     return response.presharedKey;
   }
 
-  /// Prepares wireguard plugin configuration
   static PluginConnectPayload _makePayload(
     DefguardInstance instance,
     Location location,

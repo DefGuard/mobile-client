@@ -16,6 +16,9 @@ class DgLocationCard extends StatelessWidget {
   final bool isConnected;
   final bool loading;
   final MfaMethod? mfaMethod;
+
+  /// Replaces the method name, for a flow no single method describes.
+  final String? mfaLabel;
   final RoutingMethod? routingMethod;
   final VoidCallback? onConnectTap;
   final VoidCallback? onDisconnectTap;
@@ -26,6 +29,7 @@ class DgLocationCard extends StatelessWidget {
     this.isConnected = false,
     this.loading = false,
     this.mfaMethod,
+    this.mfaLabel,
     this.routingMethod,
     this.onConnectTap,
     this.onDisconnectTap,
@@ -111,11 +115,14 @@ class DgLocationCard extends StatelessWidget {
               Expanded(
                 child: routingMethod != null
                     ? _InnerInfoCard(routing: routingMethod)
-                    : _InnerInfoCard(mfaMethod: mfaMethod),
+                    : _InnerInfoCard(
+                        mfaMethod: mfaMethod,
+                        mfaLabel: mfaLabel,
+                      ),
               ),
               Expanded(
                 child: routingMethod != null
-                    ? _InnerInfoCard(mfaMethod: mfaMethod)
+                    ? _InnerInfoCard(mfaMethod: mfaMethod, mfaLabel: mfaLabel)
                     : const SizedBox.shrink(),
               ),
             ],
@@ -269,12 +276,13 @@ Widget previewLoading() {
 class _InnerInfoCard extends StatelessWidget {
   final RoutingMethod? routing;
   final MfaMethod? mfaMethod;
+  final String? mfaLabel;
 
-  const _InnerInfoCard({this.routing, this.mfaMethod});
+  const _InnerInfoCard({this.routing, this.mfaMethod, this.mfaLabel});
 
-  bool get isMfa => mfaMethod != null;
+  bool get isMfa => mfaMethod != null || mfaLabel != null;
   bool get isRouting => routing != null;
-  bool get isEmpty => mfaMethod == null && routing == null;
+  bool get isEmpty => !isMfa && routing == null;
 
   @override
   Widget build(BuildContext context) {
@@ -341,11 +349,12 @@ class _InnerInfoCard extends StatelessWidget {
         case .email:
           iconFileName = "mail";
           break;
+        case null:
+          iconFileName = "mobile_lock";
+          break;
         case .openid:
           iconFileName = "key";
           break;
-        default:
-          iconFileName = "mobile_lock";
       }
     }
     return DgIcon(iconFileName, size: 20, color: iconColor);
@@ -363,7 +372,7 @@ class _InnerInfoCard extends StatelessWidget {
 
   String getText() {
     if (isMfa) {
-      return mfaMethod?.toUiString() ?? "MFA";
+      return mfaLabel ?? mfaMethod?.toUiString() ?? "MFA";
     }
     if (isRouting) {
       return routing?.toUiString() ?? "Traffic";
@@ -394,5 +403,7 @@ Location _mockLocation({bool mfaEnabled = false}) {
     locationMfaMode: mfaEnabled
         ? LocationMfaMode.internal
         : LocationMfaMode.unspecified,
+    mfaSteps: const [],
+    mfaStepPlan: const [],
   );
 }

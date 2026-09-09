@@ -1,8 +1,8 @@
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:mobile/data/db/database.dart';
 import 'package:mobile/logging.dart';
 import 'package:mobile/open/riverpod/package_info/package_info.dart';
@@ -12,8 +12,8 @@ import 'package:mobile/theme/spacing.dart';
 import 'package:mobile/theme/text.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import 'icons/dg_icon.dart';
 import 'dg_icon_button.dart';
+import 'icons/dg_icon.dart';
 
 const String _helpUrl = "https://docs.defguard.net/support";
 
@@ -210,30 +210,6 @@ class DrawerFooter extends ConsumerWidget {
           "Application version: $version",
           style: DgText.bodyXs400.copyWith(color: DgColor.fgWhite50),
         ),
-        // TODO: for task in 2.3
-        // Padding(
-        //   padding: const EdgeInsets.symmetric(vertical: 14),
-        //   child: Container(height: 1, color: DgColor.bgWhite10),
-        // ),
-        // Text(
-        //   "Defguard is made possible by other open-source software.",
-        //   style: DgText.bodyXs400.copyWith(color: DgColor.fgWhite60),
-        // ),
-        // SizedBox(height: 5),
-        // Row(
-        //   children: [
-        //     Text(
-        //       "Learn more here",
-        //       style: DgText.bodyXs400.copyWith(color: DgColor.fgWhite100),
-        //     ),
-        //     SizedBox(width: 4),
-        //     DgIcon(
-        //       "open_in_new_window",
-        //       color: DgColor.fgWhite100,
-        //       size: 16,
-        //     ),
-        //   ],
-        // ),
       ],
     );
   }
