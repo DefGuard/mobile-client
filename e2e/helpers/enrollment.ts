@@ -1,7 +1,9 @@
-import { $, expect } from "@wdio/globals";
+import { $, driver, expect } from "@wdio/globals";
 import type { EnrollmentFixture } from "./coreApi.js";
 import { fillField } from "./input.js";
 import { byId, containsLabel } from "./selectors.js";
+
+const confirmsBiometrySkip = () => driver.isIOS;
 
 const openManualForm = async () => {
 	await $("~Add instance Manually").click();
@@ -29,6 +31,10 @@ const skipBiometry = async () => {
 	const skip = $("~Skip");
 	await skip.waitForDisplayed();
 	await skip.click();
+
+	if (!confirmsBiometrySkip()) {
+		return;
+	}
 
 	const confirm = $(byId("skip_biometry_confirm"));
 	await confirm.waitForDisplayed();
