@@ -1,45 +1,6 @@
 {
 	"$schema": "https://biomejs.dev/schemas/2.4.16/schema.json",
-	"vcs": {
-		"enabled": false,
-		"clientKind": "git",
-		"useIgnoreFile": false
-	},
 	"files": {
-		"ignoreUnknown": false,
-		"includes": ["helpers/**", "tests/**", "wdio.ios.conf.ts"]
-	},
-	"formatter": {
-		"enabled": true,
-		"formatWithErrors": false,
-		"indentStyle": "tab",
-		"lineEnding": "lf",
-		"lineWidth": 80,
-		"bracketSpacing": true
-	},
-	"linter": {
-		"enabled": true,
-		"rules": {
-			"recommended": true
-		}
-	},
-	"javascript": {
-		"formatter": {
-			"quoteStyle": "double",
-			"quoteProperties": "asNeeded",
-			"trailingCommas": "all",
-			"semicolons": "always",
-			"arrowParentheses": "always",
-			"bracketSameLine": false,
-			"bracketSpacing": true
-		}
-	},
-	"assist": {
-		"enabled": true,
-		"actions": {
-			"source": {
-				"organizeImports": "on"
-			}
-		}
+		"includes": ["helpers/**", "tests/**", "wdio.*.conf.ts"]
 	}
 }
