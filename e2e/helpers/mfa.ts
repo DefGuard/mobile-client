@@ -1,14 +1,16 @@
 import { $ } from "@wdio/globals";
+import { fillField } from "./input.js";
+import { byId } from "./selectors.js";
 import { totpCode } from "./totp.js";
 
 const CODE_ATTEMPTS = 3;
 
 export const submitTotpCode = async (secret: string) => {
-	const submit = $("~mfa_code_submit");
-	await submit.waitForDisplayed({ timeout: 30_000 });
+	const submit = $(byId("mfa_code_submit"));
+	await submit.waitForDisplayed();
 
 	for (let attempt = 1; attempt <= CODE_ATTEMPTS; attempt++) {
-		await $("~mfa_code_input").setValue(totpCode(secret));
+		await fillField(byId("mfa_code_input"), totpCode(secret));
 		await submit.click();
 
 		const accepted = await submit

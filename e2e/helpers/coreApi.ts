@@ -2,7 +2,7 @@ import { randomBytes } from "node:crypto";
 import { requireEnv } from "./env.js";
 import { totpCode } from "./totp.js";
 
-const MIN_PEER_DISCONNECT_THRESHOLD_WITH_MFA = 120;
+const MIN_PEER_DISCONNECT_THRESHOLD = 120;
 
 const generatePassword = (): string =>
 	`${randomBytes(24).toString("base64url")}aA1!`;
@@ -122,7 +122,7 @@ export class CoreApi {
 			keepalive_interval: current.keepalive_interval,
 			peer_disconnect_threshold: Math.max(
 				Number(current.peer_disconnect_threshold ?? 0),
-				MIN_PEER_DISCONNECT_THRESHOLD_WITH_MFA,
+				MIN_PEER_DISCONNECT_THRESHOLD,
 			),
 			acl_enabled: current.acl_enabled,
 			acl_default_allow: current.acl_default_allow,

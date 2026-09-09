@@ -1,39 +1,39 @@
 import { $, expect } from "@wdio/globals";
 import type { EnrollmentFixture } from "./coreApi.js";
-import { containsText } from "./selectors.js";
+import { fillField } from "./input.js";
+import { byId, containsLabel } from "./selectors.js";
 
 const openManualForm = async () => {
 	await $("~Add instance Manually").click();
 
 	const consent = $("~I Understand");
-	if (await consent.isDisplayed()) {
-		await consent.click();
-	}
+	await consent.waitForDisplayed();
+	await consent.click();
 
-	await expect($(containsText("Add Instance Manually"))).toBeDisplayed();
+	await expect($(containsLabel("Add Instance Manually"))).toBeDisplayed();
 };
 
 const submitInstanceDetails = async (fixture: EnrollmentFixture) => {
-	await $("~add_instance_url").setValue(fixture.enrollmentUrl);
-	await $("~add_instance_token").setValue(fixture.enrollmentToken);
-	await $("~add_instance_submit").click();
+	await fillField(byId("add_instance_url"), fixture.enrollmentUrl);
+	await fillField(byId("add_instance_token"), fixture.enrollmentToken);
+	await $(byId("add_instance_submit")).click();
 };
 
 const nameDevice = async () => {
-	const submit = $("~device_name_submit");
-	await submit.waitForDisplayed({ timeout: 30_000 });
+	const submit = $(byId("device_name_submit"));
+	await submit.waitForDisplayed();
 	await submit.click();
 };
 
 const skipBiometry = async () => {
 	const skip = $("~Skip");
-	await skip.waitForDisplayed({ timeout: 30_000 });
+	await skip.waitForDisplayed();
 	await skip.click();
 
-	const confirm = $("~skip_biometry_confirm");
-	await confirm.waitForDisplayed({ timeout: 15_000 });
+	const confirm = $(byId("skip_biometry_confirm"));
+	await confirm.waitForDisplayed();
 	await confirm.click();
-	await confirm.waitForExist({ timeout: 15_000, reverse: true });
+	await confirm.waitForExist({ reverse: true });
 };
 
 export const completeEnrollment = async (fixture: EnrollmentFixture) => {

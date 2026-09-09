@@ -1,17 +1,17 @@
 import { $, driver } from "@wdio/globals";
 import type { EnrollmentFixture } from "./coreApi.js";
 import { requireEnv } from "./env.js";
+import { fillField, hideKeyboard } from "./input.js";
 import { submitTotpCode } from "./mfa.js";
-import { containsText } from "./selectors.js";
+import { byId, containsLabel } from "./selectors.js";
 
 const MENU_ATTEMPTS = 3;
+const MENU_TIMEOUT_MS = 5_000;
 const ALL_TRAFFIC = "~All traffic";
 const PREDEFINED_TRAFFIC = "~Predefined traffic only";
-const CONNECT_BUTTON = "location_connect_button";
-const DISCONNECT_BUTTON = "location_disconnect_button";
-const ACTIONS_MENU = "~instance_actions_menu";
-const DELETE_MENU_ITEM = "~Delete Instance";
-const DELETE_CONFIRMATION = "~delete_instance_confirm";
+const ACTIONS_MENU = "instance_actions_menu";
+const REFRESH_ITEM = "instance_actions_refresh";
+const DELETE_ITEM = "instance_actions_delete";
 
 interface ConnectOptions {
 	allTraffic?: boolean;
@@ -20,51 +20,70 @@ interface ConnectOptions {
 
 const locationName = () => requireEnv("NETWORK_NAME");
 
-const locationCard = () => containsText(locationName());
+export const locationCard = () => containsLabel(locationName());
 
-const cardButton = (name: string) => `~${name}_${locationName()}`;
+export const cardButton = (name: string) => byId(`${name}_${locationName()}`);
 
-const tap = async (selector: string, timeout = 15_000) => {
+const boundsOf = async (selector: string) => {
 	const element = $(selector);
-	await element.waitForDisplayed({ timeout });
-	await element.click();
+	await element.waitForExist();
+	const { x, y } = await element.getLocation();
+	const { width, height } = await element.getSize();
+	return { x, y, width, height };
 };
 
-const tapViaXcuiTest = async (selector: string, timeout = 15_000) => {
+const tap = async (selector: string, frameScale = 1) => {
 	const element = $(selector);
-	await element.waitForDisplayed({ timeout });
-	await driver.execute("mobile: tapWithNumberOfTaps", {
-		elementId: await element.elementId,
-		numberOfTaps: 1,
-		numberOfTouches: 1,
-	});
+	await element.waitForDisplayed();
+
+	if (driver.isAndroid) {
+		await element.click();
+		return;
+	}
+
+	const { x, y, width, height } = await boundsOf(selector);
+
+	await driver
+		.action("pointer", { parameters: { pointerType: "touch" } })
+		.move({
+			x: Math.round((x + width / 2) * frameScale),
+			y: Math.round((y + height / 2) * frameScale),
+		})
+		.down()
+		.pause(60)
+		.up()
+		.perform();
 };
 
 const selectTraffic = async (allTraffic: boolean) => {
 	const wanted = allTraffic ? ALL_TRAFFIC : PREDEFINED_TRAFFIC;
 	const opposite = allTraffic ? PREDEFINED_TRAFFIC : ALL_TRAFFIC;
 
-	if (await $(opposite).isDisplayed()) {
-		await tap(opposite);
+	if (await $(wanted).isDisplayed()) {
+		return;
 	}
 
-	await $(wanted).waitForDisplayed({ timeout: 15_000 });
+	await tap(opposite);
+	await $(wanted).waitForDisplayed({
+		timeoutMsg: `The traffic mode did not switch to ${wanted}`,
+	});
 };
 
-const openActionsMenu = async () => {
+const tapMenuItem = async (item: string) => {
+	const menuButton = byId(ACTIONS_MENU);
+	const trueWidth = (await boundsOf(menuButton)).width;
+
 	for (let attempt = 1; attempt <= MENU_ATTEMPTS; attempt++) {
-		if (await $(DELETE_MENU_ITEM).isDisplayed()) {
-			return;
-		}
+		await tap(menuButton);
 
-		await tapViaXcuiTest(ACTIONS_MENU, 30_000);
-
-		const opened = await $(DELETE_MENU_ITEM)
-			.waitForDisplayed({ timeout: 5_000 })
+		const opened = await $(byId(item))
+			.waitForDisplayed({ timeout: MENU_TIMEOUT_MS })
 			.then(() => true)
 			.catch(() => false);
 
 		if (opened) {
+			const shrunkWidth = (await boundsOf(menuButton)).width;
+			await tap(byId(item), Math.round(trueWidth / shrunkWidth));
 			return;
 		}
 	}
@@ -75,17 +94,16 @@ const openActionsMenu = async () => {
 };
 
 export const waitForInstanceScreen = async () => {
-	await $("~Locations").waitForDisplayed({ timeout: 30_000 });
+	await $("~Locations").waitForDisplayed();
 	await $(locationCard()).waitForDisplayed({
-		timeout: 30_000,
 		timeoutMsg: `The instance screen does not list the ${locationName()} location`,
 	});
 };
 
 export const connectLocation = async (options: ConnectOptions = {}) => {
-	await tap(cardButton(CONNECT_BUTTON), 45_000);
+	await tap(cardButton("location_connect_button"));
 
-	await $("~Connect VPN").waitForDisplayed({ timeout: 30_000 });
+	await $("~Connect VPN").waitForDisplayed();
 	await selectTraffic(options.allTraffic ?? false);
 	await tap("~Connect VPN");
 
@@ -93,46 +111,38 @@ export const connectLocation = async (options: ConnectOptions = {}) => {
 		await submitTotpCode(options.totpSecret);
 	}
 
-	await $(cardButton(DISCONNECT_BUTTON)).waitForDisplayed({
+	await $(cardButton("location_disconnect_button")).waitForDisplayed({
 		timeout: 45_000,
 		timeoutMsg: `The ${locationName()} location did not connect`,
 	});
 };
 
 export const disconnect = async () => {
-	await tap(cardButton(DISCONNECT_BUTTON), 30_000);
-	await $(cardButton(CONNECT_BUTTON)).waitForDisplayed({
-		timeout: 30_000,
+	await tap(cardButton("location_disconnect_button"));
+	await $(cardButton("location_connect_button")).waitForDisplayed({
 		timeoutMsg: `The ${locationName()} location did not disconnect`,
 	});
 };
 
 export const refreshInstance = async (fixture: EnrollmentFixture) => {
-	await openActionsMenu();
-	await tap("~Refresh configuration");
+	await tapMenuItem(REFRESH_ITEM);
 
-	const submit = $("~refresh_instance_submit");
-	await submit.waitForDisplayed({ timeout: 15_000 });
+	const submit = $(byId("refresh_instance_submit"));
+	await submit.waitForDisplayed();
 
-	const url = $("~refresh_instance_url");
-	await url.clearValue();
-	await url.setValue(fixture.enrollmentUrl);
-	await $("~refresh_instance_token").setValue(fixture.enrollmentToken);
+	await fillField(byId("refresh_instance_url"), fixture.enrollmentUrl);
+	await fillField(byId("refresh_instance_token"), fixture.enrollmentToken);
 
-	if (await driver.execute("mobile: isKeyboardShown")) {
-		await driver.execute("mobile: hideKeyboard", { keys: ["done", "return"] });
-	}
+	await hideKeyboard();
 
 	await submit.click();
 	await submit.waitForDisplayed({
-		timeout: 30_000,
 		reverse: true,
 		timeoutMsg: "The refresh dialog stayed open, the proxy rejected the token",
 	});
 };
 
 export const deleteInstance = async () => {
-	await openActionsMenu();
-	await tap(DELETE_MENU_ITEM);
-	await tap(DELETE_CONFIRMATION);
+	await tapMenuItem(DELETE_ITEM);
+	await tap(byId("delete_instance_confirm"));
 };

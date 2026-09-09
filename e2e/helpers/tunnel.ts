@@ -1,23 +1,22 @@
-import { $, driver } from "@wdio/globals";
+import { driver } from "@wdio/globals";
 import { requireEnv } from "./env.js";
+
+export const supportsTunnel = () => driver.isAndroid;
 
 const probeGateway = async () => {
 	const target = requireEnv("GATEWAY_VPN_IP");
-	const result = $("~e2e_ping_result");
+	const script = `ping -c 1 -W 2 ${target} >/dev/null 2>&1 && echo reachable || echo unreachable`;
+	const output = await driver.execute("mobile: shell", {
+		command: "sh",
+		args: ["-c", `"${script}"`],
+		timeout: 15_000,
+	});
 
-	await $("~e2e_ping_target").setValue(target);
-	await $("~e2e_ping_button").click();
-
-	await driver.waitUntil(
-		async () => ["ok", "fail"].includes(await result.getText()),
-		{
-			timeout: 30_000,
-			interval: 1_000,
-			timeoutMsg: `The E2E ping tool did not report a result for ${target}`,
-		},
-	);
-
-	return (await result.getText()) === "ok";
+	const result = String(output).trim();
+	if (result !== "reachable" && result !== "unreachable") {
+		throw new Error(`The gateway probe returned unexpected output: ${result}`);
+	}
+	return result === "reachable";
 };
 
 export const expectGatewayReachable = async () => {

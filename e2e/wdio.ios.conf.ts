@@ -1,187 +1,143 @@
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";
-import os from "node:os";
 import path from "node:path";
+import { projectRoot, sharedConfig } from "./wdio.shared.conf.js";
 
-const here = import.meta.dirname;
+const BUNDLE_ID = "net.defguard.mobile";
+const APP_BUNDLE = "../client/build/ios/iphonesimulator/Runner.app";
 
-const envFile = path.resolve(here, ".env");
-if (fs.existsSync(envFile)) {
-	process.loadEnvFile(envFile);
-}
+const app = path.resolve(projectRoot, APP_BUNDLE);
 
-process.env.APPIUM_HOME ??= path.join(os.homedir(), ".appium");
-
-const APPIUM_PORT = 4723;
-const ACCEPT_ALERT_BUTTON =
-	'**/XCUIElementTypeButton[`label == "Allow" OR label == "Zezwól"`]';
-const TEST_TIMEOUT_MS = 180_000;
-const WAIT_FOR_TIMEOUT_MS = 20_000;
-
-const teamId = process.env.APPLE_TEAM_ID;
-const bundleId = process.env.IOS_BUNDLE_ID ?? "net.defguard.mobile";
-const app = process.env.IOS_APP
-	? path.resolve(here, process.env.IOS_APP)
-	: undefined;
-
-type PairedDevice = {
+type Simulator = {
 	udid: string;
 	name: string;
-	transport: string;
+	runtime: string;
 };
 
-const listPairedDevices = (): PairedDevice[] => {
-	const tmp = path.join(os.tmpdir(), `devicectl-${process.pid}.json`);
-	const listed = spawnSync("xcrun", [
-		"devicectl",
-		"list",
-		"devices",
-		"--json-output",
-		tmp,
-	]);
-	if (listed.status !== 0 || !fs.existsSync(tmp)) return [];
+const listSimulators = (scope: "available" | "booted"): Simulator[] => {
+	const listed = spawnSync(
+		"xcrun",
+		["simctl", "list", "devices", scope, "--json"],
+		{ encoding: "utf8" },
+	);
+	if (listed.status !== 0) return [];
 
-	try {
-		const parsed = JSON.parse(fs.readFileSync(tmp, "utf8")) as {
-			result?: {
-				devices?: Array<{
-					hardwareProperties?: { udid?: string };
-					connectionProperties?: { transportType?: string };
-					deviceProperties?: { name?: string };
-				}>;
-			};
-		};
-		return (parsed.result?.devices ?? [])
-			.filter((device) => device.hardwareProperties?.udid)
-			.map((device) => ({
-				udid: device.hardwareProperties?.udid as string,
-				name: device.deviceProperties?.name ?? "(unnamed)",
-				transport: device.connectionProperties?.transportType ?? "unknown",
-			}));
-	} finally {
-		fs.rmSync(tmp, { force: true });
-	}
-};
+	const parsed = JSON.parse(listed.stdout) as {
+		devices?: Record<string, Array<{ udid: string; name: string }>>;
+	};
 
-const describeDevices = (devices: PairedDevice[]): string =>
-	devices
-		.map((device) => `  ${device.name} — ${device.udid} (${device.transport})`)
-		.join("\n");
-
-const resolveDeviceUdid = (): string => {
-	const devices = listPairedDevices();
-	const wired = devices.filter((device) => device.transport !== "localNetwork");
-	const preferred = process.env.IOS_UDID;
-
-	if (preferred) {
-		const match = devices.find((device) => device.udid === preferred);
-		if (!match) {
-			throw new Error(
-				`IOS_UDID=${preferred} is not paired with this Mac.` +
-					(devices.length
-						? `\nPaired devices:\n${describeDevices(devices)}`
-						: " No devices found."),
-			);
-		}
-		if (match.transport === "localNetwork") {
-			throw new Error(
-				`${match.name} (${preferred}) is only reachable over the network. ` +
-					"Appium requires a cable, check `system_profiler SPUSBDataType`.",
-			);
-		}
-		return preferred;
-	}
-
-	if (wired.length === 1) return wired[0].udid;
-
-	if (wired.length === 0) {
-		throw new Error(
-			"No cabled device found. Connect a phone or set IOS_UDID in .env." +
-				(devices.length
-					? `\nPaired devices:\n${describeDevices(devices)}`
-					: ""),
-		);
-	}
-
-	throw new Error(
-		`${wired.length} devices are cabled, pick one with IOS_UDID in .env:\n` +
-			describeDevices(wired),
+	return Object.entries(parsed.devices ?? {}).flatMap(([runtime, devices]) =>
+		devices.map((device) => ({
+			udid: device.udid,
+			name: device.name,
+			runtime: runtime.replace("com.apple.CoreSimulator.SimRuntime.", ""),
+		})),
 	);
 };
 
-const udid = resolveDeviceUdid();
+const describeSimulators = (simulators: Simulator[]): string =>
+	simulators
+		.map(
+			(simulator) =>
+				`  ${simulator.name} — ${simulator.runtime} (${simulator.udid})`,
+		)
+		.join("\n");
+
+const resolveSimulatorUdid = (): string => {
+	const simulators = listSimulators("available");
+	const preferred = process.env.IOS_SIMULATOR;
+
+	if (!simulators.length) {
+		throw new Error(
+			"No iOS simulator is available, create one in Xcode > Window > Devices and Simulators",
+		);
+	}
+
+	if (!preferred) {
+		throw new Error(
+			`IOS_SIMULATOR is missing from .env, pick one of:\n${describeSimulators(simulators)}`,
+		);
+	}
+
+	const matches = simulators.filter(
+		(simulator) => simulator.name === preferred || simulator.udid === preferred,
+	);
+
+	if (matches.length === 0) {
+		throw new Error(
+			`IOS_SIMULATOR=${preferred} does not exist, pick one of:\n${describeSimulators(simulators)}`,
+		);
+	}
+
+	if (matches.length > 1) {
+		throw new Error(
+			`IOS_SIMULATOR=${preferred} matches ${matches.length} simulators, use a udid instead:\n${describeSimulators(matches)}`,
+		);
+	}
+
+	return matches[0].udid;
+};
+
+const assertSimulatorArtifact = () => {
+	if (!fs.existsSync(app)) {
+		throw new Error(
+			`Application artifact not found: ${app}\nRun pnpm build:ios first`,
+		);
+	}
+
+	const platform = spawnSync(
+		"plutil",
+		[
+			"-extract",
+			"DTPlatformName",
+			"raw",
+			"-o",
+			"-",
+			path.join(app, "Info.plist"),
+		],
+		{ encoding: "utf8" },
+	);
+
+	if (platform.status !== 0) {
+		throw new Error(
+			`Could not read DTPlatformName from ${app}: ${platform.stderr.trim()}`,
+		);
+	}
+
+	const built = platform.stdout.trim();
+	if (built !== "iphonesimulator") {
+		throw new Error(
+			`${app} was built for ${built}, run pnpm build:ios to get a simulator bundle`,
+		);
+	}
+};
+
+const udid = resolveSimulatorUdid();
 
 export const config: WebdriverIO.Config = {
-	hostname: "127.0.0.1",
-	port: APPIUM_PORT,
-	specs: ["./tests/**/*.spec.ts"],
-	maxInstances: 1,
-
-	services: [
-		[
-			"appium",
-			{
-				logPath: path.resolve(here, "logs"),
-				args: { port: APPIUM_PORT, address: "127.0.0.1" },
-			},
-		],
-	],
+	...sharedConfig,
 
 	capabilities: [
 		{
 			platformName: "iOS",
 			"appium:automationName": "XCUITest",
 			"appium:udid": udid,
-			...(app ? { "appium:app": app } : { "appium:bundleId": bundleId }),
-			"appium:xcodeOrgId": teamId,
-			"appium:xcodeSigningId": "Apple Development",
-			"appium:updatedWDABundleId": `${bundleId}.WebDriverAgentRunner`,
-			"appium:allowProvisioningDeviceRegistration": true,
+			"appium:app": app,
+			"appium:bundleId": BUNDLE_ID,
+			"appium:simulatorStartupTimeout": 300_000,
 			"appium:wdaLaunchTimeout": 240_000,
-			"appium:fullReset": true,
 			"appium:autoAcceptAlerts": true,
+			"appium:reduceMotion": true,
+			"appium:connectHardwareKeyboard": false,
 		} as WebdriverIO.Capabilities,
 	],
 
-	reporters: ["spec"],
-	mochaOpts: { timeout: TEST_TIMEOUT_MS },
-	waitforTimeout: WAIT_FOR_TIMEOUT_MS,
-	connectionRetryTimeout: 240_000,
+	onPrepare: assertSimulatorArtifact,
 
-	onPrepare: async () => {
-		if (!teamId) {
-			throw new Error("APPLE_TEAM_ID is missing from .env");
-		}
-		if (app && !fs.existsSync(app)) {
-			throw new Error(`Application artifact not found: ${app}`);
-		}
-	},
-
-	afterTest: async (test, _context, { passed }) => {
-		if (passed) return;
-		try {
-			console.log(`\n===== element tree after "${test.title}" =====`);
-			console.log(await driver.getPageSource());
-		} catch (error) {
-			console.warn(`Could not fetch the element tree: ${error}`);
-		}
-	},
-
-	before: async () => {
-		if (await driver.isLocked()) {
-			await driver.unlock();
-		}
-		await driver.updateSettings({
-			acceptAlertButtonSelector: ACCEPT_ALERT_BUTTON,
-		});
-	},
-
-	after: async () => {
-		try {
-			await driver.terminateApp(bundleId);
-			await driver.removeApp(bundleId);
-		} catch (error) {
-			console.warn(`Could not remove the application from the phone: ${error}`);
+	onComplete: () => {
+		spawnSync("xcrun", ["simctl", "shutdown", udid]);
+		if (listSimulators("booted").length === 0) {
+			spawnSync("osascript", ["-e", 'quit app "Simulator"']);
 		}
 	},
 };

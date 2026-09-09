@@ -13,6 +13,7 @@ import {
 import {
 	expectGatewayReachable,
 	expectGatewayUnreachable,
+	supportsTunnel,
 } from "../helpers/tunnel.js";
 
 describe("vpn connection", () => {
@@ -20,6 +21,12 @@ describe("vpn connection", () => {
 	let networkId: number;
 	let previousMfaMode: LocationMfaMode | undefined;
 	let fixture: EnrollmentFixture;
+
+	before(function () {
+		if (!supportsTunnel()) {
+			this.skip();
+		}
+	});
 
 	beforeEach(async () => {
 		core = await loggedInCoreApi();
@@ -35,7 +42,7 @@ describe("vpn connection", () => {
 		}
 	});
 
-	it("connects to a location with predefined and all traffic and reaches the gateway through the tunnel", async () => {
+	it("connects to a location with predefined and all traffic", async () => {
 		previousMfaMode = await core.setLocationMfaMode(networkId, "disabled");
 		fixture = await core.createEnrollmentFixture();
 

@@ -1,15 +1,19 @@
 {
 	"name": "e2e-mobile",
 	"private": true,
-	"version": "1.0.0",
 	"type": "module",
 	"scripts": {
-		"build:ios": "cd ../client && flutter build ipa --export-method development --dart-define=E2E=true",
+		"build:ios": "cd ../client && flutter build ios --simulator",
+		"build:android": "cd ../client && flutter build apk --debug",
 		"test:ios": "wdio run ./wdio.ios.conf.ts",
-		"appium:setup": "APPIUM_HOME=$HOME/.appium appium driver install xcuitest",
-		"appium:doctor": "APPIUM_HOME=$HOME/.appium appium driver doctor xcuitest",
+		"test:android": "wdio run ./wdio.android.conf.ts",
+		"appium:driver:ios": "APPIUM_HOME=$HOME/.appium appium driver install xcuitest",
+		"appium:driver:android": "APPIUM_HOME=$HOME/.appium appium driver install uiautomator2",
+		"appium:doctor:ios": "APPIUM_HOME=$HOME/.appium appium driver doctor xcuitest",
+		"appium:doctor:android": "APPIUM_HOME=$HOME/.appium appium driver doctor uiautomator2",
 		"fix": "biome check --fix",
-		"lint": "biome check"
+		"lint": "biome check",
+		"typecheck": "tsc --noEmit"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "2.4.16",

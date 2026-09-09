@@ -10,13 +10,19 @@ import {
 	disconnect,
 	waitForInstanceScreen,
 } from "../helpers/instance.js";
-import { expectGatewayReachable } from "../helpers/tunnel.js";
+import { expectGatewayReachable, supportsTunnel } from "../helpers/tunnel.js";
 
 describe("mfa connection", () => {
 	let core: CoreApi;
 	let networkId: number;
 	let previousMfaMode: LocationMfaMode | undefined;
 	let fixture: EnrollmentFixture;
+
+	before(function () {
+		if (!supportsTunnel()) {
+			this.skip();
+		}
+	});
 
 	beforeEach(async () => {
 		core = await loggedInCoreApi();
