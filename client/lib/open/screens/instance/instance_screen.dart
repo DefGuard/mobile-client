@@ -7,22 +7,24 @@ import 'package:material_ui/material_ui.dart';
 import 'package:mobile/data/db/database.dart';
 import 'package:mobile/data/mfa/mfa_plan.dart';
 import 'package:mobile/data/plugin/plugin.dart';
+import 'package:mobile/logging.dart';
 import 'package:mobile/open/api.dart';
 import 'package:mobile/open/riverpod/biometrics_state.dart';
 import 'package:mobile/open/riverpod/plugin/plugin.dart';
 import 'package:mobile/open/screens/add_instance/data_gathering_dialog.dart';
 import 'package:mobile/open/screens/instance/services/tunnel_service.dart';
+import 'package:mobile/open/screens/instance/widgets/connect_dialog.dart';
 import 'package:mobile/open/screens/instance/widgets/connection_conflict_dialog.dart';
 import 'package:mobile/open/screens/instance/widgets/delete_instance_dialog.dart';
-import 'package:mobile/open/screens/instance/widgets/connect_dialog.dart';
 import 'package:mobile/open/screens/instance/widgets/refresh_instance_dialog.dart';
 import 'package:mobile/open/screens/mfa/remote_mfa_qr_screen.dart';
-import 'package:mobile/open/widgets/icons/dg_icon.dart';
 import 'package:mobile/open/widgets/dg_app_bar.dart';
 import 'package:mobile/open/widgets/dg_bottom_sheet.dart';
 import 'package:mobile/open/widgets/dg_drawer.dart';
+import 'package:mobile/open/widgets/dg_icon_button.dart';
 import 'package:mobile/open/widgets/dg_location_card.dart';
 import 'package:mobile/open/widgets/dg_menu.dart';
+import 'package:mobile/open/widgets/icons/dg_icon.dart';
 import 'package:mobile/open/widgets/toaster/toast_manager.dart';
 import 'package:mobile/plugin.dart';
 import 'package:mobile/router/routes.dart';
@@ -34,9 +36,6 @@ import 'package:mobile/utils/update_instance.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wireguard_plugin/wireguard_plugin.dart';
-
-import 'package:mobile/logging.dart';
-import 'package:mobile/open/widgets/dg_icon_button.dart';
 
 part 'instance_screen.g.dart';
 
