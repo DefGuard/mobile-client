@@ -313,20 +313,27 @@ class _ProxyApi {
     final endpoint = url.replace(
       pathSegments: [...url.pathSegments, ...mfaPathSegments, 'finish'],
     );
-    final response = await _dio.postUri(
-      endpoint,
-      data: data.toJson(),
-      // 428 is the pre-2.2 way of saying an out-of-band factor has not resolved
-      // yet, so it is normalized into the outcome a 2.2 proxy would send.
-      options: Options(
-        validateStatus: (status) =>
-            status != null && (status < 400 || status == 428),
-      ),
-    );
-    if (response.statusCode == 428) {
-      return const FinishMfaResponse(outcome: MfaAwaitingExternal());
+    try {
+      final response = await _dio.postUri(
+        endpoint,
+        data: data.toJson(),
+        // 428 is the pre-2.2 way of saying an out-of-band factor has not resolved
+        // yet, so it is normalized into the outcome a 2.2 proxy would send.
+        options: Options(
+          validateStatus: (status) =>
+              status != null && (status < 400 || status == 428),
+        ),
+      );
+      if (response.statusCode == 428) {
+        return const FinishMfaResponse(outcome: MfaAwaitingExternal());
+      }
+      return FinishMfaResponse.fromJson(response.data);
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 401) {
+        throw const MfaCodeRejectedException();
+      }
+      rethrow;
     }
-    return FinishMfaResponse.fromJson(response.data);
   }
 
   Future<void> finishRemoteMfa(Uri url, FinishMfaRequest data) async {
