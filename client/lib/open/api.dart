@@ -208,7 +208,6 @@ class _ProxyApi {
     try {
       final response = await _dio.postUri(endpoint, data: data.toJson());
       final startResponse = StartMfaResponse.fromJson(response.data);
-      // Rejections arrive on a 200, so they bypass the DioException branches.
       if (startResponse.rejections.isNotEmpty) {
         throw MfaRejectedException(startResponse.rejections);
       }
@@ -223,8 +222,6 @@ class _ProxyApi {
           final dataError = responseData['error'];
           final missingMFAMethodError = "selected MFA method not available"
               .toLowerCase();
-          // Only meaningful for a single-method plan: the error names no step,
-          // and data.method is just the first one.
           if (dataError is String &&
               data.selectedMethods.length <= 1 &&
               dataError.toLowerCase().trim() == missingMFAMethodError) {
@@ -317,8 +314,6 @@ class _ProxyApi {
       final response = await _dio.postUri(
         endpoint,
         data: data.toJson(),
-        // 428 is the pre-2.2 way of saying an out-of-band factor has not resolved
-        // yet, so it is normalized into the outcome a 2.2 proxy would send.
         options: Options(
           validateStatus: (status) =>
               status != null && (status < 400 || status == 428),
