@@ -108,7 +108,19 @@ class DgMfaSelector extends StatelessWidget {
         decoration: BoxDecoration(
           color: active ? DgColor.bgWhite10 : Colors.transparent,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: DgColor.bgWhite10, width: 1),
+          border: Border.all(
+            color: active ? Colors.transparent : DgColor.bgWhite40,
+            width: 1,
+          ),
+          boxShadow: active
+              ? const [
+                  BoxShadow(
+                    color: Color.fromRGBO(0, 0, 0, 0.05),
+                    offset: Offset(0, 4),
+                    blurRadius: 4,
+                  ),
+                ]
+              : null,
         ),
         child: TweenAnimationBuilder<Color?>(
           duration: duration,
