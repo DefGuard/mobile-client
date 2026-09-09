@@ -33,13 +33,11 @@ class PluginEventRouter extends Notifier<void> {
     final notifier = ref.read(pluginActiveTunnelStateProvider.notifier);
     switch (event) {
       case "tunnel_down":
-        // clear active connection
         notifier.clear();
         break;
       case "tunnel_up":
         if (data != null) {
           try {
-            // display active connection
             notifier.set(PluginTunnelEventData.fromJson(data));
           } catch (e) {
             talker.error("Event $event handler failed ! Reason: $e");
@@ -49,9 +47,7 @@ class PluginEventRouter extends Notifier<void> {
         }
         break;
       case "mfa_session_expired":
-        // clear active connection
         notifier.clear();
-        // show notifications
         notifyMfaSessionExpired();
         break;
       default:
@@ -61,7 +57,6 @@ class PluginEventRouter extends Notifier<void> {
 
   /// Displays system notification and in-app toast
   void notifyMfaSessionExpired() {
-    // show system notification
     flutterLocalNotificationsPlugin.show(
       id: 0,
       title: 'Connection Lost',
@@ -79,7 +74,6 @@ class PluginEventRouter extends Notifier<void> {
       ),
     );
 
-    // show in-app toast
     ref
         .read(toastManagerProvider.notifier)
         .show(

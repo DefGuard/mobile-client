@@ -840,11 +840,131 @@ i1.GeneratedColumn<int> _column_49(String aliasedName) =>
       type: i1.DriftSqlType.int,
       $customConstraints: 'NULL CHECK (posture_check_required IN (0, 1))',
     );
+
+final class Schema6 extends i0.VersionedSchema {
+  Schema6({required super.database}) : super(version: 6);
+  @override
+  late final List<i1.DatabaseSchemaEntity> entities = [
+    defguardInstances,
+    locations,
+  ];
+  late final Shape4 defguardInstances = Shape4(
+    source: i0.VersionedTable(
+      entityName: 'defguard_instances',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: [],
+      columns: [
+        _column_26,
+        _column_27,
+        _column_28,
+        _column_29,
+        _column_30,
+        _column_31,
+        _column_32,
+        _column_33,
+        _column_34,
+        _column_35,
+        _column_36,
+        _column_37,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape6 locations = Shape6(
+    source: i0.VersionedTable(
+      entityName: 'locations',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: [],
+      columns: [
+        _column_26,
+        _column_38,
+        _column_39,
+        _column_27,
+        _column_40,
+        _column_35,
+        _column_41,
+        _column_42,
+        _column_43,
+        _column_44,
+        _column_45,
+        _column_46,
+        _column_47,
+        _column_48,
+        _column_49,
+        _column_50,
+        _column_51,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+}
+
+class Shape6 extends i0.VersionedTable {
+  Shape6({required super.source, required super.alias}) : super.aliased();
+  i1.GeneratedColumn<int> get id =>
+      columnsByName['id']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<int> get instance =>
+      columnsByName['instance']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<int> get networkId =>
+      columnsByName['network_id']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<String> get name =>
+      columnsByName['name']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get address =>
+      columnsByName['address']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get pubKey =>
+      columnsByName['pub_key']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get endpoint =>
+      columnsByName['endpoint']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get allowedIps =>
+      columnsByName['allowed_ips']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get dns =>
+      columnsByName['dns']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<int> get mfaEnabled =>
+      columnsByName['mfa_enabled']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<String> get trafficMethod =>
+      columnsByName['traffic_method']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<int> get mfaMethod =>
+      columnsByName['mfa_method']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<int> get keepAliveInterval =>
+      columnsByName['keep_alive_interval']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<int> get locationMfaMode =>
+      columnsByName['location_mfa_mode']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<int> get postureCheckRequired =>
+      columnsByName['posture_check_required']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<String> get mfaSteps =>
+      columnsByName['mfa_steps']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get mfaStepPlan =>
+      columnsByName['mfa_step_plan']! as i1.GeneratedColumn<String>;
+}
+
+i1.GeneratedColumn<String> _column_50(String aliasedName) =>
+    i1.GeneratedColumn<String>(
+      'mfa_steps',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.string,
+      $customConstraints: 'NOT NULL DEFAULT \'[]\'',
+      defaultValue: const i1.CustomExpression('\'[]\''),
+    );
+i1.GeneratedColumn<String> _column_51(String aliasedName) =>
+    i1.GeneratedColumn<String>(
+      'mfa_step_plan',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.string,
+      $customConstraints: 'NOT NULL DEFAULT \'[]\'',
+      defaultValue: const i1.CustomExpression('\'[]\''),
+    );
 i0.MigrationStepWithVersion migrationSteps({
   required Future<void> Function(i1.Migrator m, Schema2 schema) from1To2,
   required Future<void> Function(i1.Migrator m, Schema3 schema) from2To3,
   required Future<void> Function(i1.Migrator m, Schema4 schema) from3To4,
   required Future<void> Function(i1.Migrator m, Schema5 schema) from4To5,
+  required Future<void> Function(i1.Migrator m, Schema6 schema) from5To6,
 }) {
   return (currentVersion, database) async {
     switch (currentVersion) {
@@ -868,6 +988,11 @@ i0.MigrationStepWithVersion migrationSteps({
         final migrator = i1.Migrator(database, schema);
         await from4To5(migrator, schema);
         return 5;
+      case 5:
+        final schema = Schema6(database: database);
+        final migrator = i1.Migrator(database, schema);
+        await from5To6(migrator, schema);
+        return 6;
       default:
         throw ArgumentError.value('Unknown migration from $currentVersion');
     }
@@ -879,11 +1004,13 @@ i1.OnUpgrade stepByStep({
   required Future<void> Function(i1.Migrator m, Schema3 schema) from2To3,
   required Future<void> Function(i1.Migrator m, Schema4 schema) from3To4,
   required Future<void> Function(i1.Migrator m, Schema5 schema) from4To5,
+  required Future<void> Function(i1.Migrator m, Schema6 schema) from5To6,
 }) => i0.VersionedSchema.stepByStepHelper(
   step: migrationSteps(
     from1To2: from1To2,
     from2To3: from2To3,
     from3To4: from3To4,
     from4To5: from4To5,
+    from5To6: from5To6,
   ),
 );

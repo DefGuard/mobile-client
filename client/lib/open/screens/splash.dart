@@ -5,8 +5,7 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mobile/data/db/database.dart';
 import 'package:mobile/router/routes.dart';
-
-const _splashBackground = Color(0xFF4F79FA);
+import 'package:mobile/theme/color.dart';
 
 const _splashCanvasSize = 288.0;
 
@@ -48,7 +47,7 @@ class AppSplash extends HookConsumerWidget {
     }, [instancesAsync.data, timerDone.value]);
 
     return ColoredBox(
-      color: _splashBackground,
+      color: DgColor.bgAppBase,
       child: Center(
         child: Image.asset("assets/splash/logo.png", width: _splashCanvasSize),
       ),

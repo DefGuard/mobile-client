@@ -1,133 +1,112 @@
-import 'package:material_ui/material_ui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:mobile/enterprise/screens/mfa/openid_mfa_waiting_screen.dart';
-import 'package:mobile/open/widgets/buttons/dg_button.dart';
-import 'package:mobile/open/widgets/dg_single_child_scroll_view.dart';
-import 'package:mobile/open/widgets/icons/openid_open.dart';
-import 'package:mobile/open/widgets/navigation/dg_scaffold.dart';
+import 'package:material_ui/material_ui.dart';
+import 'package:mobile/open/screens/mfa/mfa_step_chrome.dart';
+import 'package:mobile/open/widgets/icons/dg_icon.dart';
+import 'package:mobile/open/widgets/dg_app_bar.dart';
+import 'package:mobile/open/widgets/dg_mfa_step_label.dart';
+import 'package:mobile/open/widgets/dg_button.dart';
+import 'package:mobile/open/widgets/dg_icon_button.dart';
+import 'package:mobile/open/widgets/toaster/toast_manager.dart';
 import 'package:mobile/theme/color.dart';
-import 'package:mobile/theme/spacing.dart';
 import 'package:mobile/theme/text.dart';
-import 'package:mobile/utils/screen_padding.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../../../logging.dart';
-import '../../../open/services/snackbar_service.dart';
-
-class OpenIdMfaScreenData {
-  final String proxyUrl;
-  final String token;
-  final String? openidDisplayName;
-
-  const OpenIdMfaScreenData({
-    required this.proxyUrl,
-    required this.token,
-    this.openidDisplayName,
-  });
-}
-
-final String _title = "Two-factor authentication";
-String _mfaMsg1(String? providerName) {
-  final name = providerName ?? 'OpenID';
-  return "In order to connect to VPN please login with $name. To do so, please click \"Authenticate with $name\" button below";
-}
-
-String _mfaMsg2(String? providerName) {
-  final name = providerName ?? 'OpenID';
-  return "This will open a new window in your Web Browser and automatically redirect you to the $name login page. After authenticating with $name please get back here";
-}
-
-String _authenticateMsg(String? providerName) =>
-    'Authenticate with ${providerName ?? 'OpenID'}';
+import 'package:mobile/logging.dart';
+import 'openid_mfa_waiting_screen.dart';
 
 class OpenIdMfaScreen extends HookConsumerWidget {
-  final OpenIdMfaScreenData screenData;
+  final MfaStepHost host;
+  final String proxyUrl;
+  final String? openidDisplayName;
 
-  const OpenIdMfaScreen({super.key, required this.screenData});
+  const OpenIdMfaScreen({
+    super.key,
+    required this.host,
+    required this.proxyUrl,
+    this.openidDisplayName,
+  });
 
   Future<bool> _launchUrl() async {
     final url = Uri.parse(
-      "${screenData.proxyUrl}openid/mfa?token=${screenData.token}",
+      "${proxyUrl}openid/mfa?token=${host.controller.token}",
     );
     return await launchUrl(url, mode: LaunchMode.externalApplication);
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return DgScaffold(
-      title: _title,
-      child: DgSingleChildScrollView(
-        padding: screenPadding(
-          top: DgSpacing.l,
-          bottom: DgSpacing.m,
-          horizontal: DgSpacing.s,
-          context: context,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.max,
-          mainAxisAlignment: MainAxisAlignment.start,
-          spacing: DgSpacing.m,
-          children: [
-            Center(
-              child: Text(
-                _title,
-                style: DgText.body1,
-                textAlign: TextAlign.center,
+    final String title = "Continue with OpenID";
+    final String providerName = openidDisplayName ?? 'OpenID';
+    final toaster = ref.read(toastManagerProvider.notifier);
+
+    return MfaStepScope(
+      host: host,
+      child: Container(
+        decoration: const BoxDecoration(gradient: DgColor.gradientPrimary),
+        child: Scaffold(
+          backgroundColor: Colors.transparent,
+          appBar: DgAppBar(
+            context: context,
+            showLogo: false,
+            actionLeft: DgIconButton(
+              icon: 'arrow_small',
+              direction: DgIconDirection.left,
+              onTap: host.abort,
+            ),
+          ),
+          body: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  DgMfaStepLabel(host.controller.stepLabel),
+                  Text(
+                    title,
+                    style: DgText.h4.copyWith(color: DgColor.fgWhite100),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    "Confirm your identity to continue. You'll be redirected to your identity provider to complete verification.",
+                    style: DgText.bodyXs400.copyWith(color: DgColor.fgWhite60),
+                  ),
+                  const Spacer(),
+                  DgButton(
+                    text: 'Continue with $providerName',
+                    width: double.infinity,
+                    onTap: () async {
+                      final navigator = Navigator.of(context);
+                      try {
+                        final launched = await _launchUrl();
+                        if (!launched) {
+                          toaster.showError(
+                            message: "Failed to open the browser.",
+                          );
+                          return;
+                        }
+                        navigator.push(
+                          MaterialPageRoute(
+                            settings: const RouteSettings(
+                              name: mfaStepRouteName,
+                            ),
+                            builder: (context) =>
+                                OpenIdMfaWaitingScreen(host: host),
+                          ),
+                        );
+                      } catch (e) {
+                        talker.error("Failed to open browser! Reason: $e");
+                        toaster.showError(
+                          message: "Failed to open the browser.",
+                        );
+                      }
+                    },
+                  ),
+                ],
               ),
             ),
-            Center(child: DgIconOpenidOpen(size: 128)),
-            Text(
-              _mfaMsg1(screenData.openidDisplayName),
-              style: DgText.modal1.copyWith(color: DgColor.textBodySecondary),
-              textAlign: TextAlign.center,
-            ),
-            Text(
-              _mfaMsg2(screenData.openidDisplayName),
-              style: DgText.modal1.copyWith(color: DgColor.textBodySecondary),
-              textAlign: TextAlign.center,
-            ),
-            DgButton(
-              text: _authenticateMsg(screenData.openidDisplayName),
-              variant: DgButtonVariant.primary,
-              size: DgButtonSize.big,
-              width: double.infinity,
-              onTap: () async {
-                final navigator = Navigator.of(context);
-                try {
-                  final launched = await _launchUrl();
-                  if (!launched) {
-                    SnackbarService.showError("Failed to open the browser.");
-                  } else {
-                    // Navigate to waiting screen and await result
-                    final result = await navigator.push<String?>(
-                      MaterialPageRoute(
-                        builder: (context) => OpenIdMfaWaitingScreen(
-                          screenData: OpenIdMfaWaitingScreenData(
-                            proxyUrl: screenData.proxyUrl,
-                            token: screenData.token,
-                          ),
-                        ),
-                      ),
-                    );
-
-                    // Return the result to the tunnel service
-                    navigator.pop(result);
-                  }
-                } catch (e) {
-                  talker.error("Failed to open browser! Reason: $e");
-                  SnackbarService.showError("Failed to open the browser.");
-                }
-              },
-            ),
-            DgButton(
-              text: "Cancel",
-              size: DgButtonSize.big,
-              width: double.infinity,
-              onTap: () {
-                Navigator.of(context).pop();
-              },
-            ),
-          ],
+          ),
         ),
       ),
     );

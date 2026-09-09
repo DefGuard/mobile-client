@@ -267,6 +267,14 @@ DeviceConfig _$DeviceConfigFromJson(Map<String, dynamic> json) =>
             'posture_check_required',
             (v) => v as bool?,
           ),
+          steps: $checkedConvert(
+            'steps',
+            (v) =>
+                (v as List<dynamic>?)
+                    ?.map((e) => MfaStep.fromJson(e as Map<String, dynamic>))
+                    .toList() ??
+                [],
+          ),
         );
         return val;
       },
@@ -295,6 +303,7 @@ const _$DeviceConfigFieldMap = <String, String>{
   'keepaliveInterval': 'keepalive_interval',
   'locationMfaMode': 'location_mfa_mode',
   'postureCheckRequired': 'posture_check_required',
+  'steps': 'steps',
 };
 
 Map<String, dynamic> _$DeviceConfigToJson(DeviceConfig instance) =>
@@ -311,6 +320,7 @@ Map<String, dynamic> _$DeviceConfigToJson(DeviceConfig instance) =>
       'keepalive_interval': instance.keepaliveInterval,
       'location_mfa_mode': _$LocationMfaModeEnumMap[instance.locationMfaMode],
       'posture_check_required': instance.postureCheckRequired,
+      'steps': instance.steps,
     };
 
 const _$LocationMfaModeEnumMap = {

@@ -1,7 +1,7 @@
 import 'package:material_ui/material_ui.dart';
-import 'package:mobile/open/widgets/next/next_button.dart';
-import 'package:mobile/open/widgets/next/next_dialog.dart';
-import 'package:mobile/theme/next/spacing.dart';
+import 'package:mobile/open/widgets/dg_button.dart';
+import 'package:mobile/open/widgets/dg_dialog.dart';
+import 'package:mobile/theme/spacing.dart';
 
 class BiometrySkipDialog extends StatelessWidget {
   final VoidCallback onSkip;
@@ -15,28 +15,28 @@ class BiometrySkipDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return NextDialog(
+    return DgDialog(
       onClose: onCancel,
       children: [
-        const NextDialogTitle('Skip biometric configuration'),
-        const SizedBox(height: NextSpacing.md),
-        const NextDialogDescription(
+        const DgDialogTitle('Skip biometric configuration'),
+        const SizedBox(height: DgSpacing.md),
+        const DgDialogDescription(
           'If you skip this step, you will need to use other MFA methods configured in your user profile (Such as TOTP / Authenticator app or email verification code)',
         ),
-        const SizedBox(height: NextSpacing.xl2),
-        NextButton(
+        const SizedBox(height: DgSpacing.xl2),
+        DgButton(
           identifier: 'skip_biometry_confirm',
           text: 'Skip biometric configuration',
-          style: NextButtonStyle.primary,
-          size: NextButtonSize.big,
+          style: DgButtonStyle.primary,
+          size: DgButtonSize.big,
           width: double.infinity,
           onTap: onSkip,
         ),
-        const SizedBox(height: NextSpacing.md),
-        NextButton(
+        const SizedBox(height: DgSpacing.md),
+        DgButton(
           text: 'Cancel',
-          style: NextButtonStyle.secondary,
-          size: NextButtonSize.big,
+          style: DgButtonStyle.secondary,
+          size: DgButtonSize.big,
           width: double.infinity,
           onTap: onCancel,
         ),

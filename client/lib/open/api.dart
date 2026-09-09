@@ -5,6 +5,7 @@ import 'package:cookie_jar/cookie_jar.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:dio/dio.dart';
 import 'package:dio_cookie_manager/dio_cookie_manager.dart';
+import 'package:flutter/foundation.dart';
 import 'package:mobile/data/db/enums.dart';
 import 'package:mobile/data/proto/client_platform_info.pb.dart';
 import 'package:mobile/data/proxy/config.dart';
@@ -13,7 +14,7 @@ import 'package:mobile/data/proxy/mfa.dart';
 import 'package:mobile/enterprise/postures.dart';
 import 'package:native_dio_adapter/native_dio_adapter.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import 'package:talker_dio_logger/talker_dio_logger_interceptor.dart';
+import 'package:talker_dio_logger/talker_dio_logger.dart';
 
 import '../logging.dart';
 
@@ -59,7 +60,15 @@ class _ProxyApi {
     _dio.httpClientAdapter = NativeAdapter();
     final cookieJar = CookieJar();
     _dio.interceptors.add(CookieManager(cookieJar));
-    _dio.interceptors.add(TalkerDioLogger(talker: talker));
+    _dio.interceptors.add(
+      TalkerDioLogger(
+        talker: talker,
+        settings: TalkerDioLoggerSettings(
+          printResponseData: !kReleaseMode,
+          printErrorData: !kReleaseMode,
+        ),
+      ),
+    );
     _initHeaders();
   }
 
@@ -126,7 +135,6 @@ class _ProxyApi {
         ),
       );
       final status = response.statusCode;
-      // return early, instance lost it's enterprise status
       if (status == 402) {
         return (null, 402, response.headers);
       }
@@ -199,7 +207,13 @@ class _ProxyApi {
 
     try {
       final response = await _dio.postUri(endpoint, data: data.toJson());
-      return StartMfaResponse.fromJson(response.data);
+      final startResponse = StartMfaResponse.fromJson(response.data);
+      if (startResponse.rejections.isNotEmpty) {
+        throw MfaRejectedException(startResponse.rejections);
+      }
+      return startResponse;
+    } on MfaRejectedException {
+      rethrow;
     } on DioException catch (e) {
       if (e.response != null) {
         if (e.response!.data != null &&
@@ -209,6 +223,7 @@ class _ProxyApi {
           final missingMFAMethodError = "selected MFA method not available"
               .toLowerCase();
           if (dataError is String &&
+              data.selectedMethods.length <= 1 &&
               dataError.toLowerCase().trim() == missingMFAMethodError) {
             throw MfaMethodNotAvailableException(data.method);
           }
@@ -265,12 +280,55 @@ class _ProxyApi {
     }
   }
 
+  Future<StepStartMfaResponse> stepStartMfa(
+    Uri url,
+    StepStartMfaRequest data,
+  ) async {
+    final endpoint = url.replace(
+      pathSegments: [...url.pathSegments, ...mfaPathSegments, 'step-start'],
+    );
+
+    try {
+      final response = await _dio.postUri(endpoint, data: data.toJson());
+      return StepStartMfaResponse.fromJson(response.data);
+    } on DioException catch (e) {
+      if (e.response != null) {
+        throw HttpException(
+          "Failed to start MFA step. Status: ${e.response?.statusCode} "
+          "Body: ${e.response?.data}",
+        );
+      }
+      rethrow;
+    } catch (e) {
+      throw FormatException(
+        "Invalid JSON sent by MFA step start endpoint! Error: $e",
+      );
+    }
+  }
+
   Future<FinishMfaResponse> finishMfa(Uri url, FinishMfaRequest data) async {
     final endpoint = url.replace(
       pathSegments: [...url.pathSegments, ...mfaPathSegments, 'finish'],
     );
-    final response = await _dio.postUri(endpoint, data: data.toJson());
-    return FinishMfaResponse.fromJson(response.data);
+    try {
+      final response = await _dio.postUri(
+        endpoint,
+        data: data.toJson(),
+        options: Options(
+          validateStatus: (status) =>
+              status != null && (status < 400 || status == 428),
+        ),
+      );
+      if (response.statusCode == 428) {
+        return const FinishMfaResponse(outcome: MfaAwaitingExternal());
+      }
+      return FinishMfaResponse.fromJson(response.data);
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 401) {
+        throw const MfaCodeRejectedException();
+      }
+      rethrow;
+    }
   }
 
   Future<void> finishRemoteMfa(Uri url, FinishMfaRequest data) async {

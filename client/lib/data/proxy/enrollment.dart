@@ -3,6 +3,8 @@ import 'package:json_annotation/json_annotation.dart';
 
 import '../db/database.dart';
 import '../db/enums.dart';
+import '../mfa/mfa_plan.dart';
+import '../mfa/mfa_steps.dart';
 
 part 'enrollment.g.dart';
 
@@ -153,6 +155,8 @@ class DeviceConfig {
   final int keepaliveInterval;
   final LocationMfaMode? locationMfaMode;
   final bool? postureCheckRequired;
+  @JsonKey(defaultValue: <MfaStep>[])
+  final List<MfaStep> steps;
 
   factory DeviceConfig.fromJson(Map<String, dynamic> json) =>
       _$DeviceConfigFromJson(json);
@@ -172,7 +176,13 @@ class DeviceConfig {
     required this.keepaliveInterval,
     this.locationMfaMode,
     this.postureCheckRequired,
+    required this.steps,
   });
+
+  /// Normalizes a pre-2.2 server's single-mode MFA into a one-step flow, so
+  /// everything downstream only reads steps.
+  List<MfaStep> get effectiveSteps =>
+      steps.isNotEmpty ? steps : legacyMfaSteps(locationMfaMode, mfaEnabled);
 
   bool matchesLocation(Location other) {
     return networkId == other.networkId &&
@@ -185,13 +195,18 @@ class DeviceConfig {
         mfaEnabled == other.mfaEnabled &&
         keepaliveInterval == other.keepAliveInterval &&
         locationMfaMode == other.locationMfaMode &&
-        postureCheckRequired == other.postureCheckRequired;
+        postureCheckRequired == other.postureCheckRequired &&
+        // Compared through the shim on both sides, so a legacy location does
+        // not read as changed on the first poll after the column was added.
+        encodeMfaSteps(effectiveSteps) ==
+            encodeMfaSteps(effectiveMfaSteps(other));
   }
 
   LocationsCompanion toCompanion({
     int? id,
     MfaMethod? mfaMethod,
     RoutingMethod? trafficMethod,
+    List<MfaMethod?>? mfaStepPlan,
     required int instanceId,
   }) {
     return LocationsCompanion(
@@ -210,6 +225,8 @@ class DeviceConfig {
       address: d.Value(assignedIp),
       locationMfaMode: d.Value(locationMfaMode),
       postureCheckRequired: d.Value(postureCheckRequired),
+      mfaSteps: d.Value(effectiveSteps),
+      mfaStepPlan: d.Value.absentIfNull(mfaStepPlan),
     );
   }
 }
@@ -266,7 +283,6 @@ class InstanceInfo {
     required this.proxyUrl,
     required this.username,
     required this.enterpriseEnabled,
-    // deprecated, use clientTrafficPolicy instead
     @Deprecated('1.6') required this.disableAllTraffic,
     required this.clientTrafficPolicy,
     this.openidDisplayName,

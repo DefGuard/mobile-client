@@ -3,27 +3,27 @@ import 'dart:io';
 import 'package:collection/collection.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:drift/drift.dart' as drift;
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:mobile/data/db/database.dart';
 import 'package:mobile/data/proxy/enrollment.dart';
+import 'package:mobile/logging.dart';
 import 'package:mobile/open/screens/add_instance/generate_wireguard.dart';
-import 'package:mobile/open/widgets/next/icons/next_icon.dart';
-import 'package:mobile/open/widgets/next/next_app_bar.dart';
-import 'package:mobile/open/widgets/next/next_button.dart';
-import 'package:mobile/open/widgets/next/next_drawer.dart';
-import 'package:mobile/open/widgets/next/next_icon_button.dart';
-import 'package:mobile/open/widgets/next/next_text_form_field.dart';
+import 'package:mobile/open/widgets/dg_app_bar.dart';
+import 'package:mobile/open/widgets/dg_button.dart';
+import 'package:mobile/open/widgets/dg_drawer.dart';
+import 'package:mobile/open/widgets/dg_icon_button.dart';
+import 'package:mobile/open/widgets/dg_text_form_field.dart';
+import 'package:mobile/open/widgets/icons/dg_icon.dart';
+import 'package:mobile/open/widgets/toaster/toast_manager.dart';
 import 'package:mobile/router/routes.dart';
-import 'package:mobile/theme/next/color.dart';
-import 'package:mobile/theme/next/spacing.dart';
-import 'package:mobile/theme/next/text.dart';
+import 'package:mobile/theme/color.dart';
+import 'package:mobile/theme/spacing.dart';
+import 'package:mobile/theme/text.dart';
 import 'package:mobile/utils/instance_secrets.dart';
 
-import '../../../../logging.dart';
 import '../../../api.dart';
-import 'package:mobile/open/widgets/toaster/toast_manager.dart';
 
 class NameDeviceScreenData {
   final EnrollmentStartResponse startResponse;
@@ -112,13 +112,10 @@ class NameDeviceScreen extends HookConsumerWidget {
 
           if (Platform.isAndroid) {
             final android = await deviceInfo.androidInfo;
-            // Combine manufacturer + model for readability
             suggestedName = "${android.manufacturer} ${android.model}";
-            // e.g. "Samsung Galaxy S22"
           } else if (Platform.isIOS) {
             final ios = await deviceInfo.iosInfo;
             suggestedName = ios.name;
-            // e.g. "John’s iPhone"
           } else {
             suggestedName = "";
           }
@@ -133,19 +130,19 @@ class NameDeviceScreen extends HookConsumerWidget {
     }, const []);
 
     return Scaffold(
-      drawer: const NextDrawer(),
+      drawer: const DgDrawer(),
       extendBodyBehindAppBar: true,
-      appBar: NextAppBar(
+      appBar: DgAppBar(
         context: context,
         showLogo: false,
-        actionLeft: NextIconButton(
+        actionLeft: DgIconButton(
           icon: "arrow_big",
-          direction: NextIconDirection.left,
+          direction: DgIconDirection.left,
           onTap: () => Navigator.of(context).pop(),
         ),
       ),
       body: Container(
-        decoration: const BoxDecoration(gradient: NextColor.gradientPrimary),
+        decoration: const BoxDecoration(gradient: DgColor.gradientPrimary),
         child: SafeArea(
           child: Form(
             key: formKey,
@@ -157,22 +154,22 @@ class NameDeviceScreen extends HookConsumerWidget {
                     delegate: SliverChildListDelegate([
                       Text(
                         "Add Instance",
-                        style: NextText.h4.copyWith(
-                          color: NextColor.fgWhite100,
+                        style: DgText.h4.copyWith(
+                          color: DgColor.fgWhite100,
                         ),
                         textAlign: TextAlign.left,
                       ),
-                      const SizedBox(height: NextSpacing.sm),
+                      const SizedBox(height: DgSpacing.sm),
                       Text(
                         "Name your device to help you quickly identify it in the list.\nChoose something meaningful and easy to recognize.",
-                        style: NextText.bodySm400.copyWith(
-                          color: NextColor.fgWhite60,
+                        style: DgText.bodySm400.copyWith(
+                          color: DgColor.fgWhite60,
                         ),
                         textAlign: TextAlign.left,
                       ),
-                      const SizedBox(height: NextSpacing.xl3),
-                      NextTextFormField(
-                        size: NextTextFormFieldSize.big,
+                      const SizedBox(height: DgSpacing.xl3),
+                      DgTextFormField(
+                        size: DgTextFormFieldSize.big,
                         controller: nameController,
                         label: "Device Name",
                         required: true,
@@ -205,11 +202,11 @@ class NameDeviceScreen extends HookConsumerWidget {
                     padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
                     child: Align(
                       alignment: Alignment.bottomCenter,
-                      child: NextButton(
+                      child: DgButton(
                         identifier: "device_name_submit",
                         text: "Submit",
-                        style: NextButtonStyle.primary,
-                        size: NextButtonSize.big,
+                        style: DgButtonStyle.primary,
+                        size: DgButtonSize.big,
                         width: double.infinity,
                         loading: isLoading.value,
                         onTap: () async {

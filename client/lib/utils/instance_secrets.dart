@@ -1,4 +1,3 @@
-import 'package:mobile/open/services/snackbar_service.dart';
 import 'package:mobile/utils/keychain.dart';
 
 import '../logging.dart';
@@ -44,16 +43,10 @@ Future<void> removeInstanceSecrets({
 const missingSecretsMessage =
     "This instance is missing its credentials. Please delete it and add it again.";
 
-/// Reports missing secrets. Pass `notifyUser: false` for background tasks to log without alerting.
-void reportMissingSecret(
-  String logName,
-  String what, {
-  bool notifyUser = true,
-}) {
+/// Logs a missing secret. Telling the user is the caller's business - show
+/// [missingSecretsMessage] through the toaster where there is someone watching.
+void reportMissingSecret(String logName, String what) {
   talker.error(
     "$what of $logName is not present in the secure storage, the instance has to be re-enrolled",
   );
-  if (notifyUser) {
-    SnackbarService.showError(missingSecretsMessage);
-  }
 }

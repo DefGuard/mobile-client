@@ -16,9 +16,6 @@ List<RouteBase> get $appRoutes => [
   $addInstanceFormScreenRoute,
   $addInstanceScreenRoute,
   $talkerScreenRoute,
-  $openIdMfaScreenRoute,
-  $openIdMfaWaitingScreenRoute,
-  $mfaCodeScreenRoute,
 ];
 
 RouteBase get $appSplashRoute => GoRouteData.$route(
@@ -366,97 +363,4 @@ mixin $TalkerScreenRoute on GoRouteData {
 
   @override
   void replace(BuildContext context) => context.replace(location);
-}
-
-RouteBase get $openIdMfaScreenRoute => GoRouteData.$route(
-  path: '/mfa/openid',
-  hasOverriddenOnExit: false,
-  factory: $OpenIdMfaScreenRoute._fromState,
-);
-
-mixin $OpenIdMfaScreenRoute on GoRouteData {
-  static OpenIdMfaScreenRoute _fromState(GoRouterState state) =>
-      OpenIdMfaScreenRoute(state.extra as OpenIdMfaScreenData);
-
-  OpenIdMfaScreenRoute get _self => this as OpenIdMfaScreenRoute;
-
-  @override
-  String get location => GoRouteData.$location('/mfa/openid');
-
-  @override
-  void go(BuildContext context) => context.go(location, extra: _self.$extra);
-
-  @override
-  Future<T?> push<T>(BuildContext context) =>
-      context.push<T>(location, extra: _self.$extra);
-
-  @override
-  void pushReplacement(BuildContext context) =>
-      context.pushReplacement(location, extra: _self.$extra);
-
-  @override
-  void replace(BuildContext context) =>
-      context.replace(location, extra: _self.$extra);
-}
-
-RouteBase get $openIdMfaWaitingScreenRoute => GoRouteData.$route(
-  path: '/mfa/openid/waiting',
-  hasOverriddenOnExit: false,
-  factory: $OpenIdMfaWaitingScreenRoute._fromState,
-);
-
-mixin $OpenIdMfaWaitingScreenRoute on GoRouteData {
-  static OpenIdMfaWaitingScreenRoute _fromState(GoRouterState state) =>
-      OpenIdMfaWaitingScreenRoute(state.extra as OpenIdMfaWaitingScreenData);
-
-  OpenIdMfaWaitingScreenRoute get _self => this as OpenIdMfaWaitingScreenRoute;
-
-  @override
-  String get location => GoRouteData.$location('/mfa/openid/waiting');
-
-  @override
-  void go(BuildContext context) => context.go(location, extra: _self.$extra);
-
-  @override
-  Future<T?> push<T>(BuildContext context) =>
-      context.push<T>(location, extra: _self.$extra);
-
-  @override
-  void pushReplacement(BuildContext context) =>
-      context.pushReplacement(location, extra: _self.$extra);
-
-  @override
-  void replace(BuildContext context) =>
-      context.replace(location, extra: _self.$extra);
-}
-
-RouteBase get $mfaCodeScreenRoute => GoRouteData.$route(
-  path: '/mfa/code',
-  hasOverriddenOnExit: false,
-  factory: $MfaCodeScreenRoute._fromState,
-);
-
-mixin $MfaCodeScreenRoute on GoRouteData {
-  static MfaCodeScreenRoute _fromState(GoRouterState state) =>
-      MfaCodeScreenRoute(state.extra as MfaCodeScreenData);
-
-  MfaCodeScreenRoute get _self => this as MfaCodeScreenRoute;
-
-  @override
-  String get location => GoRouteData.$location('/mfa/code');
-
-  @override
-  void go(BuildContext context) => context.go(location, extra: _self.$extra);
-
-  @override
-  Future<T?> push<T>(BuildContext context) =>
-      context.push<T>(location, extra: _self.$extra);
-
-  @override
-  void pushReplacement(BuildContext context) =>
-      context.pushReplacement(location, extra: _self.$extra);
-
-  @override
-  void replace(BuildContext context) =>
-      context.replace(location, extra: _self.$extra);
 }

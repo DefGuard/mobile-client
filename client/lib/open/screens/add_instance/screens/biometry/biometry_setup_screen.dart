@@ -1,43 +1,21 @@
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:mobile/data/db/database.dart';
+import 'package:mobile/logging.dart';
+import 'package:mobile/open/api.dart';
 import 'package:mobile/open/riverpod/biometrics_state.dart';
-import 'package:mobile/open/screens/add_instance/screens/biometry/widgets/biometry_setup_banner.dart';
-import 'package:mobile/open/widgets/dg_single_child_scroll_view.dart';
-import 'package:mobile/open/widgets/navigation/dg_scaffold.dart';
+import 'package:mobile/open/screens/add_instance/screens/biometry/widgets/biometry_skip_dialog.dart';
+import 'package:mobile/open/widgets/dg_button.dart';
+import 'package:mobile/open/widgets/dg_circular_progress.dart';
+import 'package:mobile/open/widgets/rive_asset_animation.dart';
+import 'package:mobile/open/widgets/toaster/toast_manager.dart';
+import 'package:mobile/router/routes.dart';
+import 'package:mobile/theme/color.dart';
 import 'package:mobile/theme/spacing.dart';
-import 'package:mobile/utils/screen_padding.dart';
-import 'package:riverpod_annotation/riverpod_annotation.dart';
-
-import '../../../../../logging.dart';
-import '../../../../../router/routes.dart';
-import '../../../../../theme/color.dart';
-import '../../../../../theme/text.dart';
-import '../../../../../utils/secure_storage.dart';
-import '../../../../api.dart';
-import '../../../../widgets/buttons/dg_button.dart';
-import '../../../../widgets/loading_screen.dart';
-
-part 'biometry_setup_screen.g.dart';
-
-const String title = "Enable Biometric Authentication";
-
-const String message1 = r"""
-Do you want to enable biometrics as a Multi-Factor Authentication (MFA) method when connecting to locations that require MFA?
-
-If you enable biometrics, by default, all locations requiring internal Defguard MFA will prompt you to authenticate using your device’s biometric method during connection.
-""";
-
-const String message2 =
-    "\nIf you skip this step, you will need to use other MFA methods configured in your user profile (such as TOTP/Authenticator app or email codes).";
-
-const String biometryNotEnabledMessage =
-    "Biometry is not available on the system please add it and return to this screen or you can skip it.";
-
-const String biometryWeakMessage =
-    "Your device doesn't meet the required standards for the biometry MFA. Try to enable fingerprint auth or use other MFA method.";
+import 'package:mobile/theme/text.dart';
+import 'package:mobile/utils/secure_storage.dart';
 
 class BiometrySetupScreen extends StatelessWidget {
   final int instanceId;
@@ -46,32 +24,95 @@ class BiometrySetupScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return DgScaffold(
-      title: "Add Instance",
-      child: _ScreenContent(instanceId: instanceId),
+    return Scaffold(
+      body: Container(
+        decoration: const BoxDecoration(gradient: DgColor.gradientPrimary),
+        child: SafeArea(child: _ScreenContent(instanceId: instanceId)),
+      ),
     );
   }
 }
 
-@riverpod
-Stream _screenData(Ref ref, int id) {
-  final db = ref.read(databaseProvider);
-  return db.managers.defguardInstances
-      .filter((row) => row.id.equals(id))
-      .watchSingle();
-}
+final biometryScreenDataProvider = StreamProvider.family<DefguardInstance, int>(
+  (ref, id) {
+    final db = ref.read(databaseProvider);
+    return db.managers.defguardInstances
+        .filter((row) => row.id.equals(id))
+        .watchSingle();
+  },
+);
 
 class _ScreenContent extends HookConsumerWidget {
   final int instanceId;
 
   const _ScreenContent({required this.instanceId});
 
+  Widget _getRiveAnimation(BiometricsState status) {
+    String asset = "assets/next/rive/biometric_face.riv";
+    if (!status.isSupported) {
+      asset = "assets/next/rive/biometric_face.riv";
+    } else if (status.enrolledOptions.isEmpty) {
+      asset = "assets/next/rive/biometric_face.riv";
+    } else {
+      asset = "assets/next/rive/biometric_face.riv";
+    }
+
+    return Center(
+      child: SizedBox(
+        height: 100,
+        width: 100,
+        child: RiveAssetAnimation(asset),
+      ),
+    );
+  }
+
+  String _getTitle(BiometricsState status) {
+    if (!status.isSupported) {
+      return "Biometry Unsupported";
+    }
+    if (status.enrolledOptions.isEmpty) {
+      return "Biometry Not Registered";
+    }
+    // enrolled, but not class 3 / strong - the keystore cannot be biometry
+    // bound, so registering would produce a key we could never open
+    if (!status.isStrong) {
+      return "Biometry Not Secure Enough";
+    }
+    return "Enable Biometric Authentication";
+  }
+
+  String _getDescription(BiometricsState status) {
+    if (!status.isSupported) {
+      return "Biometry is not available on the system please add it and return to this screen or you can skip it.";
+    }
+    if (status.enrolledOptions.isEmpty) {
+      return "Biometry is supported on your device, but no fingerprints or face data are registered. Please set them up in your system settings.";
+    }
+    if (!status.isStrong) {
+      return "Your device doesn't meet the required standards for the biometry MFA. Try to enable fingerprint auth and return to this screen, or use another MFA method.";
+    }
+    return "Do you want to enable biometrics (FaceID/Touch ID) as a Multi-Factor Authentication (MFA) method when connecting to locations that require MFA?";
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final db = ref.read(databaseProvider);
-    final instanceFuture = ref.watch(_screenDataProvider(instanceId));
+    final instanceFuture = ref.watch(
+      biometryScreenDataProvider(instanceId),
+    );
     final biometryStatus = ref.watch(biometricsCapabilityProvider);
     final isLoading = useState(false);
+
+    final handleSkip = useCallback(() {
+      ref
+          .read(toastManagerProvider.notifier)
+          .showSuccess(
+            message: "Instance added successfully",
+          );
+      InstanceScreenRoute(
+        id: instanceId.toString(),
+      ).go(context);
+    }, [instanceId]);
 
     final handleRegister = useCallback((
       DefguardInstance instance,
@@ -88,7 +129,6 @@ class _ScreenContent extends HookConsumerWidget {
           authSecret.publicKey,
           instance.pubKey,
         );
-        // update instance information
         var instanceDb = await db.managers.defguardInstances
             .filter((row) => row.id.equals(instanceId))
             .getSingle();
@@ -124,106 +164,96 @@ class _ScreenContent extends HookConsumerWidget {
     }, []);
 
     return instanceFuture.when(
-      loading: () => LoadingView(),
+      loading: () => const Center(child: DgCircularProgress(size: 48)),
       error: (err, _) {
         talker.error("Failed to get screen data", err);
         InstanceScreenRoute(id: instanceId.toString()).go(context);
         return const SizedBox();
       },
-      data: (instance) => DgSingleChildScrollView(
-        padding: screenPadding(
-          top: DgSpacing.l,
-          bottom: DgSpacing.m,
-          horizontal: DgSpacing.s,
-          context: context,
+      data: (instance) => Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: DgSpacing.xl,
+          vertical: DgSpacing.xl,
         ),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.start,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.max,
-          spacing: DgSpacing.m,
           children: [
-            Center(
-              child: FittedBox(
-                fit: BoxFit.scaleDown,
-                alignment: Alignment.center,
-                child: Text(
-                  title,
-                  style: DgText.body1,
-                  textAlign: TextAlign.center,
-                  maxLines: 1,
+            Expanded(
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    SizedBox(height: 70),
+                    _getRiveAnimation(biometryStatus),
+                    SizedBox(height: 60),
+                    Text(
+                      _getTitle(biometryStatus),
+                      style: DgText.h4.copyWith(color: DgColor.fgWhite100),
+                      textAlign: .center,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      _getDescription(biometryStatus),
+                      style: DgText.bodySm400.copyWith(
+                        color: DgColor.fgWhite80,
+                      ),
+                      textAlign: .center,
+                    ),
+                    // shown in every state - skipping is always an option, so
+                    // the consequence of skipping always has to be stated
+                    const SizedBox(height: DgSpacing.xl2),
+                    Text(
+                      "If you skip this step, you will need to use other MFA methods configured in your user profile (such as TOTP/Authenticator app or email codes).",
+                      style: DgText.bodyXs400.copyWith(
+                        color: DgColor.fgWhite60,
+                      ),
+                      textAlign: .center,
+                    ),
+                  ],
                 ),
               ),
             ),
-            BiometrySetupBanner(),
-            RichText(
-              text: TextSpan(
-                children: [
-                  TextSpan(
-                    text: message1,
-                    style: DgText.body2.copyWith(
-                      color: DgColor.textBodySecondary,
-                    ),
-                  ),
-                  TextSpan(
-                    text: message2,
-                    style: DgText.body2.copyWith(
-                      color: DgColor.textBodySecondary,
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            if (biometryStatus.isSupported &&
-                biometryStatus.enrolledOptions.isEmpty)
-              Text(
-                biometryNotEnabledMessage,
-                style: DgText.body2.copyWith(
-                  fontSize: 14,
-                  color: DgColor.textAlert,
-                ),
-              ),
-            if (biometryStatus.isSupported && biometryStatus.isWeak)
-              Text(
-                biometryWeakMessage,
-                style: DgText.body2.copyWith(
-                  fontSize: 14,
-                  color: DgColor.textAlert,
-                ),
-              ),
-            Row(
-              spacing: DgSpacing.m,
-              mainAxisSize: MainAxisSize.max,
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
+            const SizedBox(height: DgSpacing.xl),
+            Column(
+              spacing: DgSpacing.md,
               children: [
-                Flexible(
-                  flex: 1,
-                  fit: FlexFit.tight,
-                  child: DgButton(
-                    text: "Skip",
-                    size: DgButtonSize.big,
-                    variant: DgButtonVariant.secondary,
-                    disabled: isLoading.value,
-                    onTap: () {
-                      InstanceScreenRoute(
-                        id: instanceId.toString(),
-                      ).go(context);
-                    },
-                  ),
-                ),
-                Flexible(
-                  flex: 1,
-                  fit: FlexFit.tight,
-                  child: DgButton(
-                    text: "Yes",
-                    disabled: !biometryStatus.isStrong,
+                if (biometryStatus.isSupported &&
+                    (biometryStatus.isStrong ||
+                        biometryStatus.enrolledOptions.isEmpty))
+                  DgButton(
+                    text: "Enable",
+                    size: .big,
+                    width: .infinity,
                     loading: isLoading.value,
-                    size: DgButtonSize.big,
-                    variant: DgButtonVariant.primary,
+                    style: DgButtonStyle.primary,
+                    disabled: biometryStatus.enrolledOptions.isEmpty,
                     onTap: () => handleRegister(instance, context),
                   ),
+                DgButton(
+                  text: "Skip",
+                  style: DgButtonStyle.secondary,
+                  size: .big,
+                  disabled: isLoading.value,
+                  width: .infinity,
+                  onTap: () {
+                    final cannotSetupBiometry =
+                        !biometryStatus.isSupported ||
+                        (biometryStatus.enrolledOptions.isNotEmpty &&
+                            biometryStatus.isWeak);
+                    if (cannotSetupBiometry) {
+                      handleSkip();
+                    } else {
+                      showDialog(
+                        context: context,
+                        useSafeArea: false,
+                        barrierColor: Colors.transparent,
+                        builder: (context) => BiometrySkipDialog(
+                          onSkip: handleSkip,
+                          onCancel: () => Navigator.of(context).pop(),
+                        ),
+                      );
+                    }
+                  },
                 ),
               ],
             ),

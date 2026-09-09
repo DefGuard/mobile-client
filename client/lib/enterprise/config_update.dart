@@ -1,6 +1,6 @@
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:mobile/data/db/database.dart';
 import 'package:mobile/data/db/enums.dart';
 import 'package:mobile/open/api.dart';
@@ -29,7 +29,6 @@ class ConfigurationUpdater extends HookConsumerWidget {
     final hasShown = useState(false);
 
     final updateConfiguration = useCallback(() async {
-      // cancel if update is already pending
       if (updatePending.value) return;
       updatePending.value = true;
       List<Map<String, dynamic>> versionUnsupportedInstances = [];
@@ -49,17 +48,12 @@ class ConfigurationUpdater extends HookConsumerWidget {
           );
           final token = await instance.poolingToken();
           if (token == null) {
-            reportMissingSecret(
-              instance.logName,
-              "Proxy token",
-              notifyUser: false,
-            );
+            reportMissingSecret(instance.logName, "Proxy token");
             continue;
           }
           final (responseData, responseStatus, headers) = await proxyApi
               .pollConfiguration(instance.proxyUrl, token);
           talker.debug("Headers: $headers");
-          // Check versions
           try {
             if (headers == null) {
               talker.error("Headers are null for ${instance.logName}");
@@ -92,7 +86,6 @@ class ConfigurationUpdater extends HookConsumerWidget {
           } catch (e) {
             talker.error("Failed to parse versions for ${instance.logName}", e);
           }
-          // instance lost it's enterprise status
           if (responseStatus == 402) {
             final instanceUpdate = instance.copyWith(
               clientTrafficPolicy: ClientTrafficPolicy.none,
@@ -137,7 +130,6 @@ class ConfigurationUpdater extends HookConsumerWidget {
             );
           }
         }
-        // After processing all instances, check for version warning
         if (versionUnsupportedInstances.isNotEmpty) {
           if (!hasShown.value) {
             String message =
@@ -166,7 +158,6 @@ class ConfigurationUpdater extends HookConsumerWidget {
       return null;
     }, []);
 
-    // update when user wakes up application
     useEffect(() {
       final timeTick = DateTime.now();
       final afterCooldown =

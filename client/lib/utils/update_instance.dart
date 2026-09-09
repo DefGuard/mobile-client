@@ -1,6 +1,7 @@
 import 'package:collection/collection.dart';
 import 'package:mobile/logging.dart';
 import '../data/db/database.dart';
+import '../data/mfa/mfa_plan.dart';
 import '../data/proxy/enrollment.dart';
 
 class UpdateInstanceResult {
@@ -90,6 +91,10 @@ Future<UpdateInstanceResult?> updateInstance({
             id: location.id,
             trafficMethod: location.trafficMethod,
             mfaMethod: location.mfaMethod,
+            mfaStepPlan: sanitizeMfaStepPlan(
+              location.mfaStepPlan,
+              config.effectiveSteps,
+            ),
           );
           talker.debug(companion.toString());
           result.locationsUpdated.add(companion.id.value);
