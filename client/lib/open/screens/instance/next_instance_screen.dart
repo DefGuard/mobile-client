@@ -345,6 +345,7 @@ class _InstanceAppBar extends ConsumerWidget implements PreferredSizeWidget {
               items: [
                 if (activeTunnel != null)
                   NextMenuItem(
+                    identifier: "instance_actions_disconnect_all",
                     icon: "disconnect_all",
                     text: "Disconnect all locations",
                     onTap: () async {
@@ -360,6 +361,7 @@ class _InstanceAppBar extends ConsumerWidget implements PreferredSizeWidget {
                     },
                   ),
                 NextMenuItem(
+                  identifier: "instance_actions_refresh",
                   text: "Refresh configuration",
                   icon: "refresh",
                   onTap: () {
@@ -373,6 +375,7 @@ class _InstanceAppBar extends ConsumerWidget implements PreferredSizeWidget {
                   },
                 ),
                 NextMenuItem(
+                  identifier: "instance_actions_delete",
                   icon: "delete",
                   text: "Delete Instance",
                   onTap: onDeleteInstance,
