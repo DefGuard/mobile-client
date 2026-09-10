@@ -221,6 +221,7 @@ class _ScreenContent extends HookConsumerWidget {
                     (biometryStatus.isStrong ||
                         biometryStatus.enrolledOptions.isEmpty))
                   DgButton(
+                    identifier: "enable_biometry",
                     text: "Enable",
                     size: .big,
                     width: .infinity,

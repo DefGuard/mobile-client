@@ -65,6 +65,7 @@ class BiometryFinishScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: DgSpacing.xl),
                 DgButton(
+                  identifier: "biometry_finish_continue",
                   text: "Continue",
                   width: double.infinity,
                   style: DgButtonStyle.primary,
