@@ -1,8 +1,5 @@
-import 'dart:io';
-
-import 'package:device_info_plus/device_info_plus.dart';
 import 'package:json_annotation/json_annotation.dart';
-import 'package:package_info_plus/package_info_plus.dart';
+import 'package:mobile/data/client_identity.dart';
 
 part 'postures.g.dart';
 
@@ -136,69 +133,23 @@ class PostureConnectResponse {
 }
 
 Future<DevicePostureData> getPosture() async {
-  final packageInfo = await PackageInfo.fromPlatform();
-  final deviceInfo = DeviceInfoPlugin();
+  return devicePostureData(await clientIdentity.get());
+}
 
-  if (Platform.isAndroid) {
-    final android = await deviceInfo.androidInfo;
-    return DevicePostureData(
-      defguardClientVersion: packageInfo.version,
-      osType: "Android",
-      osName: StringCheck.value(android.version.release),
-      osVersion: StringCheck.value(android.version.release),
-      // TODO: implement full google play integrity check flow
-      // TODO: https://github.com/DefGuard/defguard/issues/2986
-      deviceIntegrity: BoolCheck.unavailable(UnavailableReason.unspecified),
-
-      diskEncryption: BoolCheck.unavailable(UnavailableReason.notApplicable),
-      antivirusPresent: BoolCheck.unavailable(UnavailableReason.notApplicable),
-      windowsAdDomainJoined: BoolCheck.unavailable(
-        UnavailableReason.notApplicable,
-      ),
-      windowsSecurityUpdateAgeDays: Int32Check.unavailable(
-        UnavailableReason.notApplicable,
-      ),
-      linuxKernelVersion: StringCheck.unavailable(
-        UnavailableReason.notApplicable,
-      ),
-      androidSecurityPatchDate: android.version.securityPatch != null
-          ? StringCheck.value(android.version.securityPatch!)
-          : StringCheck.unavailable(UnavailableReason.detectionFailed),
-    );
-  }
-
-  if (Platform.isIOS) {
-    final ios = await deviceInfo.iosInfo;
-    return DevicePostureData(
-      defguardClientVersion: packageInfo.version,
-      osType: "iOS",
-      osName: StringCheck.value(ios.systemName),
-      osVersion: StringCheck.value(ios.systemVersion),
-      deviceIntegrity: BoolCheck.unavailable(UnavailableReason.notApplicable),
-
-      diskEncryption: BoolCheck.unavailable(UnavailableReason.notApplicable),
-      antivirusPresent: BoolCheck.unavailable(UnavailableReason.notApplicable),
-      windowsAdDomainJoined: BoolCheck.unavailable(
-        UnavailableReason.notApplicable,
-      ),
-      windowsSecurityUpdateAgeDays: Int32Check.unavailable(
-        UnavailableReason.notApplicable,
-      ),
-      linuxKernelVersion: StringCheck.unavailable(
-        UnavailableReason.notApplicable,
-      ),
-      androidSecurityPatchDate: StringCheck.unavailable(
-        UnavailableReason.notApplicable,
-      ),
-    );
-  }
-
-  // Fallback for unsupported platforms: report the generic Dart OS values
+DevicePostureData devicePostureData(ClientIdentity identity) {
+  final facts = identity.facts;
   return DevicePostureData(
-    defguardClientVersion: packageInfo.version,
-    osType: Platform.operatingSystem,
-    osName: StringCheck.value(Platform.operatingSystem),
-    osVersion: StringCheck.unavailable(UnavailableReason.unspecified),
+    defguardClientVersion: identity.version,
+    osType: facts.osType,
+    osName: StringCheck.value(facts.osName),
+    osVersion: facts.kind == PlatformKind.other
+        ? StringCheck.unavailable(UnavailableReason.unspecified)
+        : StringCheck.value(facts.osVersion),
+    deviceIntegrity: facts.kind == PlatformKind.android
+        // TODO: implement full google play integrity check flow
+        // TODO: https://github.com/DefGuard/defguard/issues/2986
+        ? BoolCheck.unavailable(UnavailableReason.unspecified)
+        : BoolCheck.unavailable(UnavailableReason.notApplicable),
     diskEncryption: BoolCheck.unavailable(UnavailableReason.notApplicable),
     antivirusPresent: BoolCheck.unavailable(UnavailableReason.notApplicable),
     windowsAdDomainJoined: BoolCheck.unavailable(
@@ -210,9 +161,16 @@ Future<DevicePostureData> getPosture() async {
     linuxKernelVersion: StringCheck.unavailable(
       UnavailableReason.notApplicable,
     ),
-    deviceIntegrity: BoolCheck.unavailable(UnavailableReason.notApplicable),
-    androidSecurityPatchDate: StringCheck.unavailable(
-      UnavailableReason.notApplicable,
-    ),
+    androidSecurityPatchDate: _androidSecurityPatch(facts),
   );
+}
+
+StringCheck _androidSecurityPatch(DevicePlatformFacts facts) {
+  if (facts.kind != PlatformKind.android) {
+    return StringCheck.unavailable(UnavailableReason.notApplicable);
+  }
+  final patch = facts.androidSecurityPatch;
+  return patch != null
+      ? StringCheck.value(patch)
+      : StringCheck.unavailable(UnavailableReason.detectionFailed);
 }
