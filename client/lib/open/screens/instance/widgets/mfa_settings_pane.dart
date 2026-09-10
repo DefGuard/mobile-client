@@ -60,14 +60,16 @@ class MfaSettingsPane extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
-              const SizedBox(width: 44, height: 44),
+              SizedBox(
+                width: 44,
+              ),
             ],
           ),
         ),
-        const SizedBox(height: DgSpacing.xl2),
+        const SizedBox(height: DgSpacing.xl),
         Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
-          spacing: DgSpacing.xl2,
+          spacing: DgSpacing.xl3,
           children: [
             for (final (index, step) in steps.indexed)
               _StepSection(
@@ -116,11 +118,11 @@ class _StepSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
-      spacing: DgSpacing.md,
+      spacing: DgSpacing.sm,
       children: [
         Text(
           "Step $number",
-          style: DgText.bodySm400.copyWith(color: DgColor.fgWhite60),
+          style: DgText.bodyXs400.copyWith(color: DgColor.fgWhite60),
         ),
         for (final entry in pickableMfaMethods(step))
           mfaMethodRow(
