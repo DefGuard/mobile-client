@@ -130,7 +130,6 @@ class DgLocationCard extends StatelessWidget {
           const SizedBox(height: DgSpacing.lg),
           Semantics(
             identifier: "location_disconnect_button_${location.name}",
-            container: true,
             child: DgMainCta(
               text: "Disconnect",
               connected: false,
@@ -192,7 +191,6 @@ class DgLocationCard extends StatelessWidget {
           ),
           Semantics(
             identifier: "location_connect_button_${location.name}",
-            container: true,
             child: DgButton(
               text: "Connect",
               onTap: onConnectTap,

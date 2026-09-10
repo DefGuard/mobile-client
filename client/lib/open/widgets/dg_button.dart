@@ -204,7 +204,7 @@ class DgButton extends StatelessWidget {
       return button;
     }
 
-    return Semantics(identifier: identifier, container: true, child: button);
+    return Semantics(identifier: identifier, child: button);
   }
 
   List<Widget> _getRow() {

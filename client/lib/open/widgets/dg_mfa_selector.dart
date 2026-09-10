@@ -169,7 +169,7 @@ class DgMfaSelector extends StatelessWidget {
       return row;
     }
 
-    return Semantics(identifier: identifier, container: true, child: row);
+    return Semantics(identifier: identifier, child: row);
   }
 }
 

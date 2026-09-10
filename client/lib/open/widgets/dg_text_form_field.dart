@@ -119,7 +119,7 @@ class _NextTextFormFieldContent extends HookWidget {
     if (identifier == null) {
       return child;
     }
-    return Semantics(identifier: identifier, container: true, child: child);
+    return Semantics(identifier: identifier, child: child);
   }
 
   @override

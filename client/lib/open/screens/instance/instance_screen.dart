@@ -388,7 +388,6 @@ class _InstanceAppBar extends ConsumerWidget implements PreferredSizeWidget {
             link: actionsLayerLink,
             child: Semantics(
               identifier: "instance_actions_menu",
-              container: true,
               child: DgIconButton(
                 icon: "menu",
                 onTap: actionsController.toggle,
@@ -573,9 +572,12 @@ class _LocationList extends HookConsumerWidget {
       children: [
         Padding(
           padding: const EdgeInsets.only(bottom: DgSpacing.xl),
-          child: Text(
-            "Locations",
-            style: DgText.h4.copyWith(color: DgColor.fgWhite100),
+          child: Semantics(
+            identifier: "instance_screen_header",
+            child: Text(
+              "Locations",
+              style: DgText.h4.copyWith(color: DgColor.fgWhite100),
+            ),
           ),
         ),
         if (connectedLocation != null) ...[

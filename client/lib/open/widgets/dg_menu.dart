@@ -193,7 +193,6 @@ class _NextMenuItem extends StatelessWidget {
 
     return Semantics(
       identifier: itemData.identifier,
-      container: true,
       child: item,
     );
   }

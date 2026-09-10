@@ -73,10 +73,13 @@ class _AddInstanceFormContent extends HookConsumerWidget {
             padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
             sliver: SliverList(
               delegate: SliverChildListDelegate([
-                Text(
-                  "Add Instance Manually",
-                  style: DgText.h4.copyWith(color: DgColor.fgWhite100),
-                  textAlign: TextAlign.left,
+                Semantics(
+                  identifier: "add_instance_form_header",
+                  child: Text(
+                    "Add Instance Manually",
+                    style: DgText.h4.copyWith(color: DgColor.fgWhite100),
+                    textAlign: TextAlign.left,
+                  ),
                 ),
                 const SizedBox(height: DgSpacing.sm),
                 Text(
