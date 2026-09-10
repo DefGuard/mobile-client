@@ -1,6 +1,12 @@
+import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import {
+	assertLockCleared,
+	DEVICE_PIN,
+	prepareBiometrics,
+} from "./helpers/biometrics.js";
 import { projectRoot, sharedConfig } from "./wdio.shared.conf.js";
 
 const APP_PACKAGE = "net.defguard.mobile";
@@ -69,6 +75,17 @@ process.env.ANDROID_SDK_ROOT = sdkRoot;
 
 const avd = resolveAvd();
 const apk = path.resolve(projectRoot, APK_PATH);
+const adbPath = path.join(sdkRoot, "platform-tools", "adb");
+
+const adb = (...args: string[]) =>
+	spawnSync(adbPath, args, { encoding: "utf8" }).stdout ?? "";
+
+const resetDeviceLock = () => {
+	adb("shell", "locksettings", "clear", "--old", DEVICE_PIN);
+	adb("shell", "locksettings", "clear");
+
+	assertLockCleared(adb("shell", "dumpsys", "fingerprint"));
+};
 
 export const config: WebdriverIO.Config = {
 	...sharedConfig,
@@ -83,6 +100,9 @@ export const config: WebdriverIO.Config = {
 			"appium:app": apk,
 			"appium:appPackage": APP_PACKAGE,
 			"appium:appActivity": APP_ACTIVITY,
+			"appium:autoLaunch": false,
+			"appium:unlockType": "pin",
+			"appium:unlockKey": DEVICE_PIN,
 			"appium:autoGrantPermissions": true,
 			"appium:disableWindowAnimation": true,
 			"appium:uiautomator2ServerInstallTimeout": 120_000,
@@ -96,6 +116,8 @@ export const config: WebdriverIO.Config = {
 				`Application artifact not found: ${apk}\nRun pnpm build:android first`,
 			);
 		}
+
+		resetDeviceLock();
 	},
 
 	before: async () => {
@@ -105,5 +127,13 @@ export const config: WebdriverIO.Config = {
 			target: "appops",
 			action: "allow",
 		});
+
+		try {
+			await prepareBiometrics();
+		} finally {
+			await driver.execute("mobile: activateApp", { appId: APP_PACKAGE });
+		}
 	},
+
+	onComplete: resetDeviceLock,
 };

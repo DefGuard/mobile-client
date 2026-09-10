@@ -1,6 +1,7 @@
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
+import { prepareBiometrics, resetFaceId } from "./helpers/biometrics.js";
 import { projectRoot, sharedConfig } from "./wdio.shared.conf.js";
 
 const BUNDLE_ID = "net.defguard.mobile";
@@ -133,6 +134,10 @@ export const config: WebdriverIO.Config = {
 	],
 
 	onPrepare: assertSimulatorArtifact,
+
+	before: prepareBiometrics,
+
+	after: resetFaceId,
 
 	onComplete: () => {
 		spawnSync("xcrun", ["simctl", "shutdown", udid]);

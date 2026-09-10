@@ -1,18 +1,23 @@
-import { $, driver, expect } from "@wdio/globals";
+import { $, expect } from "@wdio/globals";
+import { approveBiometricPrompt } from "./biometrics.js";
 import type { EnrollmentFixture } from "./coreApi.js";
 import { fillField } from "./input.js";
-import { byId, containsLabel } from "./selectors.js";
+import { byId } from "./selectors.js";
 
-const confirmsBiometrySkip = () => driver.isIOS;
+const STEP_SETTLE_MS = 2_000;
+
+interface EnrollmentOptions {
+	biometry?: boolean;
+}
 
 const openManualForm = async () => {
-	await $("~Add instance Manually").click();
+	await $(byId("add_instance_manual_button")).click();
 
-	const consent = $("~I Understand");
+	const consent = $(byId("data_gathering_accept"));
 	await consent.waitForDisplayed();
 	await consent.click();
 
-	await expect($(containsLabel("Add Instance Manually"))).toBeDisplayed();
+	await expect($(byId("add_instance_form_header"))).toBeDisplayed();
 };
 
 const submitInstanceDetails = async (fixture: EnrollmentFixture) => {
@@ -27,14 +32,10 @@ const nameDevice = async () => {
 	await submit.click();
 };
 
-const skipBiometry = async () => {
-	const skip = $("~Skip");
+export const skipBiometry = async () => {
+	const skip = $(byId("skip_biometry"));
 	await skip.waitForDisplayed();
 	await skip.click();
-
-	if (!confirmsBiometrySkip()) {
-		return;
-	}
 
 	const confirm = $(byId("skip_biometry_confirm"));
 	await confirm.waitForDisplayed();
@@ -42,9 +43,43 @@ const skipBiometry = async () => {
 	await confirm.waitForExist({ reverse: true });
 };
 
-export const completeEnrollment = async (fixture: EnrollmentFixture) => {
+const enableBiometry = async () => {
+	await $(byId("biometry_state_ready")).waitForDisplayed({
+		timeoutMsg:
+			"The device reports no usable biometry, the session failed to provision it",
+	});
+
+	const enable = $(byId("enable_biometry"));
+	await enable.waitForDisplayed();
+	await enable.click();
+
+	const proceed = $(byId("biometry_finish_continue"));
+	await approveBiometricPrompt(() =>
+		proceed
+			.waitForDisplayed({ timeout: STEP_SETTLE_MS })
+			.then(() => true)
+			.catch(() => false),
+	);
+
+	await proceed.click();
+};
+
+export const reachBiometryStep = async (fixture: EnrollmentFixture) => {
 	await openManualForm();
 	await submitInstanceDetails(fixture);
 	await nameDevice();
+};
+
+export const completeEnrollment = async (
+	fixture: EnrollmentFixture,
+	options: EnrollmentOptions = {},
+) => {
+	await reachBiometryStep(fixture);
+
+	if (options.biometry) {
+		await enableBiometry();
+		return;
+	}
+
 	await skipBiometry();
 };

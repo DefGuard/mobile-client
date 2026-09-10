@@ -5,10 +5,9 @@ import {
 	loggedInCoreApi,
 } from "../helpers/coreApi.js";
 import { completeEnrollment } from "../helpers/enrollment.js";
-import { deleteInstance, waitForInstanceScreen } from "../helpers/instance.js";
-import { byId } from "../helpers/selectors.js";
+import { locationCard, waitForInstanceScreen } from "../helpers/instance.js";
 
-describe("instance delete", () => {
+describe("biometry enrollment", () => {
 	let core: CoreApi;
 	let fixture: EnrollmentFixture;
 
@@ -22,13 +21,12 @@ describe("instance delete", () => {
 		}
 	});
 
-	it("deletes the instance", async () => {
+	it("registers biometry while adding an instance", async () => {
 		fixture = await core.createEnrollmentFixture();
 
-		await completeEnrollment(fixture);
+		await completeEnrollment(fixture, { biometry: true });
 		await waitForInstanceScreen();
 
-		await deleteInstance();
-		await expect($(byId("add_instance_screen_header"))).toBeDisplayed();
+		await expect($(locationCard())).toBeDisplayed();
 	});
 });

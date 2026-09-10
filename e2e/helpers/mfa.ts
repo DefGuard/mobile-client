@@ -1,9 +1,11 @@
 import { $ } from "@wdio/globals";
+import { approveBiometricPrompt } from "./biometrics.js";
 import { fillField } from "./input.js";
 import { byId } from "./selectors.js";
 import { totpCode } from "./totp.js";
 
 const CODE_ATTEMPTS = 3;
+const PROOF_SETTLE_MS = 2_000;
 
 export const submitTotpCode = async (secret: string) => {
 	const submit = $(byId("mfa_code_submit"));
@@ -25,5 +27,18 @@ export const submitTotpCode = async (secret: string) => {
 
 	throw new Error(
 		`The TOTP code was not accepted after ${CODE_ATTEMPTS} attempts`,
+	);
+};
+
+export const submitBiometricProof = async () => {
+	const verify = $(byId("mfa_biometric_verify"));
+	await verify.waitForDisplayed();
+	await verify.click();
+
+	await approveBiometricPrompt(() =>
+		verify
+			.waitForDisplayed({ timeout: PROOF_SETTLE_MS, reverse: true })
+			.then(() => true)
+			.catch(() => false),
 	);
 };

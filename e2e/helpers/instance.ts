@@ -2,16 +2,12 @@ import { $, driver } from "@wdio/globals";
 import type { EnrollmentFixture } from "./coreApi.js";
 import { requireEnv } from "./env.js";
 import { fillField, hideKeyboard } from "./input.js";
-import { submitTotpCode } from "./mfa.js";
+import { submitBiometricProof, submitTotpCode } from "./mfa.js";
 import { byId, containsLabel } from "./selectors.js";
 
 const MENU_ATTEMPTS = 3;
 const MENU_TIMEOUT_MS = 5_000;
-const ALL_TRAFFIC = "~All traffic";
-const PREDEFINED_TRAFFIC = "~Predefined traffic only";
-const ACTIONS_MENU = "instance_actions_menu";
-const REFRESH_ITEM = "instance_actions_refresh";
-const DELETE_ITEM = "instance_actions_delete";
+const CONNECT_TIMEOUT_MS = 45_000;
 
 interface ConnectOptions {
 	allTraffic?: boolean;
@@ -56,8 +52,12 @@ const tap = async (selector: string, frameScale = 1) => {
 };
 
 const selectTraffic = async (allTraffic: boolean) => {
-	const wanted = allTraffic ? ALL_TRAFFIC : PREDEFINED_TRAFFIC;
-	const opposite = allTraffic ? PREDEFINED_TRAFFIC : ALL_TRAFFIC;
+	const wanted = byId(
+		allTraffic ? "traffic_mode_all" : "traffic_mode_predefined",
+	);
+	const opposite = byId(
+		allTraffic ? "traffic_mode_predefined" : "traffic_mode_all",
+	);
 
 	if (await $(wanted).isDisplayed()) {
 		return;
@@ -65,12 +65,14 @@ const selectTraffic = async (allTraffic: boolean) => {
 
 	await tap(opposite);
 	await $(wanted).waitForDisplayed({
-		timeoutMsg: `The traffic mode did not switch to ${wanted}`,
+		timeoutMsg: `The traffic mode did not switch to ${
+			allTraffic ? "all traffic" : "predefined traffic only"
+		}`,
 	});
 };
 
 const tapMenuItem = async (item: string) => {
-	const menuButton = byId(ACTIONS_MENU);
+	const menuButton = byId("instance_actions_menu");
 	const trueWidth = (await boundsOf(menuButton)).width;
 
 	for (let attempt = 1; attempt <= MENU_ATTEMPTS; attempt++) {
@@ -94,27 +96,43 @@ const tapMenuItem = async (item: string) => {
 };
 
 export const waitForInstanceScreen = async () => {
-	await $("~Locations").waitForDisplayed();
+	await $(byId("instance_screen_header")).waitForDisplayed();
 	await $(locationCard()).waitForDisplayed({
 		timeoutMsg: `The instance screen does not list the ${locationName()} location`,
 	});
 };
 
-export const connectLocation = async (options: ConnectOptions = {}) => {
+const openConnectDialog = async (allTraffic: boolean) => {
 	await tap(cardButton("location_connect_button"));
 
-	await $("~Connect VPN").waitForDisplayed();
-	await selectTraffic(options.allTraffic ?? false);
-	await tap("~Connect VPN");
+	await $(byId("connect_vpn_submit")).waitForDisplayed();
+	await selectTraffic(allTraffic);
+};
+
+const waitForConnected = () =>
+	$(cardButton("location_disconnect_button")).waitForDisplayed({
+		timeout: CONNECT_TIMEOUT_MS,
+		timeoutMsg: `The ${locationName()} location did not connect`,
+	});
+
+export const connectLocation = async (options: ConnectOptions = {}) => {
+	await openConnectDialog(options.allTraffic ?? false);
+	await tap(byId("connect_vpn_submit"));
 
 	if (options.totpSecret) {
 		await submitTotpCode(options.totpSecret);
 	}
 
-	await $(cardButton("location_disconnect_button")).waitForDisplayed({
-		timeout: 45_000,
-		timeoutMsg: `The ${locationName()} location did not connect`,
-	});
+	await waitForConnected();
+};
+
+export const connectWithBiometrics = async () => {
+	await openConnectDialog(false);
+	await tap(byId("mfa_method_biometric"));
+	await tap(byId("connect_vpn_submit"));
+
+	await submitBiometricProof();
+	await waitForConnected();
 };
 
 export const disconnect = async () => {
@@ -125,7 +143,7 @@ export const disconnect = async () => {
 };
 
 export const refreshInstance = async (fixture: EnrollmentFixture) => {
-	await tapMenuItem(REFRESH_ITEM);
+	await tapMenuItem("instance_actions_refresh");
 
 	const submit = $(byId("refresh_instance_submit"));
 	await submit.waitForDisplayed();
@@ -143,6 +161,6 @@ export const refreshInstance = async (fixture: EnrollmentFixture) => {
 };
 
 export const deleteInstance = async () => {
-	await tapMenuItem(DELETE_ITEM);
+	await tapMenuItem("instance_actions_delete");
 	await tap(byId("delete_instance_confirm"));
 };

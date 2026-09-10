@@ -1,0 +1,191 @@
+import { $, $$, driver } from "@wdio/globals";
+import { byId } from "./selectors.js";
+
+export const DEVICE_PIN = "1234";
+
+const SETTINGS = "com.android.settings";
+const SYSTEM_UI = "com.android.systemui";
+const FOOTER_BUTTONS = `//*[@resource-id="${SETTINGS}:id/suc_footer_button_bar"]//*[@clickable="true"]`;
+const FINGER_ID = 1;
+const ENROLL_STEPS = 15;
+const SCAN_INTERVAL_MS = 300;
+const PIN_TIMEOUT_MS = 15_000;
+const PROMPT_TIMEOUT_MS = 20_000;
+const KEYCODE_ENTER = 66;
+const MATCH_ATTEMPTS = 5;
+const RELOAD_SECONDS = 1;
+const DEVICE_OWNER = 0;
+
+const shell = async (command: string, args: string[]) =>
+	String(await driver.execute("mobile: shell", { command, args }));
+
+const countPrints = (dump: string) => {
+	const state = dump
+		.split("\n")
+		.find((line) => line.trimStart().startsWith("{"));
+
+	if (!state) {
+		return 0;
+	}
+
+	const { prints } = JSON.parse(state) as {
+		prints?: { id: number; count: number }[];
+	};
+
+	return prints?.find((user) => user.id === DEVICE_OWNER)?.count ?? 0;
+};
+
+const fingerprintDump = () => shell("dumpsys", ["fingerprint"]);
+
+const enrolledPrints = async () => countPrints(await fingerprintDump());
+
+export const assertLockCleared = (dump: string) => {
+	if (countPrints(dump) > 0) {
+		throw new Error(
+			"The emulator kept an enrolled fingerprint after its screen lock was cleared",
+		);
+	}
+};
+
+const setDevicePin = () =>
+	shell("sh", [
+		"-c",
+		`"locksettings set-pin --old ${DEVICE_PIN} ${DEVICE_PIN} || locksettings set-pin ${DEVICE_PIN}"`,
+	]);
+
+const confirmScreenLock = async () => {
+	const field = $(byId(`${SETTINGS}:id/password_entry`));
+	await field.waitForDisplayed({
+		timeout: PIN_TIMEOUT_MS,
+		timeoutMsg: "The fingerprint wizard did not ask for the device PIN",
+	});
+
+	await field.setValue(DEVICE_PIN);
+	await driver.pressKeyCode(KEYCODE_ENTER);
+};
+
+const forwardButton = async () => {
+	const buttons = [...(await $$(FOOTER_BUTTONS))];
+	const { width } = await driver.getWindowSize();
+
+	for (const button of buttons) {
+		if ((await button.getLocation()).x > width / 2) {
+			return button;
+		}
+	}
+
+	return undefined;
+};
+
+const enrollFingerprint = async () => {
+	if ((await enrolledPrints()) > 0) {
+		return;
+	}
+
+	await setDevicePin();
+	await shell("am", ["start", "-a", "android.settings.FINGERPRINT_ENROLL"]);
+
+	await confirmScreenLock();
+
+	for (let step = 1; step <= ENROLL_STEPS; step++) {
+		if ((await enrolledPrints()) > 0) {
+			await shell("am", ["force-stop", SETTINGS]);
+			return;
+		}
+
+		const forward = await forwardButton();
+
+		if (forward) {
+			await forward.click();
+			continue;
+		}
+
+		await driver.execute("mobile: fingerprint", { fingerprintId: FINGER_ID });
+		await driver.pause(SCAN_INTERVAL_MS);
+	}
+
+	throw new Error(
+		`The fingerprint wizard enrolled no print in ${ENROLL_STEPS} steps`,
+	);
+};
+
+const answerFingerprintPrompt = async () => {
+	const prompt = $(byId(`${SYSTEM_UI}:id/biometric_prompt_constraint_layout`));
+
+	await prompt.waitForExist({
+		timeout: PROMPT_TIMEOUT_MS,
+		timeoutMsg: "The system biometric prompt did not open",
+	});
+
+	await driver.execute("mobile: fingerprint", { fingerprintId: FINGER_ID });
+
+	await prompt.waitForExist({
+		reverse: true,
+		timeout: PROMPT_TIMEOUT_MS,
+		timeoutMsg: "The system biometric prompt rejected the fingerprint",
+	});
+};
+
+const removeFingerprint = async () => {
+	await shell("sh", ["-c", `"locksettings clear --old ${DEVICE_PIN} || true"`]);
+
+	assertLockCleared(await fingerprintDump());
+
+	await setDevicePin();
+};
+
+const reloadCapabilities = () =>
+	driver.execute("mobile: backgroundApp", { seconds: RELOAD_SECONDS });
+
+const enrollFaceId = async () => {
+	await driver.execute("mobile: enrollBiometric", { isEnabled: true });
+	await reloadCapabilities();
+};
+
+const matchFaceId = () =>
+	driver.execute("mobile: sendBiometricMatch", {
+		type: "faceId",
+		match: true,
+	});
+
+export const resetFaceId = () =>
+	driver.execute("mobile: enrollBiometric", { isEnabled: false });
+
+export const prepareBiometrics = () =>
+	driver.isAndroid ? enrollFingerprint() : enrollFaceId();
+
+export const revokeBiometrics = async () => {
+	if (driver.isAndroid) {
+		await removeFingerprint();
+	} else {
+		await resetFaceId();
+	}
+
+	await reloadCapabilities();
+};
+
+export const approveBiometricPrompt = async (
+	accepted: () => Promise<boolean>,
+) => {
+	if (driver.isAndroid) {
+		await answerFingerprintPrompt();
+
+		if (await accepted()) {
+			return;
+		}
+
+		throw new Error("The app did not continue past the biometric prompt");
+	}
+
+	for (let attempt = 1; attempt <= MATCH_ATTEMPTS; attempt++) {
+		await matchFaceId();
+
+		if (await accepted()) {
+			return;
+		}
+	}
+
+	throw new Error(
+		`The biometric prompt was not accepted after ${MATCH_ATTEMPTS} matches`,
+	);
+};
