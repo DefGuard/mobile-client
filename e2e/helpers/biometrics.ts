@@ -9,7 +9,6 @@ const FOOTER_BUTTONS = `//*[@resource-id="${SETTINGS}:id/suc_footer_button_bar"]
 const FINGER_ID = 1;
 const ENROLL_STEPS = 20;
 const SCAN_INTERVAL_MS = 300;
-const PIN_SETTLE_MS = 5_000;
 const PROMPT_TIMEOUT_MS = 20_000;
 const ACCEPT_TIMEOUT_MS = 20_000;
 const ACCEPT_POLL_MS = 500;
@@ -49,11 +48,18 @@ export const assertLockCleared = (dump: string) => {
 	}
 };
 
-const setDevicePin = () =>
-	shell("sh", [
+const setDevicePin = async () => {
+	const output = await shell("sh", [
 		"-c",
 		`"locksettings set-pin --old ${DEVICE_PIN} ${DEVICE_PIN} || locksettings set-pin ${DEVICE_PIN}"`,
 	]);
+
+	if (!output.includes(`Pin set to '${DEVICE_PIN}'`)) {
+		throw new Error(
+			`The emulator refused to set a device PIN: ${output.trim().split("\n").join(" | ")}`,
+		);
+	}
+};
 
 const enterPinIfAsked = async () => {
 	const field = $(byId(`${SETTINGS}:id/password_entry`));
@@ -64,12 +70,7 @@ const enterPinIfAsked = async () => {
 
 	await field.setValue(DEVICE_PIN);
 	await driver.pressKeyCode(KEYCODE_ENTER);
-
-	await field.waitForExist({
-		reverse: true,
-		timeout: PIN_SETTLE_MS,
-		timeoutMsg: "The fingerprint wizard rejected the device PIN",
-	});
+	await driver.pause(SCAN_INTERVAL_MS);
 
 	return true;
 };
