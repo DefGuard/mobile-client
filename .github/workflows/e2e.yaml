@@ -20,8 +20,7 @@ jobs:
     env:
       DEBIAN_FRONTEND: noninteractive
     steps:
-      - name: Checkout
-        uses: actions/checkout@v7
+      - uses: actions/checkout@v7
         with:
           submodules: recursive
 
@@ -33,6 +32,8 @@ jobs:
 
       - name: Set up Android SDK
         uses: android-actions/setup-android@v4
+        with:
+          packages: tools platform-tools build-tools;36.0.0 platforms;android-37.0 ndk;28.2.13676358
 
       - name: Setup flutter
         uses: subosito/flutter-action@v2
@@ -40,8 +41,7 @@ jobs:
           channel: stable
           flutter-version: 3.47.2
 
-      - name: Setup node
-        uses: actions/setup-node@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: "26"
 
@@ -66,15 +66,29 @@ jobs:
           restore-keys: |
             pnpm-store-mobile-e2e-${{ runner.os }}-
 
-      - name: Check deployment is reachable
-        run: curl -sf --max-time 15 "${{ secrets.E2E_CORE_URL }}/api/v1/health"
-
       - name: Prepare e2e environment
         run: |
           cp e2e/.env.example e2e/.env
           echo "CORE_URL=${{ secrets.E2E_CORE_URL }}" >> e2e/.env
           echo "PROXY_URL=${{ secrets.E2E_PROXY_URL }}" >> e2e/.env
           echo "CORE_ADMIN_PASSWORD=${{ secrets.E2E_CORE_ADMIN_PASSWORD }}" >> e2e/.env
+
+      - name: Check deployment is reachable
+        run: curl -sf --max-time 15 "${{ secrets.E2E_CORE_URL }}/api/v1/health"
+
+      - name: Build debug apk
+        run: |
+          flutter pub get
+          flutter build apk --debug
+        working-directory: client
+
+      - name: Install e2e dependencies
+        run: pnpm install --frozen-lockfile
+        working-directory: e2e
+
+      - name: Install Appium Android driver
+        run: APPIUM_HOME="$HOME/.appium" pnpm appium:driver:android
+        working-directory: e2e
 
       - name: Run Android E2E on emulator
         uses: ReactiveCircus/android-emulator-runner@v2
@@ -87,34 +101,14 @@ jobs:
           heap-size: 512M
           disable-animations: true
           emulator-options: -no-snapshot -no-window -no-audio -no-boot-anim
-          script: |
-            flutter --version
-            yes | flutter doctor --android-licenses
-            cd "$GITHUB_WORKSPACE/client" && flutter pub get
-            cd "$GITHUB_WORKSPACE/client" && flutter build apk --debug
-            cd "$GITHUB_WORKSPACE/e2e" && pnpm install --frozen-lockfile
-            cd "$GITHUB_WORKSPACE/e2e" && pnpm lint && pnpm typecheck
-            cd "$GITHUB_WORKSPACE/e2e" && APPIUM_HOME="$HOME/.appium" pnpm appium:driver:android
-            cd "$GITHUB_WORKSPACE/e2e" && pnpm test:android
-
-      - name: Upload Appium logs
-        if: failure()
-        uses: actions/upload-artifact@v7
-        with:
-          name: e2e-android-logs
-          path: e2e/logs
-          retention-days: 7
+          script: cd "$GITHUB_WORKSPACE/e2e" && pnpm test:android
 
   e2e-ios:
     needs: [e2e-android]
     runs-on: [self-hosted, macOS, native]
     timeout-minutes: 90
-    defaults:
-      run:
-        working-directory: ./client
     steps:
-      - name: Checkout
-        uses: actions/checkout@v7
+      - uses: actions/checkout@v7
         with:
           submodules: recursive
 
@@ -124,11 +118,7 @@ jobs:
           channel: stable
           flutter-version: 3.47.2
 
-      - name: Enable Swift Package Manager
-        run: flutter config --enable-swift-package-manager
-
-      - name: Setup node
-        uses: actions/setup-node@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: "26"
 
@@ -153,52 +143,71 @@ jobs:
           restore-keys: |
             pnpm-store-mobile-e2e-${{ runner.os }}-
 
-      - name: Install deps
-        run: flutter pub get
-
-      - name: Create BoringTun directory
-        run: mkdir -p ios/VPNExtension/BoringTun
-
-      - name: Generate boringtun bindings
-        run: cd ios/boringtun && ./bindings.sh
-
-      - name: Build iOS simulator app
-        run: flutter build ios --simulator
-
-      - name: Check deployment is reachable
-        working-directory: .
-        run: curl -sf --max-time 15 "${{ secrets.E2E_CORE_URL }}/api/v1/health"
-
-      - name: Install e2e dependencies
-        working-directory: ./e2e
-        run: pnpm install --frozen-lockfile
-
-      - name: Lint and typecheck e2e
-        working-directory: ./e2e
-        run: |
-          pnpm lint
-          pnpm typecheck
-
-      - name: Install Appium iOS driver
-        working-directory: ./e2e
-        run: APPIUM_HOME="$HOME/.appium" pnpm appium:driver:ios
-
       - name: Prepare e2e environment
-        working-directory: ./e2e
         run: |
           cp .env.example .env
           echo "CORE_URL=${{ secrets.E2E_CORE_URL }}" >> .env
           echo "PROXY_URL=${{ secrets.E2E_PROXY_URL }}" >> .env
           echo "CORE_ADMIN_PASSWORD=${{ secrets.E2E_CORE_ADMIN_PASSWORD }}" >> .env
+        working-directory: e2e
+
+      - name: Check deployment is reachable
+        run: curl -sf --max-time 15 "${{ secrets.E2E_CORE_URL }}/api/v1/health"
+
+      - name: Enable Swift Package Manager
+        run: flutter config --enable-swift-package-manager
+
+      - name: Install deps
+        run: flutter pub get
+        working-directory: client
+
+      - name: Create BoringTun directory
+        run: mkdir -p ios/VPNExtension/BoringTun
+        working-directory: client
+
+      - name: Generate boringtun bindings
+        run: cd ios/boringtun && ./bindings.sh
+        working-directory: client
+
+      - name: Build iOS simulator app
+        run: flutter build ios --simulator
+        working-directory: client
+
+      - name: Install e2e dependencies
+        run: pnpm install --frozen-lockfile
+        working-directory: e2e
+
+      - name: Install Appium iOS driver
+        run: APPIUM_HOME="$HOME/.appium" pnpm appium:driver:ios
+        working-directory: e2e
 
       - name: Run iOS E2E on simulator
-        working-directory: ./e2e
         run: pnpm test:ios
+        working-directory: e2e
 
-      - name: Upload Appium logs
-        if: failure()
-        uses: actions/upload-artifact@v7
+  lint-e2e:
+    runs-on: [self-hosted, Linux, X64]
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
         with:
-          name: e2e-ios-logs
-          path: e2e/logs
-          retention-days: 7
+          node-version: "26"
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          version: 11.11
+          run_install: false
+
+      - name: Install e2e dependencies
+        run: pnpm install --frozen-lockfile
+        working-directory: e2e
+
+      - name: Lint e2e
+        run: pnpm lint
+        working-directory: e2e
+
+      - name: Typecheck e2e
+        run: pnpm typecheck
+        working-directory: e2e
