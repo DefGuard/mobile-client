@@ -105,6 +105,7 @@ jobs:
 
   e2e-ios:
     needs: [e2e-android]
+    if: success() || failure()
     runs-on: [self-hosted, macOS, native]
     timeout-minutes: 90
     steps:
