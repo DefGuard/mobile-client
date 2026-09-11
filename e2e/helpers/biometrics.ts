@@ -51,7 +51,7 @@ export const assertLockCleared = (dump: string) => {
 const setDevicePin = async () => {
 	const output = await shell("sh", [
 		"-c",
-		`"locksettings set-pin --old ${DEVICE_PIN} ${DEVICE_PIN} || locksettings set-pin ${DEVICE_PIN}"`,
+		`"locksettings set-pin ${DEVICE_PIN}; locksettings set-pin --old ${DEVICE_PIN} ${DEVICE_PIN}"`,
 	]);
 
 	if (!output.includes(`Pin set to '${DEVICE_PIN}'`)) {
