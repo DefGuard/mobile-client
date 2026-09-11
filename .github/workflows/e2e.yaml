@@ -1,0 +1,205 @@
+name: Mobile E2E tests
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, dev, 'release/**', 'stable/**']
+    paths-ignore: ['*.md', 'LICENSE']
+  pull_request:
+    branches: [main, dev, 'release/**', 'stable/**']
+    paths-ignore: ['*.md', 'LICENSE']
+
+concurrency:
+  group: mobile-e2e
+  cancel-in-progress: false
+
+jobs:
+  e2e-android:
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 90
+    env:
+      DEBIAN_FRONTEND: noninteractive
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          submodules: recursive
+
+      - name: Set up Java
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Setup flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.47.2
+
+      - name: Setup node
+        uses: actions/setup-node@v7
+        with:
+          node-version: "26"
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          version: 11.11
+          run_install: false
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          STORE_PATH=$(pnpm store path --silent)
+          mkdir -p "$STORE_PATH"
+          echo "STORE_PATH=$STORE_PATH" >> $GITHUB_ENV
+
+      - name: Restore pnpm store cache
+        uses: actions/cache@v6
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: pnpm-store-mobile-e2e-${{ runner.os }}-${{ hashFiles('e2e/pnpm-lock.yaml') }}
+          restore-keys: |
+            pnpm-store-mobile-e2e-${{ runner.os }}-
+
+      - name: Check deployment is reachable
+        run: curl -sf --max-time 15 "${{ secrets.E2E_CORE_URL }}/api/v1/health"
+
+      - name: Prepare e2e environment
+        run: |
+          cp e2e/.env.example e2e/.env
+          echo "CORE_URL=${{ secrets.E2E_CORE_URL }}" >> e2e/.env
+          echo "PROXY_URL=${{ secrets.E2E_PROXY_URL }}" >> e2e/.env
+          echo "CORE_ADMIN_PASSWORD=${{ secrets.E2E_CORE_ADMIN_PASSWORD }}" >> e2e/.env
+
+      - name: Run Android E2E on emulator
+        uses: ReactiveCircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          ram-size: 4096M
+          heap-size: 512M
+          disable-animations: true
+          emulator-options: -no-snapshot -no-window -no-audio -no-boot-anim
+          script: |
+            set -euo pipefail
+            flutter --version
+            yes | flutter doctor --android-licenses
+            cd "$GITHUB_WORKSPACE/client"
+            flutter pub get
+            flutter build apk --debug
+            cd "$GITHUB_WORKSPACE/e2e"
+            pnpm install --frozen-lockfile
+            pnpm lint
+            pnpm typecheck
+            APPIUM_HOME="$HOME/.appium" pnpm appium:driver:android
+            pnpm test:android
+
+      - name: Upload Appium logs
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: e2e-android-logs
+          path: e2e/logs
+          retention-days: 7
+
+  e2e-ios:
+    needs: [e2e-android]
+    runs-on: [self-hosted, macOS, native]
+    timeout-minutes: 90
+    defaults:
+      run:
+        working-directory: ./client
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          submodules: recursive
+
+      - name: Setup flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.47.2
+
+      - name: Enable Swift Package Manager
+        run: flutter config --enable-swift-package-manager
+
+      - name: Setup node
+        uses: actions/setup-node@v7
+        with:
+          node-version: "26"
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          version: 11.11
+          run_install: false
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          STORE_PATH=$(pnpm store path --silent)
+          mkdir -p "$STORE_PATH"
+          echo "STORE_PATH=$STORE_PATH" >> $GITHUB_ENV
+
+      - name: Restore pnpm store cache
+        uses: actions/cache@v6
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: pnpm-store-mobile-e2e-${{ runner.os }}-${{ hashFiles('e2e/pnpm-lock.yaml') }}
+          restore-keys: |
+            pnpm-store-mobile-e2e-${{ runner.os }}-
+
+      - name: Install deps
+        run: flutter pub get
+
+      - name: Create BoringTun directory
+        run: mkdir -p ios/VPNExtension/BoringTun
+
+      - name: Generate boringtun bindings
+        run: cd ios/boringtun && ./bindings.sh
+
+      - name: Build iOS simulator app
+        run: flutter build ios --simulator
+
+      - name: Check deployment is reachable
+        working-directory: .
+        run: curl -sf --max-time 15 "${{ secrets.E2E_CORE_URL }}/api/v1/health"
+
+      - name: Install e2e dependencies
+        working-directory: ./e2e
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint and typecheck e2e
+        working-directory: ./e2e
+        run: |
+          pnpm lint
+          pnpm typecheck
+
+      - name: Install Appium iOS driver
+        working-directory: ./e2e
+        run: APPIUM_HOME="$HOME/.appium" pnpm appium:driver:ios
+
+      - name: Prepare e2e environment
+        working-directory: ./e2e
+        run: |
+          cp .env.example .env
+          echo "CORE_URL=${{ secrets.E2E_CORE_URL }}" >> .env
+          echo "PROXY_URL=${{ secrets.E2E_PROXY_URL }}" >> .env
+          echo "CORE_ADMIN_PASSWORD=${{ secrets.E2E_CORE_ADMIN_PASSWORD }}" >> .env
+
+      - name: Run iOS E2E on simulator
+        working-directory: ./e2e
+        run: pnpm test:ios
+
+      - name: Upload Appium logs
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: e2e-ios-logs
+          path: e2e/logs
+          retention-days: 7
