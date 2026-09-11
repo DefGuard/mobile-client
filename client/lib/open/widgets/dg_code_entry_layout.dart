@@ -111,6 +111,7 @@ class DgCodeEntryLayout extends HookWidget {
                             ),
                             const SizedBox(height: 32),
                             DgTextFormField(
+                              identifier: 'mfa_code_input',
                               required: true,
                               size: .big,
                               label: fieldLabel,
@@ -123,6 +124,7 @@ class DgCodeEntryLayout extends HookWidget {
                             const Spacer(),
                             const SizedBox(height: 20),
                             DgButton(
+                              identifier: 'mfa_code_submit',
                               text: 'Submit',
                               loading: isLoading.value,
                               width: double.infinity,

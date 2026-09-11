@@ -81,6 +81,19 @@ class _ScreenContent extends HookConsumerWidget {
     return "Enable Biometric Authentication";
   }
 
+  String _getStateIdentifier(BiometricsState status) {
+    if (!status.isSupported) {
+      return "biometry_state_unsupported";
+    }
+    if (status.enrolledOptions.isEmpty) {
+      return "biometry_state_not_registered";
+    }
+    if (!status.isStrong) {
+      return "biometry_state_not_secure";
+    }
+    return "biometry_state_ready";
+  }
+
   String _getDescription(BiometricsState status) {
     if (!status.isSupported) {
       return "Biometry is not available on the system please add it and return to this screen or you can skip it.";
@@ -186,10 +199,13 @@ class _ScreenContent extends HookConsumerWidget {
                     SizedBox(height: 70),
                     _getRiveAnimation(biometryStatus),
                     SizedBox(height: 60),
-                    Text(
-                      _getTitle(biometryStatus),
-                      style: DgText.h4.copyWith(color: DgColor.fgWhite100),
-                      textAlign: .center,
+                    Semantics(
+                      identifier: _getStateIdentifier(biometryStatus),
+                      child: Text(
+                        _getTitle(biometryStatus),
+                        style: DgText.h4.copyWith(color: DgColor.fgWhite100),
+                        textAlign: .center,
+                      ),
                     ),
                     const SizedBox(height: 8),
                     Text(
@@ -221,6 +237,7 @@ class _ScreenContent extends HookConsumerWidget {
                     (biometryStatus.isStrong ||
                         biometryStatus.enrolledOptions.isEmpty))
                   DgButton(
+                    identifier: "enable_biometry",
                     text: "Enable",
                     size: .big,
                     width: .infinity,
@@ -230,6 +247,7 @@ class _ScreenContent extends HookConsumerWidget {
                     onTap: () => handleRegister(instance, context),
                   ),
                 DgButton(
+                  identifier: "skip_biometry",
                   text: "Skip",
                   style: DgButtonStyle.secondary,
                   size: .big,

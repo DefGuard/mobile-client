@@ -19,6 +19,7 @@ class DataGatheringDialog extends StatelessWidget {
         const DgDialogTitle("Data gathering"),
         const DgDialogDescription(noticeMessage),
         DgButton(
+          identifier: "data_gathering_accept",
           text: "I Understand",
           style: DgButtonStyle.primary,
           size: DgButtonSize.big,

@@ -73,10 +73,13 @@ class _AddInstanceFormContent extends HookConsumerWidget {
             padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
             sliver: SliverList(
               delegate: SliverChildListDelegate([
-                Text(
-                  "Add Instance Manually",
-                  style: DgText.h4.copyWith(color: DgColor.fgWhite100),
-                  textAlign: TextAlign.left,
+                Semantics(
+                  identifier: "add_instance_form_header",
+                  child: Text(
+                    "Add Instance Manually",
+                    style: DgText.h4.copyWith(color: DgColor.fgWhite100),
+                    textAlign: TextAlign.left,
+                  ),
                 ),
                 const SizedBox(height: DgSpacing.sm),
                 Text(
@@ -88,6 +91,7 @@ class _AddInstanceFormContent extends HookConsumerWidget {
                 ),
                 const SizedBox(height: DgSpacing.xl3),
                 DgTextFormField(
+                  identifier: "add_instance_url",
                   size: .big,
                   controller: urlController,
                   label: "URL",
@@ -98,6 +102,7 @@ class _AddInstanceFormContent extends HookConsumerWidget {
                 ),
                 const SizedBox(height: DgSpacing.xl),
                 DgTextFormField(
+                  identifier: "add_instance_token",
                   size: .big,
                   controller: tokenController,
                   label: "Token",
@@ -117,6 +122,7 @@ class _AddInstanceFormContent extends HookConsumerWidget {
               child: Align(
                 alignment: Alignment.bottomCenter,
                 child: DgButton(
+                  identifier: "add_instance_submit",
                   text: "Continue",
                   style: DgButtonStyle.primary,
                   size: DgButtonSize.big,

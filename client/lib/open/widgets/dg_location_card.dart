@@ -128,10 +128,13 @@ class DgLocationCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: DgSpacing.lg),
-          DgMainCta(
-            text: "Disconnect",
-            connected: false,
-            onTap: onDisconnectTap,
+          Semantics(
+            identifier: "location_disconnect_button_${location.name}",
+            child: DgMainCta(
+              text: "Disconnect",
+              connected: false,
+              onTap: onDisconnectTap,
+            ),
           ),
         ],
       ),
@@ -186,13 +189,16 @@ class DgLocationCard extends StatelessWidget {
               ],
             ),
           ),
-          DgButton(
-            text: "Connect",
-            onTap: onConnectTap,
-            loading: loading,
-            size: DgButtonSize.big,
-            style: DgButtonStyle.secondary,
-            height: 36,
+          Semantics(
+            identifier: "location_connect_button_${location.name}",
+            child: DgButton(
+              text: "Connect",
+              onTap: onConnectTap,
+              loading: loading,
+              size: DgButtonSize.big,
+              style: DgButtonStyle.secondary,
+              height: 36,
+            ),
           ),
         ],
       ),

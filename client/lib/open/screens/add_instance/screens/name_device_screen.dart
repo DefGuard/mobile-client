@@ -203,6 +203,7 @@ class NameDeviceScreen extends HookConsumerWidget {
                     child: Align(
                       alignment: Alignment.bottomCenter,
                       child: DgButton(
+                        identifier: "device_name_submit",
                         text: "Submit",
                         style: DgButtonStyle.primary,
                         size: DgButtonSize.big,

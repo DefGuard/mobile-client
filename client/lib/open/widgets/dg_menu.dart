@@ -15,9 +15,15 @@ import 'package:mobile/theme/color.dart';
 class DgMenuItem {
   final String text;
   final String? icon;
+  final String? identifier;
   final VoidCallback onTap;
 
-  const DgMenuItem({required this.text, required this.onTap, this.icon});
+  const DgMenuItem({
+    required this.text,
+    required this.onTap,
+    this.icon,
+    this.identifier,
+  });
 }
 
 class DgMenu extends HookConsumerWidget {
@@ -155,7 +161,7 @@ class _NextMenuItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
+    final item = InkWell(
       onTap: onTap,
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 8),
@@ -179,6 +185,15 @@ class _NextMenuItem extends StatelessWidget {
           ],
         ),
       ),
+    );
+
+    if (itemData.identifier == null) {
+      return item;
+    }
+
+    return Semantics(
+      identifier: itemData.identifier,
+      child: item,
     );
   }
 }

@@ -25,6 +25,7 @@ class BiometrySkipDialog extends StatelessWidget {
         ),
         const SizedBox(height: DgSpacing.xl2),
         DgButton(
+          identifier: 'skip_biometry_confirm',
           text: 'Skip biometric configuration',
           style: DgButtonStyle.primary,
           size: DgButtonSize.big,
