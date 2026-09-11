@@ -5,7 +5,7 @@ import { byId } from "./selectors.js";
 import { totpCode } from "./totp.js";
 
 const CODE_ATTEMPTS = 3;
-const PROOF_SETTLE_MS = 2_000;
+const PROBE_TIMEOUT_MS = 1_000;
 
 export const submitTotpCode = async (secret: string) => {
 	const submit = $(byId("mfa_code_submit"));
@@ -36,8 +36,8 @@ export const submitBiometricProof = async () => {
 	await verify.click();
 
 	await approveBiometricPrompt(() =>
-		verify
-			.waitForDisplayed({ timeout: PROOF_SETTLE_MS, reverse: true })
+		$(byId("mfa_biometric_verify"))
+			.waitForDisplayed({ timeout: PROBE_TIMEOUT_MS, reverse: true })
 			.then(() => true)
 			.catch(() => false),
 	);

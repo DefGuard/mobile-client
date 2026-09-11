@@ -4,7 +4,7 @@ import type { EnrollmentFixture } from "./coreApi.js";
 import { fillField } from "./input.js";
 import { byId } from "./selectors.js";
 
-const STEP_SETTLE_MS = 2_000;
+const PROBE_TIMEOUT_MS = 1_000;
 
 interface EnrollmentOptions {
 	biometry?: boolean;
@@ -53,15 +53,14 @@ const enableBiometry = async () => {
 	await enable.waitForDisplayed();
 	await enable.click();
 
-	const proceed = $(byId("biometry_finish_continue"));
 	await approveBiometricPrompt(() =>
-		proceed
-			.waitForDisplayed({ timeout: STEP_SETTLE_MS })
+		$(byId("biometry_finish_continue"))
+			.waitForDisplayed({ timeout: PROBE_TIMEOUT_MS })
 			.then(() => true)
 			.catch(() => false),
 	);
 
-	await proceed.click();
+	await $(byId("biometry_finish_continue")).click();
 };
 
 export const reachBiometryStep = async (fixture: EnrollmentFixture) => {

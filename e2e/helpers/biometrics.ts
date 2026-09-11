@@ -7,10 +7,12 @@ const SETTINGS = "com.android.settings";
 const SYSTEM_UI = "com.android.systemui";
 const FOOTER_BUTTONS = `//*[@resource-id="${SETTINGS}:id/suc_footer_button_bar"]//*[@clickable="true"]`;
 const FINGER_ID = 1;
-const ENROLL_STEPS = 15;
+const ENROLL_STEPS = 20;
 const SCAN_INTERVAL_MS = 300;
-const PIN_TIMEOUT_MS = 15_000;
+const PIN_SETTLE_MS = 5_000;
 const PROMPT_TIMEOUT_MS = 20_000;
+const ACCEPT_TIMEOUT_MS = 20_000;
+const ACCEPT_POLL_MS = 500;
 const KEYCODE_ENTER = 66;
 const MATCH_ATTEMPTS = 5;
 const RELOAD_SECONDS = 1;
@@ -53,15 +55,23 @@ const setDevicePin = () =>
 		`"locksettings set-pin --old ${DEVICE_PIN} ${DEVICE_PIN} || locksettings set-pin ${DEVICE_PIN}"`,
 	]);
 
-const confirmScreenLock = async () => {
+const enterPinIfAsked = async () => {
 	const field = $(byId(`${SETTINGS}:id/password_entry`));
-	await field.waitForDisplayed({
-		timeout: PIN_TIMEOUT_MS,
-		timeoutMsg: "The fingerprint wizard did not ask for the device PIN",
-	});
+
+	if (!(await field.isExisting())) {
+		return false;
+	}
 
 	await field.setValue(DEVICE_PIN);
 	await driver.pressKeyCode(KEYCODE_ENTER);
+
+	await field.waitForExist({
+		reverse: true,
+		timeout: PIN_SETTLE_MS,
+		timeoutMsg: "The fingerprint wizard rejected the device PIN",
+	});
+
+	return true;
 };
 
 const forwardButton = async () => {
@@ -85,12 +95,14 @@ const enrollFingerprint = async () => {
 	await setDevicePin();
 	await shell("am", ["start", "-a", "android.settings.FINGERPRINT_ENROLL"]);
 
-	await confirmScreenLock();
-
 	for (let step = 1; step <= ENROLL_STEPS; step++) {
 		if ((await enrolledPrints()) > 0) {
 			await shell("am", ["force-stop", SETTINGS]);
 			return;
+		}
+
+		if (await enterPinIfAsked()) {
+			continue;
 		}
 
 		const forward = await forwardButton();
@@ -167,10 +179,27 @@ export const revokeBiometrics = async () => {
 export const approveBiometricPrompt = async (
 	accepted: () => Promise<boolean>,
 ) => {
+	const waitForAccepted = async (timeoutMs = ACCEPT_TIMEOUT_MS) => {
+		const deadline = Date.now() + timeoutMs;
+		for (;;) {
+			try {
+				if (await accepted()) {
+					return true;
+				}
+			} catch {
+				// Stale / detached element during Flutter rebuild = not settled yet.
+			}
+			if (Date.now() >= deadline) {
+				return false;
+			}
+			await driver.pause(ACCEPT_POLL_MS);
+		}
+	};
+
 	if (driver.isAndroid) {
 		await answerFingerprintPrompt();
 
-		if (await accepted()) {
+		if (await waitForAccepted()) {
 			return;
 		}
 
@@ -180,7 +209,7 @@ export const approveBiometricPrompt = async (
 	for (let attempt = 1; attempt <= MATCH_ATTEMPTS; attempt++) {
 		await matchFaceId();
 
-		if (await accepted()) {
+		if (await waitForAccepted(ACCEPT_TIMEOUT_MS / MATCH_ATTEMPTS)) {
 			return;
 		}
 	}
