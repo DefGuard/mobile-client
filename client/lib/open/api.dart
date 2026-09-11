@@ -1,19 +1,17 @@
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:cookie_jar/cookie_jar.dart';
-import 'package:device_info_plus/device_info_plus.dart';
 import 'package:dio/dio.dart';
 import 'package:dio_cookie_manager/dio_cookie_manager.dart';
 import 'package:flutter/foundation.dart';
+import 'package:mobile/data/client_identity.dart';
 import 'package:mobile/data/db/enums.dart';
-import 'package:mobile/data/proto/client_platform_info.pb.dart';
 import 'package:mobile/data/proxy/config.dart';
 import 'package:mobile/data/proxy/enrollment.dart';
 import 'package:mobile/data/proxy/mfa.dart';
 import 'package:mobile/enterprise/postures.dart';
+import 'package:mobile/open/client_headers_interceptor.dart';
 import 'package:native_dio_adapter/native_dio_adapter.dart';
-import 'package:package_info_plus/package_info_plus.dart';
 import 'package:talker_dio_logger/talker_dio_logger.dart';
 
 import '../logging.dart';
@@ -43,77 +41,44 @@ class MfaMethodNotAvailableException implements Exception {
   }
 }
 
-class _ProxyApi {
-  static final _ProxyApi _instance = _ProxyApi._internal();
-
-  factory _ProxyApi() => _instance;
-
-  final Dio _dio = Dio(
+/// The only sanctioned path to the proxy. Every request through this Dio is
+/// held by [ClientHeadersInterceptor] until the client identity is known.
+@visibleForTesting
+Dio buildProxyDio({
+  required ClientIdentitySource identity,
+  HttpClientAdapter? adapter,
+}) {
+  final dio = Dio(
     BaseOptions(
       responseType: ResponseType.json,
       connectTimeout: Duration(seconds: 20),
       receiveTimeout: Duration(seconds: 60),
     ),
   );
-
-  _ProxyApi._internal() {
-    _dio.httpClientAdapter = NativeAdapter();
-    final cookieJar = CookieJar();
-    _dio.interceptors.add(CookieManager(cookieJar));
-    _dio.interceptors.add(
-      TalkerDioLogger(
-        talker: talker,
-        settings: TalkerDioLoggerSettings(
-          printResponseData: !kReleaseMode,
-          printErrorData: !kReleaseMode,
-        ),
+  dio.httpClientAdapter = adapter ?? NativeAdapter();
+  dio.interceptors.addAll([
+    ClientHeadersInterceptor(identity),
+    CookieManager(CookieJar()),
+    TalkerDioLogger(
+      talker: talker,
+      settings: TalkerDioLoggerSettings(
+        printRequestHeaders: !kReleaseMode,
+        printResponseData: !kReleaseMode,
+        printErrorData: !kReleaseMode,
       ),
-    );
-    _initHeaders();
-  }
+    ),
+  ]);
+  return dio;
+}
 
-  Future<void> _initHeaders() async {
-    try {
-      final deviceInfo = DeviceInfoPlugin();
-      final ClientPlatformInfo platformInfo;
+class _ProxyApi {
+  static final _ProxyApi _instance = _ProxyApi._internal();
 
-      if (Platform.isAndroid) {
-        final android = await deviceInfo.androidInfo;
-        platformInfo = ClientPlatformInfo(
-          osFamily: 'android',
-          osType: 'Android',
-          version: android.version.release,
-          codename: android.version.codename,
-          architecture: android.supportedAbis.first,
-          bitness: '64',
-        );
-      } else if (Platform.isIOS) {
-        final ios = await deviceInfo.iosInfo;
-        platformInfo = ClientPlatformInfo(
-          osFamily: 'ios',
-          osType: 'iOS',
-          version: ios.systemVersion,
-          architecture: 'arm64',
-          bitness: '64',
-        );
-      } else {
-        platformInfo = ClientPlatformInfo(
-          osFamily: Platform.operatingSystem,
-          osType: Platform.operatingSystem,
-          version: Platform.operatingSystemVersion,
-        );
-      }
+  factory _ProxyApi() => _instance;
 
-      final platformBytes = platformInfo.writeToBuffer();
-      final platformBase64 = base64Encode(platformBytes);
+  late final Dio _dio = buildProxyDio(identity: clientIdentity);
 
-      final packageInfo = await PackageInfo.fromPlatform();
-      _dio.options.headers['defguard-client-version'] = packageInfo.version;
-      _dio.options.headers['defguard-client-platform'] = platformBase64;
-    } catch (e) {
-      talker.error("Failed to set client headers", e);
-    }
-  }
+  _ProxyApi._internal();
 
   Future<(ConfigurationPollResponse?, int?, Headers?)> pollConfiguration(
     String proxyUrl,

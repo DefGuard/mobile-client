@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart' as flutter_cupertino;
 import 'package:flutter/material.dart' as flutter_material;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
+import 'package:mobile/data/client_identity.dart';
 import 'package:mobile/enterprise/config_update.dart';
 import 'package:mobile/open/riverpod/biometrics_state.dart';
 import 'package:mobile/open/riverpod/router/router.dart';
@@ -16,6 +17,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initSecureStorage();
   await initNotifications();
+  await clientIdentity.warmUp();
   await rive.RiveNative.init();
   runApp(
     ProviderScope(

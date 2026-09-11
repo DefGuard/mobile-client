@@ -146,10 +146,10 @@ class _StepSummary extends StatelessWidget {
       spacing: DgSpacing.md,
       children: [
         Padding(
-          padding: const EdgeInsets.only(bottom: DgSpacing.sm),
+          padding: const EdgeInsets.only(bottom: 4),
           child: Text(
             _multiStepDescription,
-            style: DgText.bodyXs400.copyWith(color: DgColor.fgWhite60),
+            style: DgText.bodyXs400.copyWith(color: DgColor.fgWhite80),
           ),
         ),
         for (final (index, step) in steps.indexed)

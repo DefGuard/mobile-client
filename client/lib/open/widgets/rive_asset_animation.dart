@@ -1,4 +1,5 @@
 import 'package:material_ui/material_ui.dart';
+import 'package:mobile/logging.dart';
 import 'package:rive/rive.dart' as rive;
 
 class RiveAssetAnimation extends StatefulWidget {
@@ -45,7 +46,10 @@ class _RiveAssetAnimationState extends State<RiveAssetAnimation> {
       );
 
       if (!mounted) return;
-      if (file == null) return;
+      if (file == null) {
+        talker.error("Rive asset ${widget.asset} loaded as null");
+        return;
+      }
 
       final stateMachineSelector = widget.stateMachineName != null
           ? rive.StateMachineNamed(widget.stateMachineName!)
@@ -60,8 +64,8 @@ class _RiveAssetAnimationState extends State<RiveAssetAnimation> {
           stateMachineSelector: stateMachineSelector,
         );
       });
-    } catch (e) {
-      debugPrint('Error loading Rive file: $e');
+    } catch (e, s) {
+      talker.error("Failed to load Rive asset ${widget.asset}", e, s);
     }
   }
 
