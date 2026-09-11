@@ -90,6 +90,9 @@ jobs:
         run: APPIUM_HOME="$HOME/.appium" pnpm appium:driver:android
         working-directory: e2e
 
+      - name: Disable emulator console auth
+        run: ': > "$HOME/.emulator_console_auth_token"'
+
       - name: Run Android E2E on emulator
         uses: ReactiveCircus/android-emulator-runner@v2
         with:

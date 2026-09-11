@@ -48,6 +48,15 @@ export const assertLockCleared = (dump: string) => {
 	}
 };
 
+const focusedWindow = async () => {
+	const output = await shell("sh", [
+		"-c",
+		"\"dumpsys window | grep -E 'mCurrentFocus|mFocusedApp'\"",
+	]);
+
+	return output.trim().split("\n").join(" | ");
+};
+
 const setDevicePin = async () => {
 	const output = await shell("sh", [
 		"-c",
@@ -96,30 +105,33 @@ const enrollFingerprint = async () => {
 	await setDevicePin();
 	await shell("am", ["start", "-a", "android.settings.FINGERPRINT_ENROLL"]);
 
-	for (let step = 1; step <= ENROLL_STEPS; step++) {
-		if ((await enrolledPrints()) > 0) {
-			await shell("am", ["force-stop", SETTINGS]);
-			return;
+	try {
+		for (let step = 1; step <= ENROLL_STEPS; step++) {
+			if ((await enrolledPrints()) > 0) {
+				return;
+			}
+
+			if (await enterPinIfAsked()) {
+				continue;
+			}
+
+			const forward = await forwardButton();
+
+			if (forward) {
+				await forward.click();
+				continue;
+			}
+
+			await driver.execute("mobile: fingerprint", { fingerprintId: FINGER_ID });
+			await driver.pause(SCAN_INTERVAL_MS);
 		}
 
-		if (await enterPinIfAsked()) {
-			continue;
-		}
-
-		const forward = await forwardButton();
-
-		if (forward) {
-			await forward.click();
-			continue;
-		}
-
-		await driver.execute("mobile: fingerprint", { fingerprintId: FINGER_ID });
-		await driver.pause(SCAN_INTERVAL_MS);
+		throw new Error(
+			`The fingerprint wizard enrolled no print in ${ENROLL_STEPS} steps, it stopped on ${await focusedWindow()}`,
+		);
+	} finally {
+		await shell("am", ["force-stop", SETTINGS]);
 	}
-
-	throw new Error(
-		`The fingerprint wizard enrolled no print in ${ENROLL_STEPS} steps`,
-	);
 };
 
 const answerFingerprintPrompt = async () => {
