@@ -85,18 +85,14 @@ jobs:
           disable-animations: true
           emulator-options: -no-snapshot -no-window -no-audio -no-boot-anim
           script: |
-            set -euo pipefail
             flutter --version
             yes | flutter doctor --android-licenses
-            cd "$GITHUB_WORKSPACE/client"
-            flutter pub get
-            flutter build apk --debug
-            cd "$GITHUB_WORKSPACE/e2e"
-            pnpm install --frozen-lockfile
-            pnpm lint
-            pnpm typecheck
-            APPIUM_HOME="$HOME/.appium" pnpm appium:driver:android
-            pnpm test:android
+            cd "$GITHUB_WORKSPACE/client" && flutter pub get
+            cd "$GITHUB_WORKSPACE/client" && flutter build apk --debug
+            cd "$GITHUB_WORKSPACE/e2e" && pnpm install --frozen-lockfile
+            cd "$GITHUB_WORKSPACE/e2e" && pnpm lint && pnpm typecheck
+            cd "$GITHUB_WORKSPACE/e2e" && APPIUM_HOME="$HOME/.appium" pnpm appium:driver:android
+            cd "$GITHUB_WORKSPACE/e2e" && pnpm test:android
 
       - name: Upload Appium logs
         if: failure()
