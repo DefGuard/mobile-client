@@ -1,1 +1,7 @@
 #include "Generated.xcconfig"
+
+// rive_native links its prebuilt xcframework statically and resolves entry
+// points with dlsym(RTLD_DEFAULT, ...). Xcode's default "All Symbols" strip
+// removes them, so .riv assets fail to load in release builds.
+// https://github.com/rive-app/rive-flutter/issues/617
+STRIP_STYLE = non-global
