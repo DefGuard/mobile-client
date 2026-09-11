@@ -11,7 +11,9 @@ interface EnrollmentOptions {
 }
 
 const openManualForm = async () => {
-	await $(byId("add_instance_manual_button")).click();
+	const manual = $(byId("add_instance_manual_button"));
+	await manual.waitForDisplayed();
+	await manual.click();
 
 	const consent = $(byId("data_gathering_accept"));
 	await consent.waitForDisplayed();
