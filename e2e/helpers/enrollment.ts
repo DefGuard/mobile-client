@@ -1,4 +1,4 @@
-import { $, expect } from "@wdio/globals";
+import { $, driver, expect } from "@wdio/globals";
 import { approveBiometricPrompt } from "./biometrics.js";
 import type { EnrollmentFixture } from "./coreApi.js";
 import { fillField } from "./input.js";
@@ -16,10 +16,21 @@ const openManualForm = async () => {
 	await manual.click();
 
 	const consent = $(byId("data_gathering_accept"));
-	await consent.waitForDisplayed();
-	await consent.click();
+	const header = $(byId("add_instance_form_header"));
 
-	await expect($(byId("add_instance_form_header"))).toBeDisplayed();
+	await driver.waitUntil(
+		async () => (await consent.isDisplayed()) || (await header.isDisplayed()),
+		{
+			timeoutMsg:
+				"Neither the data gathering dialog nor the manual form opened",
+		},
+	);
+
+	if (await consent.isDisplayed()) {
+		await consent.click();
+	}
+
+	await expect(header).toBeDisplayed();
 };
 
 const submitInstanceDetails = async (fixture: EnrollmentFixture) => {

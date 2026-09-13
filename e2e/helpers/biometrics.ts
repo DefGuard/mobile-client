@@ -5,7 +5,8 @@ export const DEVICE_PIN = "1234";
 
 const SETTINGS = "com.android.settings";
 const SYSTEM_UI = "com.android.systemui";
-const FOOTER_BUTTONS = `//*[@resource-id="${SETTINGS}:id/suc_footer_button_bar"]//*[@clickable="true"]`;
+const WIZARD_BUTTONS = '//android.widget.Button[@clickable="true"]';
+const FOOTER_AREA = 0.7;
 const FINGER_ID = 1;
 const ENROLL_STEPS = 20;
 const SCAN_INTERVAL_MS = 300;
@@ -84,18 +85,31 @@ const enterPinIfAsked = async () => {
 	return true;
 };
 
-const forwardButton = async () => {
-	const buttons = [...(await $$(FOOTER_BUTTONS))];
-	const { width } = await driver.getWindowSize();
+const wizardButtons = async () => {
+	const { width, height } = await driver.getWindowSize();
+	const found = [];
 
-	for (const button of buttons) {
-		if ((await button.getLocation()).x > width / 2) {
-			return button;
-		}
+	for (const button of await $$(WIZARD_BUTTONS)) {
+		const { x, y } = await button.getLocation();
+		found.push({
+			button,
+			label: await button.getText(),
+			x,
+			y,
+			forward: x > width / 2 && y > height * FOOTER_AREA,
+		});
 	}
 
-	return undefined;
+	return found;
 };
+
+const forwardButton = async () =>
+	(await wizardButtons()).find((candidate) => candidate.forward)?.button;
+
+const describeButtons = async () =>
+	(await wizardButtons())
+		.map(({ label, x, y }) => `${label || "?"}@${x},${y}`)
+		.join(", ") || "no buttons";
 
 const enrollFingerprint = async () => {
 	if ((await enrolledPrints()) > 0) {
@@ -127,7 +141,7 @@ const enrollFingerprint = async () => {
 		}
 
 		throw new Error(
-			`The fingerprint wizard enrolled no print in ${ENROLL_STEPS} steps, it stopped on ${await focusedWindow()}`,
+			`The fingerprint wizard enrolled no print in ${ENROLL_STEPS} steps, it stopped on ${await focusedWindow()} showing ${await describeButtons()}`,
 		);
 	} finally {
 		await shell("am", ["force-stop", SETTINGS]);
