@@ -11,20 +11,29 @@ interface EnrollmentOptions {
 	biometry?: boolean;
 }
 
+const shown = (identifier: string) => $(byId(identifier)).isDisplayed();
+
 const openManualForm = async () => {
 	const manual = $(byId("add_instance_manual_button"));
 	await manual.waitForDisplayed();
 
-	const consent = $(byId("data_gathering_accept"));
-	const header = $(byId("add_instance_form_header"));
+	if (driver.isAndroid) {
+		await manual.click();
+	}
 
 	await driver.waitUntil(
 		async () => {
-			if ((await consent.isDisplayed()) || (await header.isDisplayed())) {
+			if (
+				(await shown("data_gathering_accept")) ||
+				(await shown("add_instance_form_header"))
+			) {
 				return true;
 			}
 
-			await manual.click();
+			if (driver.isIOS) {
+				await $(byId("add_instance_manual_button")).click();
+			}
+
 			return false;
 		},
 		{
@@ -34,11 +43,11 @@ const openManualForm = async () => {
 		},
 	);
 
-	if (await consent.isDisplayed()) {
-		await consent.click();
+	if (await shown("data_gathering_accept")) {
+		await $(byId("data_gathering_accept")).click();
 	}
 
-	await expect(header).toBeDisplayed();
+	await expect($(byId("add_instance_form_header"))).toBeDisplayed();
 };
 
 const submitInstanceDetails = async (fixture: EnrollmentFixture) => {
