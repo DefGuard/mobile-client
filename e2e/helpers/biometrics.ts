@@ -5,6 +5,7 @@ export const DEVICE_PIN = "1234";
 
 const SETTINGS = "com.android.settings";
 const SYSTEM_UI = "com.android.systemui";
+const ANR_WAIT = "android:id/aerr_wait";
 const WIZARD_BUTTONS = '//android.widget.Button[@clickable="true"]';
 const FOOTER_AREA = 0.7;
 const FINGER_ID = 1;
@@ -103,6 +104,18 @@ const wizardButtons = async () => {
 	return found;
 };
 
+const dismissNotResponding = async () => {
+	const wait = $(byId(ANR_WAIT));
+
+	if (!(await wait.isExisting())) {
+		return false;
+	}
+
+	await wait.click();
+	await driver.pause(SCAN_INTERVAL_MS);
+	return true;
+};
+
 const forwardButton = async () =>
 	(await wizardButtons()).find((candidate) => candidate.forward)?.button;
 
@@ -123,6 +136,10 @@ const enrollFingerprint = async () => {
 		for (let step = 1; step <= ENROLL_STEPS; step++) {
 			if ((await enrolledPrints()) > 0) {
 				return;
+			}
+
+			if (await dismissNotResponding()) {
+				continue;
 			}
 
 			if (await enterPinIfAsked()) {
