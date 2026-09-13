@@ -15,8 +15,6 @@ concurrency:
 
 jobs:
   e2e-android:
-    needs: [e2e-ios]
-    if: success() || failure()
     runs-on: [self-hosted, Linux, X64]
     timeout-minutes: 90
     env:
@@ -110,6 +108,8 @@ jobs:
           script: cd "$GITHUB_WORKSPACE/e2e" && pnpm test:android --logLevel warn
 
   e2e-ios:
+    needs: [e2e-android]
+    if: success() || failure()
     runs-on: [self-hosted, macOS, native]
     timeout-minutes: 90
     steps:
