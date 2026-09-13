@@ -42,7 +42,7 @@ const fingerprintDump = () => shell("dumpsys", ["fingerprint"]);
 
 const enrolledPrints = async () => countPrints(await fingerprintDump());
 
-export const assertLockCleared = (dump: string) => {
+export const assertNoEnrolledPrints = (dump: string) => {
 	if (countPrints(dump) > 0) {
 		throw new Error(
 			"The emulator kept an enrolled fingerprint after its screen lock was cleared",
@@ -185,7 +185,7 @@ const answerFingerprintPrompt = async () => {
 const removeFingerprint = async () => {
 	await shell("sh", ["-c", `"locksettings clear --old ${DEVICE_PIN} || true"`]);
 
-	assertLockCleared(await fingerprintDump());
+	assertNoEnrolledPrints(await fingerprintDump());
 
 	await setDevicePin();
 };
@@ -223,22 +223,11 @@ export const revokeBiometrics = async () => {
 export const approveBiometricPrompt = async (
 	accepted: () => Promise<boolean>,
 ) => {
-	const waitForAccepted = async (timeoutMs = ACCEPT_TIMEOUT_MS) => {
-		const deadline = Date.now() + timeoutMs;
-		for (;;) {
-			try {
-				if (await accepted()) {
-					return true;
-				}
-			} catch {
-				// Stale / detached element during Flutter rebuild = not settled yet.
-			}
-			if (Date.now() >= deadline) {
-				return false;
-			}
-			await driver.pause(ACCEPT_POLL_MS);
-		}
-	};
+	const waitForAccepted = (timeout = ACCEPT_TIMEOUT_MS) =>
+		driver
+			.waitUntil(accepted, { timeout, interval: ACCEPT_POLL_MS })
+			.then(() => true)
+			.catch(() => false);
 
 	if (driver.isAndroid) {
 		await answerFingerprintPrompt();

@@ -3,7 +3,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import {
-	assertLockCleared,
+	assertNoEnrolledPrints,
 	DEVICE_PIN,
 	prepareBiometrics,
 } from "./helpers/biometrics.js";
@@ -37,7 +37,7 @@ const listAvds = (): string[] => {
 	return fs
 		.readdirSync(avdHome)
 		.filter((entry) => entry.endsWith(".ini"))
-		.map((entry) => entry.replace(/\.ini$/, ""));
+		.map((entry) => path.parse(entry).name);
 };
 
 const resolveAvd = (): string => {
@@ -84,7 +84,7 @@ const resetDeviceLock = () => {
 	adb("shell", "locksettings", "clear", "--old", DEVICE_PIN);
 	adb("shell", "locksettings", "clear");
 
-	assertLockCleared(adb("shell", "dumpsys", "fingerprint"));
+	assertNoEnrolledPrints(adb("shell", "dumpsys", "fingerprint"));
 };
 
 export const config: WebdriverIO.Config = {

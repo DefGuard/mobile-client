@@ -6,6 +6,7 @@ import { totpCode } from "./totp.js";
 
 const CODE_ATTEMPTS = 3;
 const PROBE_TIMEOUT_MS = 1_000;
+const ACCEPT_TIMEOUT_MS = 20_000;
 
 export const submitTotpCode = async (secret: string) => {
 	const submit = $(byId("mfa_code_submit"));
@@ -16,7 +17,7 @@ export const submitTotpCode = async (secret: string) => {
 		await submit.click();
 
 		const accepted = await submit
-			.waitForDisplayed({ timeout: 20_000, reverse: true })
+			.waitForDisplayed({ timeout: ACCEPT_TIMEOUT_MS, reverse: true })
 			.then(() => true)
 			.catch(() => false);
 
