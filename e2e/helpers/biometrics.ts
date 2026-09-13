@@ -5,7 +5,7 @@ export const DEVICE_PIN = "1234";
 
 const SETTINGS = "com.android.settings";
 const SYSTEM_UI = "com.android.systemui";
-const ANR_WAIT = "android:id/aerr_wait";
+const ANR_CLOSE = "android:id/aerr_close";
 const WIZARD_BUTTONS = '//android.widget.Button[@clickable="true"]';
 const FOOTER_AREA = 0.7;
 const FINGER_ID = 1;
@@ -105,14 +105,14 @@ const wizardButtons = async () => {
 };
 
 const dismissNotResponding = async () => {
-	const wait = $(byId(ANR_WAIT));
+	const close = $(byId(ANR_CLOSE));
 
-	if (!(await wait.isExisting())) {
+	if (!(await close.isExisting())) {
 		return false;
 	}
 
-	await wait.click();
-	await driver.pause(SCAN_INTERVAL_MS);
+	await close.click();
+	await close.waitForExist({ reverse: true, timeout: PROMPT_TIMEOUT_MS });
 	return true;
 };
 
