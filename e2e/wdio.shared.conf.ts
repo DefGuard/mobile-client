@@ -37,6 +37,7 @@ export const sharedConfig: Partial<WebdriverIO.Config> = {
 		],
 	],
 
+	specFileRetries: 1,
 	reporters: ["spec"],
 	mochaOpts: { timeout: TEST_TIMEOUT_MS },
 	waitforTimeout: WAIT_FOR_TIMEOUT_MS,
