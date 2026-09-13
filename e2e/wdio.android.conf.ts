@@ -80,6 +80,10 @@ const adbPath = path.join(sdkRoot, "platform-tools", "adb");
 const adb = (...args: string[]) =>
 	spawnSync(adbPath, args, { encoding: "utf8" }).stdout ?? "";
 
+const hideSystemErrorDialogs = () => {
+	adb("shell", "settings", "put", "global", "hide_error_dialogs", "1");
+};
+
 const resetDeviceLock = () => {
 	adb("shell", "locksettings", "clear", "--old", DEVICE_PIN);
 	adb("shell", "locksettings", "clear");
@@ -117,6 +121,7 @@ export const config: WebdriverIO.Config = {
 			);
 		}
 
+		hideSystemErrorDialogs();
 		resetDeviceLock();
 	},
 
