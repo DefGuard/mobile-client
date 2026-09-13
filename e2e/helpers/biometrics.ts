@@ -149,7 +149,7 @@ const enrollFingerprint = async () => {
 };
 
 const answerFingerprintPrompt = async () => {
-	const prompt = $(byId(`${SYSTEM_UI}:id/biometric_prompt_constraint_layout`));
+	const prompt = $(byId(`${SYSTEM_UI}:id/biometric_icon`));
 
 	await prompt.waitForExist({
 		timeout: PROMPT_TIMEOUT_MS,
