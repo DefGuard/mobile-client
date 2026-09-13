@@ -105,7 +105,6 @@ jobs:
           heap-size: 512M
           disable-animations: true
           emulator-options: -no-snapshot -no-window -no-audio -no-boot-anim
-          pre-emulator-launch-script: printf 'hw.lcd.width=720\nhw.lcd.height=1280\nhw.lcd.density=320\n' >> "$HOME/.android/avd/test.avd/config.ini"
           script: cd "$GITHUB_WORKSPACE/e2e" && pnpm test:android --logLevel warn
 
   e2e-ios:
