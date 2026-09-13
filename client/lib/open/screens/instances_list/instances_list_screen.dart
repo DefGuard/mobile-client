@@ -81,9 +81,12 @@ class InstancesListScreen extends HookConsumerWidget {
           ),
         ),
         actionRight: [
-          DgIconButton(
-            icon: "plus",
-            onTap: () => const AddInstanceScreenRoute().push(context),
+          Semantics(
+            identifier: "add_instance_button",
+            child: DgIconButton(
+              icon: "plus",
+              onTap: () => const AddInstanceScreenRoute().push(context),
+            ),
           ),
         ],
       ),

@@ -75,12 +75,14 @@ class RefreshInstanceDialog extends HookConsumerWidget {
           "Enter your proxy URL and instance token to refresh the configuration.",
         ),
         DgTextFormField(
+          identifier: "refresh_instance_url",
           controller: proxyUrlController,
           label: "Proxy URL",
           hintText: "https://...",
         ),
         const SizedBox(height: DgSpacing.md),
         DgTextFormField(
+          identifier: "refresh_instance_token",
           controller: tokenController,
           label: "Instance Token",
           hintText: "Enter token",
@@ -98,6 +100,7 @@ class RefreshInstanceDialog extends HookConsumerWidget {
             ),
             Expanded(
               child: DgButton(
+                identifier: "refresh_instance_submit",
                 text: "Refresh",
                 style: DgButtonStyle.primary,
                 loading: isLoading.value,

@@ -64,20 +64,25 @@ class ConnectPane extends StatelessWidget {
           padding: EdgeInsets.only(top: 20, bottom: 16),
           child: Divider(height: 1, color: DgColor.bgWhite10),
         ),
-        GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onTap: canChangeTraffic ? onToggleTraffic : null,
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(minHeight: 44),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  allTraffic ? "All traffic" : "Predefined traffic only",
-                  style: DgText.bodySm400.copyWith(color: DgColor.fgWhite100),
-                ),
-                DgToggle(value: allTraffic),
-              ],
+        Semantics(
+          identifier: allTraffic
+              ? "traffic_mode_all"
+              : "traffic_mode_predefined",
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: canChangeTraffic ? onToggleTraffic : null,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: 44),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    allTraffic ? "All traffic" : "Predefined traffic only",
+                    style: DgText.bodySm400.copyWith(color: DgColor.fgWhite100),
+                  ),
+                  DgToggle(value: allTraffic),
+                ],
+              ),
             ),
           ),
         ),
@@ -107,6 +112,7 @@ class ConnectPane extends StatelessWidget {
           child: Divider(height: 1, color: DgColor.bgWhite10),
         ),
         DgButton(
+          identifier: "connect_vpn_submit",
           text: "Connect VPN",
           size: DgButtonSize.big,
           style: DgButtonStyle.primary,

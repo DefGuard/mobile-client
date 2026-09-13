@@ -19,6 +19,7 @@ class DgButton extends StatelessWidget {
   final DgButtonSize size;
   final bool disabled;
   final double? width;
+  final String? identifier;
 
   final Color backgroundColor;
   final TextStyle textStyle;
@@ -45,6 +46,7 @@ class DgButton extends StatelessWidget {
     this.disabled = false,
     this.icon,
     this.width,
+    this.identifier,
   });
 
   factory DgButton({
@@ -58,6 +60,7 @@ class DgButton extends StatelessWidget {
     Widget? icon,
     double? width,
     double? height,
+    String? identifier,
   }) {
     double heightInner;
     BorderRadius borderRadiusInner;
@@ -137,6 +140,7 @@ class DgButton extends StatelessWidget {
       disabled: disabled,
       icon: icon,
       width: width,
+      identifier: identifier,
     );
   }
 
@@ -146,7 +150,7 @@ class DgButton extends StatelessWidget {
     const duration = Duration(milliseconds: 160);
     const curve = Curves.easeOut;
 
-    return AnimatedContainer(
+    final button = AnimatedContainer(
       duration: duration,
       curve: curve,
       height: height,
@@ -195,6 +199,12 @@ class DgButton extends StatelessWidget {
         ),
       ),
     );
+
+    if (identifier == null) {
+      return button;
+    }
+
+    return Semantics(identifier: identifier, child: button);
   }
 
   List<Widget> _getRow() {

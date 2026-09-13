@@ -87,6 +87,11 @@ class DgMfaSelector extends StatelessWidget {
 
   String get getLabel => label ?? factor?.toUiString() ?? 'Unsupported method';
 
+  String? get getIdentifier {
+    final method = factor;
+    return method == null ? null : 'mfa_method_${method.name}';
+  }
+
   Color get getLabelColor {
     if (disabled) return DgColor.fgDisabled;
     return active ? DgColor.fgWhite100 : DgColor.fgWhite80;
@@ -98,7 +103,7 @@ class DgMfaSelector extends StatelessWidget {
     const duration = Duration(milliseconds: 200);
     const curve = Curves.easeOut;
 
-    return GestureDetector(
+    final row = GestureDetector(
       onTap: disabled ? null : onTap,
       child: AnimatedContainer(
         duration: duration,
@@ -158,6 +163,13 @@ class DgMfaSelector extends StatelessWidget {
         ),
       ),
     );
+
+    final identifier = getIdentifier;
+    if (identifier == null) {
+      return row;
+    }
+
+    return Semantics(identifier: identifier, child: row);
   }
 }
 
