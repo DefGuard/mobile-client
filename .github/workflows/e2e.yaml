@@ -21,6 +21,7 @@ jobs:
     timeout-minutes: 90
     env:
       DEBIAN_FRONTEND: noninteractive
+      ANDROID_SERIAL: emulator-5560
     steps:
       - uses: actions/checkout@v7
         with:
@@ -74,6 +75,7 @@ jobs:
           echo "CORE_URL=${{ secrets.E2E_CORE_URL }}" >> e2e/.env
           echo "PROXY_URL=${{ secrets.E2E_PROXY_URL }}" >> e2e/.env
           echo "CORE_ADMIN_PASSWORD=${{ secrets.E2E_CORE_ADMIN_PASSWORD }}" >> e2e/.env
+          echo "ANDROID_AVD=mobile-e2e" >> e2e/.env
 
       - name: Check deployment is reachable
         run: curl -sf --max-time 15 "${{ secrets.E2E_CORE_URL }}/api/v1/health"
@@ -102,6 +104,8 @@ jobs:
           target: google_apis
           arch: x86_64
           profile: pixel_6
+          avd-name: mobile-e2e
+          emulator-port: 5560
           ram-size: 4096M
           heap-size: 512M
           disable-animations: true
