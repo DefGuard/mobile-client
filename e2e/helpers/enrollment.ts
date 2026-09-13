@@ -1,10 +1,11 @@
 import { $, driver, expect } from "@wdio/globals";
 import { approveBiometricPrompt } from "./biometrics.js";
 import type { EnrollmentFixture } from "./coreApi.js";
-import { fillField } from "./input.js";
+import { fillField, hideKeyboard } from "./input.js";
 import { byId } from "./selectors.js";
 
 const PROBE_TIMEOUT_MS = 1_000;
+const RETAP_INTERVAL_MS = 1_000;
 
 interface EnrollmentOptions {
 	biometry?: boolean;
@@ -13,14 +14,21 @@ interface EnrollmentOptions {
 const openManualForm = async () => {
 	const manual = $(byId("add_instance_manual_button"));
 	await manual.waitForDisplayed();
-	await manual.click();
 
 	const consent = $(byId("data_gathering_accept"));
 	const header = $(byId("add_instance_form_header"));
 
 	await driver.waitUntil(
-		async () => (await consent.isDisplayed()) || (await header.isDisplayed()),
+		async () => {
+			if ((await consent.isDisplayed()) || (await header.isDisplayed())) {
+				return true;
+			}
+
+			await manual.click();
+			return false;
+		},
 		{
+			interval: RETAP_INTERVAL_MS,
 			timeoutMsg:
 				"Neither the data gathering dialog nor the manual form opened",
 		},
@@ -36,6 +44,9 @@ const openManualForm = async () => {
 const submitInstanceDetails = async (fixture: EnrollmentFixture) => {
 	await fillField(byId("add_instance_url"), fixture.enrollmentUrl);
 	await fillField(byId("add_instance_token"), fixture.enrollmentToken);
+
+	await hideKeyboard();
+
 	await $(byId("add_instance_submit")).click();
 };
 
