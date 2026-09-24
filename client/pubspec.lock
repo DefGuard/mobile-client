@@ -77,10 +77,10 @@ packages:
     dependency: transitive
     description:
       name: archive
-      sha256: ace891da0862b0e4cabbb064ee3fd87b2728b898949fdb366d83fe98342c9f19
+      sha256: "6c5bcd986e06b94e3c40244af471750840a3d2341d1f9763a1100a14add517b4"
       url: "https://pub.dev"
     source: hosted
-    version: "4.2.0"
+    version: "4.3.0"
   args:
     dependency: transitive
     description:
@@ -309,10 +309,10 @@ packages:
     dependency: "direct main"
     description:
       name: cupertino_ui
-      sha256: e9dfe7fac704028f8928cbe4028a0be5e8a709498e8daf8247de99e99a32aef3
+      sha256: c6747018d37d32feeeb858a1d7043831cb541460ebe1a890a995cdb8df8ea5a5
       url: "https://pub.dev"
     source: hosted
-    version: "1.0.2"
+    version: "1.1.0"
   dart_style:
     dependency: transitive
     description:
@@ -373,18 +373,18 @@ packages:
     dependency: "direct main"
     description:
       name: drift
-      sha256: bab55d542d63765f6250ee3e2c62e11bfa1145d4ec2ffa05353c8fb4e10b52c1
+      sha256: e3b6352aa02e60bed6ffc3cc9894c421578dad5fbef21b1f7f57cdc0e4edabcb
       url: "https://pub.dev"
     source: hosted
-    version: "2.34.4"
+    version: "2.35.0"
   drift_dev:
     dependency: "direct dev"
     description:
       name: drift_dev
-      sha256: aa824b21ac7c43e417e1e481d114c60546ec4b585dcc0f98e7a556d1d0adb476
+      sha256: fbad5c1e3a73820cdb1f32161eb2f40bb5e5f03c0c1a3d236595725aec7efc6d
       url: "https://pub.dev"
     source: hosted
-    version: "2.34.6"
+    version: "2.35.0"
   drift_flutter:
     dependency: "direct main"
     description:
@@ -474,10 +474,10 @@ packages:
     dependency: "direct main"
     description:
       name: flutter_local_notifications
-      sha256: "1447ba911c60f2ba3f25dae1af151ec187162566b0f57e37771bf0b400f013ad"
+      sha256: "357be7ff996dc272e2037c69c1bdd5d1bd21172219d55f8bd2e11aeea602e6d3"
       url: "https://pub.dev"
     source: hosted
-    version: "22.3.0"
+    version: "22.3.1"
   flutter_local_notifications_linux:
     dependency: transitive
     description:
@@ -543,10 +543,10 @@ packages:
     dependency: "direct main"
     description:
       name: flutter_secure_storage
-      sha256: "7686b1d6a29985dcbb808c59518226e603e3bfa7c0ddfd1a0d00e4cda77c868e"
+      sha256: fe638107c5f69119156ada2db5a57734385fac3f64430bd7252a00d3ead2ca4b
       url: "https://pub.dev"
     source: hosted
-    version: "10.3.1"
+    version: "10.3.4"
   flutter_secure_storage_darwin:
     dependency: transitive
     description:
@@ -559,18 +559,18 @@ packages:
     dependency: transitive
     description:
       name: flutter_secure_storage_linux
-      sha256: "76fa9c841b3b1619fc5b5bc36efc7d158fa2356f223b6caeb1d0c80a54168546"
+      sha256: caa75bd78f017422912e3a904933113b2428eb79f981ac37acd2dd2a700458ea
       url: "https://pub.dev"
     source: hosted
-    version: "3.0.2"
+    version: "3.0.3"
   flutter_secure_storage_platform_interface:
     dependency: transitive
     description:
       name: flutter_secure_storage_platform_interface
-      sha256: "788060052712555182aba55ecb5f8b6e5cb9cfe8f776c83249a61fe3ce877db4"
+      sha256: "64951127f001f546891c86f414972bf49ef2c4c8a4c92c65f5790cc0c9100045"
       url: "https://pub.dev"
     source: hosted
-    version: "2.0.3"
+    version: "2.1.1"
   flutter_secure_storage_web:
     dependency: transitive
     description:
@@ -737,10 +737,10 @@ packages:
     dependency: transitive
     description:
       name: image
-      sha256: "1976370a4df3091bb0f72409c187ad1f9132a818bc6b95ca59c0bae1c75c688e"
+      sha256: a1e7f4951e538a568e14b856702afc9ae1d2f4b202daced8d22c1b9cd211ce89
       url: "https://pub.dev"
     source: hosted
-    version: "4.9.2"
+    version: "4.10.1"
   intl:
     dependency: transitive
     description:
@@ -849,10 +849,10 @@ packages:
     dependency: transitive
     description:
       name: local_auth_android
-      sha256: "2de619ed7196c136ec4579539c0446668e794afeec1e1815786a3158a478d04b"
+      sha256: fc6d4edecbb8baa59f1f1ab2005c5043bbe311c3936a467fb5e05c2b155bf111
       url: "https://pub.dev"
     source: hosted
-    version: "2.0.10"
+    version: "2.1.0"
   local_auth_darwin:
     dependency: transitive
     description:
@@ -905,10 +905,10 @@ packages:
     dependency: "direct main"
     description:
       name: material_ui
-      sha256: "9c0156b0cf8b3f56d365c8ffe051a720be3cae9eec55119f01e01b986ffb7101"
+      sha256: "6d056d60ce745335fcf1c726a4fc46a481a62229f202b65dbc2db5edbbabc7e2"
       url: "https://pub.dev"
     source: hosted
-    version: "1.1.1"
+    version: "1.3.0"
   meta:
     dependency: transitive
     description:
@@ -929,10 +929,10 @@ packages:
     dependency: "direct main"
     description:
       name: mobile_scanner
-      sha256: ce3f059ebd6dbfab7292bba0e893e354b46730636820d3c9ef69005ce2d55bce
+      sha256: "5a51ea79f0cf8293f616a5d08baae185b59b5e6bb24df01f2a63037ade0bade0"
       url: "https://pub.dev"
     source: hosted
-    version: "7.4.0"
+    version: "7.4.2"
   mockito:
     dependency: transitive
     description:
@@ -1153,10 +1153,10 @@ packages:
     dependency: "direct main"
     description:
       name: protobuf
-      sha256: "75ec242d22e950bdcc79ee38dd520ce4ee0bc491d7fadc4ea47694604d22bf06"
+      sha256: "13b6717366aa7ec3792dd62c19c7d33a785708224365f2db23c5ca01f1c1a0f2"
       url: "https://pub.dev"
     source: hosted
-    version: "6.0.0"
+    version: "6.1.0"
   pub_semver:
     dependency: "direct main"
     description:
@@ -1406,10 +1406,10 @@ packages:
     dependency: transitive
     description:
       name: sqlite3
-      sha256: "4c7fe79840389aaeaf05fd093f795b631b5a98e2bd28d54e555c100f4a9c7a1c"
+      sha256: fa3fd961e83b2dca8890a7b1014ab1226831d2b5908067c0ab7f385ffb655caf
       url: "https://pub.dev"
     source: hosted
-    version: "3.5.2"
+    version: "3.6.0"
   sqlite3_flutter_libs:
     dependency: "direct main"
     description:
