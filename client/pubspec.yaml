@@ -33,6 +33,8 @@ dependencies:
 
   wireguard_plugin:
     path: ../wireguard_plugin
+  qr_plugin:
+    path: ../qr_plugin
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
@@ -59,7 +61,6 @@ dependencies:
   flutter_svg: ^2.1.0
   app_links: ^7.0.0
   permission_handler: ^13.0.2
-  mobile_scanner: ^7.0.1
   rxdart: ^0.28.0
   talker: ^5.1.20
   talker_flutter: ^5.1.20

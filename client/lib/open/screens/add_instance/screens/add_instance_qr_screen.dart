@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -31,15 +29,8 @@ class AddInstanceQrScreen extends HookConsumerWidget {
         description: description,
         loading: isLoading.value,
         onCancel: () => Navigator.of(context).pop(),
-        validator: (raw) {
-          try {
-            final decodedString = jsonDecode(utf8.decode(base64Decode(raw)));
-            return QrInstanceRegistration.fromJson(decodedString);
-          } catch (e) {
-            talker.error("Failed to decode QR: $e");
-            return null;
-          }
-        },
+        validator: (raw) =>
+            decodeQrPayload(raw, QrInstanceRegistration.fromJson),
         onScan: (data, controller) async {
           isLoading.value = true;
           final url = Uri.parse(data.url);
