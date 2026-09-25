@@ -72,6 +72,7 @@ jobs:
           echo "CORE_URL=${{ secrets.E2E_CORE_URL }}" >> e2e/.env
           echo "PROXY_URL=${{ secrets.E2E_PROXY_URL }}" >> e2e/.env
           echo "CORE_ADMIN_PASSWORD=${{ secrets.E2E_CORE_ADMIN_PASSWORD }}" >> e2e/.env
+          echo "ANDROID_AVD=test" >> e2e/.env
 
       - name: Check deployment is reachable
         run: curl -sf --max-time 15 "${{ secrets.E2E_CORE_URL }}/api/v1/health"
