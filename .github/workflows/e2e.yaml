@@ -101,7 +101,7 @@ jobs:
           ram-size: 4096M
           heap-size: 512M
           disable-animations: true
-          emulator-options: -no-snapshot -no-window -no-audio -no-boot-anim
+          emulator-options: -no-snapshot -no-audio -no-boot-anim
           script: cd "$GITHUB_WORKSPACE/e2e" && { pnpm test:android --logLevel warn || { tail -n 80 logs/wdio-appium.log; exit 1; }; }
 
   e2e-ios:
