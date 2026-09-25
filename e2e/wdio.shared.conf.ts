@@ -42,14 +42,4 @@ export const sharedConfig: Partial<WebdriverIO.Config> = {
 	mochaOpts: { timeout: TEST_TIMEOUT_MS },
 	waitforTimeout: WAIT_FOR_TIMEOUT_MS,
 	connectionRetryTimeout: 240_000,
-
-	afterTest: async (test, _context, { passed }) => {
-		if (passed) return;
-		try {
-			console.log(`\n===== element tree after "${test.title}" =====`);
-			console.log(await driver.getPageSource());
-		} catch (error) {
-			console.warn(`Could not fetch the element tree: ${error}`);
-		}
-	},
 };
