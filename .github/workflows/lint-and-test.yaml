@@ -58,6 +58,58 @@ jobs:
       - name: run lint
         run: flutter analyze
 
+  lint-qr-plugin:
+    name: Lint qr_plugin
+    runs-on: [self-hosted, Linux, X64]
+    env:
+      KTLINT_VERSION: "1.8.0"
+    defaults:
+      run:
+        working-directory: ./qr_plugin
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: setup flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.47.2
+
+      - name: Set up Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: "temurin"
+          java-version: "17"
+
+      - name: get deps
+        run: flutter pub get
+
+      - name: check formatting
+        run: dart format --output=none --set-exit-if-changed .
+
+      - name: run lint
+        run: flutter analyze
+
+      - name: run ktlint
+        run: |
+          curl -sSfL -o "$RUNNER_TEMP/ktlint" \
+            "https://github.com/pinterest/ktlint/releases/download/${KTLINT_VERSION}/ktlint"
+          chmod +x "$RUNNER_TEMP/ktlint"
+          "$RUNNER_TEMP/ktlint" "android/**/*.kt"
+
+  lint-qr-plugin-swift:
+    name: Lint qr_plugin Swift
+    runs-on: [self-hosted, macOS, native]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: run swift-format
+        run: xcrun swift-format lint --strict --recursive qr_plugin/ios
+
   flutter-test:
     name: Run Flutter tests
     runs-on: [self-hosted, Linux, X64]

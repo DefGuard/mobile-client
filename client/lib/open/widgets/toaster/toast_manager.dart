@@ -28,7 +28,7 @@ class ToastData {
   });
 }
 
-const toastDuration = Duration(seconds: 5);
+const _toastDuration = Duration(seconds: 5);
 const _animationDuration = Duration(milliseconds: 200);
 
 @Riverpod(keepAlive: true)
@@ -75,7 +75,7 @@ class ToastManager extends _$ToastManager {
     final innerId = id ?? const Uuid().v4();
     talker.debug("Showing toast: $innerId");
     state = ToastData(id: innerId, message: message, variant: variant);
-    _timer = Timer(toastDuration, () => remove(id: innerId));
+    _timer = Timer(_toastDuration, () => remove(id: innerId));
   }
 
   /// With [id] given the toast is only removed if it is still the one on

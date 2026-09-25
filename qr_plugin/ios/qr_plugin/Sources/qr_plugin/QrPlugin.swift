@@ -30,9 +30,15 @@ private class PreviewView: UIView {
 
     override func layoutSubviews() {
         super.layoutSubviews()
+        if #unavailable(iOS 17.0) {
+            applyInterfaceOrientation()
+        }
+    }
+
+    private func applyInterfaceOrientation() {
         guard let connection = previewLayer.connection, connection.isVideoOrientationSupported,
-              let orientation = window?.windowScene?.interfaceOrientation,
-              let videoOrientation = AVCaptureVideoOrientation(rawValue: orientation.rawValue)
+            let orientation = window?.windowScene?.interfaceOrientation,
+            let videoOrientation = AVCaptureVideoOrientation(rawValue: orientation.rawValue)
         else { return }
         connection.videoOrientation = videoOrientation
     }
@@ -45,6 +51,9 @@ private class QrView: NSObject, FlutterPlatformView, AVCaptureMetadataOutputObje
     private let output = AVCaptureMetadataOutput()
     private let queue = DispatchQueue(label: "net.defguard.qr_plugin.session")
     private var active = true
+    private var runtimeErrorObserver: NSObjectProtocol?
+    private var rotationCoordinator: AnyObject?
+    private var rotationObservation: NSKeyValueObservation?
 
     init(frame: CGRect, channelId: Int, messenger: FlutterBinaryMessenger) {
         preview = PreviewView(frame: frame)
@@ -61,10 +70,19 @@ private class QrView: NSObject, FlutterPlatformView, AVCaptureMetadataOutputObje
             }
             result(nil)
         }
+        runtimeErrorObserver = NotificationCenter.default.addObserver(
+            forName: AVCaptureSession.runtimeErrorNotification,
+            object: session,
+            queue: .main
+        ) { [weak self] notification in
+            let error = notification.userInfo?[AVCaptureSessionErrorKey] as? Error
+            self?.fail("cameraError", error.map { "\($0)" } ?? "Capture session runtime error")
+        }
         queue.async { [weak self] in self?.configure() }
     }
 
     deinit {
+        removeObservers()
         stopSession()
     }
 
@@ -98,9 +116,27 @@ private class QrView: NSObject, FlutterPlatformView, AVCaptureMetadataOutputObje
             output.metadataObjectTypes = [.qr]
             session.commitConfiguration()
             session.startRunning()
-            DispatchQueue.main.async { [preview] in preview.setNeedsLayout() }
+            DispatchQueue.main.async { [weak self] in self?.onSessionStarted(device) }
         } catch {
             fail("cameraError", "\(error)")
+        }
+    }
+
+    private func onSessionStarted(_ device: AVCaptureDevice) {
+        guard #available(iOS 17.0, *) else { return preview.setNeedsLayout() }
+        let coordinator = AVCaptureDevice.RotationCoordinator(device: device, previewLayer: preview.previewLayer)
+        rotationCoordinator = coordinator
+        rotationObservation = coordinator.observe(
+            \.videoRotationAngleForHorizonLevelPreview,
+            options: [.initial, .new]
+        ) { [weak self] coordinator, _ in
+            let angle = coordinator.videoRotationAngleForHorizonLevelPreview
+            DispatchQueue.main.async {
+                guard let connection = self?.preview.previewLayer.connection,
+                    connection.isVideoRotationAngleSupported(angle)
+                else { return }
+                connection.videoRotationAngle = angle
+            }
         }
     }
 
@@ -109,9 +145,8 @@ private class QrView: NSObject, FlutterPlatformView, AVCaptureMetadataOutputObje
         didOutput metadataObjects: [AVMetadataObject],
         from connection: AVCaptureConnection
     ) {
-        guard active,
-              let value = metadataObjects.lazy.compactMap({ ($0 as? AVMetadataMachineReadableCodeObject)?.stringValue }).first(where: { !$0.isEmpty })
-        else { return }
+        let values = metadataObjects.lazy.compactMap { ($0 as? AVMetadataMachineReadableCodeObject)?.stringValue }
+        guard active, let value = values.first(where: { !$0.isEmpty }) else { return }
         channel.invokeMethod("code", arguments: value)
     }
 
@@ -122,9 +157,21 @@ private class QrView: NSObject, FlutterPlatformView, AVCaptureMetadataOutputObje
     }
 
     private func dispose() {
+        active = false
         channel.setMethodCallHandler(nil)
-        output.setMetadataObjectsDelegate(nil, queue: nil)
+        removeObservers()
+        queue.async { [output] in output.setMetadataObjectsDelegate(nil, queue: nil) }
         stopSession()
+    }
+
+    private func removeObservers() {
+        if let observer = runtimeErrorObserver {
+            NotificationCenter.default.removeObserver(observer)
+            runtimeErrorObserver = nil
+        }
+        rotationObservation?.invalidate()
+        rotationObservation = nil
+        rotationCoordinator = nil
     }
 
     private func stopSession() {

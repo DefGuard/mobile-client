@@ -7,20 +7,25 @@ import 'package:flutter/widgets.dart';
 
 const _viewType = 'net.defguard.qr_plugin/view';
 
-class QrScannerException implements Exception {
-  static const permissionDenied = 'permissionDenied';
-  static const noCamera = 'noCamera';
-  static const cameraError = 'cameraError';
+enum QrScannerError { permissionDenied, noCamera, cameraError }
 
-  final String code;
+class QrScannerException implements Exception {
+  final QrScannerError code;
   final String? message;
 
   const QrScannerException(this.code, [this.message]);
 
+  factory QrScannerException._fromNative(Map<Object?, Object?> args) =>
+      QrScannerException(
+        QrScannerError.values.asNameMap()[args['code']] ??
+            QrScannerError.cameraError,
+        args['message'] as String?,
+      );
+
   @override
   String toString() => message == null
-      ? 'QrScannerException($code)'
-      : 'QrScannerException($code): $message';
+      ? 'QrScannerException(${code.name})'
+      : 'QrScannerException(${code.name}): $message';
 }
 
 class QrScannerController {
@@ -30,6 +35,7 @@ class QrScannerController {
   late final MethodChannel _channel = MethodChannel('${_viewType}_$_id');
   bool _running = true;
   bool _attached = false;
+  bool _inUse = false;
 
   bool get isRunning => _running;
 
@@ -39,8 +45,14 @@ class QrScannerController {
 
   Future<void> _setRunning(bool running) async {
     _running = running;
-    if (_attached) {
-      await _channel.invokeMethod(running ? 'start' : 'stop');
+    if (_attached) await _invoke(running ? 'start' : 'stop');
+  }
+
+  Future<void> _invoke(String method) async {
+    try {
+      await _channel.invokeMethod<void>(method);
+    } catch (e) {
+      if (e is! PlatformException && e is! MissingPluginException) rethrow;
     }
   }
 }
@@ -67,15 +79,18 @@ class _QrScannerViewState extends State<QrScannerView> {
   @override
   void initState() {
     super.initState();
+    assert(!_controller._inUse, 'QrScannerController is bound to another view');
+    _controller._inUse = true;
     _controller._channel.setMethodCallHandler(_handle);
   }
 
   @override
   void dispose() {
     _controller._attached = false;
+    _controller._inUse = false;
     _controller._channel.setMethodCallHandler(null);
     if (defaultTargetPlatform == TargetPlatform.iOS) {
-      unawaited(_controller._channel.invokeMethod('dispose'));
+      unawaited(_controller._invoke('dispose'));
     }
     super.dispose();
   }
@@ -85,13 +100,7 @@ class _QrScannerViewState extends State<QrScannerView> {
       case 'code':
         if (_controller._running) widget.onCode(call.arguments as String);
       case 'error':
-        final args = call.arguments as Map;
-        widget.onError(
-          QrScannerException(
-            args['code'] as String,
-            args['message'] as String?,
-          ),
-        );
+        widget.onError(QrScannerException._fromNative(call.arguments as Map));
     }
   }
 

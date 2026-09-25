@@ -1,16 +1,17 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:clock/clock.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:qr_plugin/qr_plugin.dart';
 
 import 'package:mobile/logging.dart';
-import 'package:mobile/open/widgets/toaster/toast_manager.dart';
 import 'dg_qr_overlay.dart';
 
 const _duplicateWindow = Duration(milliseconds: 650);
+const _retryCooldown = Duration(seconds: 5);
 
 T? decodeQrPayload<T>(String raw, T Function(Map<String, dynamic>) fromJson) {
   var step = 'base64';
@@ -39,24 +40,30 @@ class DgScannerController {
   final _rejected = <String>{};
   String? _lastValue;
   DateTime _lastSeenAt = DateTime(0);
+  String? _cooldownValue;
   DateTime _cooldownUntil = DateTime(0);
 
   DgScannerController(this._controller);
 
-  bool _isNewSighting(String value) {
-    final now = DateTime.now();
+  @visibleForTesting
+  bool isNewSighting(String value) {
+    final now = clock.now();
     final repeated =
         value == _lastValue && now.difference(_lastSeenAt) < _duplicateWindow;
+    final coolingDown = value == _cooldownValue && now.isBefore(_cooldownUntil);
     _lastValue = value;
     _lastSeenAt = now;
-    return !repeated &&
-        now.isAfter(_cooldownUntil) &&
-        !_rejected.contains(value);
+    return !repeated && !coolingDown && !_rejected.contains(value);
   }
 
+  @visibleForTesting
+  void reject(String value) => _rejected.add(value);
+
+  /// Resumes scanning; the code handled last is ignored for [_retryCooldown].
   Future<void> resume() async {
-    _lastSeenAt = DateTime.now();
-    _cooldownUntil = _lastSeenAt.add(toastDuration);
+    _lastSeenAt = clock.now();
+    _cooldownValue = _lastValue;
+    _cooldownUntil = _lastSeenAt.add(_retryCooldown);
     if (!_controller.isRunning) {
       await _controller.start();
     }
@@ -97,11 +104,11 @@ class DgQrScanner<T> extends HookWidget {
     final error = useState<QrScannerException?>(null);
 
     void onCode(String rawValue) {
-      if (!nextController._isNewSighting(rawValue)) return;
+      if (!nextController.isNewSighting(rawValue)) return;
       try {
         final validated = validator(rawValue);
         if (validated == null) {
-          nextController._rejected.add(rawValue);
+          nextController.reject(rawValue);
           return;
         }
         // Explicitly stop scanning immediately to prevent double processing
@@ -115,16 +122,24 @@ class DgQrScanner<T> extends HookWidget {
     final granted = permission.data?.isGranted;
 
     useEffect(() {
-      if (granted == false) {
+      if (permission.hasError) {
+        talker.error(
+          "Camera permission request failed",
+          permission.error,
+          permission.stackTrace,
+        );
+      } else if (granted == false) {
         talker.warning(
           "Camera permission not granted: ${permission.data!.name}",
         );
       }
       return null;
-    }, [granted]);
-    final currentError = granted == false
-        ? const QrScannerException(QrScannerException.permissionDenied)
-        : error.value;
+    }, [granted, permission.hasError]);
+    final currentError = switch ((permission.hasError, granted)) {
+      (true, _) => const QrScannerException(QrScannerError.cameraError),
+      (_, false) => const QrScannerException(QrScannerError.permissionDenied),
+      _ => error.value,
+    };
 
     return Stack(
       fit: StackFit.expand,
@@ -170,7 +185,7 @@ class DgQrScanner<T> extends HookWidget {
               ),
               const SizedBox(height: 16),
               Text(
-                "Could not access camera: ${error.code}",
+                "Could not access camera: ${error.code.name}",
                 style: const TextStyle(color: Colors.white),
                 textAlign: TextAlign.center,
               ),

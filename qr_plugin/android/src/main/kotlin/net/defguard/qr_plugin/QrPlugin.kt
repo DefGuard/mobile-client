@@ -2,10 +2,13 @@ package net.defguard.qr_plugin
 
 import android.app.Activity
 import android.content.Context
+import android.graphics.Matrix
 import android.util.Size
 import android.view.View
 import androidx.camera.core.CameraSelector
+import androidx.camera.core.CameraState
 import androidx.camera.core.ImageAnalysis
+import androidx.camera.core.ImageProxy
 import androidx.camera.core.resolutionselector.AspectRatioStrategy
 import androidx.camera.core.resolutionselector.ResolutionSelector
 import androidx.camera.core.resolutionselector.ResolutionStrategy
@@ -32,7 +35,9 @@ import io.flutter.plugin.common.StandardMessageCodec
 import io.flutter.plugin.platform.PlatformView
 import io.flutter.plugin.platform.PlatformViewFactory
 
-class QrPlugin : FlutterPlugin, ActivityAware {
+class QrPlugin :
+    FlutterPlugin,
+    ActivityAware {
     private var activity: Activity? = null
 
     override fun onAttachedToEngine(binding: FlutterPlugin.FlutterPluginBinding) {
@@ -40,7 +45,7 @@ class QrPlugin : FlutterPlugin, ActivityAware {
             "net.defguard.qr_plugin/view",
             object : PlatformViewFactory(StandardMessageCodec.INSTANCE) {
                 override fun create(context: Context, viewId: Int, args: Any?): PlatformView =
-                    QrView(context, activity as LifecycleOwner, binding.binaryMessenger, args as Int)
+                    QrView(context, activity as? LifecycleOwner, binding.binaryMessenger, args as Int)
             },
         )
     }
@@ -64,12 +69,9 @@ class QrPlugin : FlutterPlugin, ActivityAware {
     }
 }
 
-private class QrView(
-    context: Context,
-    private val host: LifecycleOwner,
-    messenger: BinaryMessenger,
-    channelId: Int,
-) : PlatformView, LifecycleOwner {
+private class QrView(context: Context, private val host: LifecycleOwner?, messenger: BinaryMessenger, channelId: Int) :
+    PlatformView,
+    LifecycleOwner {
     private val registry = LifecycleRegistry(this)
     override val lifecycle: Lifecycle get() = registry
 
@@ -105,16 +107,34 @@ private class QrView(
             }
             result.success(null)
         }
-        host.lifecycle.addObserver(hostObserver)
-        controller.bindToLifecycle(this)
-        controller.initializationFuture.addListener({
-            val error = runCatching { controller.initializationFuture.get() }.exceptionOrNull()
-            when {
-                error != null -> fail("cameraError", (error.cause ?: error).toString())
-                !controller.hasCamera(CameraSelector.DEFAULT_BACK_CAMERA) -> fail("noCamera", "No back camera available")
+        if (host == null) {
+            fail("cameraError", "No lifecycle-aware host activity")
+        } else {
+            host.lifecycle.addObserver(hostObserver)
+            controller.bindToLifecycle(this)
+            controller.initializationFuture.addListener({ checkInitialized() }, mainExecutor)
+            controller.zoomState.observe(this) { if (scanner == null) onCameraBound(it.maxZoomRatio) }
+        }
+    }
+
+    private fun checkInitialized() {
+        val error = runCatching { controller.initializationFuture.get() }.exceptionOrNull()
+        when {
+            error != null -> fail("cameraError", (error.cause ?: error).toString())
+
+            !controller.hasCamera(CameraSelector.DEFAULT_BACK_CAMERA) ->
+                fail("noCamera", "No back camera available")
+        }
+    }
+
+    private fun onCameraBound(maxZoomRatio: Float) {
+        controller.cameraInfo?.cameraState?.observe(this) { state ->
+            val error = state.error
+            if (error?.type == CameraState.ErrorType.CRITICAL) {
+                fail("cameraError", "Camera state error ${error.code}")
             }
-        }, mainExecutor)
-        controller.zoomState.observe(this) { if (scanner == null) startScanner(it.maxZoomRatio) }
+        }
+        startScanner(maxZoomRatio)
     }
 
     private fun startScanner(maxZoomRatio: Float) {
@@ -127,13 +147,15 @@ private class QrView(
             .setZoomSuggestionOptions(zoom)
             .build()
         val scanner = BarcodeScanning.getClient(options).also { scanner = it }
-        controller.setImageAnalysisAnalyzer(
+        val analyzer = MlKitAnalyzer(
+            listOf(scanner),
+            ImageAnalysis.COORDINATE_SYSTEM_ORIGINAL,
             mainExecutor,
-            MlKitAnalyzer(listOf(scanner), ImageAnalysis.COORDINATE_SYSTEM_ORIGINAL, mainExecutor) { result ->
-                val value = result.getValue(scanner)?.firstNotNullOfOrNull { it.rawValue?.ifEmpty { null } }
-                if (active && value != null) channel.invokeMethod("code", value)
-            },
-        )
+        ) { result ->
+            val value = result.getValue(scanner)?.firstNotNullOfOrNull { it.rawValue?.ifEmpty { null } }
+            if (active && value != null) channel.invokeMethod("code", value)
+        }
+        controller.setImageAnalysisAnalyzer(mainExecutor, GatedAnalyzer(analyzer) { active })
     }
 
     private fun fail(code: String, message: String) =
@@ -142,12 +164,25 @@ private class QrView(
     override fun getView(): View = previewView
 
     override fun dispose() {
+        active = false
         channel.setMethodCallHandler(null)
-        host.lifecycle.removeObserver(hostObserver)
+        host?.lifecycle?.removeObserver(hostObserver)
         controller.clearImageAnalysisAnalyzer()
         if (registry.currentState.isAtLeast(Lifecycle.State.CREATED)) {
             registry.currentState = Lifecycle.State.DESTROYED
         }
         scanner?.close()
     }
+}
+
+// Drops frames while paused so ML Kit does no work, without rebinding the camera.
+private class GatedAnalyzer(private val inner: ImageAnalysis.Analyzer, private val enabled: () -> Boolean) :
+    ImageAnalysis.Analyzer {
+    override fun analyze(image: ImageProxy) = if (enabled()) inner.analyze(image) else image.close()
+
+    override fun getDefaultTargetResolution(): Size? = inner.defaultTargetResolution
+
+    override fun getTargetCoordinateSystem(): Int = inner.targetCoordinateSystem
+
+    override fun updateTransform(matrix: Matrix?) = inner.updateTransform(matrix)
 }
