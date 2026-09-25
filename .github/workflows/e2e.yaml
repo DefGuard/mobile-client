@@ -64,9 +64,6 @@ jobs:
       - name: Prepare e2e environment
         run: |
           cp .env.example .env
-          echo "CORE_URL=${{ secrets.E2E_CORE_URL }}" >> .env
-          echo "PROXY_URL=${{ secrets.E2E_PROXY_URL }}" >> .env
-          echo "CORE_ADMIN_PASSWORD=${{ secrets.E2E_CORE_ADMIN_PASSWORD }}" >> .env
           echo "ANDROID_AVD=test" >> .env
         working-directory: e2e
 
@@ -92,6 +89,10 @@ jobs:
 
       - name: Run Android E2E on emulator
         uses: ReactiveCircus/android-emulator-runner@v2
+        env:
+          CORE_URL: ${{ secrets.E2E_CORE_URL }}
+          PROXY_URL: ${{ secrets.E2E_PROXY_URL }}
+          CORE_ADMIN_PASSWORD: ${{ secrets.E2E_CORE_ADMIN_PASSWORD }}
         with:
           api-level: 34
           target: google_apis
@@ -146,11 +147,7 @@ jobs:
             pnpm-store-mobile-e2e-${{ runner.os }}-
 
       - name: Prepare e2e environment
-        run: |
-          cp .env.example .env
-          echo "CORE_URL=${{ secrets.E2E_CORE_URL }}" >> .env
-          echo "PROXY_URL=${{ secrets.E2E_PROXY_URL }}" >> .env
-          echo "CORE_ADMIN_PASSWORD=${{ secrets.E2E_CORE_ADMIN_PASSWORD }}" >> .env
+        run: cp .env.example .env
         working-directory: e2e
 
       - name: Check deployment is reachable
@@ -186,6 +183,10 @@ jobs:
       - name: Run iOS E2E on simulator
         run: pnpm test:ios --logLevel warn
         working-directory: e2e
+        env:
+          CORE_URL: ${{ secrets.E2E_CORE_URL }}
+          PROXY_URL: ${{ secrets.E2E_PROXY_URL }}
+          CORE_ADMIN_PASSWORD: ${{ secrets.E2E_CORE_ADMIN_PASSWORD }}
 
   lint-e2e:
     runs-on: [self-hosted, Linux, X64]
