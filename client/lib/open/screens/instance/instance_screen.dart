@@ -342,6 +342,7 @@ class _InstanceAppBar extends ConsumerWidget implements PreferredSizeWidget {
               items: [
                 if (activeTunnel != null)
                   DgMenuItem(
+                    identifier: "instance_actions_disconnect_all",
                     icon: "disconnect_all",
                     text: "Disconnect all locations",
                     onTap: () async {
@@ -357,6 +358,7 @@ class _InstanceAppBar extends ConsumerWidget implements PreferredSizeWidget {
                     },
                   ),
                 DgMenuItem(
+                  identifier: "instance_actions_refresh",
                   text: "Refresh configuration",
                   icon: "refresh",
                   onTap: () {
@@ -370,6 +372,7 @@ class _InstanceAppBar extends ConsumerWidget implements PreferredSizeWidget {
                   },
                 ),
                 DgMenuItem(
+                  identifier: "instance_actions_delete",
                   icon: "delete",
                   text: "Delete Instance",
                   onTap: onDeleteInstance,
@@ -383,9 +386,12 @@ class _InstanceAppBar extends ConsumerWidget implements PreferredSizeWidget {
           },
           child: CompositedTransformTarget(
             link: actionsLayerLink,
-            child: DgIconButton(
-              icon: "menu",
-              onTap: actionsController.toggle,
+            child: Semantics(
+              identifier: "instance_actions_menu",
+              child: DgIconButton(
+                icon: "menu",
+                onTap: actionsController.toggle,
+              ),
             ),
           ),
         ),
@@ -566,9 +572,12 @@ class _LocationList extends HookConsumerWidget {
       children: [
         Padding(
           padding: const EdgeInsets.only(bottom: DgSpacing.xl),
-          child: Text(
-            "Locations",
-            style: DgText.h4.copyWith(color: DgColor.fgWhite100),
+          child: Semantics(
+            identifier: "instance_screen_header",
+            child: Text(
+              "Locations",
+              style: DgText.h4.copyWith(color: DgColor.fgWhite100),
+            ),
           ),
         ),
         if (connectedLocation != null) ...[

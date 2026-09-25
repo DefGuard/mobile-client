@@ -1,0 +1,7 @@
+packages:
+  - "."
+allowBuilds:
+  appium: true
+  esbuild: true
+  edgedriver: false
+  geckodriver: false

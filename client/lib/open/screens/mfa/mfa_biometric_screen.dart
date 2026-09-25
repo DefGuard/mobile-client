@@ -149,6 +149,7 @@ class MfaBiometricScreen extends HookConsumerWidget {
                   ),
                   const SizedBox(height: DgSpacing.xl),
                   DgButton(
+                    identifier: "mfa_biometric_verify",
                     text: hasFailed.value ? "Retry" : "Verify now",
                     style: DgButtonStyle.primary,
                     size: DgButtonSize.big,

@@ -23,6 +23,7 @@ class DgTextFormField extends FormField<String> {
   final bool readOnly;
   final ValueChanged<String>? onChanged;
   final ValueChanged<String>? onFieldSubmitted;
+  final String? identifier;
 
   DgTextFormField({
     super.key,
@@ -43,6 +44,7 @@ class DgTextFormField extends FormField<String> {
     this.onChanged,
     this.onFieldSubmitted,
     super.onSaved,
+    this.identifier,
     String? initialValue,
   }) : assert(
          initialValue == null || controller == null,
@@ -70,6 +72,7 @@ class DgTextFormField extends FormField<String> {
              readOnly: readOnly,
              onChanged: onChanged,
              onFieldSubmitted: onFieldSubmitted,
+             identifier: identifier,
            );
          },
        );
@@ -91,6 +94,7 @@ class _NextTextFormFieldContent extends HookWidget {
   final bool readOnly;
   final ValueChanged<String>? onChanged;
   final ValueChanged<String>? onFieldSubmitted;
+  final String? identifier;
 
   const _NextTextFormFieldContent({
     required this.state,
@@ -108,7 +112,15 @@ class _NextTextFormFieldContent extends HookWidget {
     required this.readOnly,
     this.onChanged,
     this.onFieldSubmitted,
+    this.identifier,
   });
+
+  Widget _withIdentifier(Widget child) {
+    if (identifier == null) {
+      return child;
+    }
+    return Semantics(identifier: identifier, child: child);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -240,31 +252,33 @@ class _NextTextFormFieldContent extends HookWidget {
               borderRadius: borderRadius,
               border: Border.all(color: borderColor, width: 1.0),
             ),
-            child: TextField(
-              controller: effectiveController,
-              focusNode: effectiveFocusNode,
-              enabled: !disabled,
-              readOnly: readOnly,
-              obscureText: obscureText,
-              keyboardType: keyboardType,
-              maxLines: maxLines,
-              onChanged: (value) {
-                onChanged?.call(value);
-              },
-              onSubmitted: onFieldSubmitted,
-              style: inputTextStyle,
-              cursorColor: DgColor.fgWhite100,
-              decoration: InputDecoration(
-                isDense: true,
-                contentPadding: EdgeInsets.zero,
-                border: InputBorder.none,
-                enabledBorder: InputBorder.none,
-                focusedBorder: InputBorder.none,
-                disabledBorder: InputBorder.none,
-                errorBorder: InputBorder.none,
-                focusedErrorBorder: InputBorder.none,
-                hintText: hintText,
-                hintStyle: hintTextStyle,
+            child: _withIdentifier(
+              TextField(
+                controller: effectiveController,
+                focusNode: effectiveFocusNode,
+                enabled: !disabled,
+                readOnly: readOnly,
+                obscureText: obscureText,
+                keyboardType: keyboardType,
+                maxLines: maxLines,
+                onChanged: (value) {
+                  onChanged?.call(value);
+                },
+                onSubmitted: onFieldSubmitted,
+                style: inputTextStyle,
+                cursorColor: DgColor.fgWhite100,
+                decoration: InputDecoration(
+                  isDense: true,
+                  contentPadding: EdgeInsets.zero,
+                  border: InputBorder.none,
+                  enabledBorder: InputBorder.none,
+                  focusedBorder: InputBorder.none,
+                  disabledBorder: InputBorder.none,
+                  errorBorder: InputBorder.none,
+                  focusedErrorBorder: InputBorder.none,
+                  hintText: hintText,
+                  hintStyle: hintTextStyle,
+                ),
               ),
             ),
           ),

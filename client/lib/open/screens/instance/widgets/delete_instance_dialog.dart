@@ -49,6 +49,7 @@ class DeleteInstanceDialog extends HookConsumerWidget {
         const DgDialogTitle("Delete instance"),
         DgDialogDescription(warningText),
         DgButton(
+          identifier: "delete_instance_confirm",
           text: "Delete instance",
           style: DgButtonStyle.critical,
           size: DgButtonSize.big,

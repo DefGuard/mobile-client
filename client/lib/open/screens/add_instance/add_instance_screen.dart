@@ -50,12 +50,15 @@ class AddInstanceScreen extends HookConsumerWidget {
                   delegate: SliverChildListDelegate([
                     Padding(
                       padding: const EdgeInsets.only(bottom: DgSpacing.xs),
-                      child: Text(
-                        "Add instance",
-                        style: DgText.h3.copyWith(
-                          color: DgColor.fgWhite100,
+                      child: Semantics(
+                        identifier: "add_instance_screen_header",
+                        child: Text(
+                          "Add instance",
+                          style: DgText.h3.copyWith(
+                            color: DgColor.fgWhite100,
+                          ),
+                          textAlign: TextAlign.center,
                         ),
-                        textAlign: TextAlign.center,
                       ),
                     ),
                     Text(
@@ -139,6 +142,7 @@ class AddInstanceScreen extends HookConsumerWidget {
                         ),
                         const SizedBox(height: DgSpacing.md),
                         DgButton(
+                          identifier: "add_instance_manual_button",
                           text: "Add instance Manually",
                           style: DgButtonStyle.secondary,
                           size: DgButtonSize.big,
