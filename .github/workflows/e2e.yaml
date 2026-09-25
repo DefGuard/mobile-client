@@ -3,22 +3,17 @@ name: Mobile E2E tests
 on:
   workflow_dispatch:
   push:
-    branches: [main, dev, "release/**", "stable/**"]
-    paths-ignore: ["*.md", "LICENSE"]
+    branches: [main, dev]
   pull_request:
-    branches: [main, dev, "release/**", "stable/**"]
-    paths-ignore: ["*.md", "LICENSE"]
+    branches: [main, dev]
 
 concurrency:
   group: mobile-e2e
-  cancel-in-progress: false
 
 jobs:
   e2e-android:
     runs-on: [self-hosted, macOS, native]
     timeout-minutes: 90
-    env:
-      DEBIAN_FRONTEND: noninteractive
     steps:
       - uses: actions/checkout@v7
         with:
@@ -35,7 +30,7 @@ jobs:
         with:
           packages: tools platform-tools build-tools;36.0.0 platforms;android-37.0 ndk;28.2.13676358
 
-      - name: Setup flutter
+      - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
           channel: stable
@@ -68,11 +63,12 @@ jobs:
 
       - name: Prepare e2e environment
         run: |
-          cp e2e/.env.example e2e/.env
-          echo "CORE_URL=${{ secrets.E2E_CORE_URL }}" >> e2e/.env
-          echo "PROXY_URL=${{ secrets.E2E_PROXY_URL }}" >> e2e/.env
-          echo "CORE_ADMIN_PASSWORD=${{ secrets.E2E_CORE_ADMIN_PASSWORD }}" >> e2e/.env
-          echo "ANDROID_AVD=test" >> e2e/.env
+          cp .env.example .env
+          echo "CORE_URL=${{ secrets.E2E_CORE_URL }}" >> .env
+          echo "PROXY_URL=${{ secrets.E2E_PROXY_URL }}" >> .env
+          echo "CORE_ADMIN_PASSWORD=${{ secrets.E2E_CORE_ADMIN_PASSWORD }}" >> .env
+          echo "ANDROID_AVD=test" >> .env
+        working-directory: e2e
 
       - name: Check deployment is reachable
         run: curl -sf --max-time 15 "${{ secrets.E2E_CORE_URL }}/api/v1/health"
@@ -118,7 +114,7 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Setup flutter
+      - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
           channel: stable
