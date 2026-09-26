@@ -54,7 +54,6 @@ dependencies {
     val cameraxVersion = "1.6.2"
     implementation("androidx.camera:camera-camera2:$cameraxVersion")
     implementation("androidx.camera:camera-lifecycle:$cameraxVersion")
-    implementation("androidx.camera:camera-view:$cameraxVersion")
     implementation("androidx.camera:camera-mlkit-vision:$cameraxVersion")
     implementation("com.google.mlkit:barcode-scanning:17.3.0")
 }

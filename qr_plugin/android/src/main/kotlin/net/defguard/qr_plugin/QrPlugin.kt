@@ -1,21 +1,23 @@
 package net.defguard.qr_plugin
 
 import android.app.Activity
-import android.content.Context
 import android.graphics.Matrix
+import android.hardware.display.DisplayManager
 import android.util.Size
-import android.view.View
+import androidx.camera.core.Camera
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.CameraState
+import androidx.camera.core.FocusMeteringAction
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageProxy
+import androidx.camera.core.Preview
+import androidx.camera.core.SurfaceOrientedMeteringPointFactory
+import androidx.camera.core.SurfaceRequest
 import androidx.camera.core.resolutionselector.AspectRatioStrategy
 import androidx.camera.core.resolutionselector.ResolutionSelector
 import androidx.camera.core.resolutionselector.ResolutionStrategy
+import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.mlkit.vision.MlKitAnalyzer
-import androidx.camera.view.CameraController
-import androidx.camera.view.LifecycleCameraController
-import androidx.camera.view.PreviewView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -30,27 +32,71 @@ import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.embedding.engine.plugins.activity.ActivityAware
 import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding
 import io.flutter.plugin.common.BinaryMessenger
+import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
-import io.flutter.plugin.common.StandardMessageCodec
-import io.flutter.plugin.platform.PlatformView
-import io.flutter.plugin.platform.PlatformViewFactory
+import io.flutter.view.TextureRegistry
+import java.util.concurrent.Future
+import kotlin.math.min
+
+private val RESOLUTION = ResolutionSelector.Builder()
+    .setAspectRatioStrategy(AspectRatioStrategy.RATIO_16_9_FALLBACK_AUTO_STRATEGY)
+    .setResolutionStrategy(
+        ResolutionStrategy(Size(1920, 1080), ResolutionStrategy.FALLBACK_RULE_CLOSEST_LOWER_THEN_HIGHER),
+    )
+    .build()
+
+// Beyond this, digital zoom upscales a 1080p stream past what the sensor resolves.
+private const val MAX_ZOOM_RATIO = 3f
+private const val METERING_SIZE = 0.35f
 
 class QrPlugin :
     FlutterPlugin,
-    ActivityAware {
+    ActivityAware,
+    MethodChannel.MethodCallHandler {
+    private var binding: FlutterPlugin.FlutterPluginBinding? = null
+    private var channel: MethodChannel? = null
     private var activity: Activity? = null
+    private val scanners = mutableMapOf<Int, QrScanner>()
 
     override fun onAttachedToEngine(binding: FlutterPlugin.FlutterPluginBinding) {
-        binding.platformViewRegistry.registerViewFactory(
-            "net.defguard.qr_plugin/view",
-            object : PlatformViewFactory(StandardMessageCodec.INSTANCE) {
-                override fun create(context: Context, viewId: Int, args: Any?): PlatformView =
-                    QrView(context, activity as? LifecycleOwner, binding.binaryMessenger, args as Int)
-            },
-        )
+        this.binding = binding
+        channel = MethodChannel(binding.binaryMessenger, "net.defguard.qr_plugin").also {
+            it.setMethodCallHandler(this)
+        }
     }
 
-    override fun onDetachedFromEngine(binding: FlutterPlugin.FlutterPluginBinding) {}
+    override fun onDetachedFromEngine(binding: FlutterPlugin.FlutterPluginBinding) {
+        channel?.setMethodCallHandler(null)
+        channel = null
+        scanners.values.forEach { it.dispose() }
+        scanners.clear()
+        this.binding = null
+    }
+
+    override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
+        val id = call.arguments as Int
+        when (call.method) {
+            "create" -> create(id, result)
+
+            "dispose" -> {
+                scanners.remove(id)?.dispose()
+                result.success(null)
+            }
+
+            else -> result.notImplemented()
+        }
+    }
+
+    private fun create(id: Int, result: MethodChannel.Result) {
+        val binding = binding ?: return result.error("cameraError", "Plugin detached from engine", null)
+        val activity = activity
+        if (activity !is LifecycleOwner) {
+            return result.error("cameraError", "No lifecycle-aware host activity", null)
+        }
+        val scanner = QrScanner(activity, activity, binding.textureRegistry, binding.binaryMessenger, id)
+        scanners.put(id, scanner)?.dispose()
+        result.success(scanner.textureId)
+    }
 
     override fun onAttachedToActivity(binding: ActivityPluginBinding) {
         activity = binding.activity
@@ -69,33 +115,37 @@ class QrPlugin :
     }
 }
 
-private class QrView(context: Context, private val host: LifecycleOwner?, messenger: BinaryMessenger, channelId: Int) :
-    PlatformView,
-    LifecycleOwner {
+private class QrScanner(
+    private val activity: Activity,
+    private val host: LifecycleOwner,
+    textureRegistry: TextureRegistry,
+    messenger: BinaryMessenger,
+    id: Int,
+) : LifecycleOwner {
     private val registry = LifecycleRegistry(this)
     override val lifecycle: Lifecycle get() = registry
 
     private val hostObserver = LifecycleEventObserver { _, event -> registry.handleLifecycleEvent(event) }
-    private val mainExecutor = ContextCompat.getMainExecutor(context)
-    private val channel = MethodChannel(messenger, "net.defguard.qr_plugin/view_$channelId")
+    private val mainExecutor = ContextCompat.getMainExecutor(activity)
+    private val channel = MethodChannel(messenger, "net.defguard.qr_plugin/scanner_$id")
+    private val producer = textureRegistry.createSurfaceProducer()
+    private val displayManager = activity.getSystemService(DisplayManager::class.java)
+    private val preview = Preview.Builder().setResolutionSelector(RESOLUTION).build()
+    private val analysis = ImageAnalysis.Builder().setResolutionSelector(RESOLUTION).build()
+    private val surfaceProvider = Preview.SurfaceProvider(::provideSurface)
+    private var provider: ProcessCameraProvider? = null
     private var scanner: BarcodeScanner? = null
     private var active = true
+    private var disposed = false
 
-    private val controller = LifecycleCameraController(context).apply {
-        cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
-        setEnabledUseCases(CameraController.IMAGE_ANALYSIS)
-        imageAnalysisResolutionSelector = ResolutionSelector.Builder()
-            .setAspectRatioStrategy(AspectRatioStrategy.RATIO_4_3_FALLBACK_AUTO_STRATEGY)
-            .setResolutionStrategy(
-                ResolutionStrategy(Size(1280, 960), ResolutionStrategy.FALLBACK_RULE_CLOSEST_HIGHER_THEN_LOWER),
-            )
-            .build()
-    }
+    val textureId: Long get() = producer.id()
 
-    private val previewView = PreviewView(context).apply {
-        implementationMode = PreviewView.ImplementationMode.COMPATIBLE
-        scaleType = PreviewView.ScaleType.FILL_CENTER
-        controller = this@QrView.controller
+    private val displayListener = object : DisplayManager.DisplayListener {
+        override fun onDisplayAdded(displayId: Int) {}
+
+        override fun onDisplayRemoved(displayId: Int) {}
+
+        override fun onDisplayChanged(displayId: Int) = updateRotation()
     }
 
     init {
@@ -107,41 +157,79 @@ private class QrView(context: Context, private val host: LifecycleOwner?, messen
             }
             result.success(null)
         }
-        if (host == null) {
-            fail("cameraError", "No lifecycle-aware host activity")
-        } else {
-            host.lifecycle.addObserver(hostObserver)
-            controller.bindToLifecycle(this)
-            controller.initializationFuture.addListener({ checkInitialized() }, mainExecutor)
-            controller.zoomState.observe(this) { if (scanner == null) onCameraBound(it.maxZoomRatio) }
-        }
+        producer.setCallback(
+            object : TextureRegistry.SurfaceProducer.Callback {
+                override fun onSurfaceAvailable() = preview.setSurfaceProvider(surfaceProvider)
+
+                override fun onSurfaceCleanup() = preview.setSurfaceProvider(null)
+            },
+        )
+        preview.setSurfaceProvider(surfaceProvider)
+        updateRotation()
+        displayManager.registerDisplayListener(displayListener, null)
+        host.lifecycle.addObserver(hostObserver)
+        val future = ProcessCameraProvider.getInstance(activity)
+        future.addListener({ bind(future) }, mainExecutor)
     }
 
-    private fun checkInitialized() {
-        val error = runCatching { controller.initializationFuture.get() }.exceptionOrNull()
-        when {
-            error != null -> fail("cameraError", (error.cause ?: error).toString())
-
-            !controller.hasCamera(CameraSelector.DEFAULT_BACK_CAMERA) ->
-                fail("noCamera", "No back camera available")
+    private fun provideSurface(request: SurfaceRequest) {
+        val resolution = request.resolution
+        producer.setSize(resolution.width, resolution.height)
+        // The ImageReader-backed producer does not apply buffer rotation, so Dart rotates the texture.
+        request.setTransformationInfoListener(mainExecutor) { info ->
+            channel.invokeMethod(
+                "size",
+                mapOf(
+                    "width" to resolution.width,
+                    "height" to resolution.height,
+                    "quarterTurns" to info.rotationDegrees / 90,
+                ),
+            )
         }
+        request.provideSurface(producer.surface, mainExecutor) {}
     }
 
-    private fun onCameraBound(maxZoomRatio: Float) {
-        controller.cameraInfo?.cameraState?.observe(this) { state ->
+    private fun updateRotation() {
+        val rotation = activity.display?.rotation ?: return
+        preview.targetRotation = rotation
+        analysis.targetRotation = rotation
+    }
+
+    private fun bind(future: Future<ProcessCameraProvider>) {
+        if (disposed) return
+        val camera = try {
+            val provider = future.get().also { provider = it }
+            if (!provider.hasCamera(CameraSelector.DEFAULT_BACK_CAMERA)) {
+                return fail("noCamera", "No back camera available")
+            }
+            provider.bindToLifecycle(this, CameraSelector.DEFAULT_BACK_CAMERA, preview, analysis)
+        } catch (e: Exception) {
+            return fail("cameraError", (e.cause ?: e).toString())
+        }
+        camera.cameraInfo.cameraState.observe(this) { state ->
             val error = state.error
-            if (error?.type == CameraState.ErrorType.CRITICAL) {
-                fail("cameraError", "Camera state error ${error.code}")
+            when {
+                error?.type == CameraState.ErrorType.CRITICAL -> fail("cameraError", "Camera state error ${error.code}")
+                state.type == CameraState.Type.OPEN -> meterScanWindow(camera)
             }
         }
-        startScanner(maxZoomRatio)
+        camera.cameraInfo.zoomState.observe(this) { if (scanner == null) startScanner(camera, it.maxZoomRatio) }
     }
 
-    private fun startScanner(maxZoomRatio: Float) {
+    // Whole-frame metering exposes for a dim room and blows out a QR code shown on a bright screen.
+    private fun meterScanWindow(camera: Camera) {
+        val point = SurfaceOrientedMeteringPointFactory(1f, 1f).createPoint(0.5f, 0.5f, METERING_SIZE)
+        val action = FocusMeteringAction.Builder(point, FocusMeteringAction.FLAG_AE or FocusMeteringAction.FLAG_AWB)
+            .disableAutoCancel()
+            .build()
+        camera.cameraControl.startFocusAndMetering(action)
+    }
+
+    private fun startScanner(camera: Camera, maxZoomRatio: Float) {
         val zoom = ZoomSuggestionOptions.Builder { ratio ->
-            mainExecutor.execute { controller.setZoomRatio(ratio) }
+            mainExecutor.execute { camera.cameraControl.setZoomRatio(ratio) }
             true
-        }.setMaxSupportedZoomRatio(maxZoomRatio).build()
+        }.setMaxSupportedZoomRatio(min(maxZoomRatio, MAX_ZOOM_RATIO)).build()
         val options = BarcodeScannerOptions.Builder()
             .setBarcodeFormats(Barcode.FORMAT_QR_CODE)
             .setZoomSuggestionOptions(zoom)
@@ -155,22 +243,26 @@ private class QrView(context: Context, private val host: LifecycleOwner?, messen
             val value = result.getValue(scanner)?.firstNotNullOfOrNull { it.rawValue?.ifEmpty { null } }
             if (active && value != null) channel.invokeMethod("code", value)
         }
-        controller.setImageAnalysisAnalyzer(mainExecutor, GatedAnalyzer(analyzer) { active })
+        analysis.setAnalyzer(mainExecutor, GatedAnalyzer(analyzer) { active })
     }
 
     private fun fail(code: String, message: String) =
         channel.invokeMethod("error", mapOf("code" to code, "message" to message))
 
-    override fun getView(): View = previewView
-
-    override fun dispose() {
+    fun dispose() {
+        if (disposed) return
+        disposed = true
         active = false
         channel.setMethodCallHandler(null)
-        host?.lifecycle?.removeObserver(hostObserver)
-        controller.clearImageAnalysisAnalyzer()
+        displayManager.unregisterDisplayListener(displayListener)
+        host.lifecycle.removeObserver(hostObserver)
+        analysis.clearAnalyzer()
+        preview.setSurfaceProvider(null)
+        provider?.unbind(preview, analysis)
         if (registry.currentState.isAtLeast(Lifecycle.State.CREATED)) {
             registry.currentState = Lifecycle.State.DESTROYED
         }
+        producer.release()
         scanner?.close()
     }
 }

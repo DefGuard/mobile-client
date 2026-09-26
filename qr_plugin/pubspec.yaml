@@ -1,5 +1,5 @@
 name: qr_plugin
-description: "Native QR code scanner view: CameraX + ML Kit on Android, AVFoundation on iOS."
+description: "Native QR code scanner: CameraX + ML Kit on Android, AVFoundation on iOS."
 version: 0.0.1
 publish_to: none
 
