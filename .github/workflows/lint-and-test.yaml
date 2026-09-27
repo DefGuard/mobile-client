@@ -99,8 +99,8 @@ jobs:
           chmod +x "$RUNNER_TEMP/ktlint"
           "$RUNNER_TEMP/ktlint" "android/**/*.kt"
 
-  lint-qr-plugin-swift:
-    name: Lint qr_plugin Swift
+  lint-plugins-swift:
+    name: Lint plugins Swift
     runs-on: [self-hosted, macOS, native]
 
     steps:
@@ -108,7 +108,7 @@ jobs:
         uses: actions/checkout@v7
 
       - name: run swift-format
-        run: xcrun swift-format lint --strict --recursive qr_plugin/ios
+        run: xcrun swift-format lint --strict --recursive qr_plugin/ios wireguard_plugin/darwin
 
   flutter-test:
     name: Run Flutter tests

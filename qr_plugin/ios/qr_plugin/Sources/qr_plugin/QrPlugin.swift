@@ -37,7 +37,7 @@ public class QrPlugin: NSObject, FlutterPlugin {
     }
 
     public func detachFromEngine(for registrar: FlutterPluginRegistrar) {
-        scanners.values.forEach { $0.dispose() }
+        for scanner in scanners.values { scanner.dispose() }
         scanners.removeAll()
     }
 }
@@ -90,7 +90,9 @@ private class QrScanner: NSObject, FlutterTexture, AVCaptureVideoDataOutputSampl
     }
 
     private func configure() {
-        let types: [AVCaptureDevice.DeviceType] = [.builtInTripleCamera, .builtInDualWideCamera, .builtInWideAngleCamera]
+        let types: [AVCaptureDevice.DeviceType] = [
+            .builtInTripleCamera, .builtInDualWideCamera, .builtInWideAngleCamera,
+        ]
         guard let device = types.lazy.compactMap({ AVCaptureDevice.default($0, for: .video, position: .back) }).first
         else { return fail("noCamera", "No back camera available") }
         do {

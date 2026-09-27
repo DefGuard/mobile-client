@@ -2,10 +2,10 @@ import NetworkExtension
 import os
 
 #if os(macOS)
-import FlutterMacOS
-import Cocoa
+    import FlutterMacOS
+    import Cocoa
 #elseif os(iOS)
-import Flutter
+    import Flutter
 #endif
 
 // The timeout for waiting for the tunnel status to change (e.g. when connecting or disconnecting).
@@ -18,8 +18,9 @@ public class WireguardPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
     private var appStateObservers: [NSObjectProtocol] = []
     private var configurationObserver: NSObjectProtocol?
     private var vpnManager: VPNManagement
-    private var logger = Logger(subsystem: Bundle.main.bundleIdentifier!,
-                                category: "WireguardPlugin")
+    private var logger = Logger(
+        subsystem: Bundle.main.bundleIdentifier!,
+        category: "WireguardPlugin")
 
     public init(vpnManager: VPNManagement? = nil) {
         if let vpnManager = vpnManager {
@@ -79,10 +80,10 @@ public class WireguardPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
 
         if let config = providerManager.protocolConfiguration
             as? NETunnelProviderProtocol,
-           let configDict = config.providerConfiguration,
-           let activeTunnelData = try? ActiveTunnelData.from(
-            dictionary: configDict
-           )
+            let configDict = config.providerConfiguration,
+            let activeTunnelData = try? ActiveTunnelData.from(
+                dictionary: configDict
+            )
         {
             completion(activeTunnelData)
         } else {
@@ -173,43 +174,43 @@ public class WireguardPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
 
     public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         switch call.method {
-            case "requestPermissions":
-                result(true)
-            case "startTunnel":
-                guard
-                    let args = call.arguments as? String,
-                    let data = args.data(using: .utf8)
-                else {
-                    result(
-                        VPNError.invalidArguments(
-                            "Invalid or missing tunnel config: \(call.arguments ?? "nil")"
-                        ).flutterError
-                    )
-                    return
-                }
+        case "requestPermissions":
+            result(true)
+        case "startTunnel":
+            guard
+                let args = call.arguments as? String,
+                let data = args.data(using: .utf8)
+            else {
+                result(
+                    VPNError.invalidArguments(
+                        "Invalid or missing tunnel config: \(call.arguments ?? "nil")"
+                    ).flutterError
+                )
+                return
+            }
 
-                let decoder = JSONDecoder()
-                decoder.keyDecodingStrategy = .convertFromSnakeCase
-                let config: TunnelStartData
-                do {
-                    config = try decoder.decode(
-                        TunnelStartData.self,
-                        from: data
-                    )
-                } catch {
-                    logger.log(
-                        "Failed to decode tunnel config: \(error.localizedDescription, privacy: .public)"
-                    )
-                    result(
-                        VPNError.configurationError(error).flutterError
-                    )
-                    return
-                }
-                startTunnel(config: config, result: result)
-            case "closeTunnel":
-                closeTunnel(result: result)
-            default:
-                result(FlutterMethodNotImplemented)
+            let decoder = JSONDecoder()
+            decoder.keyDecodingStrategy = .convertFromSnakeCase
+            let config: TunnelStartData
+            do {
+                config = try decoder.decode(
+                    TunnelStartData.self,
+                    from: data
+                )
+            } catch {
+                logger.log(
+                    "Failed to decode tunnel config: \(error.localizedDescription, privacy: .public)"
+                )
+                result(
+                    VPNError.configurationError(error).flutterError
+                )
+                return
+            }
+            startTunnel(config: config, result: result)
+        case "closeTunnel":
+            closeTunnel(result: result)
+        default:
+            result(FlutterMethodNotImplemented)
         }
     }
 
@@ -221,15 +222,36 @@ public class WireguardPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
         }
 
         switch vpnStatus {
-            case .connected:
-                logger.log("Detected that the VPN has connected, emitting event.")
-                let encoder = JSONEncoder()
-                encoder.keyEncodingStrategy = .convertToSnakeCase
-                if let activeTunnelData = activeTunnelData {
+        case .connected:
+            logger.log("Detected that the VPN has connected, emitting event.")
+            let encoder = JSONEncoder()
+            encoder.keyEncodingStrategy = .convertToSnakeCase
+            if let activeTunnelData = activeTunnelData {
+                guard let data = try? encoder.encode(activeTunnelData),
+                    let dataString = String(data: data, encoding: .utf8)
+                else {
+                    logger.log("Failed to encode active tunnel data")
+                    return
+                }
+                self.activeTunnelData = activeTunnelData
+                self.emitEvent(
+                    event: WireguardEvent.tunnelUp,
+                    data: dataString
+                )
+            } else {
+                getActiveTunnelData { activeTunnelData in
+                    guard let activeTunnelData = activeTunnelData else {
+                        self.logger.log("No active tunnel data available")
+                        self.emitEvent(
+                            event: WireguardEvent.tunnelDown,
+                            data: nil
+                        )
+                        return
+                    }
                     guard let data = try? encoder.encode(activeTunnelData),
-                          let dataString = String(data: data, encoding: .utf8)
+                        let dataString = String(data: data, encoding: .utf8)
                     else {
-                        logger.log("Failed to encode active tunnel data")
+                        self.logger.log("Failed to encode active tunnel data")
                         return
                     }
                     self.activeTunnelData = activeTunnelData
@@ -237,68 +259,51 @@ public class WireguardPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
                         event: WireguardEvent.tunnelUp,
                         data: dataString
                     )
-                } else {
-                    getActiveTunnelData { activeTunnelData in
-                        guard let activeTunnelData = activeTunnelData else {
-                            self.logger.log("No active tunnel data available")
-                            self.emitEvent(
-                                event: WireguardEvent.tunnelDown,
-                                data: nil
-                            )
-                            return
-                        }
-                        guard let data = try? encoder.encode(activeTunnelData),
-                              let dataString = String(data: data, encoding: .utf8)
-                        else {
-                            self.logger.log("Failed to encode active tunnel data")
-                            return
-                        }
-                        self.activeTunnelData = activeTunnelData
-                        self.emitEvent(
-                            event: WireguardEvent.tunnelUp,
-                            data: dataString
-                        )
-                    }
                 }
-                setupVPNObservers()
-            case .disconnected, .invalid:
-                logger.log(
-                    "Detected that the system VPN status is disconnected. Emitting event if our state differs"
-                )
-                // no point in emitting this event if we already agree that the tunnel is down
-                if activeTunnelData != nil {
-                    if let lastError = getLastTunnelError() {
-                        logger.log("Detected that the tunnel stopped due to the following error: \(lastError.rawValue, privacy: .public)")
-                        if lastError == .mfaSessionExpired {
-                            logger.log("Detected that the tunnel stopped due to MFA session expiration, emitting event.")
-                            emitEvent(event: WireguardEvent.MFASessionExpired, data: nil)
-                        } else {
-                            logger.warning("Detected that the tunnel stopped due to an unknown error: \(lastError.rawValue, privacy: .public)")
-                            emitEvent(event: WireguardEvent.tunnelDown, data: nil)
-                        }
-                        resetLastTunnelError()
+            }
+            setupVPNObservers()
+        case .disconnected, .invalid:
+            logger.log(
+                "Detected that the system VPN status is disconnected. Emitting event if our state differs"
+            )
+            // no point in emitting this event if we already agree that the tunnel is down
+            if activeTunnelData != nil {
+                if let lastError = getLastTunnelError() {
+                    logger.log(
+                        "Detected that the tunnel stopped due to the following error: \(lastError.rawValue, privacy: .public)"
+                    )
+                    if lastError == .mfaSessionExpired {
+                        logger.log("Detected that the tunnel stopped due to MFA session expiration, emitting event.")
+                        emitEvent(event: WireguardEvent.MFASessionExpired, data: nil)
                     } else {
+                        logger.warning(
+                            "Detected that the tunnel stopped due to an unknown error: \(lastError.rawValue, privacy: .public)"
+                        )
                         emitEvent(event: WireguardEvent.tunnelDown, data: nil)
                     }
-
-                    activeTunnelData = nil
-
-                    logger.log("Our state differed, emitted event to inform the frontend about stopped tunnel.")
+                    resetLastTunnelError()
                 } else {
-                    logger.log("Our state did not differ, no event emitted.")
+                    emitEvent(event: WireguardEvent.tunnelDown, data: nil)
                 }
-            case .connecting:
-                logger.log("Detected that VPN is connecting, ignoring it since it is a temporary state we don't handle.")
-            case .disconnecting:
-                logger.log(
-                    "Detected that VPN is disconnecting, ignoring it since it is a temporary state we don't handle."
-                )
-            case .reasserting:
-                logger.log("Detected that VPN is reasserting, ignoring it since it is a temporary state we don't handle.")
-            @unknown default:
-                logger.log(
-                    "Detected unknown VPN status: \(vpnStatus.rawValue, privacy: .public), ignoring it since it is a state we don't handle."
-                )
+
+                activeTunnelData = nil
+
+                logger.log("Our state differed, emitted event to inform the frontend about stopped tunnel.")
+            } else {
+                logger.log("Our state did not differ, no event emitted.")
+            }
+        case .connecting:
+            logger.log("Detected that VPN is connecting, ignoring it since it is a temporary state we don't handle.")
+        case .disconnecting:
+            logger.log(
+                "Detected that VPN is disconnecting, ignoring it since it is a temporary state we don't handle."
+            )
+        case .reasserting:
+            logger.log("Detected that VPN is reasserting, ignoring it since it is a temporary state we don't handle.")
+        @unknown default:
+            logger.log(
+                "Detected unknown VPN status: \(vpnStatus.rawValue, privacy: .public), ignoring it since it is a state we don't handle."
+            )
         }
     }
 

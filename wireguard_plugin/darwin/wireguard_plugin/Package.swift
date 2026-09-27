@@ -7,7 +7,7 @@ let package = Package(
     name: "wireguard_plugin",
     platforms: [
         .iOS("15.0"),
-        .macOS("11.0")
+        .macOS("11.0"),
     ],
     products: [
         .library(name: "wireguard-plugin", targets: ["wireguard_plugin"])
@@ -24,7 +24,7 @@ let package = Package(
             linkerSettings: [
                 // Mirrors `s.frameworks` and OTHER_LDFLAGS in wireguard_plugin.podspec.
                 .linkedFramework("NetworkExtension"),
-                .linkedFramework("Network")
+                .linkedFramework("Network"),
             ]
         )
     ]

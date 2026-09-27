@@ -24,8 +24,9 @@ public protocol VPNManagement {
 
 public class VPNManager: VPNManagement {
     static let shared = VPNManager()
-    private var logger = Logger(subsystem: Bundle.main.bundleIdentifier!,
-                                category: "WireguardPlugin.VPNManager")
+    private var logger = Logger(
+        subsystem: Bundle.main.bundleIdentifier!,
+        category: "WireguardPlugin.VPNManager")
 
     public private(set) var providerManager: NETunnelProviderManager?
 
