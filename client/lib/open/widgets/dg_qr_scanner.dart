@@ -140,6 +140,18 @@ class DgQrScanner<T> extends HookWidget {
       (_, false) => const QrScannerException(QrScannerError.permissionDenied),
       _ => error.value,
     };
+    final permissionDenied =
+        currentError?.code == QrScannerError.permissionDenied;
+
+    useEffect(() {
+      if (permissionDenied) {
+        // Leave the scanner once the frame is done, popping during build throws.
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (context.mounted) onCancel();
+        });
+      }
+      return null;
+    }, [permissionDenied]);
 
     return Stack(
       fit: StackFit.expand,

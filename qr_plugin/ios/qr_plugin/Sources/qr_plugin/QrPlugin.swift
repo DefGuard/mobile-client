@@ -56,7 +56,12 @@ private class QrScanner: NSObject, FlutterTexture, AVCaptureVideoDataOutputSampl
     private var bufferSize = CGSize.zero
     private(set) var textureId: Int64 = 0
     private var active = true
+    // Main-confined; the session is stopped while the app is inactive (Control Center, app switcher, alerts).
+    private var foreground = UIApplication.shared.applicationState == .active
+    // Queue-confined.
+    private var configured = false
     private var runtimeErrorObserver: NSObjectProtocol?
+    private var lifecycleObservers: [NSObjectProtocol] = []
     private var geometryObservation: NSKeyValueObservation?
 
     init(id: Int, textures: FlutterTextureRegistry, messenger: FlutterBinaryMessenger) {
@@ -80,7 +85,16 @@ private class QrScanner: NSObject, FlutterTexture, AVCaptureVideoDataOutputSampl
             let error = notification.userInfo?[AVCaptureSessionErrorKey] as? Error
             self?.fail("cameraError", error.map { "\($0)" } ?? "Capture session runtime error")
         }
-        queue.async { [weak self] in self?.configure() }
+        lifecycleObservers = [
+            (UIApplication.willResignActiveNotification, false),
+            (UIApplication.didBecomeActiveNotification, true),
+        ].map { name, foreground in
+            NotificationCenter.default.addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in
+                self?.setForeground(foreground)
+            }
+        }
+        let foreground = foreground
+        queue.async { [weak self] in self?.configure(startRunning: foreground) }
     }
 
     func copyPixelBuffer() -> Unmanaged<CVPixelBuffer>? {
@@ -89,7 +103,7 @@ private class QrScanner: NSObject, FlutterTexture, AVCaptureVideoDataOutputSampl
         return latestBuffer.map { Unmanaged.passRetained($0) }
     }
 
-    private func configure() {
+    private func configure(startRunning: Bool) {
         let types: [AVCaptureDevice.DeviceType] = [
             .builtInTripleCamera, .builtInDualWideCamera, .builtInWideAngleCamera,
         ]
@@ -117,10 +131,25 @@ private class QrScanner: NSObject, FlutterTexture, AVCaptureVideoDataOutputSampl
             session.commitConfiguration()
             // Applying the preset resets the active format and zoom, so the device is set up afterwards.
             try configureDevice(device)
-            session.startRunning()
+            configured = true
+            if startRunning {
+                session.startRunning()
+            }
             DispatchQueue.main.async { [weak self] in self?.onSessionStarted() }
         } catch {
             fail("cameraError", "\(error)")
+        }
+    }
+
+    private func setForeground(_ foreground: Bool) {
+        self.foreground = foreground
+        queue.async { [weak self] in
+            guard let self, configured else { return }
+            if foreground {
+                session.startRunning()
+            } else {
+                session.stopRunning()
+            }
         }
     }
 
@@ -211,7 +240,7 @@ private class QrScanner: NSObject, FlutterTexture, AVCaptureVideoDataOutputSampl
         from connection: AVCaptureConnection
     ) {
         let values = metadataObjects.lazy.compactMap { ($0 as? AVMetadataMachineReadableCodeObject)?.stringValue }
-        guard active, let value = values.first(where: { !$0.isEmpty }) else { return }
+        guard active, foreground, let value = values.first(where: { !$0.isEmpty }) else { return }
         channel.invokeMethod("code", arguments: value)
     }
 
@@ -228,6 +257,8 @@ private class QrScanner: NSObject, FlutterTexture, AVCaptureVideoDataOutputSampl
             NotificationCenter.default.removeObserver(observer)
             runtimeErrorObserver = nil
         }
+        for observer in lifecycleObservers { NotificationCenter.default.removeObserver(observer) }
+        lifecycleObservers.removeAll()
         geometryObservation?.invalidate()
         geometryObservation = nil
         queue.async { [session, videoOutput, metadataOutput, textures, textureId] in
