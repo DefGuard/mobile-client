@@ -20,11 +20,11 @@ enum VPNError: Error, LocalizedError {
         case .stopError(let error): return "Stop error: \(error.localizedDescription)"
         }
     }
-    
+
     var flutterError: FlutterError {
         return FlutterError(code: self.code, message: self.errorDescription, details: nil)
     }
-    
+
     private var code: String {
         switch self {
         case .invalidArguments: return "INVALID_ARGUMENTS"
