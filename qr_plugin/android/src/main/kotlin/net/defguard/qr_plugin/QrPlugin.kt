@@ -226,24 +226,28 @@ private class QrScanner(
     }
 
     private fun startScanner(camera: Camera, maxZoomRatio: Float) {
-        val zoom = ZoomSuggestionOptions.Builder { ratio ->
-            mainExecutor.execute { camera.cameraControl.setZoomRatio(ratio) }
-            true
-        }.setMaxSupportedZoomRatio(min(maxZoomRatio, MAX_ZOOM_RATIO)).build()
-        val options = BarcodeScannerOptions.Builder()
-            .setBarcodeFormats(Barcode.FORMAT_QR_CODE)
-            .setZoomSuggestionOptions(zoom)
-            .build()
-        val scanner = BarcodeScanning.getClient(options).also { scanner = it }
-        val analyzer = MlKitAnalyzer(
-            listOf(scanner),
-            ImageAnalysis.COORDINATE_SYSTEM_ORIGINAL,
-            mainExecutor,
-        ) { result ->
-            val value = result.getValue(scanner)?.firstNotNullOfOrNull { it.rawValue?.ifEmpty { null } }
-            if (active && value != null) channel.invokeMethod("code", value)
+        try {
+            val zoom = ZoomSuggestionOptions.Builder { ratio ->
+                mainExecutor.execute { camera.cameraControl.setZoomRatio(ratio) }
+                true
+            }.setMaxSupportedZoomRatio(min(maxZoomRatio, MAX_ZOOM_RATIO)).build()
+            val options = BarcodeScannerOptions.Builder()
+                .setBarcodeFormats(Barcode.FORMAT_QR_CODE)
+                .setZoomSuggestionOptions(zoom)
+                .build()
+            val scanner = BarcodeScanning.getClient(options).also { scanner = it }
+            val analyzer = MlKitAnalyzer(
+                listOf(scanner),
+                ImageAnalysis.COORDINATE_SYSTEM_ORIGINAL,
+                mainExecutor,
+            ) { result ->
+                val value = result.getValue(scanner)?.firstNotNullOfOrNull { it.rawValue?.ifEmpty { null } }
+                if (active && value != null) channel.invokeMethod("code", value)
+            }
+            analysis.setAnalyzer(mainExecutor, GatedAnalyzer(analyzer) { active })
+        } catch (e: Exception) {
+            fail("cameraError", (e.cause ?: e).toString())
         }
-        analysis.setAnalyzer(mainExecutor, GatedAnalyzer(analyzer) { active })
     }
 
     private fun fail(code: String, message: String) =
