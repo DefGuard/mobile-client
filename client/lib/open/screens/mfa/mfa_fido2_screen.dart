@@ -5,6 +5,8 @@ import 'package:material_ui/material_ui.dart';
 import 'package:mobile/data/mfa/fido2_pin_memory.dart';
 import 'package:mobile/data/mfa/fido2_step.dart';
 import 'package:mobile/data/mfa/mfa_flow.dart';
+import 'package:mobile/data/proxy/mfa.dart';
+import 'package:mobile/logging.dart';
 import 'package:mobile/open/screens/mfa/mfa_step_chrome.dart';
 import 'package:mobile/open/widgets/dg_app_bar.dart';
 import 'package:mobile/open/widgets/dg_button.dart';
@@ -16,6 +18,7 @@ import 'package:mobile/open/widgets/toaster/toast_manager.dart';
 import 'package:mobile/theme/color.dart';
 import 'package:mobile/theme/spacing.dart';
 import 'package:mobile/theme/text.dart';
+import 'package:mobile/utils/error_handler.dart';
 
 const _plugin = Fido2Plugin();
 
@@ -52,9 +55,13 @@ class MfaFido2Screen extends HookConsumerWidget {
 
     useEffect(() {
       _refreshNfc(context, nfcStatus);
-      memory.requiresPin(host.controller.credentialIds).then((required) {
-        if (context.mounted && required) needsPin.value = true;
-      });
+      memory.requiresPin(host.controller.credentialIds).then(
+        (required) {
+          if (context.mounted && required) needsPin.value = true;
+        },
+        onError: (Object e) =>
+            talker.error("Failed to read which FIDO2 keys need a PIN", e),
+      );
       return () => _plugin.cancel().ignore();
     }, const []);
 
@@ -98,14 +105,23 @@ class MfaFido2Screen extends HookConsumerWidget {
               authData: assertion.authenticatorData,
               credentialId: assertion.credentialId,
             );
-            if (progress is MfaStepAwaiting) {
-              throw StateError("FIDO2 step returned an out-of-band outcome");
+            if (progress is! MfaStepAwaiting) {
+              host.reportProgress(progress);
+              return;
             }
-            host.reportProgress(progress);
-            return;
+            toaster.showError(
+              message: "Unexpected verification state. Please try again.",
+              logMessage: "FIDO2 step returned an out-of-band outcome",
+            );
+          } on MfaCodeRejectedException catch (e) {
+            toaster.showError(
+              message: "Your security key was not accepted. Please try again.",
+              logMessage: "FIDO2 MFA assertion rejected",
+              error: e,
+            );
           } catch (e) {
             toaster.showError(
-              message: "Verification failed. Please try again.",
+              message: ErrorHandler.getHumanReadableError(e),
               logMessage: "FIDO2 MFA assertion submit failed",
               error: e,
             );
@@ -121,10 +137,15 @@ class MfaFido2Screen extends HookConsumerWidget {
           );
         case Fido2PinInvalid(:final retries):
           pinController.clear();
-          pinError.value = retries == null
-              ? "Wrong PIN"
-              : "Wrong PIN, $retries attempts left";
+          pinError.value = switch (retries) {
+            null => "Wrong PIN",
+            1 => "Wrong PIN, 1 attempt left",
+            _ => "Wrong PIN, $retries attempts left",
+          };
         case Fido2Failed(:final error):
+          if (error.code == Fido2ErrorCode.nfcDisabled) {
+            _refreshNfc(context, nfcStatus);
+          }
           final message = _failureMessage(error.code);
           if (message != null) {
             toaster.showError(
@@ -283,8 +304,6 @@ String? _failureMessage(Fido2ErrorCode code) => switch (code) {
     "This security key's PIN is blocked. Reset the key to use it again.",
   Fido2ErrorCode.pinAuthBlocked =>
     "Too many wrong PINs. Move the key away, then tap it again.",
-  Fido2ErrorCode.pinNotSet =>
-    "This security key has no PIN set, but its credential requires one.",
   Fido2ErrorCode.unsupportedKey => "This key does not support FIDO2.",
   Fido2ErrorCode.nfcDisabled => "Turn on NFC to use your security key.",
   Fido2ErrorCode.nfcUnavailable => "NFC is not available on this device.",

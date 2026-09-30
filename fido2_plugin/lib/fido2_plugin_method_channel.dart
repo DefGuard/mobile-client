@@ -33,16 +33,20 @@ class MethodChannelFido2Plugin extends Fido2PluginPlatform {
       'pin': pin,
       'timeoutMs': timeout.inMilliseconds,
     });
-    if (result == null) {
-      throw const Fido2Exception(
-        Fido2ErrorCode.unknown,
-        message: 'getAssertion returned no result',
+    if (result case {
+      'authenticatorData': final Uint8List authenticatorData,
+      'signature': final Uint8List signature,
+      'credentialId': final Uint8List credentialId,
+    }) {
+      return Fido2Assertion(
+        authenticatorData: authenticatorData,
+        signature: signature,
+        credentialId: credentialId,
       );
     }
-    return Fido2Assertion(
-      authenticatorData: result['authenticatorData'] as Uint8List,
-      signature: result['signature'] as Uint8List,
-      credentialId: result['credentialId'] as Uint8List,
+    throw const Fido2Exception(
+      Fido2ErrorCode.unknown,
+      message: 'getAssertion returned a malformed result',
     );
   }
 
@@ -53,14 +57,19 @@ class MethodChannelFido2Plugin extends Fido2PluginPlatform {
     try {
       return await methodChannel.invokeMethod<T>(method, arguments);
     } on PlatformException catch (e) {
-      final details = e.details;
       throw Fido2Exception(
         Fido2ErrorCode.values.asNameMap()[e.code] ?? Fido2ErrorCode.unknown,
         message: e.message,
-        pinRetries: details is Map ? details['pinRetries'] as int? : null,
+        pinRetries: switch (e.details) {
+          {'pinRetries': final int retries} => retries,
+          _ => null,
+        },
       );
     } on MissingPluginException catch (e) {
       throw Fido2Exception(Fido2ErrorCode.nfcUnavailable, message: e.message);
+    } catch (e) {
+      // invokeMethod's own cast of an unexpected result type.
+      throw Fido2Exception(Fido2ErrorCode.unknown, message: '$e');
     }
   }
 }

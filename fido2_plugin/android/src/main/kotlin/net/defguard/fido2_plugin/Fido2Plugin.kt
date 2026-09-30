@@ -9,6 +9,7 @@ import android.os.Looper
 import android.provider.Settings
 import com.yubico.yubikit.android.transport.nfc.NfcConfiguration
 import com.yubico.yubikit.android.transport.nfc.NfcNotAvailable
+import com.yubico.yubikit.android.transport.nfc.NfcYubiKeyDevice
 import com.yubico.yubikit.android.transport.nfc.NfcYubiKeyManager
 import com.yubico.yubikit.core.application.ApplicationNotAvailableException
 import com.yubico.yubikit.core.fido.CtapException
@@ -41,11 +42,7 @@ private class AssertionRequest(
 
 private class PinInvalid(val retries: Int?) : Exception("PIN invalid")
 
-private class Ceremony(
-    val result: MethodChannel.Result,
-    val manager: NfcYubiKeyManager,
-    val activity: Activity,
-) {
+private class Ceremony(val result: MethodChannel.Result, val manager: NfcYubiKeyManager, val activity: Activity) {
     val tagClaimed = AtomicBoolean(false)
 }
 
@@ -58,7 +55,8 @@ class Fido2Plugin :
     private var activity: Activity? = null
     private var pending: Ceremony? = null
     private val mainHandler = Handler(Looper.getMainLooper())
-    private val timeout = Runnable { pending?.let { finish(it) { r -> r.error("timeout", "No security key was tapped", null) } } }
+    private val timeout =
+        Runnable { pending?.let { finish(it) { r -> r.error("timeout", "No security key was tapped", null) } } }
 
     override fun onAttachedToEngine(binding: FlutterPlugin.FlutterPluginBinding) {
         context = binding.applicationContext
@@ -123,25 +121,38 @@ class Fido2Plugin :
 
         try {
             val config = NfcConfiguration().timeout(ISO_DEP_TIMEOUT_MS).skipNdefCheck(true)
-            manager.enable(activity, config) { device ->
-                if (!ceremony.tagClaimed.compareAndSet(false, true)) return@enable
-                device.requestConnection(SmartCardConnection::class.java) { connection ->
-                    val outcome = runCatching { performAssertion(connection.value, request) }
-                    mainHandler.post {
-                        finish(ceremony) { r ->
-                            outcome.fold(
-                                onSuccess = { r.success(it) },
-                                onFailure = { reportError(r, it) },
-                            )
-                        }
-                    }
-                }
-            }
+            manager.enable(activity, config) { device -> onTag(ceremony, device, request) }
         } catch (e: NfcNotAvailable) {
             pending = null
             return result.error(if (e.isDisabled) "nfcDisabled" else "nfcUnavailable", e.message, null)
+        } catch (e: Exception) {
+            pending = null
+            runCatching { manager.disable(activity) }
+            return result.error("nfcUnavailable", e.message, null)
         }
         mainHandler.postDelayed(timeout, timeoutMs)
+    }
+
+    private fun onTag(ceremony: Ceremony, device: NfcYubiKeyDevice, request: AssertionRequest) {
+        if (!ceremony.tagClaimed.compareAndSet(false, true)) return
+        // Every exchange from here on is bounded by the IsoDep timeout, so the tap wait no longer applies.
+        mainHandler.post { if (pending === ceremony) mainHandler.removeCallbacks(timeout) }
+        try {
+            device.requestConnection(SmartCardConnection::class.java) { connection ->
+                val outcome = runCatching { performAssertion(connection.value, request) }
+                mainHandler.post {
+                    finish(ceremony) { r ->
+                        outcome.fold(
+                            onSuccess = { r.success(it) },
+                            onFailure = { reportError(r, it) },
+                        )
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            // The ceremony finished while this tap was being dispatched, and its executor is shut down.
+            mainHandler.post { finish(ceremony) { r -> reportError(r, e) } }
+        }
     }
 
     private fun performAssertion(connection: SmartCardConnection, request: AssertionRequest): Map<String, ByteArray> {
@@ -189,15 +200,27 @@ class Fido2Plugin :
                 if (e.ctapError != CtapException.ERR_NO_CREDENTIALS) throw e
             }
         }
+        // A key with a PIN set may be hiding a credential registered with credProtect=3.
+        if (request.pin == null && info.options["clientPin"] == true) {
+            throw CtapException(CtapException.ERR_PUAT_REQUIRED)
+        }
         throw CtapException(CtapException.ERR_NO_CREDENTIALS)
     }
 
     private fun reportError(result: MethodChannel.Result, error: Throwable) {
         when (error) {
             is PinInvalid -> result.error("pinInvalid", error.message, mapOf("pinRetries" to error.retries))
-            is CtapException -> result.error(ctapCode(error.ctapError), error.message, mapOf("ctapError" to error.ctapError.toInt()))
+
+            is CtapException -> result.error(
+                ctapCode(error.ctapError),
+                error.message,
+                mapOf("ctapError" to error.ctapError.toInt()),
+            )
+
             is ApplicationNotAvailableException -> result.error("unsupportedKey", error.message, null)
+
             is IOException -> result.error("tagLost", error.message, null)
+
             else -> result.error("unknown", error.message, null)
         }
     }
@@ -216,7 +239,7 @@ class Fido2Plugin :
         if (pending !== ceremony) return
         pending = null
         mainHandler.removeCallbacks(timeout)
-        ceremony.manager.disable(ceremony.activity)
+        runCatching { ceremony.manager.disable(ceremony.activity) }
         deliver(ceremony.result)
     }
 

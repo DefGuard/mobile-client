@@ -60,6 +60,16 @@ class _Memory implements Fido2PinMemory {
   Future<void> remember(String credentialId) async => known.add(credentialId);
 }
 
+class _BrokenMemory implements Fido2PinMemory {
+  @override
+  Future<bool> requiresPin(List<String> credentialIds) =>
+      Future.error(StateError('storage unavailable'));
+
+  @override
+  Future<void> remember(String credentialId) =>
+      Future.error(StateError('storage unavailable'));
+}
+
 final _assertion = Fido2Assertion(
   authenticatorData: Uint8List.fromList([1, 2, 3]),
   signature: Uint8List.fromList([4, 5]),
@@ -103,11 +113,18 @@ void main() {
     expect(call.pin, isNull);
   });
 
-  test('a key hiding its credential without a PIN asks for the PIN', () async {
+  test('no credential on a key without a PIN is the wrong key', () async {
     final (attempt, _) = await run([
       const Fido2Exception(Fido2ErrorCode.noCredentials),
     ]);
-    expect(attempt, isA<Fido2NeedsPin>());
+    expect(attempt, isA<Fido2WrongKey>());
+  });
+
+  test('a PIN sent to a key without one is the wrong key', () async {
+    final (attempt, _) = await run([
+      const Fido2Exception(Fido2ErrorCode.pinNotSet),
+    ], pin: '1234');
+    expect(attempt, isA<Fido2WrongKey>());
   });
 
   test('a key demanding a PIN token asks for the PIN', () async {
@@ -152,6 +169,33 @@ void main() {
     ]);
     expect(attempt, isA<Fido2Failed>());
     expect((attempt as Fido2Failed).error.code, Fido2ErrorCode.timeout);
+  });
+
+  test('errors from outside the plugin become a failure', () async {
+    final (attempt, _) = await run([const FormatException('boom')]);
+    expect(attempt, isA<Fido2Failed>());
+    expect((attempt as Fido2Failed).error.code, Fido2ErrorCode.unknown);
+  });
+
+  test('a malformed credential id becomes a failure', () async {
+    Fido2PluginPlatform.instance = _FakePlatform([_assertion]);
+    final attempt = await Fido2StepRunner(pinMemory: memory).attempt(
+      rpId: 'core.example',
+      challenge: 'the-challenge',
+      credentialIds: const ['not base64!'],
+    );
+    expect(attempt, isA<Fido2Failed>());
+  });
+
+  test('a failure to remember the PIN keeps the assertion', () async {
+    Fido2PluginPlatform.instance = _FakePlatform([_assertion]);
+    final attempt = await Fido2StepRunner(pinMemory: _BrokenMemory()).attempt(
+      rpId: 'core.example',
+      challenge: 'the-challenge',
+      credentialIds: const [_keyA],
+      pin: '1234',
+    );
+    expect(attempt, isA<Fido2Success>());
   });
 
   test('credential ids round-trip unpadded base64url', () {

@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:crypto/crypto.dart';
 import 'package:fido2_plugin/fido2_plugin.dart';
 import 'package:mobile/data/mfa/fido2_pin_memory.dart';
+import 'package:mobile/logging.dart';
 
 sealed class Fido2Attempt {
   const Fido2Attempt();
@@ -15,13 +16,13 @@ class Fido2Success extends Fido2Attempt {
   const Fido2Success(this.assertion);
 }
 
-/// The key hid its credential or demanded a PIN, which a credential registered
-/// with `credProtect=3` does whenever no PIN is given.
+/// The key demanded a PIN, or has one set and may be hiding a credential
+/// registered with `credProtect=3`.
 class Fido2NeedsPin extends Fido2Attempt {
   const Fido2NeedsPin();
 }
 
-/// Even with the PIN the key has none of the offered credentials.
+/// The key has none of the offered credentials.
 class Fido2WrongKey extends Fido2Attempt {
   const Fido2WrongKey();
 }
@@ -67,16 +68,23 @@ class Fido2StepRunner {
       );
     } on Fido2Exception catch (e) {
       return switch (e.code) {
-        Fido2ErrorCode.noCredentials when pin == null => const Fido2NeedsPin(),
         Fido2ErrorCode.pinRequired => const Fido2NeedsPin(),
         Fido2ErrorCode.noCredentials => const Fido2WrongKey(),
+        // A key without a PIN cannot hold a credential that needs one.
+        Fido2ErrorCode.pinNotSet => const Fido2WrongKey(),
         Fido2ErrorCode.pinInvalid => Fido2PinInvalid(e.pinRetries),
         _ => Fido2Failed(e),
       };
+    } catch (e) {
+      return Fido2Failed(Fido2Exception(Fido2ErrorCode.unknown, message: '$e'));
     }
 
     if (pin != null) {
-      await pinMemory.remember(encodeCredentialId(assertion.credentialId));
+      try {
+        await pinMemory.remember(encodeCredentialId(assertion.credentialId));
+      } catch (e) {
+        talker.error("Failed to remember that a FIDO2 key needs its PIN", e);
+      }
     }
     return Fido2Success(assertion);
   }
