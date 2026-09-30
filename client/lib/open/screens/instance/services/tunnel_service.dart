@@ -136,6 +136,7 @@ class TunnelService {
           postureData: payload.postureCheckRequired ? await getPosture() : null,
         ),
         proxyUrl: instance.proxyUrl,
+        instanceUrl: instance.url,
         secureStorageKey: instance.secureStorageKey,
         openidDisplayName: instance.openidDisplayName,
       );

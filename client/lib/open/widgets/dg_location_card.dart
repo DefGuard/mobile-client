@@ -361,6 +361,9 @@ class _InnerInfoCard extends StatelessWidget {
         case .openid:
           iconFileName = "key";
           break;
+        case .fido2:
+          iconFileName = "key";
+          break;
       }
     }
     return DgIcon(iconFileName, size: 20, color: iconColor);

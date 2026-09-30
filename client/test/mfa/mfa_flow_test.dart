@@ -20,10 +20,13 @@ class _FakeTransport implements MfaTransport {
   Future<StartMfaResponse> start(StartMfaRequest request) async {
     calls.add('start');
     starts.add(request);
-    return const StartMfaResponse(
+    return StartMfaResponse(
       token: 'session-token',
       challenge: 'start-challenge',
-      rejections: [],
+      rejections: const [],
+      credentialIds: request.method == MfaMethod.fido2
+          ? const ['start-key']
+          : const [],
     );
   }
 
@@ -33,6 +36,9 @@ class _FakeTransport implements MfaTransport {
     return StepStartMfaResponse(
       stepAttemptId: 'attempt-${++_attempt}',
       challenge: 'step-challenge',
+      credentialIds: request.method == MfaMethod.fido2
+          ? const ['step-key']
+          : const [],
     );
   }
 
@@ -251,6 +257,55 @@ void main() {
     expect(controller.challenge, isNull);
     await controller.startStep();
     expect(controller.challenge, 'step-challenge');
+  });
+
+  test('a FIDO2 first step exposes the offered keys', () async {
+    final transport = _FakeTransport(finishAnswers: [_completed()]);
+    final controller = _controller(transport, [MfaMethod.fido2]);
+
+    await controller.startStep();
+    expect(controller.credentialIds, ['start-key']);
+  });
+
+  test('the offered keys follow the step being opened', () async {
+    final transport = _FakeTransport(finishAnswers: [_advanced(1)]);
+    final controller = _controller(transport, [
+      MfaMethod.totp,
+      MfaMethod.fido2,
+    ]);
+
+    await controller.startStep();
+    expect(controller.credentialIds, isEmpty);
+    await controller.submit(code: '111111');
+    await controller.startStep();
+    expect(controller.credentialIds, ['step-key']);
+  });
+
+  test('a FIDO2 proof carries the signature as unpadded base64url', () async {
+    final transport = _FakeTransport(
+      finishAnswers: [_advanced(1), _completed()],
+    );
+    final controller = _controller(transport, [
+      MfaMethod.totp,
+      MfaMethod.fido2,
+    ]);
+
+    await controller.startStep();
+    await controller.submit(code: '111111');
+    await controller.startStep();
+    final progress = await controller.submitFido2(
+      signature: [0xfb, 0xff],
+      authData: [1, 2, 3],
+      credentialId: [7],
+    );
+
+    expect(progress, isA<MfaStepCompleted>());
+    final finish = transport.finishes.last;
+    expect(finish.authPubKey, '-_8');
+    expect(finish.code, isNull);
+    expect(finish.authData, [1, 2, 3]);
+    expect(finish.credentialId, [7]);
+    expect(finish.stepAttemptId, 'attempt-1');
   });
 
   test('cancelling is observable and submits nothing further', () async {

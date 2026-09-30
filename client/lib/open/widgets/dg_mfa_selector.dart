@@ -75,6 +75,8 @@ class DgMfaSelector extends StatelessWidget {
         return 'biometric';
       case MfaMethod.openid:
         return 'globe';
+      case MfaMethod.fido2:
+        return 'key';
       case null:
         return 'key';
     }

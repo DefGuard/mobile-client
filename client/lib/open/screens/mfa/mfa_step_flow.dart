@@ -8,6 +8,7 @@ import 'package:mobile/enterprise/screens/mfa/openid_mfa_screen.dart';
 import 'package:mobile/open/api.dart';
 import 'package:mobile/open/screens/mfa/mfa_biometric_screen.dart';
 import 'package:mobile/open/screens/mfa/mfa_email_screen.dart';
+import 'package:mobile/open/screens/mfa/mfa_fido2_screen.dart';
 import 'package:mobile/open/screens/mfa/mfa_step_chrome.dart';
 import 'package:mobile/open/screens/mfa/mfa_totp_screen.dart';
 import 'package:mobile/utils/error_handler.dart';
@@ -40,6 +41,10 @@ typedef MfaStepScreenBuilder = Widget Function(MfaStepHost host);
 class MfaStepFlow implements MfaStepHost {
   final NavigatorState navigator;
   final String proxyUrl;
+
+  /// The core's URL, whose host is the relying party id keys are registered
+  /// under. Not [proxyUrl].
+  final String instanceUrl;
   final String? secureStorageKey;
   final String? openidDisplayName;
 
@@ -57,6 +62,7 @@ class MfaStepFlow implements MfaStepHost {
     required this.navigator,
     required this.controller,
     required this.proxyUrl,
+    required this.instanceUrl,
     this.secureStorageKey,
     this.openidDisplayName,
     this.buildStepScreen,
@@ -156,6 +162,10 @@ class MfaStepFlow implements MfaStepHost {
       host: this,
       proxyUrl: proxyUrl,
       openidDisplayName: openidDisplayName,
+    ),
+    MfaMethod.fido2 => MfaFido2Screen(
+      host: this,
+      rpId: Uri.parse(instanceUrl).host.toLowerCase(),
     ),
   };
 }

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mobile/data/db/enums.dart';
 import 'package:mobile/data/mfa/mfa_method_api.dart';
@@ -35,8 +36,15 @@ void main() {
 
     test('leaves the ones it cannot unsupported', () {
       expect(ApiMfaMethod.mobileApprove.supported, isNull);
-      expect(ApiMfaMethod.fido2.supported, isNull);
       expect(ApiMfaMethod.unknown.supported, isNull);
+    });
+
+    test('supports FIDO2 on Android only', () {
+      addTearDown(() => debugDefaultTargetPlatformOverride = null);
+      debugDefaultTargetPlatformOverride = TargetPlatform.android;
+      expect(ApiMfaMethod.fido2.supported, MfaMethod.fido2);
+      debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+      expect(ApiMfaMethod.fido2.supported, isNull);
     });
 
     test('round-trips MfaMethod', () {
@@ -54,8 +62,8 @@ void main() {
 
   group('MfaStep parsing', () {
     test('keeps the raw method and marks it unsupported', () {
-      final entry = MfaStepMethod.fromJson({'method': 5, 'configured': true});
-      expect(entry.apiMethod, ApiMfaMethod.fido2);
+      final entry = MfaStepMethod.fromJson({'method': 4, 'configured': true});
+      expect(entry.apiMethod, ApiMfaMethod.mobileApprove);
       expect(entry.method, isNull);
       expect(entry.configured, isTrue);
     });

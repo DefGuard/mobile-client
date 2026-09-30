@@ -44,6 +44,11 @@ class StartMfaResponse {
   @JsonKey(defaultValue: <MfaStepRejection>[])
   final List<MfaStepRejection> rejections;
 
+  /// Base64url ids of the user's security keys, sent when the first step is
+  /// FIDO2.
+  @JsonKey(defaultValue: <String>[])
+  final List<String> credentialIds;
+
   factory StartMfaResponse.fromJson(Map<String, dynamic> json) =>
       _$StartMfaResponseFromJson(json);
 
@@ -53,6 +58,7 @@ class StartMfaResponse {
     required this.token,
     required this.challenge,
     required this.rejections,
+    this.credentialIds = const [],
   });
 }
 
@@ -67,11 +73,20 @@ class FinishMfaRequest {
   @JsonKey(includeIfNull: false)
   final String? stepAttemptId;
 
+  /// FIDO2 only. The proxy's serde reads proto `bytes` as a number array.
+  @JsonKey(includeIfNull: false)
+  final List<int>? authData;
+
+  @JsonKey(includeIfNull: false)
+  final List<int>? credentialId;
+
   const FinishMfaRequest({
     required this.token,
     this.code,
     this.authPubKey,
     this.stepAttemptId,
+    this.authData,
+    this.credentialId,
   });
 
   factory FinishMfaRequest.fromJson(Map<String, dynamic> json) =>
@@ -207,7 +222,14 @@ class StepStartMfaResponse {
   final String stepAttemptId;
   final String? challenge;
 
-  const StepStartMfaResponse({required this.stepAttemptId, this.challenge});
+  @JsonKey(defaultValue: <String>[])
+  final List<String> credentialIds;
+
+  const StepStartMfaResponse({
+    required this.stepAttemptId,
+    this.challenge,
+    this.credentialIds = const [],
+  });
 
   factory StepStartMfaResponse.fromJson(Map<String, dynamic> json) =>
       _$StepStartMfaResponseFromJson(json);

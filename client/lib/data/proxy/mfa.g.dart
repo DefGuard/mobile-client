@@ -64,6 +64,7 @@ const _$MfaMethodEnumMap = {
   MfaMethod.email: 1,
   MfaMethod.openid: 2,
   MfaMethod.biometric: 3,
+  MfaMethod.fido2: 5,
 };
 
 StartMfaResponse _$StartMfaResponseFromJson(Map<String, dynamic> json) =>
@@ -81,14 +82,19 @@ StartMfaResponse _$StartMfaResponseFromJson(Map<String, dynamic> json) =>
                   .toList() ??
               [],
         ),
+        credentialIds: $checkedConvert(
+          'credential_ids',
+          (v) => (v as List<dynamic>?)?.map((e) => e as String).toList() ?? [],
+        ),
       );
       return val;
-    });
+    }, fieldKeyMap: const {'credentialIds': 'credential_ids'});
 
 const _$StartMfaResponseFieldMap = <String, String>{
   'token': 'token',
   'challenge': 'challenge',
   'rejections': 'rejections',
+  'credentialIds': 'credential_ids',
 };
 
 Map<String, dynamic> _$StartMfaResponseToJson(StartMfaResponse instance) =>
@@ -96,6 +102,7 @@ Map<String, dynamic> _$StartMfaResponseToJson(StartMfaResponse instance) =>
       'token': instance.token,
       'challenge': instance.challenge,
       'rejections': instance.rejections,
+      'credential_ids': instance.credentialIds,
     };
 
 FinishMfaRequest _$FinishMfaRequestFromJson(Map<String, dynamic> json) =>
@@ -111,12 +118,24 @@ FinishMfaRequest _$FinishMfaRequestFromJson(Map<String, dynamic> json) =>
             'step_attempt_id',
             (v) => v as String?,
           ),
+          authData: $checkedConvert(
+            'auth_data',
+            (v) =>
+                (v as List<dynamic>?)?.map((e) => (e as num).toInt()).toList(),
+          ),
+          credentialId: $checkedConvert(
+            'credential_id',
+            (v) =>
+                (v as List<dynamic>?)?.map((e) => (e as num).toInt()).toList(),
+          ),
         );
         return val;
       },
       fieldKeyMap: const {
         'authPubKey': 'auth_pub_key',
         'stepAttemptId': 'step_attempt_id',
+        'authData': 'auth_data',
+        'credentialId': 'credential_id',
       },
     );
 
@@ -125,6 +144,8 @@ const _$FinishMfaRequestFieldMap = <String, String>{
   'code': 'code',
   'authPubKey': 'auth_pub_key',
   'stepAttemptId': 'step_attempt_id',
+  'authData': 'auth_data',
+  'credentialId': 'credential_id',
 };
 
 Map<String, dynamic> _$FinishMfaRequestToJson(FinishMfaRequest instance) =>
@@ -133,6 +154,8 @@ Map<String, dynamic> _$FinishMfaRequestToJson(FinishMfaRequest instance) =>
       'code': instance.code,
       'auth_pub_key': instance.authPubKey,
       'step_attempt_id': ?instance.stepAttemptId,
+      'auth_data': ?instance.authData,
+      'credential_id': ?instance.credentialId,
     };
 
 SecureInstanceStorage _$SecureInstanceStorageFromJson(
@@ -240,17 +263,30 @@ Map<String, dynamic> _$StepStartMfaRequestToJson(
 
 StepStartMfaResponse _$StepStartMfaResponseFromJson(
   Map<String, dynamic> json,
-) => $checkedCreate('StepStartMfaResponse', json, ($checkedConvert) {
-  final val = StepStartMfaResponse(
-    stepAttemptId: $checkedConvert('step_attempt_id', (v) => v as String),
-    challenge: $checkedConvert('challenge', (v) => v as String?),
-  );
-  return val;
-}, fieldKeyMap: const {'stepAttemptId': 'step_attempt_id'});
+) => $checkedCreate(
+  'StepStartMfaResponse',
+  json,
+  ($checkedConvert) {
+    final val = StepStartMfaResponse(
+      stepAttemptId: $checkedConvert('step_attempt_id', (v) => v as String),
+      challenge: $checkedConvert('challenge', (v) => v as String?),
+      credentialIds: $checkedConvert(
+        'credential_ids',
+        (v) => (v as List<dynamic>?)?.map((e) => e as String).toList() ?? [],
+      ),
+    );
+    return val;
+  },
+  fieldKeyMap: const {
+    'stepAttemptId': 'step_attempt_id',
+    'credentialIds': 'credential_ids',
+  },
+);
 
 const _$StepStartMfaResponseFieldMap = <String, String>{
   'stepAttemptId': 'step_attempt_id',
   'challenge': 'challenge',
+  'credentialIds': 'credential_ids',
 };
 
 Map<String, dynamic> _$StepStartMfaResponseToJson(
@@ -258,4 +294,5 @@ Map<String, dynamic> _$StepStartMfaResponseToJson(
 ) => <String, dynamic>{
   'step_attempt_id': instance.stepAttemptId,
   'challenge': instance.challenge,
+  'credential_ids': instance.credentialIds,
 };
