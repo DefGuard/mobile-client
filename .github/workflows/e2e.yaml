@@ -15,35 +15,35 @@ jobs:
     runs-on: [self-hosted, macOS, native]
     timeout-minutes: 90
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           submodules: recursive
 
       - name: Set up Java
-        uses: actions/setup-java@v6
+        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6
         with:
           distribution: temurin
           java-version: "17"
 
       - name: Set up Android SDK
-        uses: android-actions/setup-android@v4
+        uses: android-actions/setup-android@be39fa834029ff78f1a44aa3bb0819b8fc2bd8fd # v4
         with:
           packages: tools platform-tools build-tools;36.0.0 platforms;android-37.0 ndk;28.2.13676358
 
       - name: Set up Flutter
-        uses: subosito/flutter-action@v2
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
         with:
           channel: stable
           flutter-version: 3.47.2
 
-      - uses: actions/setup-node@v7
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           node-version: "26"
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v6
+        uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6
         with:
-          version: 11.11
+          version: 11.27
           run_install: false
 
       - name: Get pnpm store directory
@@ -54,7 +54,7 @@ jobs:
           echo "STORE_PATH=$STORE_PATH" >> $GITHUB_ENV
 
       - name: Restore pnpm store cache
-        uses: actions/cache@v6
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
         with:
           path: ${{ env.STORE_PATH }}
           key: pnpm-store-mobile-e2e-${{ runner.os }}-${{ hashFiles('e2e/pnpm-lock.yaml') }}
@@ -88,7 +88,7 @@ jobs:
         run: ': > "$HOME/.emulator_console_auth_token"'
 
       - name: Run Android E2E on emulator
-        uses: ReactiveCircus/android-emulator-runner@v2
+        uses: ReactiveCircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2
         env:
           CORE_URL: ${{ secrets.E2E_CORE_URL }}
           PROXY_URL: ${{ secrets.E2E_PROXY_URL }}
@@ -111,24 +111,24 @@ jobs:
     runs-on: [self-hosted, macOS, native]
     timeout-minutes: 90
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           submodules: recursive
 
       - name: Set up Flutter
-        uses: subosito/flutter-action@v2
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
         with:
           channel: stable
           flutter-version: 3.47.2
 
-      - uses: actions/setup-node@v7
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           node-version: "26"
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v6
+        uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6
         with:
-          version: 11.11
+          version: 11.27
           run_install: false
 
       - name: Get pnpm store directory
@@ -139,7 +139,7 @@ jobs:
           echo "STORE_PATH=$STORE_PATH" >> $GITHUB_ENV
 
       - name: Restore pnpm store cache
-        uses: actions/cache@v6
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
         with:
           path: ${{ env.STORE_PATH }}
           key: pnpm-store-mobile-e2e-${{ runner.os }}-${{ hashFiles('e2e/pnpm-lock.yaml') }}
@@ -191,16 +191,16 @@ jobs:
   lint-e2e:
     runs-on: [self-hosted, Linux, X64]
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
-      - uses: actions/setup-node@v7
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           node-version: "26"
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v6
+        uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6
         with:
-          version: 11.11
+          version: 11.27
           run_install: false
 
       - name: Install e2e dependencies
