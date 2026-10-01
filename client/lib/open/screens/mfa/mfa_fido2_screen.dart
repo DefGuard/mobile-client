@@ -2,11 +2,9 @@ import 'package:fido2_plugin/fido2_plugin.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:mobile/data/mfa/fido2_pin_memory.dart';
 import 'package:mobile/data/mfa/fido2_step.dart';
 import 'package:mobile/data/mfa/mfa_flow.dart';
 import 'package:mobile/data/proxy/mfa.dart';
-import 'package:mobile/logging.dart';
 import 'package:mobile/open/screens/mfa/mfa_step_chrome.dart';
 import 'package:mobile/open/widgets/dg_app_bar.dart';
 import 'package:mobile/open/widgets/dg_button.dart';
@@ -28,40 +26,18 @@ class MfaFido2Screen extends HookConsumerWidget {
   /// Host of the instance URL, which is what the core registers keys under.
   final String rpId;
 
-  final Fido2PinMemory? pinMemory;
-
-  const MfaFido2Screen({
-    super.key,
-    required this.host,
-    required this.rpId,
-    this.pinMemory,
-  });
+  const MfaFido2Screen({super.key, required this.host, required this.rpId});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final toaster = ref.read(toastManagerProvider.notifier);
-    final memory = useMemoized(() => pinMemory ?? PrefsFido2PinMemory(), [
-      pinMemory,
-    ]);
-    final runner = useMemoized(() => Fido2StepRunner(pinMemory: memory), [
-      memory,
-    ]);
     final pinController = useTextEditingController();
     final nfcStatus = useState<Fido2NfcStatus?>(null);
-    final needsPin = useState(false);
     final waiting = useState(false);
-    final hint = useState<String?>(null);
     final pinError = useState<String?>(null);
 
     useEffect(() {
       _refreshNfc(context, nfcStatus);
-      memory.requiresPin(host.controller.credentialIds).then(
-        (required) {
-          if (context.mounted && required) needsPin.value = true;
-        },
-        onError: (Object e) =>
-            talker.error("Failed to read which FIDO2 keys need a PIN", e),
-      );
       return () => _plugin.cancel().ignore();
     }, const []);
 
@@ -80,16 +56,11 @@ class MfaFido2Screen extends HookConsumerWidget {
         return;
       }
 
-      final pin = needsPin.value ? pinController.text : null;
-      if (pin != null && pin.isEmpty) {
-        pinError.value = "Enter your security key PIN";
-        return;
-      }
+      final pin = pinController.text.isEmpty ? null : pinController.text;
       pinError.value = null;
-      hint.value = null;
       waiting.value = true;
 
-      final attempt = await runner.attempt(
+      final attempt = await const Fido2StepRunner().attempt(
         rpId: rpId,
         challenge: challenge,
         credentialIds: controller.credentialIds,
@@ -127,9 +98,13 @@ class MfaFido2Screen extends HookConsumerWidget {
             );
           }
         case Fido2NeedsPin():
-          needsPin.value = true;
-          hint.value =
-              "This key needs its PIN. Enter it and tap the key again.";
+          pinError.value =
+              "This security key requires a PIN. Enter it and tap the key again.";
+        case Fido2PinNotSet():
+          pinError.value =
+              "This security key has no PIN. Leave this field empty.";
+        case Fido2PinMalformed():
+          pinError.value = "Incorrect PIN. A PIN has 4 to 63 characters.";
         case Fido2WrongKey():
           toaster.showError(
             message: "This security key is not registered for your account.",
@@ -138,9 +113,9 @@ class MfaFido2Screen extends HookConsumerWidget {
         case Fido2PinInvalid(:final retries):
           pinController.clear();
           pinError.value = switch (retries) {
-            null => "Wrong PIN",
-            1 => "Wrong PIN, 1 attempt left",
-            _ => "Wrong PIN, $retries attempts left",
+            null => "Incorrect PIN. Try again.",
+            1 => "Incorrect PIN. 1 attempt left before the key locks.",
+            _ => "Incorrect PIN. $retries attempts left.",
           };
         case Fido2Failed(:final error):
           if (error.code == Fido2ErrorCode.nfcDisabled) {
@@ -156,7 +131,7 @@ class MfaFido2Screen extends HookConsumerWidget {
           }
       }
       if (context.mounted) waiting.value = false;
-    }, [host, rpId, runner]);
+    }, [host, rpId]);
 
     final nfcOff = nfcStatus.value == Fido2NfcStatus.disabled;
     final nfcMissing = nfcStatus.value == Fido2NfcStatus.unsupported;
@@ -213,28 +188,16 @@ class MfaFido2Screen extends HookConsumerWidget {
                             ),
                             textAlign: TextAlign.center,
                           ),
-                          if (hint.value case final hint?) ...[
-                            const SizedBox(height: 8),
-                            Text(
-                              hint,
-                              style: DgText.bodySm400.copyWith(
-                                color: DgColor.fgWhite100,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                          ],
-                          if (needsPin.value) ...[
-                            const SizedBox(height: DgSpacing.xl),
-                            DgTextFormField(
-                              identifier: "mfa_fido2_pin",
-                              label: "Security key PIN",
-                              controller: pinController,
-                              obscureText: true,
-                              disabled: waiting.value,
-                              errorText: pinError.value,
-                              onFieldSubmitted: (_) => handleVerify(),
-                            ),
-                          ],
+                          const SizedBox(height: DgSpacing.xl),
+                          DgTextFormField(
+                            identifier: "mfa_fido2_pin",
+                            label: "Security key PIN (if set)",
+                            controller: pinController,
+                            obscureText: true,
+                            disabled: waiting.value,
+                            errorText: pinError.value,
+                            onFieldSubmitted: (_) => handleVerify(),
+                          ),
                         ],
                       ),
                     ),
