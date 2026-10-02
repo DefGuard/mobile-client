@@ -80,7 +80,7 @@ dependencies:
   shared_preferences: ^2.5.3
   # held on 10.x: 11 drops the EncryptedSharedPreferences backend that 1.7.x
   # wrote Android secrets to, only 10 migrates them
-  flutter_secure_storage: ^10.3.4
+  flutter_secure_storage: ^11.0.0
   device_info_plus: ^13.2.0
   protobuf: ^6.0.0
   rive: ^0.14.11
