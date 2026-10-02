@@ -1,5 +1,4 @@
 import 'package:flutter/widget_previews.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:mobile/data/db/enums.dart';
 import 'package:mobile/open/widgets/dg_app_bar.dart';
@@ -65,7 +64,7 @@ class DgOpenIdMfaLayout extends StatelessWidget {
                   style: DgText.bodySm400.copyWith(color: DgColor.fgWhite60),
                 ),
                 Expanded(
-                  child: SvgPicture.asset("assets/next/img/openid_mfa.svg"),
+                  child: Image.asset("assets/next/img/openid_mfa.png"),
                 ),
                 DgExternalProviderButton(
                   text: 'Continue with $providerName',
