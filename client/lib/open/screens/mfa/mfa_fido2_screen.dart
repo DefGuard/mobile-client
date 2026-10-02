@@ -13,6 +13,7 @@ import 'package:mobile/open/widgets/dg_icon_button.dart';
 import 'package:mobile/open/widgets/dg_mfa_step_label.dart';
 import 'package:mobile/open/widgets/dg_text_form_field.dart';
 import 'package:mobile/open/widgets/icons/dg_icon.dart';
+import 'package:mobile/open/widgets/rive_asset_animation.dart';
 import 'package:mobile/open/widgets/toaster/toast_manager.dart';
 import 'package:mobile/theme/color.dart';
 import 'package:mobile/theme/spacing.dart';
@@ -162,13 +163,19 @@ class MfaFido2Screen extends HookConsumerWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          const SizedBox(height: 70),
-                          const DgIcon(
-                            'key',
-                            size: 72,
-                            color: DgColor.fgWhite100,
+                          const SizedBox(
+                            height: 16,
                           ),
-                          const SizedBox(height: 60),
+                          const Center(
+                            child: SizedBox(
+                              height: 80,
+                              width: 80,
+                              child: RiveAssetAnimation(
+                                "assets/next/rive/yk_factor.riv",
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 48),
                           DgMfaStepLabel(host.controller.stepLabel),
                           Text(
                             "Security key",
@@ -178,18 +185,21 @@ class MfaFido2Screen extends HookConsumerWidget {
                             textAlign: TextAlign.center,
                           ),
                           const SizedBox(height: 8),
-                          Text(
-                            _description(
-                              nfcOff: nfcOff,
-                              nfcMissing: nfcMissing,
-                              waiting: waiting.value,
+                          ConstrainedBox(
+                            constraints: BoxConstraints(maxWidth: 300),
+                            child: Text(
+                              _description(
+                                nfcOff: nfcOff,
+                                nfcMissing: nfcMissing,
+                                waiting: waiting.value,
+                              ),
+                              style: DgText.bodySm400.copyWith(
+                                color: DgColor.fgWhite80,
+                              ),
+                              textAlign: TextAlign.center,
                             ),
-                            style: DgText.bodySm400.copyWith(
-                              color: DgColor.fgWhite80,
-                            ),
-                            textAlign: TextAlign.center,
                           ),
-                          const SizedBox(height: DgSpacing.xl),
+                          const SizedBox(height: DgSpacing.xl3),
                           DgTextFormField(
                             identifier: "mfa_fido2_pin",
                             label: "Security key PIN (if set)",
@@ -197,6 +207,7 @@ class MfaFido2Screen extends HookConsumerWidget {
                             obscureText: true,
                             disabled: waiting.value,
                             errorText: pinError.value,
+                            size: .big,
                             onFieldSubmitted: (_) => handleVerify(),
                           ),
                         ],
@@ -257,9 +268,9 @@ String _description({
   // iPhones read NFC at the top edge, Android phones at the back.
   final where = defaultTargetPlatform == TargetPlatform.iOS
       ? "near the top of your iPhone"
-      : "against the back of the phone";
+      : "against the back of the mobile phone";
   if (waiting) return "Hold your security key $where.";
-  return "Tap Verify, then hold your security key $where.";
+  return "Tap “Verify” and hold your security key $where.";
 }
 
 /// Null when the user caused it and needs no telling.

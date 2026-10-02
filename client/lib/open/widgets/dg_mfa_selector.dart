@@ -76,7 +76,7 @@ class DgMfaSelector extends StatelessWidget {
       case MfaMethod.openid:
         return 'globe';
       case MfaMethod.fido2:
-        return 'key';
+        return 'hardware_key';
       case null:
         return 'key';
     }
@@ -87,7 +87,11 @@ class DgMfaSelector extends StatelessWidget {
     return active ? DgColor.fgWhite100 : DgColor.fgWhite80;
   }
 
-  String get getLabel => label ?? factor?.toUiString() ?? 'Unsupported method';
+  String get getLabel {
+    if (label != null) return label!;
+    if (factor == MfaMethod.fido2) return 'FIDO2 Security key';
+    return factor?.toUiString() ?? 'Unsupported method';
+  }
 
   String? get getIdentifier {
     final method = factor;
