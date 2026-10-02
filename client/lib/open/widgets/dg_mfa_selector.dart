@@ -1,5 +1,6 @@
 import 'package:flutter/widget_previews.dart';
 import 'package:material_ui/material_ui.dart';
+import 'package:mobile/data/db/database.dart';
 import 'package:mobile/data/db/enums.dart';
 import 'package:mobile/open/widgets/dg_preview_wrapper.dart';
 import 'package:mobile/open/widgets/dg_radio_indicator.dart';
@@ -48,6 +49,7 @@ class DgMfaSelector extends StatelessWidget {
 
   /// Names a factor with no [MfaMethod], and overrides the label otherwise.
   final String? label;
+  final DefguardInstance? instance;
 
   /// Marks the row as the saved default for its step.
   final bool isDefault;
@@ -61,6 +63,7 @@ class DgMfaSelector extends StatelessWidget {
     this.onTap,
     this.disabled = false,
     this.label,
+    this.instance,
     this.isDefault = false,
     this.trailing = const DgMfaSelectorTrailing.radio(),
   });
@@ -74,7 +77,7 @@ class DgMfaSelector extends StatelessWidget {
       case MfaMethod.biometric:
         return 'biometric';
       case MfaMethod.openid:
-        return 'globe';
+        return (instance?.openidProvider ?? OpenIdProvider.custom).icon;
       case MfaMethod.fido2:
         return 'hardware_key';
       case null:
@@ -90,7 +93,8 @@ class DgMfaSelector extends StatelessWidget {
   String get getLabel {
     if (label != null) return label!;
     if (factor == MfaMethod.fido2) return 'FIDO2 Security key';
-    return factor?.toUiString() ?? 'Unsupported method';
+    return factor?.toUiString(openidDisplayName: instance?.openidDisplayName) ??
+        'Unsupported method';
   }
 
   String? get getIdentifier {

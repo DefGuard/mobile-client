@@ -62,11 +62,26 @@ enum MfaMethod {
       case MfaMethod.email:
         return "Email";
       case MfaMethod.openid:
-        return openidDisplayName ?? "OpenID";
+        return (openidDisplayName?.isEmpty ?? true)
+            ? "OpenID"
+            : openidDisplayName!;
       case MfaMethod.fido2:
         return "Security key";
     }
   }
+}
+
+enum OpenIdProvider {
+  microsoft('openid_microsoft', 'openid_microsoft_color'),
+  google('openid_google', 'openid_google_color'),
+  okta('openid_okta', 'openid_okta_color'),
+  jumpcloud('openid_jumpcloud', 'openid_jumpcloud_color'),
+  custom('openid_custom', 'openid_custom_color');
+
+  final String icon;
+  final String colorIcon;
+
+  const OpenIdProvider(this.icon, this.colorIcon);
 }
 
 class MfaMethodConverter extends TypeConverter<MfaMethod, int> {

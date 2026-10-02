@@ -1,4 +1,5 @@
 import 'package:material_ui/material_ui.dart';
+import 'package:mobile/data/db/database.dart';
 import 'package:mobile/data/db/enums.dart';
 import 'package:mobile/data/mfa/mfa_plan.dart';
 import 'package:mobile/data/mfa/mfa_steps.dart';
@@ -21,6 +22,7 @@ class ConnectPane extends StatelessWidget {
 
   final List<MfaMethod?> savedPlan;
   final bool biometricAvailable;
+  final DefguardInstance instance;
   final bool allTraffic;
   final bool canChangeTraffic;
   final bool isLoading;
@@ -37,6 +39,7 @@ class ConnectPane extends StatelessWidget {
     required this.plan,
     required this.savedPlan,
     required this.biometricAvailable,
+    required this.instance,
     required this.allTraffic,
     required this.canChangeTraffic,
     required this.isLoading,
@@ -97,13 +100,18 @@ class ConnectPane extends StatelessWidget {
           ),
           const SizedBox(height: DgSpacing.md),
           if (steps.length > 1)
-            _StepSummary(steps: steps, plan: plan)
+            _StepSummary(
+              steps: steps,
+              plan: plan,
+              instance: instance,
+            )
           else
             _MethodPicker(
               step: steps.single,
               selected: plan.single,
               savedDefault: savedPlan.isEmpty ? null : savedPlan.first,
               biometricAvailable: biometricAvailable,
+              instance: instance,
               onSelected: onMethodSelected,
             ),
         ],
@@ -136,8 +144,13 @@ class ConnectPane extends StatelessWidget {
 class _StepSummary extends StatelessWidget {
   final List<MfaStep> steps;
   final List<MfaMethod?> plan;
+  final DefguardInstance instance;
 
-  const _StepSummary({required this.steps, required this.plan});
+  const _StepSummary({
+    required this.steps,
+    required this.plan,
+    required this.instance,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -158,6 +171,7 @@ class _StepSummary extends StatelessWidget {
             factor: plan[index],
             label: plan[index] == null ? _unusableLabel(step) : null,
             disabled: plan[index] == null,
+            instance: instance,
             trailing: DgMfaSelectorTrailing.step(index + 1),
           ),
       ],
@@ -167,7 +181,9 @@ class _StepSummary extends StatelessWidget {
   String _unusableLabel(MfaStep step) {
     final entries = pickableMfaMethods(step);
     if (entries.isEmpty) return "No method available";
-    return entries.first.method?.toUiString() ??
+    return entries.first.method?.toUiString(
+          openidDisplayName: instance.openidDisplayName,
+        ) ??
         entries.first.apiMethod.unsupportedLabel;
   }
 }
@@ -177,6 +193,7 @@ class _MethodPicker extends StatelessWidget {
   final MfaMethod? selected;
   final MfaMethod? savedDefault;
   final bool biometricAvailable;
+  final DefguardInstance instance;
   final ValueChanged<MfaMethod> onSelected;
 
   const _MethodPicker({
@@ -184,6 +201,7 @@ class _MethodPicker extends StatelessWidget {
     required this.selected,
     required this.savedDefault,
     required this.biometricAvailable,
+    required this.instance,
     required this.onSelected,
   });
 
@@ -197,6 +215,7 @@ class _MethodPicker extends StatelessWidget {
           mfaMethodRow(
             entry: entry,
             biometricAvailable: biometricAvailable,
+            instance: instance,
             selected: selected,
             savedDefault: savedDefault,
             onSelected: onSelected,
