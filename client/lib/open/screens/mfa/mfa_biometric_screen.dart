@@ -116,7 +116,7 @@ class MfaBiometricScreen extends HookConsumerWidget {
                         mainAxisAlignment: MainAxisAlignment.start,
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          const SizedBox(height: 70),
+                          const SizedBox(height: 16),
                           const Center(
                             child: SizedBox(
                               height: 100,
@@ -126,7 +126,7 @@ class MfaBiometricScreen extends HookConsumerWidget {
                               ),
                             ),
                           ),
-                          const SizedBox(height: 60),
+                          const SizedBox(height: 48),
                           DgMfaStepLabel(host.controller.stepLabel),
                           Text(
                             "Biometric verification",
@@ -136,12 +136,15 @@ class MfaBiometricScreen extends HookConsumerWidget {
                             textAlign: TextAlign.center,
                           ),
                           const SizedBox(height: 8),
-                          Text(
-                            "Confirm your identity using Face ID to continue.",
-                            style: DgText.bodySm400.copyWith(
-                              color: DgColor.fgWhite80,
+                          ConstrainedBox(
+                            constraints: BoxConstraints(maxWidth: 300),
+                            child: Text(
+                              "Confirm your identity using Face ID to continue.",
+                              style: DgText.bodySm400.copyWith(
+                                color: DgColor.fgWhite80,
+                              ),
+                              textAlign: TextAlign.center,
                             ),
-                            textAlign: TextAlign.center,
                           ),
                         ],
                       ),

@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:mobile/data/db/enums.dart';
 import 'package:mobile/data/proxy/mfa.dart';
 import 'package:mobile/enterprise/postures.dart';
@@ -65,6 +67,7 @@ class MfaFlowController {
   int _stepIndex = 0;
   String? _token;
   String? _challenge;
+  List<String> _credentialIds = const [];
   String? _stepAttemptId;
   String? _presharedKey;
   bool _cancelled = false;
@@ -87,6 +90,9 @@ class MfaFlowController {
   String? get token => _token;
 
   String? get challenge => _challenge;
+
+  /// Security keys the server will accept for the current FIDO2 step.
+  List<String> get credentialIds => _credentialIds;
 
   bool get isCancelled => _cancelled;
 
@@ -114,6 +120,7 @@ class MfaFlowController {
       );
       _stepAttemptId = step.stepAttemptId;
       _challenge = step.challenge;
+      _credentialIds = step.credentialIds;
       _stepOpen = true;
       return;
     }
@@ -129,6 +136,7 @@ class MfaFlowController {
     );
     _token = session.token;
     _challenge = session.challenge;
+    _credentialIds = session.credentialIds;
     _stepAttemptId = null;
     _stepOpen = true;
   }
@@ -136,7 +144,33 @@ class MfaFlowController {
   /// Submits a proof for the current step, or polls for an out-of-band one when
   /// [code] is null. The attempt id is reused across retries, so a rejected code
   /// does not need the step reopening.
-  Future<MfaStepProgress> submit({String? code}) async {
+  Future<MfaStepProgress> submit({String? code}) => _finish(
+    (token) => FinishMfaRequest(
+      token: token,
+      code: code,
+      stepAttemptId: _stepAttemptId,
+    ),
+  );
+
+  /// Submits a security key assertion. The server reads the signature from
+  /// `auth_pub_key`, as the desktop client sends it.
+  Future<MfaStepProgress> submitFido2({
+    required List<int> signature,
+    required List<int> authData,
+    required List<int> credentialId,
+  }) => _finish(
+    (token) => FinishMfaRequest(
+      token: token,
+      authPubKey: base64Url.encode(signature).replaceAll('=', ''),
+      authData: authData,
+      credentialId: credentialId,
+      stepAttemptId: _stepAttemptId,
+    ),
+  );
+
+  Future<MfaStepProgress> _finish(
+    FinishMfaRequest Function(String token) buildRequest,
+  ) async {
     final token = _token;
     if (token == null || !_stepOpen) {
       // The previous step's screen stays on top while the next one is being
@@ -144,13 +178,7 @@ class MfaFlowController {
       throw StateError("MFA proof submitted while no step was open");
     }
 
-    final response = await transport.finish(
-      FinishMfaRequest(
-        token: token,
-        code: code,
-        stepAttemptId: _stepAttemptId,
-      ),
-    );
+    final response = await transport.finish(buildRequest(token));
 
     switch (response.outcome) {
       case MfaAdvanced(:final nextStep):
@@ -162,6 +190,7 @@ class MfaFlowController {
         }
         _stepIndex = nextStep;
         _challenge = null;
+        _credentialIds = const [];
         _stepAttemptId = null;
         _stepOpen = false;
         return const MfaStepAdvanced();

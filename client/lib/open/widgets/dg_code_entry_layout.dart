@@ -83,7 +83,7 @@ class DgCodeEntryLayout extends HookWidget {
                     top: false,
                     child: Padding(
                       padding: const EdgeInsets.only(
-                        top: 12,
+                        top: 4,
                         left: 20,
                         right: 20,
                         bottom: 20,

@@ -77,6 +77,7 @@ void main() {
         networkId: 11,
       ),
       proxyUrl: 'https://proxy.example/',
+      instanceUrl: 'https://core.example/',
       buildStepScreen: (host) => _StubStep(host),
     );
   }

@@ -29,6 +29,16 @@ void main() {
       });
       expect(response.token, 'session-token');
       expect(response.rejections, isEmpty);
+      expect(response.credentialIds, isEmpty);
+    });
+
+    test('reads the security keys offered for a FIDO2 first step', () {
+      final response = StartMfaResponse.fromJson({
+        'token': 'session-token',
+        'challenge': 'challenge',
+        'credential_ids': ['a2V5LWE'],
+      });
+      expect(response.credentialIds, ['a2V5LWE']);
     });
 
     test('reads rejections and numbers the steps for people', () {
@@ -85,6 +95,33 @@ void main() {
       );
       expect(request.toJson()['step_attempt_id'], 'attempt-1');
     });
+
+    test('omits the FIDO2 fields for a code proof', () {
+      final json = const FinishMfaRequest(
+        token: 'session-token',
+        code: '123456',
+      ).toJson();
+      expect(json.containsKey('auth_data'), isFalse);
+      expect(json.containsKey('credential_id'), isFalse);
+    });
+
+    test('sends FIDO2 bytes as number arrays, as prost serde reads them', () {
+      const request = FinishMfaRequest(
+        token: 'session-token',
+        authPubKey: 'c2ln',
+        authData: [1, 2, 255],
+        credentialId: [9, 8],
+        stepAttemptId: 'attempt-1',
+      );
+      expect(request.toJson(), {
+        'token': 'session-token',
+        'code': null,
+        'auth_pub_key': 'c2ln',
+        'step_attempt_id': 'attempt-1',
+        'auth_data': [1, 2, 255],
+        'credential_id': [9, 8],
+      });
+    });
   });
 
   group('StepStartMfa', () {
@@ -95,6 +132,16 @@ void main() {
       });
       expect(response.stepAttemptId, 'attempt-1');
       expect(response.challenge, 'challenge');
+      expect(response.credentialIds, isEmpty);
+    });
+
+    test('reads the security keys offered for a FIDO2 step', () {
+      final response = StepStartMfaResponse.fromJson({
+        'step_attempt_id': 'attempt-1',
+        'challenge': 'challenge',
+        'credential_ids': ['a2V5LWE', 'a2V5LWI'],
+      });
+      expect(response.credentialIds, ['a2V5LWE', 'a2V5LWI']);
     });
 
     test('sends the token and the step method', () {

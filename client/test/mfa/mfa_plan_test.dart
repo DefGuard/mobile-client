@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mobile/data/db/database.dart';
 import 'package:mobile/data/db/enums.dart';
@@ -31,8 +32,8 @@ MfaStep _step(List<MfaStepMethod> methods) => MfaStep(methods);
 MfaStepMethod _entry(MfaMethod method, {bool configured = true}) =>
     MfaStepMethod.supported(method, configured: configured);
 
-const _fido2 = MfaStepMethod(
-  apiMethod: ApiMfaMethod.fido2,
+const _unsupported = MfaStepMethod(
+  apiMethod: ApiMfaMethod.mobileApprove,
   configured: true,
 );
 
@@ -150,7 +151,7 @@ void main() {
 
     test('leaves a hole for a step mobile cannot pass', () {
       final steps = [
-        _step([_fido2]),
+        _step([_unsupported]),
         _step([_entry(MfaMethod.email)]),
       ];
       expect(sanitizeMfaStepPlan(const [], steps), [null, MfaMethod.email]);
@@ -194,7 +195,7 @@ void main() {
         MfaMethodAvailability.biometryUnavailable,
       );
       expect(
-        mfaMethodAvailability(_fido2, biometricAvailable: true),
+        mfaMethodAvailability(_unsupported, biometricAvailable: true),
         MfaMethodAvailability.unsupported,
       );
     });
@@ -216,7 +217,7 @@ void main() {
         _entry(MfaMethod.totp),
         _entry(MfaMethod.email, configured: false),
         _entry(MfaMethod.biometric),
-        _fido2,
+        _unsupported,
       ]);
       expect(
         usableMfaMethods(step, biometricAvailable: false).map((e) => e.method),
@@ -231,7 +232,7 @@ void main() {
 
   group('pickableMfaMethods', () {
     test('hides factors this client cannot perform', () {
-      final step = _step([_entry(MfaMethod.totp), _fido2]);
+      final step = _step([_entry(MfaMethod.totp), _unsupported]);
       expect(pickableMfaMethods(step).map((e) => e.method), [MfaMethod.totp]);
     });
 
@@ -241,8 +242,8 @@ void main() {
     });
 
     test('falls back to the raw list when nothing is supported', () {
-      final step = _step([_fido2]);
-      expect(pickableMfaMethods(step), [_fido2]);
+      final step = _step([_unsupported]);
+      expect(pickableMfaMethods(step), [_unsupported]);
     });
   });
 
@@ -306,7 +307,7 @@ void main() {
         resolveMfaStepPlan(
           _location(
             steps: [
-              _step([_fido2]),
+              _step([_unsupported]),
             ],
           ),
           biometricAvailable: true,
@@ -400,7 +401,7 @@ void main() {
     test('reports desktop-only when the step needs another client', () {
       final location = _location(
         steps: [
-          _step([_fido2]),
+          _step([_unsupported]),
         ],
       );
       expect(
@@ -413,7 +414,7 @@ void main() {
       final location = _location(
         steps: [
           _step([
-            _fido2,
+            _unsupported,
             _entry(MfaMethod.totp, configured: false),
             _entry(MfaMethod.biometric),
           ]),
@@ -427,6 +428,67 @@ void main() {
 
     test('names the step count for the badge', () {
       expect(mfaStepsToText(3), '3-step verification');
+    });
+  });
+
+  group('FIDO2 availability', () {
+    const fido2 = MfaStepMethod(
+      apiMethod: ApiMfaMethod.fido2,
+      configured: true,
+    );
+
+    tearDown(() => debugDefaultTargetPlatformOverride = null);
+
+    test('is usable on Android', () {
+      debugDefaultTargetPlatformOverride = TargetPlatform.android;
+      expect(
+        mfaMethodAvailability(fido2, biometricAvailable: false),
+        MfaMethodAvailability.usable,
+      );
+      expect(
+        resolveMfaStepPlan(
+          _location(
+            steps: [
+              _step([fido2]),
+            ],
+          ),
+          biometricAvailable: false,
+        ),
+        [MfaMethod.fido2],
+      );
+    });
+
+    test('is usable on iOS', () {
+      debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+      expect(
+        mfaMethodAvailability(fido2, biometricAvailable: false),
+        MfaMethodAvailability.usable,
+      );
+      expect(
+        resolveMfaStepPlan(
+          _location(
+            steps: [
+              _step([fido2]),
+            ],
+          ),
+          biometricAvailable: false,
+        ),
+        [MfaMethod.fido2],
+      );
+    });
+
+    test('is not usable before a key is registered', () {
+      debugDefaultTargetPlatformOverride = TargetPlatform.android;
+      expect(
+        mfaMethodAvailability(
+          const MfaStepMethod(
+            apiMethod: ApiMfaMethod.fido2,
+            configured: false,
+          ),
+          biometricAvailable: true,
+        ),
+        MfaMethodAvailability.notConfigured,
+      );
     });
   });
 }

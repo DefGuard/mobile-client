@@ -35,6 +35,8 @@ dependencies:
     path: ../wireguard_plugin
   qr_plugin:
     path: ../qr_plugin
+  fido2_plugin:
+    path: ../fido2_plugin
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
@@ -74,6 +76,7 @@ dependencies:
   sqlite3_flutter_libs: ^0.6.0+eol
   x25519: ^0.1.1
   ed25519_edwards: ^0.3.1
+  crypto: ^3.0.7
   tuple: ^2.0.2
   local_auth: ^3.0.2
   pub_semver: ^2.2.0
