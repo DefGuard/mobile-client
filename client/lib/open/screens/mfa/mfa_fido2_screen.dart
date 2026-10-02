@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:fido2_plugin/fido2_plugin.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
@@ -156,26 +158,21 @@ class MfaFido2Screen extends HookConsumerWidget {
           body: SafeArea(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
-              child: Column(
+              child: CustomMultiChildLayout(
+                delegate: _Fido2LayoutDelegate(),
                 children: [
-                  Expanded(
+                  LayoutId(
+                    id: _Fido2Slot.animation,
+                    child: const RiveAssetAnimation(
+                      "assets/next/rive/yk_factor.riv",
+                    ),
+                  ),
+                  LayoutId(
+                    id: _Fido2Slot.content,
                     child: SingleChildScrollView(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          const SizedBox(
-                            height: 16,
-                          ),
-                          const Center(
-                            child: SizedBox(
-                              height: 80,
-                              width: 80,
-                              child: RiveAssetAnimation(
-                                "assets/next/rive/yk_factor.riv",
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 48),
                           DgMfaStepLabel(host.controller.stepLabel),
                           Text(
                             "Security key",
@@ -214,27 +211,30 @@ class MfaFido2Screen extends HookConsumerWidget {
                       ),
                     ),
                   ),
-                  const SizedBox(height: DgSpacing.xl),
-                  if (nfcOff)
-                    DgButton(
-                      identifier: "mfa_fido2_enable_nfc",
-                      text: "Turn on NFC",
-                      style: DgButtonStyle.primary,
-                      size: DgButtonSize.big,
-                      width: double.infinity,
-                      onTap: () => _plugin.openNfcSettings().ignore(),
-                    )
-                  else
-                    DgButton(
-                      identifier: "mfa_fido2_verify",
-                      text: waiting.value ? "Waiting for key…" : "Verify now",
-                      style: DgButtonStyle.primary,
-                      size: DgButtonSize.big,
-                      width: double.infinity,
-                      loading: waiting.value,
-                      disabled: nfcMissing,
-                      onTap: handleVerify,
-                    ),
+                  LayoutId(
+                    id: _Fido2Slot.action,
+                    child: nfcOff
+                        ? DgButton(
+                            identifier: "mfa_fido2_enable_nfc",
+                            text: "Turn on NFC",
+                            style: DgButtonStyle.primary,
+                            size: DgButtonSize.big,
+                            width: double.infinity,
+                            onTap: () => _plugin.openNfcSettings().ignore(),
+                          )
+                        : DgButton(
+                            identifier: "mfa_fido2_verify",
+                            text: waiting.value
+                                ? "Waiting for key…"
+                                : "Verify now",
+                            style: DgButtonStyle.primary,
+                            size: DgButtonSize.big,
+                            width: double.infinity,
+                            loading: waiting.value,
+                            disabled: nfcMissing,
+                            onTap: handleVerify,
+                          ),
+                  ),
                 ],
               ),
             ),
@@ -243,6 +243,75 @@ class MfaFido2Screen extends HookConsumerWidget {
       ),
     );
   }
+}
+
+enum _Fido2Slot { animation, content, action }
+
+/// Gives up space in order: free space and the button gap, the gap under
+/// the animation, the gap under the app bar, then the animation itself.
+class _Fido2LayoutDelegate extends MultiChildLayoutDelegate {
+  static const _topMin = DgSpacing.xs;
+  static const _topMax = DgSpacing.lg;
+  static const _animation = 80.0;
+  static const _titleGapMin = DgSpacing.xl2;
+  static const _titleGapMax = DgSpacing.xl5;
+  static const _actionGapMin = DgSpacing.lg;
+  static const _actionGapMax = DgSpacing.xl;
+
+  @override
+  void performLayout(Size size) {
+    final action = layoutChild(
+      _Fido2Slot.action,
+      BoxConstraints.tightFor(width: size.width),
+    );
+    final content = layoutChild(
+      _Fido2Slot.content,
+      BoxConstraints(
+        minWidth: size.width,
+        maxWidth: size.width,
+        maxHeight: max(
+          0,
+          size.height - _topMin - _actionGapMin - action.height,
+        ),
+      ),
+    );
+
+    var rest = max(
+      0.0,
+      size.height - _topMin - content.height - _actionGapMin - action.height,
+    );
+    double take(double amount) {
+      final taken = min(rest, amount);
+      rest -= taken;
+      return taken;
+    }
+
+    final animationBlock = take(_animation + _titleGapMin);
+    final top = _topMin + take(_topMax - _topMin);
+    final titleGapExtra = take(_titleGapMax - _titleGapMin);
+    take(_actionGapMax - _actionGapMin);
+
+    final animationSize =
+        animationBlock * _animation / (_animation + _titleGapMin);
+    final titleGap = animationBlock - animationSize + titleGapExtra;
+
+    layoutChild(
+      _Fido2Slot.animation,
+      BoxConstraints.tight(Size.square(animationSize)),
+    );
+    positionChild(
+      _Fido2Slot.animation,
+      Offset((size.width - animationSize) / 2, top),
+    );
+    positionChild(
+      _Fido2Slot.content,
+      Offset(0, top + animationSize + titleGap),
+    );
+    positionChild(_Fido2Slot.action, Offset(0, size.height - action.height));
+  }
+
+  @override
+  bool shouldRelayout(_Fido2LayoutDelegate oldDelegate) => false;
 }
 
 void _refreshNfc(BuildContext context, ValueNotifier<Fido2NfcStatus?> status) {
