@@ -47,6 +47,7 @@ private final class Ceremony {
 // State is only touched on the main thread: from `handle` and from main-actor tasks.
 public class Fido2Plugin: NSObject, FlutterPlugin {
     private var pending: Ceremony?
+    private var lastRun: Task<Void, Never>?
 
     public static func register(with registrar: FlutterPluginRegistrar) {
         let channel = FlutterMethodChannel(name: "net.defguard.fido2_plugin", binaryMessenger: registrar.messenger())
@@ -90,8 +91,9 @@ public class Fido2Plugin: NSObject, FlutterPlugin {
             pin: args["pin"] as? String
         )
 
-        // The previous ceremony must release the single NFC session before the next one asks for it.
-        let previous = pending?.task
+        // The previous run must release the single NFC session before the next one asks for it,
+        // even when its ceremony already finished or was cancelled.
+        let previous = lastRun
         cancelPending()
 
         let ceremony = Ceremony(result: result)
@@ -100,8 +102,9 @@ public class Fido2Plugin: NSObject, FlutterPlugin {
             await previous?.value
             await self?.run(ceremony, request)
         }
+        lastRun = ceremony.task
         ceremony.timeout = Task { @MainActor in
-            try? await Task.sleep(nanoseconds: UInt64(max(timeoutMs, 0)) * 1_000_000)
+            try? await Task.sleep(for: .milliseconds(timeoutMs))
             if Task.isCancelled { return }
             ceremony.timedOut = true
             ceremony.task?.cancel()
@@ -223,7 +226,7 @@ public class Fido2Plugin: NSObject, FlutterPlugin {
     }
 }
 
-// Codes and details match the Android implementation, which the Dart side maps one-to-one.
+// Codes match the Android implementation, which the Dart side maps one-to-one.
 private func reportError(_ result: FlutterResult, _ error: Error, timedOut: Bool) {
     let (code, details) = classify(error, timedOut: timedOut)
     result(FlutterError(code: code, message: String(describing: error), details: details))
@@ -234,11 +237,11 @@ private func classify(_ error: Error, timedOut: Bool) -> (String, [String: Any]?
     case let error as PinInvalid:
         return ("pinInvalid", ["pinRetries": error.retries.map { $0 as Any } ?? NSNull()])
     case let error as CtapFailure:
-        return classify(ctap: error.error)
+        return (classify(ctap: error.error), nil)
     case let error as CTAP2.SessionError:
         switch error {
         case .ctapError(let ctap, _):
-            return classify(ctap: ctap)
+            return (classify(ctap: ctap), nil)
         case .featureNotSupported:
             // The FIDO applet answered SELECT with 6A82 or 6D00.
             return ("unsupportedKey", nil)
@@ -254,18 +257,16 @@ private func classify(_ error: Error, timedOut: Bool) -> (String, [String: Any]?
     }
 }
 
-private func classify(ctap error: CTAP2.Error) -> (String, [String: Any]?) {
-    let code =
-        switch error {
-        case .noCredentials: "noCredentials"
-        case .puatRequired: "pinRequired"
-        case .pinInvalid: "pinInvalid"
-        case .pinBlocked, .uvBlocked: "pinBlocked"
-        case .pinAuthBlocked: "pinAuthBlocked"
-        case .pinNotSet: "pinNotSet"
-        default: "unknown"
-        }
-    return (code, ctapByte(error).map { ["ctapError": Int($0)] })
+private func classify(ctap error: CTAP2.Error) -> String {
+    switch error {
+    case .noCredentials: "noCredentials"
+    case .puatRequired: "pinRequired"
+    case .pinInvalid: "pinInvalid"
+    case .pinBlocked, .uvBlocked: "pinBlocked"
+    case .pinAuthBlocked: "pinAuthBlocked"
+    case .pinNotSet: "pinNotSet"
+    default: "unknown"
+    }
 }
 
 private func classify(connection error: SmartCardConnectionError, timedOut: Bool) -> String {
@@ -286,22 +287,6 @@ private func classify(connection error: SmartCardConnectionError, timedOut: Bool
             ? "timeout" : "unknown"
     case .busy, .malformedData, .pollingFailed:
         return "unknown"
-    }
-}
-
-/// yubikit-swift keeps the status byte private for the cases it names.
-private func ctapByte(_ error: CTAP2.Error) -> UInt8? {
-    switch error {
-    case .noCredentials: 0x2E
-    case .pinInvalid: 0x31
-    case .pinBlocked: 0x32
-    case .pinAuthInvalid: 0x33
-    case .pinAuthBlocked: 0x34
-    case .pinNotSet: 0x35
-    case .puatRequired: 0x36
-    case .uvBlocked: 0x3C
-    case .extension(let byte), .vendor(let byte), .unknown(let byte): byte
-    default: nil
     }
 }
 

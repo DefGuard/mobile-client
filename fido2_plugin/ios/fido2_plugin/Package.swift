@@ -21,9 +21,6 @@ let package = Package(
             dependencies: [
                 .product(name: "FlutterFramework", package: "FlutterFramework"),
                 .product(name: "YubiKit", package: "yubikit-swift"),
-            ],
-            linkerSettings: [
-                .linkedFramework("CoreNFC")
             ]
         )
     ]
