@@ -48,6 +48,7 @@ class DgMfaSelector extends StatelessWidget {
 
   /// Names a factor with no [MfaMethod], and overrides the label otherwise.
   final String? label;
+  final String? openidDisplayName;
 
   /// Marks the row as the saved default for its step.
   final bool isDefault;
@@ -61,6 +62,7 @@ class DgMfaSelector extends StatelessWidget {
     this.onTap,
     this.disabled = false,
     this.label,
+    this.openidDisplayName,
     this.isDefault = false,
     this.trailing = const DgMfaSelectorTrailing.radio(),
   });
@@ -90,7 +92,8 @@ class DgMfaSelector extends StatelessWidget {
   String get getLabel {
     if (label != null) return label!;
     if (factor == MfaMethod.fido2) return 'FIDO2 Security key';
-    return factor?.toUiString() ?? 'Unsupported method';
+    return factor?.toUiString(openidDisplayName: openidDisplayName) ??
+        'Unsupported method';
   }
 
   String? get getIdentifier {

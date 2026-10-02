@@ -15,6 +15,7 @@ String availabilityNote(MfaMethodAvailability availability) =>
 Widget mfaMethodRow({
   required MfaStepMethod entry,
   required bool biometricAvailable,
+  required String? openidDisplayName,
   required MfaMethod? selected,
   required MfaMethod? savedDefault,
   required ValueChanged<MfaMethod> onSelected,
@@ -29,6 +30,7 @@ Widget mfaMethodRow({
     active: usable && entry.method == selected,
     factor: entry.method,
     label: entry.method == null ? entry.apiMethod.unsupportedLabel : null,
+    openidDisplayName: openidDisplayName,
     disabled: !usable,
     isDefault: usable && entry.method == savedDefault,
     onTap: usable ? () => onSelected(entry.method!) : null,

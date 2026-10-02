@@ -16,6 +16,7 @@ class MfaSettingsPane extends StatelessWidget {
   final List<MfaMethod?> savedPlan;
 
   final bool biometricAvailable;
+  final String? openidDisplayName;
   final bool isSaving;
   final void Function(int step, MfaMethod method) onSelected;
   final VoidCallback onBack;
@@ -27,6 +28,7 @@ class MfaSettingsPane extends StatelessWidget {
     required this.working,
     required this.savedPlan,
     required this.biometricAvailable,
+    required this.openidDisplayName,
     required this.isSaving,
     required this.onSelected,
     required this.onBack,
@@ -80,6 +82,7 @@ class MfaSettingsPane extends StatelessWidget {
                     ? savedPlan[index]
                     : null,
                 biometricAvailable: biometricAvailable,
+                openidDisplayName: openidDisplayName,
                 onSelected: (method) => onSelected(index, method),
               ),
           ],
@@ -103,6 +106,7 @@ class _StepSection extends StatelessWidget {
   final MfaMethod? selected;
   final MfaMethod? savedDefault;
   final bool biometricAvailable;
+  final String? openidDisplayName;
   final ValueChanged<MfaMethod> onSelected;
 
   const _StepSection({
@@ -111,6 +115,7 @@ class _StepSection extends StatelessWidget {
     required this.selected,
     required this.savedDefault,
     required this.biometricAvailable,
+    required this.openidDisplayName,
     required this.onSelected,
   });
 
@@ -128,6 +133,7 @@ class _StepSection extends StatelessWidget {
           mfaMethodRow(
             entry: entry,
             biometricAvailable: biometricAvailable,
+            openidDisplayName: openidDisplayName,
             selected: selected,
             savedDefault: savedDefault,
             onSelected: onSelected,

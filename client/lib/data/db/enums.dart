@@ -62,12 +62,16 @@ enum MfaMethod {
       case MfaMethod.email:
         return "Email";
       case MfaMethod.openid:
-        return openidDisplayName ?? "OpenID";
+        return (openidDisplayName?.isEmpty ?? true)
+            ? "OpenID"
+            : openidDisplayName!;
       case MfaMethod.fido2:
         return "Security key";
     }
   }
 }
+
+enum OpenIdProvider { microsoft, google, okta, jumpcloud, custom }
 
 class MfaMethodConverter extends TypeConverter<MfaMethod, int> {
   const MfaMethodConverter();

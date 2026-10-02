@@ -229,6 +229,17 @@ extension DefguardInstanceStorageKey on DefguardInstance {
   String get secureStorageKey => mfaStorageKey(uuid, deviceId);
 }
 
+extension DefguardInstanceOpenIdProvider on DefguardInstance {
+  OpenIdProvider get openidProvider {
+    final name = openidDisplayName?.toLowerCase() ?? '';
+    return OpenIdProvider.values.firstWhere(
+      (provider) =>
+          provider != OpenIdProvider.custom && name.contains(provider.name),
+      orElse: () => OpenIdProvider.custom,
+    );
+  }
+}
+
 /// Secrets of an instance are kept in the platform keychain, not in the
 /// database. They can be absent (see [reportMissingSecret]), callers have to
 /// handle a `null`.
