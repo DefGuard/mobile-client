@@ -39,11 +39,13 @@ void main() {
       expect(ApiMfaMethod.unknown.supported, isNull);
     });
 
-    test('supports FIDO2 on Android only', () {
+    test('supports FIDO2 on Android and iOS', () {
       addTearDown(() => debugDefaultTargetPlatformOverride = null);
       debugDefaultTargetPlatformOverride = TargetPlatform.android;
       expect(ApiMfaMethod.fido2.supported, MfaMethod.fido2);
       debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+      expect(ApiMfaMethod.fido2.supported, MfaMethod.fido2);
+      debugDefaultTargetPlatformOverride = TargetPlatform.macOS;
       expect(ApiMfaMethod.fido2.supported, isNull);
     });
 

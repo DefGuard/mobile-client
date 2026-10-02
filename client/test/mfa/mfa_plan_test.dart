@@ -458,27 +458,24 @@ void main() {
       );
     });
 
-    test(
-      'stays desktop-only on iOS until the plugin has an implementation',
-      () {
-        debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
-        expect(
-          mfaMethodAvailability(fido2, biometricAvailable: true),
-          MfaMethodAvailability.unsupported,
-        );
-        expect(
-          unpassableStepReason(
-            _location(
-              steps: [
-                _step([fido2]),
-              ],
-            ),
-            biometricAvailable: true,
+    test('is usable on iOS', () {
+      debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+      expect(
+        mfaMethodAvailability(fido2, biometricAvailable: false),
+        MfaMethodAvailability.usable,
+      );
+      expect(
+        resolveMfaStepPlan(
+          _location(
+            steps: [
+              _step([fido2]),
+            ],
           ),
-          MfaUnpassableReason.desktopOnly,
-        );
-      },
-    );
+          biometricAvailable: false,
+        ),
+        [MfaMethod.fido2],
+      );
+    });
 
     test('is not usable before a key is registered', () {
       debugDefaultTargetPlatformOverride = TargetPlatform.android;

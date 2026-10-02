@@ -1,4 +1,5 @@
 import 'package:fido2_plugin/fido2_plugin.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
@@ -253,8 +254,12 @@ String _description({
     return "This device has no NFC, so a security key cannot be used.";
   }
   if (nfcOff) return "Turn on NFC to use your security key.";
-  if (waiting) return "Hold your security key against the back of the phone.";
-  return "Tap Verify, then hold your security key against the back of the phone.";
+  // iPhones read NFC at the top edge, Android phones at the back.
+  final where = defaultTargetPlatform == TargetPlatform.iOS
+      ? "near the top of your iPhone"
+      : "against the back of the phone";
+  if (waiting) return "Hold your security key $where.";
+  return "Tap Verify, then hold your security key $where.";
 }
 
 /// Null when the user caused it and needs no telling.

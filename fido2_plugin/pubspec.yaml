@@ -1,5 +1,5 @@
 name: fido2_plugin
-description: "FIDO2 security key assertions over NFC: yubikit-android on Android, iOS pending."
+description: "FIDO2 security key assertions over NFC: yubikit-android on Android, yubikit-swift on iOS."
 version: 0.0.1
 publish_to: none
 

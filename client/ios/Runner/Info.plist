@@ -70,6 +70,12 @@
 		</array>
 		<key>NSCameraUsageDescription</key>
 		<string>Your camera is used to scan QR codes making it easy to add new VPN instances.</string>
+		<key>NFCReaderUsageDescription</key>
+		<string>NFC is used to verify your security key when connecting to a VPN location.</string>
+		<key>com.apple.developer.nfc.readersession.iso7816.select-identifiers</key>
+		<array>
+			<string>A0000006472F0001</string>
+		</array>
 		<key>ITSAppUsesNonExemptEncryption</key>
 		<false/>
 		<key>NSFaceIDUsageDescription</key>
