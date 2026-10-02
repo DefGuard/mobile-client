@@ -136,7 +136,7 @@ class ConnectDialog extends HookConsumerWidget {
       plan: plan,
       savedPlan: savedPlan.value,
       biometricAvailable: biometricAvailable,
-      openidDisplayName: instance.openidDisplayName,
+      instance: instance,
       allTraffic: allTraffic.value,
       canChangeTraffic: canChangeTraffic,
       isLoading: isLoading.value,
@@ -172,7 +172,7 @@ class ConnectDialog extends HookConsumerWidget {
           working: mfaWorking.value,
           savedPlan: savedPlan.value,
           biometricAvailable: biometricAvailable,
-          openidDisplayName: instance.openidDisplayName,
+          instance: instance,
           isSaving: isSaving.value,
           onSelected: (index, method) {
             final next = [...mfaWorking.value];

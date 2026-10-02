@@ -41,7 +41,7 @@ class DgExternalProviderButton extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 SvgPicture.asset(
-                  "assets/next/img/openid_${provider.name}.svg",
+                  "assets/next/icons/${provider.colorIcon}.svg",
                   width: 20,
                   height: 20,
                 ),

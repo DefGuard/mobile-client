@@ -1,4 +1,5 @@
 import 'package:material_ui/material_ui.dart';
+import 'package:mobile/data/db/database.dart';
 import 'package:mobile/data/db/enums.dart';
 import 'package:mobile/data/mfa/mfa_plan.dart';
 import 'package:mobile/data/mfa/mfa_steps.dart';
@@ -16,7 +17,7 @@ class MfaSettingsPane extends StatelessWidget {
   final List<MfaMethod?> savedPlan;
 
   final bool biometricAvailable;
-  final String? openidDisplayName;
+  final DefguardInstance instance;
   final bool isSaving;
   final void Function(int step, MfaMethod method) onSelected;
   final VoidCallback onBack;
@@ -28,7 +29,7 @@ class MfaSettingsPane extends StatelessWidget {
     required this.working,
     required this.savedPlan,
     required this.biometricAvailable,
-    required this.openidDisplayName,
+    required this.instance,
     required this.isSaving,
     required this.onSelected,
     required this.onBack,
@@ -82,7 +83,7 @@ class MfaSettingsPane extends StatelessWidget {
                     ? savedPlan[index]
                     : null,
                 biometricAvailable: biometricAvailable,
-                openidDisplayName: openidDisplayName,
+                instance: instance,
                 onSelected: (method) => onSelected(index, method),
               ),
           ],
@@ -106,7 +107,7 @@ class _StepSection extends StatelessWidget {
   final MfaMethod? selected;
   final MfaMethod? savedDefault;
   final bool biometricAvailable;
-  final String? openidDisplayName;
+  final DefguardInstance instance;
   final ValueChanged<MfaMethod> onSelected;
 
   const _StepSection({
@@ -115,7 +116,7 @@ class _StepSection extends StatelessWidget {
     required this.selected,
     required this.savedDefault,
     required this.biometricAvailable,
-    required this.openidDisplayName,
+    required this.instance,
     required this.onSelected,
   });
 
@@ -133,7 +134,7 @@ class _StepSection extends StatelessWidget {
           mfaMethodRow(
             entry: entry,
             biometricAvailable: biometricAvailable,
-            openidDisplayName: openidDisplayName,
+            instance: instance,
             selected: selected,
             savedDefault: savedDefault,
             onSelected: onSelected,
