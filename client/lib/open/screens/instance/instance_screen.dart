@@ -594,7 +594,6 @@ class _LocationList extends HookConsumerWidget {
                 ? connectedLocation.mfaMethod
                 : null,
             mfaLabel: _mfaStepsLabel(connectedLocation),
-            openidDisplayName: data.instance.openidDisplayName,
             onDisconnectTap: () => onDisconnect(connectedLocation),
           ),
           const SizedBox(height: DgSpacing.xl),
@@ -616,7 +615,6 @@ class _LocationList extends HookConsumerWidget {
                     ? location.mfaMethod
                     : null,
                 mfaLabel: _mfaStepsLabel(location),
-                openidDisplayName: data.instance.openidDisplayName,
                 onConnectTap: () => onConnect(context, location),
               ),
             ),
