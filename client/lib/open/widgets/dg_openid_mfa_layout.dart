@@ -7,6 +7,7 @@ import 'package:mobile/open/widgets/dg_icon_button.dart';
 import 'package:mobile/open/widgets/dg_mfa_step_label.dart';
 import 'package:mobile/open/widgets/dg_preview_wrapper.dart';
 import 'package:mobile/open/widgets/icons/dg_icon.dart';
+import 'package:mobile/open/widgets/rive_asset_animation.dart';
 import 'package:mobile/theme/color.dart';
 import 'package:mobile/theme/text.dart';
 
@@ -64,7 +65,7 @@ class DgOpenIdMfaLayout extends StatelessWidget {
                   style: DgText.bodySm400.copyWith(color: DgColor.fgWhite60),
                 ),
                 Expanded(
-                  child: Image.asset("assets/next/img/openid_mfa.png"),
+                  child: RiveAssetAnimation("assets/next/rive/openid_mfa.riv"),
                 ),
                 DgExternalProviderButton(
                   text: 'Continue with $providerName',
