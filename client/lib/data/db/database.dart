@@ -46,6 +46,8 @@ class DefguardInstances extends Table with AutoIncrementingPrimaryKey {
 
   // openid provider display name configured on the server side
   TextColumn get openidDisplayName => text().nullable()();
+
+  TextColumn get openidProviderKind => textEnum<OpenIdProvider>().nullable()();
 }
 
 @DataClassName('Location')
@@ -130,7 +132,7 @@ class AppDatabase extends _$AppDatabase {
   }
 
   @override
-  int get schemaVersion => 6;
+  int get schemaVersion => 7;
 
   @override
   MigrationStrategy get migration {
@@ -205,6 +207,12 @@ class AppDatabase extends _$AppDatabase {
           await customStatement(
             "UPDATE locations SET mfa_step_plan = '[' || mfa_method || ']' "
             'WHERE mfa_method IS NOT NULL',
+          );
+        },
+        from6To7: (m, schema) async {
+          await m.addColumn(
+            schema.defguardInstances,
+            schema.defguardInstances.openidProviderKind,
           );
         },
       ),
