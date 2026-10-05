@@ -71,12 +71,18 @@ enum MfaMethod {
   }
 }
 
+@j.JsonEnum()
 enum OpenIdProvider {
-  microsoft('openid_microsoft', 'openid_microsoft_color'),
+  @j.JsonValue(1)
+  custom('openid_custom', 'openid_custom_color'),
+  @j.JsonValue(2)
   google('openid_google', 'openid_google_color'),
+  @j.JsonValue(3)
+  microsoft('openid_microsoft', 'openid_microsoft_color'),
+  @j.JsonValue(4)
   okta('openid_okta', 'openid_okta_color'),
-  jumpcloud('openid_jumpcloud', 'openid_jumpcloud_color'),
-  custom('openid_custom', 'openid_custom_color');
+  @j.JsonValue(5)
+  jumpcloud('openid_jumpcloud', 'openid_jumpcloud_color');
 
   final String icon;
   final String colorIcon;

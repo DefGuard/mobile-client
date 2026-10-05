@@ -46,6 +46,9 @@ class DefguardInstances extends Table with AutoIncrementingPrimaryKey {
 
   // openid provider display name configured on the server side
   TextColumn get openidDisplayName => text().nullable()();
+
+  TextColumn get openidProviderKind =>
+      textEnum<OpenIdProvider>().nullable()();
 }
 
 @DataClassName('Location')
@@ -130,7 +133,7 @@ class AppDatabase extends _$AppDatabase {
   }
 
   @override
-  int get schemaVersion => 6;
+  int get schemaVersion => 7;
 
   @override
   MigrationStrategy get migration {
@@ -207,6 +210,12 @@ class AppDatabase extends _$AppDatabase {
             'WHERE mfa_method IS NOT NULL',
           );
         },
+        from6To7: (m, schema) async {
+          await m.addColumn(
+            schema.defguardInstances,
+            schema.defguardInstances.openidProviderKind,
+          );
+        },
       ),
     );
   }
@@ -231,6 +240,8 @@ extension DefguardInstanceStorageKey on DefguardInstance {
 
 extension DefguardInstanceOpenIdProvider on DefguardInstance {
   OpenIdProvider get openidProvider {
+    final kind = openidProviderKind;
+    if (kind != null) return kind;
     final name = openidDisplayName?.toLowerCase() ?? '';
     return OpenIdProvider.values.firstWhere(
       (provider) =>
