@@ -139,7 +139,7 @@ class TunnelService {
         instanceUrl: instance.url,
         secureStorageKey: instance.secureStorageKey,
         openidDisplayName: instance.openidDisplayName,
-        openidProvider: instance.openidProvider,
+        openidProvider: instance.openidProviderKind ?? OpenIdProvider.custom,
       );
 
       switch (await flow.run()) {

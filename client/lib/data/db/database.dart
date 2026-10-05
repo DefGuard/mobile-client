@@ -47,8 +47,7 @@ class DefguardInstances extends Table with AutoIncrementingPrimaryKey {
   // openid provider display name configured on the server side
   TextColumn get openidDisplayName => text().nullable()();
 
-  TextColumn get openidProviderKind =>
-      textEnum<OpenIdProvider>().nullable()();
+  TextColumn get openidProviderKind => textEnum<OpenIdProvider>().nullable()();
 }
 
 @DataClassName('Location')
@@ -236,19 +235,6 @@ extension DefguardInstanceLogName on DefguardInstance {
 
 extension DefguardInstanceStorageKey on DefguardInstance {
   String get secureStorageKey => mfaStorageKey(uuid, deviceId);
-}
-
-extension DefguardInstanceOpenIdProvider on DefguardInstance {
-  OpenIdProvider get openidProvider {
-    final kind = openidProviderKind;
-    if (kind != null) return kind;
-    final name = openidDisplayName?.toLowerCase() ?? '';
-    return OpenIdProvider.values.firstWhere(
-      (provider) =>
-          provider != OpenIdProvider.custom && name.contains(provider.name),
-      orElse: () => OpenIdProvider.custom,
-    );
-  }
 }
 
 /// Secrets of an instance are kept in the platform keychain, not in the
