@@ -23,11 +23,11 @@
         # platformVersions = [ "34" "28" ];
         # abiVersions = [ "armeabi-v7a" "arm64-v8a" ];
         toolsVersion = "26.1.1";
-        platformToolsVersion = "34.0.5";
+        platformToolsVersion = "37.0.1";
         buildToolsVersions = ["35.0.0"];
         includeEmulator = false;
         emulatorVersion = "34.1.9";
-        platformVersions = ["31" "32" "33" "34" "35" "36"];
+        platformVersions = ["31" "32" "33" "34" "35" "36" "37"];
         includeSources = false;
         includeSystemImages = false;
         systemImageTypes = ["google_apis_playstore"];
