@@ -414,6 +414,14 @@ InstanceInfo _$InstanceInfoFromJson(Map<String, dynamic> json) =>
             'openid_display_name',
             (v) => v as String?,
           ),
+          openidProviderKind: $checkedConvert(
+            'openid_provider_kind',
+            (v) => $enumDecodeNullable(
+              _$OpenIdProviderEnumMap,
+              v,
+              unknownValue: JsonKey.nullForUndefinedEnumValue,
+            ),
+          ),
         );
         return val;
       },
@@ -423,6 +431,7 @@ InstanceInfo _$InstanceInfoFromJson(Map<String, dynamic> json) =>
         'disableAllTraffic': 'disable_all_traffic',
         'clientTrafficPolicy': 'client_traffic_policy',
         'openidDisplayName': 'openid_display_name',
+        'openidProviderKind': 'openid_provider_kind',
       },
     );
 
@@ -436,26 +445,37 @@ const _$InstanceInfoFieldMap = <String, String>{
   'disableAllTraffic': 'disable_all_traffic',
   'clientTrafficPolicy': 'client_traffic_policy',
   'openidDisplayName': 'openid_display_name',
+  'openidProviderKind': 'openid_provider_kind',
 };
 
-Map<String, dynamic> _$InstanceInfoToJson(InstanceInfo instance) =>
-    <String, dynamic>{
-      'id': instance.id,
-      'name': instance.name,
-      'url': instance.url,
-      'proxy_url': instance.proxyUrl,
-      'username': instance.username,
-      'enterprise_enabled': instance.enterpriseEnabled,
-      'disable_all_traffic': instance.disableAllTraffic,
-      'client_traffic_policy':
-          _$ClientTrafficPolicyEnumMap[instance.clientTrafficPolicy],
-      'openid_display_name': instance.openidDisplayName,
-    };
+Map<String, dynamic> _$InstanceInfoToJson(
+  InstanceInfo instance,
+) => <String, dynamic>{
+  'id': instance.id,
+  'name': instance.name,
+  'url': instance.url,
+  'proxy_url': instance.proxyUrl,
+  'username': instance.username,
+  'enterprise_enabled': instance.enterpriseEnabled,
+  'disable_all_traffic': instance.disableAllTraffic,
+  'client_traffic_policy':
+      _$ClientTrafficPolicyEnumMap[instance.clientTrafficPolicy],
+  'openid_display_name': instance.openidDisplayName,
+  'openid_provider_kind': _$OpenIdProviderEnumMap[instance.openidProviderKind],
+};
 
 const _$ClientTrafficPolicyEnumMap = {
   ClientTrafficPolicy.none: 0,
   ClientTrafficPolicy.disableAllTraffic: 1,
   ClientTrafficPolicy.forceAllTraffic: 2,
+};
+
+const _$OpenIdProviderEnumMap = {
+  OpenIdProvider.custom: 1,
+  OpenIdProvider.google: 2,
+  OpenIdProvider.microsoft: 3,
+  OpenIdProvider.okta: 4,
+  OpenIdProvider.jumpcloud: 5,
 };
 
 AppInfoResponse _$AppInfoResponseFromJson(Map<String, dynamic> json) =>
