@@ -80,6 +80,9 @@ class NameDeviceScreen extends HookConsumerWidget {
           openidDisplayName: drift.Value(
             createResponse.instance.openidDisplayName,
           ),
+          openidProviderKind: drift.Value(
+            createResponse.instance.openidProviderKind,
+          ),
         ),
         mode: drift.InsertMode.insertOrFail,
       );

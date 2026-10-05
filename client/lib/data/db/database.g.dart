@@ -145,6 +145,18 @@ class $DefguardInstancesTable extends DefguardInstances
         requiredDuringInsert: false,
       );
   @override
+  late final GeneratedColumnWithTypeConverter<OpenIdProvider?, String>
+  openidProviderKind =
+      GeneratedColumn<String>(
+        'openid_provider_kind',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      ).withConverter<OpenIdProvider?>(
+        $DefguardInstancesTable.$converteropenidProviderKindn,
+      );
+  @override
   List<GeneratedColumn> get $columns => [
     id,
     name,
@@ -158,6 +170,7 @@ class $DefguardInstancesTable extends DefguardInstances
     pubKey,
     mfaKeysStored,
     openidDisplayName,
+    openidProviderKind,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -321,6 +334,13 @@ class $DefguardInstancesTable extends DefguardInstances
         DriftSqlType.string,
         data['${effectivePrefix}openid_display_name'],
       ),
+      openidProviderKind: $DefguardInstancesTable.$converteropenidProviderKindn
+          .fromSql(
+            attachedDatabase.typeMapping.read(
+              DriftSqlType.string,
+              data['${effectivePrefix}openid_provider_kind'],
+            ),
+          ),
     );
   }
 
@@ -331,6 +351,14 @@ class $DefguardInstancesTable extends DefguardInstances
 
   static TypeConverter<ClientTrafficPolicy, int> $converterclientTrafficPolicy =
       const ClientTrafficPolicyConverter();
+  static JsonTypeConverter2<OpenIdProvider, String, String>
+  $converteropenidProviderKind = const EnumNameConverter<OpenIdProvider>(
+    OpenIdProvider.values,
+  );
+  static JsonTypeConverter2<OpenIdProvider?, String?, String?>
+  $converteropenidProviderKindn = JsonTypeConverter2.asNullable(
+    $converteropenidProviderKind,
+  );
 }
 
 class DefguardInstance extends DataClass
@@ -347,6 +375,7 @@ class DefguardInstance extends DataClass
   final String pubKey;
   final bool mfaKeysStored;
   final String? openidDisplayName;
+  final OpenIdProvider? openidProviderKind;
   const DefguardInstance({
     required this.id,
     required this.name,
@@ -360,6 +389,7 @@ class DefguardInstance extends DataClass
     required this.pubKey,
     required this.mfaKeysStored,
     this.openidDisplayName,
+    this.openidProviderKind,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -384,6 +414,13 @@ class DefguardInstance extends DataClass
     if (!nullToAbsent || openidDisplayName != null) {
       map['openid_display_name'] = Variable<String>(openidDisplayName);
     }
+    if (!nullToAbsent || openidProviderKind != null) {
+      map['openid_provider_kind'] = Variable<String>(
+        $DefguardInstancesTable.$converteropenidProviderKindn.toSql(
+          openidProviderKind,
+        ),
+      );
+    }
     return map;
   }
 
@@ -403,6 +440,9 @@ class DefguardInstance extends DataClass
       openidDisplayName: openidDisplayName == null && nullToAbsent
           ? const Value.absent()
           : Value(openidDisplayName),
+      openidProviderKind: openidProviderKind == null && nullToAbsent
+          ? const Value.absent()
+          : Value(openidProviderKind),
     );
   }
 
@@ -428,6 +468,8 @@ class DefguardInstance extends DataClass
       openidDisplayName: serializer.fromJson<String?>(
         json['openidDisplayName'],
       ),
+      openidProviderKind: $DefguardInstancesTable.$converteropenidProviderKindn
+          .fromJson(serializer.fromJson<String?>(json['openidProviderKind'])),
     );
   }
   @override
@@ -448,6 +490,11 @@ class DefguardInstance extends DataClass
       'pubKey': serializer.toJson<String>(pubKey),
       'mfaKeysStored': serializer.toJson<bool>(mfaKeysStored),
       'openidDisplayName': serializer.toJson<String?>(openidDisplayName),
+      'openidProviderKind': serializer.toJson<String?>(
+        $DefguardInstancesTable.$converteropenidProviderKindn.toJson(
+          openidProviderKind,
+        ),
+      ),
     };
   }
 
@@ -464,6 +511,7 @@ class DefguardInstance extends DataClass
     String? pubKey,
     bool? mfaKeysStored,
     Value<String?> openidDisplayName = const Value.absent(),
+    Value<OpenIdProvider?> openidProviderKind = const Value.absent(),
   }) => DefguardInstance(
     id: id ?? this.id,
     name: name ?? this.name,
@@ -479,6 +527,9 @@ class DefguardInstance extends DataClass
     openidDisplayName: openidDisplayName.present
         ? openidDisplayName.value
         : this.openidDisplayName,
+    openidProviderKind: openidProviderKind.present
+        ? openidProviderKind.value
+        : this.openidProviderKind,
   );
   DefguardInstance copyWithCompanion(DefguardInstancesCompanion data) {
     return DefguardInstance(
@@ -502,6 +553,9 @@ class DefguardInstance extends DataClass
       openidDisplayName: data.openidDisplayName.present
           ? data.openidDisplayName.value
           : this.openidDisplayName,
+      openidProviderKind: data.openidProviderKind.present
+          ? data.openidProviderKind.value
+          : this.openidProviderKind,
     );
   }
 
@@ -519,7 +573,8 @@ class DefguardInstance extends DataClass
           ..write('enterpriseEnabled: $enterpriseEnabled, ')
           ..write('pubKey: $pubKey, ')
           ..write('mfaKeysStored: $mfaKeysStored, ')
-          ..write('openidDisplayName: $openidDisplayName')
+          ..write('openidDisplayName: $openidDisplayName, ')
+          ..write('openidProviderKind: $openidProviderKind')
           ..write(')'))
         .toString();
   }
@@ -538,6 +593,7 @@ class DefguardInstance extends DataClass
     pubKey,
     mfaKeysStored,
     openidDisplayName,
+    openidProviderKind,
   );
   @override
   bool operator ==(Object other) =>
@@ -554,7 +610,8 @@ class DefguardInstance extends DataClass
           other.enterpriseEnabled == this.enterpriseEnabled &&
           other.pubKey == this.pubKey &&
           other.mfaKeysStored == this.mfaKeysStored &&
-          other.openidDisplayName == this.openidDisplayName);
+          other.openidDisplayName == this.openidDisplayName &&
+          other.openidProviderKind == this.openidProviderKind);
 }
 
 class DefguardInstancesCompanion extends UpdateCompanion<DefguardInstance> {
@@ -570,6 +627,7 @@ class DefguardInstancesCompanion extends UpdateCompanion<DefguardInstance> {
   final Value<String> pubKey;
   final Value<bool> mfaKeysStored;
   final Value<String?> openidDisplayName;
+  final Value<OpenIdProvider?> openidProviderKind;
   const DefguardInstancesCompanion({
     this.id = const Value.absent(),
     this.name = const Value.absent(),
@@ -583,6 +641,7 @@ class DefguardInstancesCompanion extends UpdateCompanion<DefguardInstance> {
     this.pubKey = const Value.absent(),
     this.mfaKeysStored = const Value.absent(),
     this.openidDisplayName = const Value.absent(),
+    this.openidProviderKind = const Value.absent(),
   });
   DefguardInstancesCompanion.insert({
     this.id = const Value.absent(),
@@ -597,6 +656,7 @@ class DefguardInstancesCompanion extends UpdateCompanion<DefguardInstance> {
     required String pubKey,
     required bool mfaKeysStored,
     this.openidDisplayName = const Value.absent(),
+    this.openidProviderKind = const Value.absent(),
   }) : name = Value(name),
        uuid = Value(uuid),
        url = Value(url),
@@ -619,6 +679,7 @@ class DefguardInstancesCompanion extends UpdateCompanion<DefguardInstance> {
     Expression<String>? pubKey,
     Expression<bool>? mfaKeysStored,
     Expression<String>? openidDisplayName,
+    Expression<String>? openidProviderKind,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -634,6 +695,8 @@ class DefguardInstancesCompanion extends UpdateCompanion<DefguardInstance> {
       if (pubKey != null) 'pub_key': pubKey,
       if (mfaKeysStored != null) 'mfa_keys_stored': mfaKeysStored,
       if (openidDisplayName != null) 'openid_display_name': openidDisplayName,
+      if (openidProviderKind != null)
+        'openid_provider_kind': openidProviderKind,
     });
   }
 
@@ -650,6 +713,7 @@ class DefguardInstancesCompanion extends UpdateCompanion<DefguardInstance> {
     Value<String>? pubKey,
     Value<bool>? mfaKeysStored,
     Value<String?>? openidDisplayName,
+    Value<OpenIdProvider?>? openidProviderKind,
   }) {
     return DefguardInstancesCompanion(
       id: id ?? this.id,
@@ -664,6 +728,7 @@ class DefguardInstancesCompanion extends UpdateCompanion<DefguardInstance> {
       pubKey: pubKey ?? this.pubKey,
       mfaKeysStored: mfaKeysStored ?? this.mfaKeysStored,
       openidDisplayName: openidDisplayName ?? this.openidDisplayName,
+      openidProviderKind: openidProviderKind ?? this.openidProviderKind,
     );
   }
 
@@ -710,6 +775,13 @@ class DefguardInstancesCompanion extends UpdateCompanion<DefguardInstance> {
     if (openidDisplayName.present) {
       map['openid_display_name'] = Variable<String>(openidDisplayName.value);
     }
+    if (openidProviderKind.present) {
+      map['openid_provider_kind'] = Variable<String>(
+        $DefguardInstancesTable.$converteropenidProviderKindn.toSql(
+          openidProviderKind.value,
+        ),
+      );
+    }
     return map;
   }
 
@@ -727,7 +799,8 @@ class DefguardInstancesCompanion extends UpdateCompanion<DefguardInstance> {
           ..write('enterpriseEnabled: $enterpriseEnabled, ')
           ..write('pubKey: $pubKey, ')
           ..write('mfaKeysStored: $mfaKeysStored, ')
-          ..write('openidDisplayName: $openidDisplayName')
+          ..write('openidDisplayName: $openidDisplayName, ')
+          ..write('openidProviderKind: $openidProviderKind')
           ..write(')'))
         .toString();
   }
@@ -1767,6 +1840,7 @@ typedef $$DefguardInstancesTableCreateCompanionBuilder =
       required String pubKey,
       required bool mfaKeysStored,
       Value<String?> openidDisplayName,
+      Value<OpenIdProvider?> openidProviderKind,
     });
 typedef $$DefguardInstancesTableUpdateCompanionBuilder =
     DefguardInstancesCompanion Function({
@@ -1782,6 +1856,7 @@ typedef $$DefguardInstancesTableUpdateCompanionBuilder =
       Value<String> pubKey,
       Value<bool> mfaKeysStored,
       Value<String?> openidDisplayName,
+      Value<OpenIdProvider?> openidProviderKind,
     });
 
 final class $$DefguardInstancesTableReferences
@@ -1886,6 +1961,12 @@ class $$DefguardInstancesTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnWithTypeConverterFilters<OpenIdProvider?, OpenIdProvider, String>
+  get openidProviderKind => $composableBuilder(
+    column: $table.openidProviderKind,
+    builder: (column) => ColumnWithTypeConverterFilters(column),
+  );
+
   Expression<bool> locationsRefs(
     Expression<bool> Function($$LocationsTableFilterComposer f) f,
   ) {
@@ -1980,6 +2061,11 @@ class $$DefguardInstancesTableOrderingComposer
     column: $table.openidDisplayName,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get openidProviderKind => $composableBuilder(
+    column: $table.openidProviderKind,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$DefguardInstancesTableAnnotationComposer
@@ -2033,6 +2119,12 @@ class $$DefguardInstancesTableAnnotationComposer
 
   GeneratedColumn<String> get openidDisplayName => $composableBuilder(
     column: $table.openidDisplayName,
+    builder: (column) => column,
+  );
+
+  GeneratedColumnWithTypeConverter<OpenIdProvider?, String>
+  get openidProviderKind => $composableBuilder(
+    column: $table.openidProviderKind,
     builder: (column) => column,
   );
 
@@ -2108,6 +2200,8 @@ class $$DefguardInstancesTableTableManager
                 Value<String> pubKey = const Value.absent(),
                 Value<bool> mfaKeysStored = const Value.absent(),
                 Value<String?> openidDisplayName = const Value.absent(),
+                Value<OpenIdProvider?> openidProviderKind =
+                    const Value.absent(),
               }) => DefguardInstancesCompanion(
                 id: id,
                 name: name,
@@ -2121,6 +2215,7 @@ class $$DefguardInstancesTableTableManager
                 pubKey: pubKey,
                 mfaKeysStored: mfaKeysStored,
                 openidDisplayName: openidDisplayName,
+                openidProviderKind: openidProviderKind,
               ),
           createCompanionCallback:
               ({
@@ -2137,6 +2232,8 @@ class $$DefguardInstancesTableTableManager
                 required String pubKey,
                 required bool mfaKeysStored,
                 Value<String?> openidDisplayName = const Value.absent(),
+                Value<OpenIdProvider?> openidProviderKind =
+                    const Value.absent(),
               }) => DefguardInstancesCompanion.insert(
                 id: id,
                 name: name,
@@ -2150,6 +2247,7 @@ class $$DefguardInstancesTableTableManager
                 pubKey: pubKey,
                 mfaKeysStored: mfaKeysStored,
                 openidDisplayName: openidDisplayName,
+                openidProviderKind: openidProviderKind,
               ),
           withReferenceMapper: (p0) => p0
               .map(

@@ -275,6 +275,8 @@ class InstanceInfo {
   final bool disableAllTraffic;
   final ClientTrafficPolicy? clientTrafficPolicy;
   final String? openidDisplayName;
+  @JsonKey(unknownEnumValue: JsonKey.nullForUndefinedEnumValue)
+  final OpenIdProvider? openidProviderKind;
 
   const InstanceInfo({
     required this.id,
@@ -286,6 +288,7 @@ class InstanceInfo {
     @Deprecated('1.6') required this.disableAllTraffic,
     required this.clientTrafficPolicy,
     this.openidDisplayName,
+    this.openidProviderKind,
   });
 
   factory InstanceInfo.fromJson(Map<String, dynamic> json) =>
@@ -301,7 +304,8 @@ class InstanceInfo {
         username == other.username &&
         enterpriseEnabled == other.enterpriseEnabled &&
         getPolicy() == other.clientTrafficPolicy &&
-        openidDisplayName == other.openidDisplayName;
+        openidDisplayName == other.openidDisplayName &&
+        openidProviderKind == other.openidProviderKind;
   }
 
   DefguardInstancesCompanion toCompanion({DefguardInstance? instance}) {
@@ -317,6 +321,7 @@ class InstanceInfo {
       clientTrafficPolicy: d.Value(getPolicy()),
       uuid: d.Value(id),
       openidDisplayName: d.Value(openidDisplayName),
+      openidProviderKind: d.Value(openidProviderKind),
     );
   }
 
