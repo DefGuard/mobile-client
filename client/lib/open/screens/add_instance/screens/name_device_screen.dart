@@ -83,6 +83,9 @@ class NameDeviceScreen extends HookConsumerWidget {
           openidProviderKind: drift.Value(
             createResponse.instance.openidProviderKind,
           ),
+          mfaContract: drift.Value(
+            mfaContractFromInstanceInfo(createResponse.instance),
+          ),
         ),
         mode: drift.InsertMode.insertOrFail,
       );

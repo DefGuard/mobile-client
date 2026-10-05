@@ -157,6 +157,18 @@ class $DefguardInstancesTable extends DefguardInstances
         $DefguardInstancesTable.$converteropenidProviderKindn,
       );
   @override
+  late final GeneratedColumnWithTypeConverter<MfaContract, String> mfaContract =
+      GeneratedColumn<String>(
+        'mfa_contract',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+        defaultValue: const Constant('legacy'),
+      ).withConverter<MfaContract>(
+        $DefguardInstancesTable.$convertermfaContract,
+      );
+  @override
   List<GeneratedColumn> get $columns => [
     id,
     name,
@@ -171,6 +183,7 @@ class $DefguardInstancesTable extends DefguardInstances
     mfaKeysStored,
     openidDisplayName,
     openidProviderKind,
+    mfaContract,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -341,6 +354,12 @@ class $DefguardInstancesTable extends DefguardInstances
               data['${effectivePrefix}openid_provider_kind'],
             ),
           ),
+      mfaContract: $DefguardInstancesTable.$convertermfaContract.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}mfa_contract'],
+        )!,
+      ),
     );
   }
 
@@ -359,6 +378,8 @@ class $DefguardInstancesTable extends DefguardInstances
   $converteropenidProviderKindn = JsonTypeConverter2.asNullable(
     $converteropenidProviderKind,
   );
+  static JsonTypeConverter2<MfaContract, String, String> $convertermfaContract =
+      const EnumNameConverter<MfaContract>(MfaContract.values);
 }
 
 class DefguardInstance extends DataClass
@@ -376,6 +397,7 @@ class DefguardInstance extends DataClass
   final bool mfaKeysStored;
   final String? openidDisplayName;
   final OpenIdProvider? openidProviderKind;
+  final MfaContract mfaContract;
   const DefguardInstance({
     required this.id,
     required this.name,
@@ -390,6 +412,7 @@ class DefguardInstance extends DataClass
     required this.mfaKeysStored,
     this.openidDisplayName,
     this.openidProviderKind,
+    required this.mfaContract,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -421,6 +444,11 @@ class DefguardInstance extends DataClass
         ),
       );
     }
+    {
+      map['mfa_contract'] = Variable<String>(
+        $DefguardInstancesTable.$convertermfaContract.toSql(mfaContract),
+      );
+    }
     return map;
   }
 
@@ -443,6 +471,7 @@ class DefguardInstance extends DataClass
       openidProviderKind: openidProviderKind == null && nullToAbsent
           ? const Value.absent()
           : Value(openidProviderKind),
+      mfaContract: Value(mfaContract),
     );
   }
 
@@ -470,6 +499,9 @@ class DefguardInstance extends DataClass
       ),
       openidProviderKind: $DefguardInstancesTable.$converteropenidProviderKindn
           .fromJson(serializer.fromJson<String?>(json['openidProviderKind'])),
+      mfaContract: $DefguardInstancesTable.$convertermfaContract.fromJson(
+        serializer.fromJson<String>(json['mfaContract']),
+      ),
     );
   }
   @override
@@ -495,6 +527,9 @@ class DefguardInstance extends DataClass
           openidProviderKind,
         ),
       ),
+      'mfaContract': serializer.toJson<String>(
+        $DefguardInstancesTable.$convertermfaContract.toJson(mfaContract),
+      ),
     };
   }
 
@@ -512,6 +547,7 @@ class DefguardInstance extends DataClass
     bool? mfaKeysStored,
     Value<String?> openidDisplayName = const Value.absent(),
     Value<OpenIdProvider?> openidProviderKind = const Value.absent(),
+    MfaContract? mfaContract,
   }) => DefguardInstance(
     id: id ?? this.id,
     name: name ?? this.name,
@@ -530,6 +566,7 @@ class DefguardInstance extends DataClass
     openidProviderKind: openidProviderKind.present
         ? openidProviderKind.value
         : this.openidProviderKind,
+    mfaContract: mfaContract ?? this.mfaContract,
   );
   DefguardInstance copyWithCompanion(DefguardInstancesCompanion data) {
     return DefguardInstance(
@@ -556,6 +593,9 @@ class DefguardInstance extends DataClass
       openidProviderKind: data.openidProviderKind.present
           ? data.openidProviderKind.value
           : this.openidProviderKind,
+      mfaContract: data.mfaContract.present
+          ? data.mfaContract.value
+          : this.mfaContract,
     );
   }
 
@@ -574,7 +614,8 @@ class DefguardInstance extends DataClass
           ..write('pubKey: $pubKey, ')
           ..write('mfaKeysStored: $mfaKeysStored, ')
           ..write('openidDisplayName: $openidDisplayName, ')
-          ..write('openidProviderKind: $openidProviderKind')
+          ..write('openidProviderKind: $openidProviderKind, ')
+          ..write('mfaContract: $mfaContract')
           ..write(')'))
         .toString();
   }
@@ -594,6 +635,7 @@ class DefguardInstance extends DataClass
     mfaKeysStored,
     openidDisplayName,
     openidProviderKind,
+    mfaContract,
   );
   @override
   bool operator ==(Object other) =>
@@ -611,7 +653,8 @@ class DefguardInstance extends DataClass
           other.pubKey == this.pubKey &&
           other.mfaKeysStored == this.mfaKeysStored &&
           other.openidDisplayName == this.openidDisplayName &&
-          other.openidProviderKind == this.openidProviderKind);
+          other.openidProviderKind == this.openidProviderKind &&
+          other.mfaContract == this.mfaContract);
 }
 
 class DefguardInstancesCompanion extends UpdateCompanion<DefguardInstance> {
@@ -628,6 +671,7 @@ class DefguardInstancesCompanion extends UpdateCompanion<DefguardInstance> {
   final Value<bool> mfaKeysStored;
   final Value<String?> openidDisplayName;
   final Value<OpenIdProvider?> openidProviderKind;
+  final Value<MfaContract> mfaContract;
   const DefguardInstancesCompanion({
     this.id = const Value.absent(),
     this.name = const Value.absent(),
@@ -642,6 +686,7 @@ class DefguardInstancesCompanion extends UpdateCompanion<DefguardInstance> {
     this.mfaKeysStored = const Value.absent(),
     this.openidDisplayName = const Value.absent(),
     this.openidProviderKind = const Value.absent(),
+    this.mfaContract = const Value.absent(),
   });
   DefguardInstancesCompanion.insert({
     this.id = const Value.absent(),
@@ -657,6 +702,7 @@ class DefguardInstancesCompanion extends UpdateCompanion<DefguardInstance> {
     required bool mfaKeysStored,
     this.openidDisplayName = const Value.absent(),
     this.openidProviderKind = const Value.absent(),
+    this.mfaContract = const Value.absent(),
   }) : name = Value(name),
        uuid = Value(uuid),
        url = Value(url),
@@ -680,6 +726,7 @@ class DefguardInstancesCompanion extends UpdateCompanion<DefguardInstance> {
     Expression<bool>? mfaKeysStored,
     Expression<String>? openidDisplayName,
     Expression<String>? openidProviderKind,
+    Expression<String>? mfaContract,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -697,6 +744,7 @@ class DefguardInstancesCompanion extends UpdateCompanion<DefguardInstance> {
       if (openidDisplayName != null) 'openid_display_name': openidDisplayName,
       if (openidProviderKind != null)
         'openid_provider_kind': openidProviderKind,
+      if (mfaContract != null) 'mfa_contract': mfaContract,
     });
   }
 
@@ -714,6 +762,7 @@ class DefguardInstancesCompanion extends UpdateCompanion<DefguardInstance> {
     Value<bool>? mfaKeysStored,
     Value<String?>? openidDisplayName,
     Value<OpenIdProvider?>? openidProviderKind,
+    Value<MfaContract>? mfaContract,
   }) {
     return DefguardInstancesCompanion(
       id: id ?? this.id,
@@ -729,6 +778,7 @@ class DefguardInstancesCompanion extends UpdateCompanion<DefguardInstance> {
       mfaKeysStored: mfaKeysStored ?? this.mfaKeysStored,
       openidDisplayName: openidDisplayName ?? this.openidDisplayName,
       openidProviderKind: openidProviderKind ?? this.openidProviderKind,
+      mfaContract: mfaContract ?? this.mfaContract,
     );
   }
 
@@ -782,6 +832,11 @@ class DefguardInstancesCompanion extends UpdateCompanion<DefguardInstance> {
         ),
       );
     }
+    if (mfaContract.present) {
+      map['mfa_contract'] = Variable<String>(
+        $DefguardInstancesTable.$convertermfaContract.toSql(mfaContract.value),
+      );
+    }
     return map;
   }
 
@@ -800,7 +855,8 @@ class DefguardInstancesCompanion extends UpdateCompanion<DefguardInstance> {
           ..write('pubKey: $pubKey, ')
           ..write('mfaKeysStored: $mfaKeysStored, ')
           ..write('openidDisplayName: $openidDisplayName, ')
-          ..write('openidProviderKind: $openidProviderKind')
+          ..write('openidProviderKind: $openidProviderKind, ')
+          ..write('mfaContract: $mfaContract')
           ..write(')'))
         .toString();
   }
@@ -1841,6 +1897,7 @@ typedef $$DefguardInstancesTableCreateCompanionBuilder =
       required bool mfaKeysStored,
       Value<String?> openidDisplayName,
       Value<OpenIdProvider?> openidProviderKind,
+      Value<MfaContract> mfaContract,
     });
 typedef $$DefguardInstancesTableUpdateCompanionBuilder =
     DefguardInstancesCompanion Function({
@@ -1857,6 +1914,7 @@ typedef $$DefguardInstancesTableUpdateCompanionBuilder =
       Value<bool> mfaKeysStored,
       Value<String?> openidDisplayName,
       Value<OpenIdProvider?> openidProviderKind,
+      Value<MfaContract> mfaContract,
     });
 
 final class $$DefguardInstancesTableReferences
@@ -1967,6 +2025,12 @@ class $$DefguardInstancesTableFilterComposer
     builder: (column) => ColumnWithTypeConverterFilters(column),
   );
 
+  ColumnWithTypeConverterFilters<MfaContract, MfaContract, String>
+  get mfaContract => $composableBuilder(
+    column: $table.mfaContract,
+    builder: (column) => ColumnWithTypeConverterFilters(column),
+  );
+
   Expression<bool> locationsRefs(
     Expression<bool> Function($$LocationsTableFilterComposer f) f,
   ) {
@@ -2066,6 +2130,11 @@ class $$DefguardInstancesTableOrderingComposer
     column: $table.openidProviderKind,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get mfaContract => $composableBuilder(
+    column: $table.mfaContract,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$DefguardInstancesTableAnnotationComposer
@@ -2127,6 +2196,12 @@ class $$DefguardInstancesTableAnnotationComposer
     column: $table.openidProviderKind,
     builder: (column) => column,
   );
+
+  GeneratedColumnWithTypeConverter<MfaContract, String> get mfaContract =>
+      $composableBuilder(
+        column: $table.mfaContract,
+        builder: (column) => column,
+      );
 
   Expression<T> locationsRefs<T extends Object>(
     Expression<T> Function($$LocationsTableAnnotationComposer a) f,
@@ -2202,6 +2277,7 @@ class $$DefguardInstancesTableTableManager
                 Value<String?> openidDisplayName = const Value.absent(),
                 Value<OpenIdProvider?> openidProviderKind =
                     const Value.absent(),
+                Value<MfaContract> mfaContract = const Value.absent(),
               }) => DefguardInstancesCompanion(
                 id: id,
                 name: name,
@@ -2216,6 +2292,7 @@ class $$DefguardInstancesTableTableManager
                 mfaKeysStored: mfaKeysStored,
                 openidDisplayName: openidDisplayName,
                 openidProviderKind: openidProviderKind,
+                mfaContract: mfaContract,
               ),
           createCompanionCallback:
               ({
@@ -2234,6 +2311,7 @@ class $$DefguardInstancesTableTableManager
                 Value<String?> openidDisplayName = const Value.absent(),
                 Value<OpenIdProvider?> openidProviderKind =
                     const Value.absent(),
+                Value<MfaContract> mfaContract = const Value.absent(),
               }) => DefguardInstancesCompanion.insert(
                 id: id,
                 name: name,
@@ -2248,6 +2326,7 @@ class $$DefguardInstancesTableTableManager
                 mfaKeysStored: mfaKeysStored,
                 openidDisplayName: openidDisplayName,
                 openidProviderKind: openidProviderKind,
+                mfaContract: mfaContract,
               ),
           withReferenceMapper: (p0) => p0
               .map(

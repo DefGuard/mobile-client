@@ -71,6 +71,8 @@ enum MfaMethod {
   }
 }
 
+enum MfaContract { legacy, multiStep }
+
 @j.JsonEnum()
 enum OpenIdProvider {
   @j.JsonValue(1)

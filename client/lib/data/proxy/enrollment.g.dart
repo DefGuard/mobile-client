@@ -422,6 +422,10 @@ InstanceInfo _$InstanceInfoFromJson(Map<String, dynamic> json) =>
               unknownValue: JsonKey.nullForUndefinedEnumValue,
             ),
           ),
+          mfaUserState: $checkedConvert(
+            'mfa_user_state',
+            (v) => v as Map<String, dynamic>?,
+          ),
         );
         return val;
       },
@@ -432,6 +436,7 @@ InstanceInfo _$InstanceInfoFromJson(Map<String, dynamic> json) =>
         'clientTrafficPolicy': 'client_traffic_policy',
         'openidDisplayName': 'openid_display_name',
         'openidProviderKind': 'openid_provider_kind',
+        'mfaUserState': 'mfa_user_state',
       },
     );
 
@@ -446,6 +451,7 @@ const _$InstanceInfoFieldMap = <String, String>{
   'clientTrafficPolicy': 'client_traffic_policy',
   'openidDisplayName': 'openid_display_name',
   'openidProviderKind': 'openid_provider_kind',
+  'mfaUserState': 'mfa_user_state',
 };
 
 Map<String, dynamic> _$InstanceInfoToJson(
@@ -462,6 +468,7 @@ Map<String, dynamic> _$InstanceInfoToJson(
       _$ClientTrafficPolicyEnumMap[instance.clientTrafficPolicy],
   'openid_display_name': instance.openidDisplayName,
   'openid_provider_kind': _$OpenIdProviderEnumMap[instance.openidProviderKind],
+  'mfa_user_state': instance.mfaUserState,
 };
 
 const _$ClientTrafficPolicyEnumMap = {

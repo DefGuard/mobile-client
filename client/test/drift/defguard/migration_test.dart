@@ -14,6 +14,8 @@ import 'generated/schema_v2.dart' as v2;
 import 'generated/schema_v4.dart' as v4;
 import 'generated/schema_v5.dart' as v5;
 import 'generated/schema_v6.dart' as v6;
+import 'generated/schema_v7.dart' as v7;
+import 'generated/schema_v8.dart' as v8;
 
 void main() {
   driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
@@ -40,6 +42,42 @@ void main() {
         }
       });
     }
+  });
+
+  test('migration from v7 to v8 defaults the MFA contract to legacy', () async {
+    const oldInstance = v7.DefguardInstancesData(
+      id: 1,
+      name: 'instance',
+      uuid: 'instance-uuid',
+      url: 'https://defguard.example',
+      deviceId: 7,
+      proxyUrl: 'https://proxy.defguard.example',
+      username: 'user',
+      clientTrafficPolicy: 0,
+      enterpriseEnabled: 1,
+      pubKey: 'public-key',
+      mfaKeysStored: 0,
+      openidProviderKind: 'google',
+    );
+
+    await verifier.testWithDataIntegrity(
+      oldVersion: 7,
+      newVersion: 8,
+      createOld: v7.DatabaseAtV7.new,
+      createNew: v8.DatabaseAtV8.new,
+      openTestedDatabase: AppDatabase.new,
+      createItems: (batch, oldDb) {
+        batch.insertAll(oldDb.defguardInstances, [oldInstance]);
+      },
+      validateItems: (newDb) async {
+        final instance = await newDb
+            .select(newDb.defguardInstances)
+            .getSingle();
+        expect(instance.uuid, 'instance-uuid');
+        expect(instance.openidProviderKind, 'google');
+        expect(instance.mfaContract, 'legacy');
+      },
+    );
   });
 
   // The following template shows how to write tests ensuring your migrations

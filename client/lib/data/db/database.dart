@@ -48,6 +48,9 @@ class DefguardInstances extends Table with AutoIncrementingPrimaryKey {
   TextColumn get openidDisplayName => text().nullable()();
 
   TextColumn get openidProviderKind => textEnum<OpenIdProvider>().nullable()();
+
+  TextColumn get mfaContract =>
+      textEnum<MfaContract>().withDefault(const Constant('legacy'))();
 }
 
 @DataClassName('Location')
@@ -132,7 +135,7 @@ class AppDatabase extends _$AppDatabase {
   }
 
   @override
-  int get schemaVersion => 7;
+  int get schemaVersion => 8;
 
   @override
   MigrationStrategy get migration {
@@ -213,6 +216,12 @@ class AppDatabase extends _$AppDatabase {
           await m.addColumn(
             schema.defguardInstances,
             schema.defguardInstances.openidProviderKind,
+          );
+        },
+        from7To8: (m, schema) async {
+          await m.addColumn(
+            schema.defguardInstances,
+            schema.defguardInstances.mfaContract,
           );
         },
       ),

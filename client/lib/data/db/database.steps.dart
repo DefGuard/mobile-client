@@ -1061,6 +1061,112 @@ i1.GeneratedColumn<String> _column_52(String aliasedName) =>
       type: i1.DriftSqlType.string,
       $customConstraints: 'NULL',
     );
+
+final class Schema8 extends i0.VersionedSchema {
+  Schema8({required super.database}) : super(version: 8);
+  @override
+  late final List<i1.DatabaseSchemaEntity> entities = [
+    defguardInstances,
+    locations,
+  ];
+  late final Shape8 defguardInstances = Shape8(
+    source: i0.VersionedTable(
+      entityName: 'defguard_instances',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: [],
+      columns: [
+        _column_26,
+        _column_27,
+        _column_28,
+        _column_29,
+        _column_30,
+        _column_31,
+        _column_32,
+        _column_33,
+        _column_34,
+        _column_35,
+        _column_36,
+        _column_37,
+        _column_52,
+        _column_53,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape6 locations = Shape6(
+    source: i0.VersionedTable(
+      entityName: 'locations',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: [],
+      columns: [
+        _column_26,
+        _column_38,
+        _column_39,
+        _column_27,
+        _column_40,
+        _column_35,
+        _column_41,
+        _column_42,
+        _column_43,
+        _column_44,
+        _column_45,
+        _column_46,
+        _column_47,
+        _column_48,
+        _column_49,
+        _column_50,
+        _column_51,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+}
+
+class Shape8 extends i0.VersionedTable {
+  Shape8({required super.source, required super.alias}) : super.aliased();
+  i1.GeneratedColumn<int> get id =>
+      columnsByName['id']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<String> get name =>
+      columnsByName['name']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get uuid =>
+      columnsByName['uuid']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get url =>
+      columnsByName['url']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<int> get deviceId =>
+      columnsByName['device_id']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<String> get proxyUrl =>
+      columnsByName['proxy_url']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get username =>
+      columnsByName['username']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<int> get clientTrafficPolicy =>
+      columnsByName['client_traffic_policy']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<int> get enterpriseEnabled =>
+      columnsByName['enterprise_enabled']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<String> get pubKey =>
+      columnsByName['pub_key']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<int> get mfaKeysStored =>
+      columnsByName['mfa_keys_stored']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<String> get openidDisplayName =>
+      columnsByName['openid_display_name']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get openidProviderKind =>
+      columnsByName['openid_provider_kind']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get mfaContract =>
+      columnsByName['mfa_contract']! as i1.GeneratedColumn<String>;
+}
+
+i1.GeneratedColumn<String> _column_53(String aliasedName) =>
+    i1.GeneratedColumn<String>(
+      'mfa_contract',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.string,
+      $customConstraints: 'NOT NULL DEFAULT \'legacy\'',
+      defaultValue: const i1.CustomExpression('\'legacy\''),
+    );
 i0.MigrationStepWithVersion migrationSteps({
   required Future<void> Function(i1.Migrator m, Schema2 schema) from1To2,
   required Future<void> Function(i1.Migrator m, Schema3 schema) from2To3,
@@ -1068,6 +1174,7 @@ i0.MigrationStepWithVersion migrationSteps({
   required Future<void> Function(i1.Migrator m, Schema5 schema) from4To5,
   required Future<void> Function(i1.Migrator m, Schema6 schema) from5To6,
   required Future<void> Function(i1.Migrator m, Schema7 schema) from6To7,
+  required Future<void> Function(i1.Migrator m, Schema8 schema) from7To8,
 }) {
   return (currentVersion, database) async {
     switch (currentVersion) {
@@ -1101,6 +1208,11 @@ i0.MigrationStepWithVersion migrationSteps({
         final migrator = i1.Migrator(database, schema);
         await from6To7(migrator, schema);
         return 7;
+      case 7:
+        final schema = Schema8(database: database);
+        final migrator = i1.Migrator(database, schema);
+        await from7To8(migrator, schema);
+        return 8;
       default:
         throw ArgumentError.value('Unknown migration from $currentVersion');
     }
@@ -1114,6 +1226,7 @@ i1.OnUpgrade stepByStep({
   required Future<void> Function(i1.Migrator m, Schema5 schema) from4To5,
   required Future<void> Function(i1.Migrator m, Schema6 schema) from5To6,
   required Future<void> Function(i1.Migrator m, Schema7 schema) from6To7,
+  required Future<void> Function(i1.Migrator m, Schema8 schema) from7To8,
 }) => i0.VersionedSchema.stepByStepHelper(
   step: migrationSteps(
     from1To2: from1To2,
@@ -1122,5 +1235,6 @@ i1.OnUpgrade stepByStep({
     from4To5: from4To5,
     from5To6: from5To6,
     from6To7: from6To7,
+    from7To8: from7To8,
   ),
 );

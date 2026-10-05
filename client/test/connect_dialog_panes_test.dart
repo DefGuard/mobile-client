@@ -36,6 +36,7 @@ const _instance = DefguardInstance(
   enterpriseEnabled: false,
   pubKey: 'instance-pubkey',
   mfaKeysStored: true,
+  mfaContract: MfaContract.legacy,
 );
 
 MfaStep _step(List<MfaMethod> methods) =>
