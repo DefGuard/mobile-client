@@ -180,28 +180,55 @@ Map<String, dynamic> _$SecureInstanceStorageToJson(
   'public_key': instance.publicKey,
 };
 
-RemoteMfaQr _$RemoteMfaQrFromJson(Map<String, dynamic> json) =>
-    $checkedCreate('RemoteMfaQr', json, ($checkedConvert) {
-      final val = RemoteMfaQr(
-        instanceId: $checkedConvert('instance_id', (v) => v as String),
-        token: $checkedConvert('token', (v) => v as String),
-        challenge: $checkedConvert('challenge', (v) => v as String),
-      );
-      return val;
-    }, fieldKeyMap: const {'instanceId': 'instance_id'});
+MfaMobileApprovalProof _$MfaMobileApprovalProofFromJson(
+  Map<String, dynamic> json,
+) => $checkedCreate('MfaMobileApprovalProof', json, ($checkedConvert) {
+  final val = MfaMobileApprovalProof(
+    signature: $checkedConvert('signature', (v) => v as String),
+    authPubKey: $checkedConvert('auth_pub_key', (v) => v as String),
+  );
+  return val;
+}, fieldKeyMap: const {'authPubKey': 'auth_pub_key'});
 
-const _$RemoteMfaQrFieldMap = <String, String>{
-  'instanceId': 'instance_id',
-  'token': 'token',
-  'challenge': 'challenge',
+const _$MfaMobileApprovalProofFieldMap = <String, String>{
+  'signature': 'signature',
+  'authPubKey': 'auth_pub_key',
 };
 
-Map<String, dynamic> _$RemoteMfaQrToJson(RemoteMfaQr instance) =>
-    <String, dynamic>{
-      'instance_id': instance.instanceId,
-      'token': instance.token,
-      'challenge': instance.challenge,
-    };
+Map<String, dynamic> _$MfaMobileApprovalProofToJson(
+  MfaMobileApprovalProof instance,
+) => <String, dynamic>{
+  'signature': instance.signature,
+  'auth_pub_key': instance.authPubKey,
+};
+
+MfaFlowApproveRequest _$MfaFlowApproveRequestFromJson(
+  Map<String, dynamic> json,
+) => $checkedCreate('MfaFlowApproveRequest', json, ($checkedConvert) {
+  final val = MfaFlowApproveRequest(
+    token: $checkedConvert('token', (v) => v as String),
+    stepAttemptId: $checkedConvert('step_attempt_id', (v) => v as String),
+    proof: $checkedConvert(
+      'proof',
+      (v) => MfaMobileApprovalProof.fromJson(v as Map<String, dynamic>),
+    ),
+  );
+  return val;
+}, fieldKeyMap: const {'stepAttemptId': 'step_attempt_id'});
+
+const _$MfaFlowApproveRequestFieldMap = <String, String>{
+  'token': 'token',
+  'stepAttemptId': 'step_attempt_id',
+  'proof': 'proof',
+};
+
+Map<String, dynamic> _$MfaFlowApproveRequestToJson(
+  MfaFlowApproveRequest instance,
+) => <String, dynamic>{
+  'token': instance.token,
+  'step_attempt_id': instance.stepAttemptId,
+  'proof': instance.proof,
+};
 
 MfaStepRejection _$MfaStepRejectionFromJson(Map<String, dynamic> json) =>
     $checkedCreate('MfaStepRejection', json, ($checkedConvert) {

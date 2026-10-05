@@ -78,15 +78,29 @@ class RemoteMfaQrScreen extends HookConsumerWidget {
             }
 
             final signature = signChallenge(data.challenge, storage.privateKey);
-            final requestData = FinishMfaRequest(
-              token: data.token,
-              code: signature,
-              authPubKey: storage.publicKey,
-            );
-            await proxyApi.finishRemoteMfa(
-              Uri.parse(instance.proxyUrl),
-              requestData,
-            );
+            final proxyUrl = Uri.parse(instance.proxyUrl);
+            await switch (data) {
+              MfaFlowRemoteMfaQr(:final stepAttemptId) =>
+                proxyApi.approveMfaFlow(
+                  proxyUrl,
+                  MfaFlowApproveRequest(
+                    token: data.token,
+                    stepAttemptId: stepAttemptId,
+                    proof: MfaMobileApprovalProof(
+                      signature: signature,
+                      authPubKey: storage.publicKey,
+                    ),
+                  ),
+                ),
+              LegacyRemoteMfaQr() => proxyApi.finishRemoteMfa(
+                proxyUrl,
+                FinishMfaRequest(
+                  token: data.token,
+                  code: signature,
+                  authPubKey: storage.publicKey,
+                ),
+              ),
+            };
             talker.info(
               "Successfully authorized instance ${instance.logName}.",
             );

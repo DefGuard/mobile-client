@@ -21,6 +21,10 @@ final enrollmentPathSegments = ['api', 'v1', 'enrollment'];
 final mfaPathSegments = ['api', 'v1', 'client-mfa'];
 final posturePathSegments = ['api', 'v1', 'posture'];
 
+bool _isMfaEndpoint(Uri uri) =>
+    uri.pathSegments.contains('client-mfa') ||
+    uri.pathSegments.contains('mfa-flow');
+
 class PostureCheckException implements Exception {
   final String message;
 
@@ -65,20 +69,27 @@ Dio buildProxyDio({
         printRequestHeaders: !kReleaseMode,
         printResponseData: !kReleaseMode,
         printErrorData: !kReleaseMode,
+        requestFilter: (request) => !_isMfaEndpoint(request.uri),
+        responseFilter: (response) =>
+            !_isMfaEndpoint(response.requestOptions.uri),
+        errorFilter: (error) => !_isMfaEndpoint(error.requestOptions.uri),
       ),
     ),
   ]);
   return dio;
 }
 
-class _ProxyApi {
-  static final _ProxyApi _instance = _ProxyApi._internal();
+class ProxyApi {
+  static final ProxyApi _instance = ProxyApi._internal();
 
-  factory _ProxyApi() => _instance;
+  factory ProxyApi() => _instance;
 
-  late final Dio _dio = buildProxyDio(identity: clientIdentity);
+  final Dio _dio;
 
-  _ProxyApi._internal();
+  ProxyApi._internal() : _dio = buildProxyDio(identity: clientIdentity);
+
+  @visibleForTesting
+  ProxyApi.forTesting(this._dio);
 
   Future<(ConfigurationPollResponse?, int?, Headers?)> pollConfiguration(
     String proxyUrl,
@@ -303,6 +314,18 @@ class _ProxyApi {
     await _dio.postUri(endpoint, data: data.toJson());
   }
 
+  Future<void> approveMfaFlow(Uri url, MfaFlowApproveRequest data) async {
+    final endpoint = url.replace(
+      pathSegments: [
+        ...url.pathSegments,
+        ..._apiV1Segments,
+        'mfa-flow',
+        'approve',
+      ],
+    );
+    await _dio.postUri(endpoint, data: data.toJson());
+  }
+
   Future<NetworkInfoResponse> networkInfo(Uri url, String pubKey) async {
     final endpoint = url.replace(
       pathSegments: [
@@ -338,4 +361,4 @@ class _ProxyApi {
   }
 }
 
-final proxyApi = _ProxyApi();
+final proxyApi = ProxyApi();

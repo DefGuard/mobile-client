@@ -128,22 +128,97 @@ class SecureInstanceStorage {
   });
 }
 
-@JsonSerializable()
-class RemoteMfaQr {
+sealed class RemoteMfaQr {
   final String instanceId;
   final String token;
   final String challenge;
-
-  factory RemoteMfaQr.fromJson(Map<String, dynamic> json) =>
-      _$RemoteMfaQrFromJson(json);
-
-  Map<String, dynamic> toJson() => _$RemoteMfaQrToJson(this);
 
   const RemoteMfaQr({
     required this.instanceId,
     required this.token,
     required this.challenge,
   });
+
+  factory RemoteMfaQr.fromJson(Map<String, dynamic> json) {
+    final instanceId = json['instance_id'];
+    final token = json['token'];
+    final challenge = json['challenge'];
+    if (instanceId is! String || token is! String || challenge is! String) {
+      throw const FormatException('Invalid remote MFA QR');
+    }
+
+    if (!json.containsKey('step_attempt_id')) {
+      return LegacyRemoteMfaQr(
+        instanceId: instanceId,
+        token: token,
+        challenge: challenge,
+      );
+    }
+
+    final stepAttemptId = json['step_attempt_id'];
+    if (stepAttemptId is! String || stepAttemptId.isEmpty) {
+      throw const FormatException('Invalid remote MFA flow QR');
+    }
+    return MfaFlowRemoteMfaQr(
+      instanceId: instanceId,
+      token: token,
+      challenge: challenge,
+      stepAttemptId: stepAttemptId,
+    );
+  }
+}
+
+final class LegacyRemoteMfaQr extends RemoteMfaQr {
+  const LegacyRemoteMfaQr({
+    required super.instanceId,
+    required super.token,
+    required super.challenge,
+  });
+}
+
+final class MfaFlowRemoteMfaQr extends RemoteMfaQr {
+  final String stepAttemptId;
+
+  const MfaFlowRemoteMfaQr({
+    required super.instanceId,
+    required super.token,
+    required super.challenge,
+    required this.stepAttemptId,
+  });
+}
+
+@JsonSerializable()
+class MfaMobileApprovalProof {
+  final String signature;
+  final String authPubKey;
+
+  const MfaMobileApprovalProof({
+    required this.signature,
+    required this.authPubKey,
+  });
+
+  factory MfaMobileApprovalProof.fromJson(Map<String, dynamic> json) =>
+      _$MfaMobileApprovalProofFromJson(json);
+
+  Map<String, dynamic> toJson() => _$MfaMobileApprovalProofToJson(this);
+}
+
+@JsonSerializable()
+class MfaFlowApproveRequest {
+  final String token;
+  final String stepAttemptId;
+  final MfaMobileApprovalProof proof;
+
+  const MfaFlowApproveRequest({
+    required this.token,
+    required this.stepAttemptId,
+    required this.proof,
+  });
+
+  factory MfaFlowApproveRequest.fromJson(Map<String, dynamic> json) =>
+      _$MfaFlowApproveRequestFromJson(json);
+
+  Map<String, dynamic> toJson() => _$MfaFlowApproveRequestToJson(this);
 }
 
 enum MfaStartRejectionReason {
