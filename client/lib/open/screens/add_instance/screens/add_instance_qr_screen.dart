@@ -63,7 +63,7 @@ class AddInstanceQrScreen extends HookConsumerWidget {
             );
 
             if (context.mounted) {
-              NameDeviceScreenRoute(routeData).go(context);
+              NameDeviceScreenRoute(routeData).pushReplacement(context);
             }
           } catch (e, st) {
             if (context.mounted) {

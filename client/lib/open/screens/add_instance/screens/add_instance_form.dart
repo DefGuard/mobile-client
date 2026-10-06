@@ -194,6 +194,6 @@ Future<void> _handleSubmit(
     proxyUrl: uri,
   );
   if (context.mounted) {
-    NameDeviceScreenRoute(routeData).push(context);
+    NameDeviceScreenRoute(routeData).pushReplacement(context);
   }
 }
