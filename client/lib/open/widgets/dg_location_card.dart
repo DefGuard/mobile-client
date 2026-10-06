@@ -19,6 +19,7 @@ class DgLocationCard extends StatelessWidget {
 
   /// Replaces the method name, for a flow no single method describes.
   final String? mfaLabel;
+  final String? openidDisplayName;
   final RoutingMethod? routingMethod;
   final VoidCallback? onConnectTap;
   final VoidCallback? onDisconnectTap;
@@ -30,6 +31,7 @@ class DgLocationCard extends StatelessWidget {
     this.loading = false,
     this.mfaMethod,
     this.mfaLabel,
+    this.openidDisplayName,
     this.routingMethod,
     this.onConnectTap,
     this.onDisconnectTap,
@@ -118,11 +120,16 @@ class DgLocationCard extends StatelessWidget {
                     : _InnerInfoCard(
                         mfaMethod: mfaMethod,
                         mfaLabel: mfaLabel,
+                        openidDisplayName: openidDisplayName,
                       ),
               ),
               Expanded(
                 child: routingMethod != null
-                    ? _InnerInfoCard(mfaMethod: mfaMethod, mfaLabel: mfaLabel)
+                    ? _InnerInfoCard(
+                        mfaMethod: mfaMethod,
+                        mfaLabel: mfaLabel,
+                        openidDisplayName: openidDisplayName,
+                      )
                     : const SizedBox.shrink(),
               ),
             ],
@@ -283,8 +290,14 @@ class _InnerInfoCard extends StatelessWidget {
   final RoutingMethod? routing;
   final MfaMethod? mfaMethod;
   final String? mfaLabel;
+  final String? openidDisplayName;
 
-  const _InnerInfoCard({this.routing, this.mfaMethod, this.mfaLabel});
+  const _InnerInfoCard({
+    this.routing,
+    this.mfaMethod,
+    this.mfaLabel,
+    this.openidDisplayName,
+  });
 
   bool get isMfa => mfaMethod != null || mfaLabel != null;
   bool get isRouting => routing != null;
@@ -381,7 +394,9 @@ class _InnerInfoCard extends StatelessWidget {
 
   String getText() {
     if (isMfa) {
-      return mfaLabel ?? mfaMethod?.toUiString() ?? "MFA";
+      return mfaLabel ??
+          mfaMethod?.toUiString(openidDisplayName: openidDisplayName) ??
+          "MFA";
     }
     if (isRouting) {
       return routing?.toUiString() ?? "Traffic";

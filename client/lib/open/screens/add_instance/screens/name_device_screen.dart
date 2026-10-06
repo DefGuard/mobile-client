@@ -9,6 +9,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:mobile/data/db/database.dart';
 import 'package:mobile/data/proxy/enrollment.dart';
 import 'package:mobile/logging.dart';
+import 'package:mobile/open/screens/add_instance/cancel_enrollment_dialog.dart';
 import 'package:mobile/open/screens/add_instance/generate_wireguard.dart';
 import 'package:mobile/open/widgets/dg_app_bar.dart';
 import 'package:mobile/open/widgets/dg_button.dart';
@@ -132,117 +133,140 @@ class NameDeviceScreen extends HookConsumerWidget {
       return null;
     }, const []);
 
-    return Scaffold(
-      drawer: const DgDrawer(),
-      extendBodyBehindAppBar: true,
-      appBar: DgAppBar(
+    Future<void> confirmLeave() async {
+      if (isLoading.value) return;
+      final confirmed = await showDialog<bool>(
         context: context,
-        showLogo: false,
-        actionLeft: DgIconButton(
-          icon: "arrow_big",
-          direction: DgIconDirection.left,
-          onTap: () => Navigator.of(context).pop(),
+        useSafeArea: false,
+        barrierColor: Colors.transparent,
+        builder: (_) => const CancelEnrollmentDialog(),
+      );
+      if (confirmed != true || !context.mounted) return;
+      final navigator = Navigator.of(context);
+      if (navigator.canPop()) {
+        navigator.pop();
+      } else {
+        const AddInstanceScreenRoute().go(context);
+      }
+    }
+
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) confirmLeave();
+      },
+      child: Scaffold(
+        drawer: const DgDrawer(),
+        extendBodyBehindAppBar: true,
+        appBar: DgAppBar(
+          context: context,
+          showLogo: false,
+          actionLeft: DgIconButton(
+            icon: "arrow_big",
+            direction: DgIconDirection.left,
+            onTap: isLoading.value ? null : confirmLeave,
+          ),
         ),
-      ),
-      body: Container(
-        decoration: const BoxDecoration(gradient: DgColor.gradientPrimary),
-        child: SafeArea(
-          child: Form(
-            key: formKey,
-            child: CustomScrollView(
-              slivers: [
-                SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
-                  sliver: SliverList(
-                    delegate: SliverChildListDelegate([
-                      Text(
-                        "Add Instance",
-                        style: DgText.h4.copyWith(
-                          color: DgColor.fgWhite100,
+        body: Container(
+          decoration: const BoxDecoration(gradient: DgColor.gradientPrimary),
+          child: SafeArea(
+            child: Form(
+              key: formKey,
+              child: CustomScrollView(
+                slivers: [
+                  SliverPadding(
+                    padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+                    sliver: SliverList(
+                      delegate: SliverChildListDelegate([
+                        Text(
+                          "Add Instance",
+                          style: DgText.h4.copyWith(
+                            color: DgColor.fgWhite100,
+                          ),
+                          textAlign: TextAlign.left,
                         ),
-                        textAlign: TextAlign.left,
-                      ),
-                      const SizedBox(height: DgSpacing.sm),
-                      Text(
-                        "Name your device to help you quickly identify it in the list.\nChoose something meaningful and easy to recognize.",
-                        style: DgText.bodySm400.copyWith(
-                          color: DgColor.fgWhite60,
+                        const SizedBox(height: DgSpacing.sm),
+                        Text(
+                          "Name your device to help you quickly identify it in the list.\nChoose something meaningful and easy to recognize.",
+                          style: DgText.bodySm400.copyWith(
+                            color: DgColor.fgWhite60,
+                          ),
+                          textAlign: TextAlign.left,
                         ),
-                        textAlign: TextAlign.left,
-                      ),
-                      const SizedBox(height: DgSpacing.xl3),
-                      DgTextFormField(
-                        size: DgTextFormFieldSize.big,
-                        controller: nameController,
-                        label: "Device Name",
-                        required: true,
-                        hintText: "Name this device",
-                        validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
-                            return "Field is required";
-                          }
-                          final matchedName = screenData
-                              .startResponse
-                              .user
-                              .deviceNames
-                              .firstWhereOrNull(
-                                (name) =>
-                                    name.toLowerCase() ==
-                                    value.toLowerCase().trim(),
-                              );
-                          if (matchedName != null) {
-                            return "Name is already used";
-                          }
-                          return null;
-                        },
-                      ),
-                    ]),
-                  ),
-                ),
-                SliverFillRemaining(
-                  hasScrollBody: false,
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-                    child: Align(
-                      alignment: Alignment.bottomCenter,
-                      child: DgButton(
-                        identifier: "device_name_submit",
-                        text: "Submit",
-                        style: DgButtonStyle.primary,
-                        size: DgButtonSize.big,
-                        width: double.infinity,
-                        loading: isLoading.value,
-                        onTap: () async {
-                          if (formKey.currentState?.validate() ?? false) {
-                            isLoading.value = true;
-                            try {
-                              final instance = await _handleRegistration(
-                                context,
-                                db,
-                                nameController.text.trim(),
-                              );
-                              if (context.mounted) {
-                                BiometrySetupScreenRoute(
-                                  id: instance.id.toString(),
-                                ).go(context);
-                              }
-                            } catch (e, st) {
-                              toaster.showError(
-                                message:
-                                    "Something went wrong. Please try again.",
-                                error: e,
-                                stackTrace: st,
-                              );
-                            } finally {
-                              isLoading.value = false;
+                        const SizedBox(height: DgSpacing.xl3),
+                        DgTextFormField(
+                          size: DgTextFormFieldSize.big,
+                          controller: nameController,
+                          label: "Device Name",
+                          required: true,
+                          hintText: "Name this device",
+                          validator: (value) {
+                            if (value == null || value.trim().isEmpty) {
+                              return "Field is required";
                             }
-                          }
-                        },
+                            final matchedName = screenData
+                                .startResponse
+                                .user
+                                .deviceNames
+                                .firstWhereOrNull(
+                                  (name) =>
+                                      name.toLowerCase() ==
+                                      value.toLowerCase().trim(),
+                                );
+                            if (matchedName != null) {
+                              return "Name is already used";
+                            }
+                            return null;
+                          },
+                        ),
+                      ]),
+                    ),
+                  ),
+                  SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                      child: Align(
+                        alignment: Alignment.bottomCenter,
+                        child: DgButton(
+                          identifier: "device_name_submit",
+                          text: "Submit",
+                          style: DgButtonStyle.primary,
+                          size: DgButtonSize.big,
+                          width: double.infinity,
+                          loading: isLoading.value,
+                          onTap: () async {
+                            if (formKey.currentState?.validate() ?? false) {
+                              isLoading.value = true;
+                              try {
+                                final instance = await _handleRegistration(
+                                  context,
+                                  db,
+                                  nameController.text.trim(),
+                                );
+                                if (context.mounted) {
+                                  BiometrySetupScreenRoute(
+                                    id: instance.id.toString(),
+                                  ).go(context);
+                                }
+                              } catch (e, st) {
+                                toaster.showError(
+                                  message:
+                                      "Something went wrong. Please try again.",
+                                  error: e,
+                                  stackTrace: st,
+                                );
+                              } finally {
+                                isLoading.value = false;
+                              }
+                            }
+                          },
+                        ),
                       ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
