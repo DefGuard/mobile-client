@@ -24,7 +24,7 @@
         # abiVersions = [ "armeabi-v7a" "arm64-v8a" ];
         toolsVersion = "26.1.1";
         platformToolsVersion = "37.0.1";
-        buildToolsVersions = ["35.0.0"];
+        buildToolsVersions = ["35.0.0" "36.0.0"];
         includeEmulator = false;
         emulatorVersion = "34.1.9";
         platformVersions = ["31" "32" "33" "34" "35" "36" "37"];
@@ -40,12 +40,19 @@
       };
       androidSdk = androidComposition.androidsdk;
 
-      emulatorPkg = pkgs.androidenv.emulateApp {
+      emulatorPkg = pkgs.androidenv.emulateApp.override {
+        composeAndroidPackages = args:
+          pkgs.androidenv.composeAndroidPackages (args // {
+            cmdLineToolsVersion = "latest";
+          });
+      } {
         name = "emulate-deguard-client";
         platformVersion = "36";
         abiVersion = "x86_64";
         systemImageType = "google_apis_playstore";
         deviceName = "pixel_9";
+        androidAvdFlags = "--device pixel_9";
+        androidEmulatorFlags = "-gpu host -camera-back webcam0";
       };
 
       flutterDevPkg = pkgs.writeShellScriptBin "flutter-dev" ''
@@ -77,6 +84,7 @@
           ];
           packages = [
             emulatorPkg
+            unzip
           ];
           shellHook = ''
             export PATH=${flutterDevPkg.outPath}/bin:$PATH
