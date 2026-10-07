@@ -84,15 +84,6 @@ class TunnelService {
   }) async {
     final navigator = Navigator.of(context);
 
-    // The instance policy outranks whatever the caller asked for - it is the
-    // administrator's setting, not a user preference.
-    final RoutingMethod selectedTrafficMethod =
-        switch (instance.clientTrafficPolicy) {
-          ClientTrafficPolicy.disableAllTraffic => RoutingMethod.predefined,
-          ClientTrafficPolicy.forceAllTraffic => RoutingMethod.all,
-          ClientTrafficPolicy.none => trafficMethod,
-        };
-
     final privateKey = await instance.wireguardPrivateKey();
     if (privateKey == null) {
       reportMissingSecret(instance.logName, "WireGuard private key");
@@ -101,9 +92,12 @@ class TunnelService {
     PluginConnectPayload payload = _makePayload(
       instance,
       location,
-      selectedTrafficMethod,
+      trafficMethod,
       privateKey,
     );
+    // An MFA retry may refresh the instance and location rows; the tunnel
+    // payload and the saved preferences must follow the refreshed ones.
+    DefguardInstance connectedInstance = instance;
 
     MfaMethod? authorizedWith;
 
@@ -143,13 +137,32 @@ class TunnelService {
           networkId: payload.networkId,
           postureData: payload.postureCheckRequired ? await getPosture() : null,
           refreshPlan: instance.mfaContract == MfaContract.multiStep
-              ? () => _refreshMfaPlan(
-                  db: db,
-                  instance: instance,
-                  location: location,
-                  oneOff: mfaPlan,
-                  capabilities: capabilities,
-                )
+              ? () async {
+                  final retry = await _refreshMfaPlan(
+                    db: db,
+                    instance: instance,
+                    location: location,
+                    oneOff: mfaPlan,
+                    capabilities: capabilities,
+                  );
+                  if (retry == null) return null;
+                  final refreshed = _makePayload(
+                    retry.instance,
+                    retry.location,
+                    trafficMethod,
+                    privateKey,
+                  );
+                  if (!canReuseMfaAttempt(payload, refreshed)) {
+                    talker.warning(
+                      "Not retrying MFA for networkId ${payload.networkId}: "
+                      "the refresh changed what the started attempt was bound to",
+                    );
+                    return null;
+                  }
+                  payload = refreshed;
+                  connectedInstance = retry.instance;
+                  return retry.plan;
+                }
               : null,
         ),
         proxyUrl: instance.proxyUrl,
@@ -196,7 +209,7 @@ class TunnelService {
 
     await _rememberPreferences(
       db,
-      instance,
+      connectedInstance,
       location,
       trafficMethod: trafficMethod,
       // null unless an MFA step actually ran
@@ -256,7 +269,21 @@ class TunnelService {
     }
   }
 
-  static Future<List<MfaMethod>?> _refreshMfaPlan({
+  /// The started MFA attempt was bound to the device key, network and posture
+  /// data; a retry may only reuse it when the refresh left those unchanged.
+  @visibleForTesting
+  static bool canReuseMfaAttempt(
+    PluginConnectPayload attempt,
+    PluginConnectPayload refreshed,
+  ) =>
+      attempt.devicePublicKey == refreshed.devicePublicKey &&
+      attempt.networkId == refreshed.networkId &&
+      attempt.postureCheckRequired == refreshed.postureCheckRequired;
+
+  static Future<
+    ({List<MfaMethod> plan, DefguardInstance instance, Location location})?
+  >
+  _refreshMfaPlan({
     required AppDatabase db,
     required DefguardInstance instance,
     required Location location,
@@ -291,11 +318,17 @@ class TunnelService {
         .getSingleOrNull();
     if (refreshedLocation == null) return null;
 
-    return resolveMfaRetryPlan(
+    final plan = resolveMfaRetryPlan(
       refreshedLocation,
       attempt: capabilities,
       refreshedContract: refreshedInstance.mfaContract,
       oneOff: oneOff,
+    );
+    if (plan == null) return null;
+    return (
+      plan: plan,
+      instance: refreshedInstance,
+      location: refreshedLocation,
     );
   }
 
@@ -369,6 +402,13 @@ class TunnelService {
     RoutingMethod trafficMethod,
     String privateKey,
   ) {
+    // The instance policy outranks whatever the caller asked for - it is the
+    // administrator's setting, not a user preference.
+    final selectedTrafficMethod = switch (instance.clientTrafficPolicy) {
+      ClientTrafficPolicy.disableAllTraffic => RoutingMethod.predefined,
+      ClientTrafficPolicy.forceAllTraffic => RoutingMethod.all,
+      ClientTrafficPolicy.none => trafficMethod,
+    };
     return PluginConnectPayload(
       publicKey: location.pubKey,
       devicePublicKey: instance.pubKey,
@@ -382,7 +422,7 @@ class TunnelService {
       locationId: location.id,
       networkId: location.networkId,
       instanceId: instance.id,
-      traffic: trafficMethod,
+      traffic: selectedTrafficMethod,
       postureCheckRequired: location.postureCheckRequired == true,
     );
   }
