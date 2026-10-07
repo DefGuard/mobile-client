@@ -95,10 +95,6 @@ class TunnelService {
       trafficMethod,
       privateKey,
     );
-    // An MFA retry may refresh the instance and location rows; the tunnel
-    // payload and the saved preferences must follow the refreshed ones.
-    DefguardInstance connectedInstance = instance;
-
     MfaMethod? authorizedWith;
 
     if (shouldStartMfa(location)) {
@@ -160,7 +156,6 @@ class TunnelService {
                     return null;
                   }
                   payload = refreshed;
-                  connectedInstance = retry.instance;
                   return retry.plan;
                 }
               : null,
@@ -207,9 +202,11 @@ class TunnelService {
 
     await wireguardPlugin.startTunnel(jsonEncode(payload.toJson()));
 
+    // The original instance, not a refreshed one: its policy decided whether
+    // the connect sheet let the user pick [trafficMethod].
     await _rememberPreferences(
       db,
-      connectedInstance,
+      instance,
       location,
       trafficMethod: trafficMethod,
       // null unless an MFA step actually ran
