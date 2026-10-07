@@ -19,6 +19,7 @@ class DgButton extends StatelessWidget {
   final DgButtonSize size;
   final bool disabled;
   final double? width;
+  final int? maxLines;
   final String? identifier;
 
   final Color backgroundColor;
@@ -46,6 +47,7 @@ class DgButton extends StatelessWidget {
     this.disabled = false,
     this.icon,
     this.width,
+    this.maxLines,
     this.identifier,
   });
 
@@ -60,6 +62,9 @@ class DgButton extends StatelessWidget {
     Widget? icon,
     double? width,
     double? height,
+    double? spacing,
+    int? maxLines,
+    TextStyle? baseTextStyle,
     String? identifier,
   }) {
     double heightInner;
@@ -129,17 +134,18 @@ class DgButton extends StatelessWidget {
       style: style,
       size: size,
       backgroundColor: backgroundColorInner,
-      textStyle: textStyleInner,
+      textStyle: baseTextStyle?.merge(textStyleInner) ?? textStyleInner,
       height: height ?? heightInner,
       borderRadius: borderRadiusInner,
       padding: paddingInner,
-      spacing: spacingInner,
+      spacing: spacing ?? spacingInner,
       border: borderInner,
       onTap: onTap,
       loading: loading,
       disabled: disabled,
       icon: icon,
       width: width,
+      maxLines: maxLines,
       identifier: identifier,
     );
   }
@@ -214,7 +220,16 @@ class DgButton extends StatelessWidget {
       children.add(icon!);
     }
 
-    children.add(Flexible(child: Text(text, textAlign: TextAlign.center)));
+    children.add(
+      Flexible(
+        child: Text(
+          text,
+          textAlign: TextAlign.center,
+          maxLines: maxLines,
+          overflow: maxLines == null ? null : TextOverflow.ellipsis,
+        ),
+      ),
+    );
 
     return children;
   }

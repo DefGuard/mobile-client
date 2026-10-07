@@ -47,7 +47,7 @@ class MfaStepFlow implements MfaStepHost {
   final String instanceUrl;
   final String? secureStorageKey;
   final String? openidDisplayName;
-  final OpenIdProvider openidProvider;
+  final OpenIdProvider? openidProvider;
 
   @override
   final MfaFlowController controller;
@@ -66,7 +66,7 @@ class MfaStepFlow implements MfaStepHost {
     required this.instanceUrl,
     this.secureStorageKey,
     this.openidDisplayName,
-    this.openidProvider = OpenIdProvider.custom,
+    this.openidProvider,
     this.buildStepScreen,
   });
 
@@ -164,7 +164,7 @@ class MfaStepFlow implements MfaStepHost {
       host: this,
       proxyUrl: proxyUrl,
       openidDisplayName: openidDisplayName,
-      openidProvider: openidProvider,
+      openidProvider: openidProvider ?? OpenIdProvider.custom,
     ),
     MfaMethod.fido2 => MfaFido2Screen(
       host: this,

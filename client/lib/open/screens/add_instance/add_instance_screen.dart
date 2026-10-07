@@ -22,7 +22,7 @@ class AddInstanceScreen extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final asyncPrefs = useMemoized(() => SharedPreferencesAsync(), []);
-    final canPop = Navigator.of(context).canPop();
+    final canPop = ModalRoute.of(context)?.canPop ?? false;
 
     return Scaffold(
       drawer: const DgDrawer(),
