@@ -90,8 +90,7 @@ final _uuid = RegExp(
   r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$',
 );
 
-/// Core issues the challenge and step attempt ID as short alphanumeric strings;
-/// the cap leaves room for longer ones without trusting any size.
+/// Core sends short alphanumeric values. The cap bounds size with headroom.
 final _qrSecret = RegExp(r'^[A-Za-z0-9]{1,128}$');
 
 /// A 2.2 token is alphanumeric, but a pre-2.2 token is a JWT.

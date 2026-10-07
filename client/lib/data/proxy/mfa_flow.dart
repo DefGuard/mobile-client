@@ -306,7 +306,6 @@ enum MfaStartRejectionReason {
   stepEmptyAfterLicense(2),
   stepUnavailable(3);
 
-  /// The proto `MfaStartRejectionReason` number.
   final int wireValue;
 
   const MfaStartRejectionReason(this.wireValue);
@@ -355,8 +354,8 @@ class MfaStepRejection {
 Map<String, dynamic>? _object(Object? value) =>
     value is Map ? Map<String, dynamic>.from(value) : null;
 
-/// Splits a serde externally tagged oneof, `{"Variant": {...}}`, into its tag
-/// and body. Anything else yields null so callers fall through to "unknown".
+/// Splits a serde externally tagged oneof into its tag and body, or null when
+/// the value has another shape.
 (String, Map<String, dynamic>)? _variant(Object? value) {
   final tagged = _object(value);
   if (tagged == null || tagged.length != 1) return null;

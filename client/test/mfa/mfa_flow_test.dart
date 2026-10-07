@@ -234,7 +234,7 @@ void main() {
     expect(
       () => controller.submitFido2(
         signature: [],
-        authData: List<int>.filled(32, 1),
+        authData: List<int>.filled(37, 1),
         credentialId: [1],
       ),
       throwsFormatException,
@@ -242,7 +242,7 @@ void main() {
     expect(
       () => controller.submitFido2(
         signature: [1],
-        authData: List<int>.filled(31, 1),
+        authData: List<int>.filled(36, 1),
         credentialId: [1],
       ),
       throwsFormatException,
@@ -250,7 +250,7 @@ void main() {
     expect(
       () => controller.submitFido2(
         signature: [1],
-        authData: List<int>.filled(32, 1),
+        authData: List<int>.filled(37, 1),
         credentialId: [],
       ),
       throwsFormatException,
@@ -389,7 +389,7 @@ void main() {
     expect(controller.credentialIds, ['offered-key']);
     await controller.submitFido2(
       signature: [1],
-      authData: List<int>.generate(32, (index) => index),
+      authData: List<int>.generate(37, (index) => index),
       credentialId: [2],
     );
     expect(transport.stepAttemptIds, ['first-attempt', 'fido-attempt']);

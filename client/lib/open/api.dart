@@ -23,7 +23,6 @@ final mfaPathSegments = ['api', 'v1', 'client-mfa'];
 final mfaFlowPathSegments = [..._apiV1Segments, 'mfa-flow'];
 final posturePathSegments = ['api', 'v1', 'posture'];
 
-/// iOS `NSURLErrorNetworkConnectionLost`.
 const _iosConnectionLostCode = '-1005';
 
 bool _isMfaEndpoint(Uri uri) =>
@@ -49,16 +48,20 @@ class MfaMethodNotAvailableException implements Exception {
       'Requested MFA method is not available on the account: ${method.toReadableString()}';
 }
 
+enum MfaRequestFailure { network, policyDenied, attemptLimit, notReady, server }
+
 class MfaRequestException implements Exception {
   final String operation;
   final int? statusCode;
-  final bool isNetworkError;
+  final MfaRequestFailure failure;
 
   const MfaRequestException(
     this.operation, {
     this.statusCode,
-    this.isNetworkError = false,
+    this.failure = MfaRequestFailure.server,
   });
+
+  bool get isNetworkError => failure == MfaRequestFailure.network;
 
   @override
   String toString() => statusCode == null
@@ -66,7 +69,12 @@ class MfaRequestException implements Exception {
       : '$operation failed. Status: $statusCode';
 }
 
-MfaRequestException _mfaRequestException(String operation, DioException error) {
+MfaRequestException _mfaRequestException(
+  String operation,
+  DioException error, {
+  Map<int, MfaRequestFailure> statusFailures = const {},
+}) {
+  final statusCode = error.response?.statusCode;
   final networkError =
       error.response == null &&
       (error.type == DioExceptionType.connectionError ||
@@ -75,10 +83,17 @@ MfaRequestException _mfaRequestException(String operation, DioException error) {
           (error.message?.contains(_iosConnectionLostCode) ?? false));
   return MfaRequestException(
     operation,
-    statusCode: error.response?.statusCode,
-    isNetworkError: networkError,
+    statusCode: statusCode,
+    failure: networkError
+        ? MfaRequestFailure.network
+        : statusFailures[statusCode] ?? MfaRequestFailure.server,
   );
 }
+
+const _startFailures = {
+  403: MfaRequestFailure.policyDenied,
+  428: MfaRequestFailure.notReady,
+};
 
 /// The only sanctioned path to the proxy. Every request through this Dio is
 /// held by [ClientHeadersInterceptor] until the client identity is known.
@@ -233,11 +248,13 @@ class ProxyApi {
               'selected mfa method not available') {
         throw MfaMethodNotAvailableException(data.method);
       }
-      if (e.response?.statusCode == 403) {
-        throw HttpException('MFA start rejected by the proxy');
-      }
-      throw _mfaRequestException('MFA start', e);
-    } catch (_) {
+      throw _mfaRequestException(
+        'MFA start',
+        e,
+        statusFailures: _startFailures,
+      );
+    } catch (e) {
+      talker.error('Invalid MFA start response: ${e.runtimeType}');
       throw const FormatException('Invalid MFA start response');
     }
   }
@@ -253,8 +270,13 @@ class ProxyApi {
       final response = await _dio.postUri(endpoint, data: data.toJson());
       return wire.MfaFlowStartResponse.fromJson(response.data);
     } on DioException catch (e) {
-      throw _mfaRequestException('MFA flow start', e);
-    } catch (_) {
+      throw _mfaRequestException(
+        'MFA flow start',
+        e,
+        statusFailures: _startFailures,
+      );
+    } catch (e) {
+      talker.error('Invalid MFA flow start response: ${e.runtimeType}');
       throw const FormatException('Invalid MFA flow start response');
     }
   }
@@ -303,8 +325,13 @@ class ProxyApi {
       final response = await _dio.postUri(endpoint, data: data.toJson());
       return wire.MfaFlowStepStartResponse.fromJson(response.data);
     } on DioException catch (e) {
-      throw _mfaRequestException('MFA flow step start', e);
-    } catch (_) {
+      throw _mfaRequestException(
+        'MFA flow step start',
+        e,
+        statusFailures: const {428: MfaRequestFailure.notReady},
+      );
+    } catch (e) {
+      talker.error('Invalid MFA flow step start response: ${e.runtimeType}');
       throw const FormatException('Invalid MFA flow step start response');
     }
   }
@@ -332,7 +359,8 @@ class ProxyApi {
         throw const MfaCodeRejectedException();
       }
       throw _mfaRequestException('MFA finish', e);
-    } catch (_) {
+    } catch (e) {
+      talker.error('Invalid MFA finish response: ${e.runtimeType}');
       throw const FormatException('Invalid MFA finish response');
     }
   }
@@ -355,8 +383,13 @@ class ProxyApi {
       if (e.response?.statusCode == 401) {
         throw const MfaCodeRejectedException();
       }
-      throw _mfaRequestException('MFA flow step finish', e);
-    } catch (_) {
+      throw _mfaRequestException(
+        'MFA flow step finish',
+        e,
+        statusFailures: const {403: MfaRequestFailure.attemptLimit},
+      );
+    } catch (e) {
+      talker.error('Invalid MFA flow step finish response: ${e.runtimeType}');
       throw const FormatException('Invalid MFA flow step finish response');
     }
   }

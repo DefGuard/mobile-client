@@ -35,7 +35,6 @@ List<MfaMethod?> sanitizeMfaStepPlan(
   }, growable: false);
 }
 
-/// What this device can do for MFA against one instance.
 class MfaCapabilities {
   final bool biometricAvailable;
   final MfaContract contract;

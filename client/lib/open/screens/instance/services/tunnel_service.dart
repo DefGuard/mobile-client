@@ -179,8 +179,8 @@ class TunnelService {
         case MfaFlowConnected():
           payload.presharedKey = flow.controller.takePresharedKey();
       }
-      // Only meaningful for a single-step flow; a multi-step one is described
-      // by its step count instead.
+      // Only a single-step flow has one method to show. A multi-step one shows
+      // its step count instead.
       final completedPlan = flow.controller.plan;
       authorizedWith = completedPlan.length == 1 ? completedPlan.single : null;
     } else if (payload.postureCheckRequired) {
@@ -266,8 +266,8 @@ class TunnelService {
     }
   }
 
-  /// The started MFA attempt was bound to the device key, network and posture
-  /// data; a retry may only reuse it when the refresh left those unchanged.
+  /// The started attempt is bound to the device key, network and posture data,
+  /// so a retry may reuse it only when the refresh left those unchanged.
   @visibleForTesting
   static bool canReuseMfaAttempt(
     PluginConnectPayload attempt,
@@ -399,8 +399,7 @@ class TunnelService {
     RoutingMethod trafficMethod,
     String privateKey,
   ) {
-    // The instance policy outranks whatever the caller asked for - it is the
-    // administrator's setting, not a user preference.
+    // The administrator's instance policy outranks the caller's choice.
     final selectedTrafficMethod = switch (instance.clientTrafficPolicy) {
       ClientTrafficPolicy.disableAllTraffic => RoutingMethod.predefined,
       ClientTrafficPolicy.forceAllTraffic => RoutingMethod.all,

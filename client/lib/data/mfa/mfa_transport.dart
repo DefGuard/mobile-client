@@ -78,7 +78,7 @@ final class MfaFido2Credential extends MfaCredential {
     required List<int> authenticatorData,
     required List<int> credentialId,
   }) {
-    if (authenticatorData.length < 32 ||
+    if (authenticatorData.length < 37 ||
         signature.isEmpty ||
         credentialId.isEmpty) {
       throw const FormatException('Invalid security key assertion');

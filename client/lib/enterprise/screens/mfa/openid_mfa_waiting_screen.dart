@@ -21,8 +21,8 @@ class OpenIdMfaWaitingScreen extends HookConsumerWidget {
 
   const OpenIdMfaWaitingScreen({super.key, required this.host});
 
-  /// Polls until the browser hop resolves. The legacy API maps its 428 response
-  /// and the flow API returns `awaitingExternal` for the same pending state.
+  /// Polls until the browser hop resolves. Legacy reports pending as 428, the
+  /// flow API as an awaiting external result.
   Future<MfaStepProgress?> _pollOpenidMfa(bool Function() isCancelled) async {
     final startTime = DateTime.now();
     const timeoutDuration = Duration(minutes: 2);

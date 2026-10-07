@@ -190,7 +190,7 @@ void main() {
       );
       final credential = MfaFido2Credential.fromAssertion(
         signature: [5, 6],
-        authenticatorData: List<int>.generate(34, (index) => index),
+        authenticatorData: List<int>.generate(37, (index) => index),
         credentialId: [7, 8],
       );
       await transport.finish(
@@ -211,7 +211,7 @@ void main() {
           'submission': {
             'Fido2': {
               'rp_id_hash': List<int>.generate(32, (index) => index),
-              'authenticator_data': List<int>.generate(34, (index) => index),
+              'authenticator_data': List<int>.generate(37, (index) => index),
               'signature': [5, 6],
               'credential_id': [7, 8],
             },
@@ -269,5 +269,107 @@ void main() {
         ),
       ),
     );
+  });
+
+  group('MFA request failures', () {
+    final url = Uri.parse('https://proxy.example');
+    const flowStart = flow.MfaFlowStartRequest(
+      locationId: 11,
+      pubkey: 'device-pubkey',
+      selectedMethods: [MfaMethod.totp],
+    );
+    const legacyStart = StartMfaRequest(
+      pubkey: 'device-pubkey',
+      locationId: 11,
+      method: MfaMethod.totp,
+    );
+
+    Matcher failsWith(MfaRequestFailure failure) => throwsA(
+      isA<MfaRequestException>().having(
+        (error) => error.failure,
+        'failure',
+        failure,
+      ),
+    );
+
+    Future<void> expectFailure(
+      int status,
+      Future<Object?> Function() call,
+      MfaRequestFailure failure,
+    ) async {
+      adapter.statusCode = status;
+      adapter.responseBody = '{"error":"server text"}';
+      await expectLater(call(), failsWith(failure));
+    }
+
+    test('a start denied by policy or not ready is told apart', () async {
+      await expectFailure(
+        403,
+        () => api.startMfaFlow(url, flowStart),
+        MfaRequestFailure.policyDenied,
+      );
+      await expectFailure(
+        428,
+        () => api.startMfaFlow(url, flowStart),
+        MfaRequestFailure.notReady,
+      );
+      await expectFailure(
+        403,
+        () => api.startMfa(url, legacyStart),
+        MfaRequestFailure.policyDenied,
+      );
+      await expectFailure(
+        428,
+        () => api.startMfa(url, legacyStart),
+        MfaRequestFailure.notReady,
+      );
+    });
+
+    test('a step that cannot open yet is not ready', () async {
+      await expectFailure(
+        428,
+        () => api.startMfaFlowStep(
+          url,
+          const flow.MfaFlowStepStartRequest(
+            token: 'flow-token',
+            method: MfaMethod.email,
+          ),
+        ),
+        MfaRequestFailure.notReady,
+      );
+    });
+
+    test('a forbidden step finish is the attempt limit', () async {
+      await expectFailure(
+        403,
+        () => api.finishMfaFlow(
+          url,
+          const flow.MfaFlowStepFinishRequest(
+            token: 'flow-token',
+            stepAttemptId: 'attempt-1',
+          ),
+        ),
+        MfaRequestFailure.attemptLimit,
+      );
+    });
+
+    test('other statuses stay server failures', () async {
+      await expectFailure(
+        500,
+        () => api.startMfaFlow(url, flowStart),
+        MfaRequestFailure.server,
+      );
+      await expectFailure(
+        403,
+        () => api.startMfaFlowStep(
+          url,
+          const flow.MfaFlowStepStartRequest(
+            token: 'flow-token',
+            method: MfaMethod.email,
+          ),
+        ),
+        MfaRequestFailure.server,
+      );
+    });
   });
 }
