@@ -54,18 +54,27 @@ class ConnectDialog extends HookConsumerWidget {
         location.copyWith(mfaStepPlan: savedPlan.value),
         oneOff: selection.value == null ? const [] : [selection.value],
         biometricAvailable: biometricAvailable,
+        contract: instance.mfaContract,
       ),
-      [location, savedPlan.value, selection.value, biometricAvailable],
+      [
+        location,
+        savedPlan.value,
+        selection.value,
+        biometricAvailable,
+        instance.mfaContract,
+      ],
     );
 
     final unpassable = plan.contains(null);
     final canEditDefaults =
+        instance.mfaContract == MfaContract.multiStep &&
         steps.length > 1 &&
         steps.any(
           (step) =>
               usableMfaMethods(
                 step,
                 biometricAvailable: biometricAvailable,
+                contract: instance.mfaContract,
               ).length >
               1,
         );
@@ -73,6 +82,7 @@ class ConnectDialog extends HookConsumerWidget {
     List<MfaMethod?> mfaDefaults(List<MfaMethod?> saved) => resolveMfaStepPlan(
       location.copyWith(mfaStepPlan: saved),
       biometricAvailable: biometricAvailable,
+      contract: instance.mfaContract,
     );
 
     final showingMfa = useState(false);
@@ -149,6 +159,7 @@ class ConnectDialog extends HookConsumerWidget {
               reason: unpassableStepReason(
                 location,
                 biometricAvailable: biometricAvailable,
+                contract: instance.mfaContract,
               ),
               instanceId: instance.id,
             )

@@ -73,7 +73,12 @@ class MfaBiometricScreen extends HookConsumerWidget {
 
       try {
         final signed = signChallenge(challenge, storage.privateKey);
-        final progress = await host.controller.submit(code: signed);
+        final progress = await host.controller.submit(
+          credential: MfaBiometricCredential(
+            signature: signed,
+            authPubKey: storage.publicKey,
+          ),
+        );
         if (progress is MfaStepAwaiting) {
           throw StateError("biometric step returned an out-of-band outcome");
         }

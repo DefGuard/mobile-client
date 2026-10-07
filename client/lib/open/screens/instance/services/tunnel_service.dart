@@ -13,6 +13,7 @@ import 'package:mobile/open/api.dart';
 import 'package:mobile/open/riverpod/biometrics_state.dart';
 import 'package:mobile/open/screens/mfa/mfa_step_flow.dart';
 import 'package:mobile/utils/instance_secrets.dart';
+import 'package:mobile/utils/update_instance.dart';
 
 import '../../../../data/db/enums.dart';
 import '../../../../utils/notifications.dart';
@@ -112,6 +113,7 @@ class TunnelService {
         location,
         oneOff: mfaPlan,
         biometricAvailable: biometricAvailable,
+        contract: instance.mfaContract,
       );
       if (resolved.isEmpty || resolved.contains(null)) {
         return const ConnectResult.failed(
@@ -129,11 +131,23 @@ class TunnelService {
       final flow = MfaStepFlow(
         navigator: navigator,
         controller: MfaFlowController(
-          transport: ProxyMfaTransport(Uri.parse(instance.proxyUrl)),
+          transport: mfaTransportForContract(
+            instance.mfaContract,
+            Uri.parse(instance.proxyUrl),
+          ),
           plan: plan,
           devicePubkey: payload.devicePublicKey,
           networkId: payload.networkId,
           postureData: payload.postureCheckRequired ? await getPosture() : null,
+          refreshPlan: instance.mfaContract == MfaContract.multiStep
+              ? () => _refreshMfaPlan(
+                  db: db,
+                  instance: instance,
+                  location: location,
+                  oneOff: mfaPlan,
+                  biometricAvailable: biometricAvailable,
+                )
+              : null,
         ),
         proxyUrl: instance.proxyUrl,
         instanceUrl: instance.url,
@@ -156,7 +170,8 @@ class TunnelService {
       }
       // Only meaningful for a single-step flow; a multi-step one is described
       // by its step count instead.
-      authorizedWith = plan.length == 1 ? plan.single : null;
+      final completedPlan = flow.controller.plan;
+      authorizedWith = completedPlan.length == 1 ? completedPlan.single : null;
     } else if (payload.postureCheckRequired) {
       final poolingToken = await instance.poolingToken();
       if (poolingToken == null) {
@@ -236,6 +251,50 @@ class TunnelService {
         e,
       );
     }
+  }
+
+  static Future<List<MfaMethod>?> _refreshMfaPlan({
+    required AppDatabase db,
+    required DefguardInstance instance,
+    required Location location,
+    required List<MfaMethod?> oneOff,
+    required bool biometricAvailable,
+  }) async {
+    final token = await instance.poolingToken();
+    if (token == null) return null;
+
+    final (config, _, _) = await proxyApi.pollConfiguration(
+      instance.proxyUrl,
+      token,
+    );
+    if (config == null) return null;
+
+    final update = await updateInstance(
+      db: db,
+      instance: instance,
+      configs: config.configs,
+      info: config.instance,
+      token: config.token,
+    );
+    if (update == null) return null;
+
+    final refreshedInstance = await db.managers.defguardInstances
+        .filter((row) => row.id.equals(instance.id))
+        .getSingleOrNull();
+    if (refreshedInstance == null) return null;
+
+    final refreshedLocation = await db.managers.locations
+        .filter((row) => row.id.equals(location.id))
+        .getSingleOrNull();
+    if (refreshedLocation == null) return null;
+
+    return resolveMfaRetryPlan(
+      refreshedLocation,
+      attemptContract: instance.mfaContract,
+      refreshedContract: refreshedInstance.mfaContract,
+      oneOff: oneOff,
+      biometricAvailable: biometricAvailable,
+    );
   }
 
   /// Whether the location has an MFA flow to satisfy. Legacy single-mode

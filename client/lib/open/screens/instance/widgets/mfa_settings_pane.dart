@@ -130,7 +130,10 @@ class _StepSection extends StatelessWidget {
           "Step $number",
           style: DgText.bodyXs400.copyWith(color: DgColor.fgWhite60),
         ),
-        for (final entry in pickableMfaMethods(step))
+        for (final entry in pickableMfaMethods(
+          step,
+          contract: instance.mfaContract,
+        ))
           mfaMethodRow(
             entry: entry,
             biometricAvailable: biometricAvailable,

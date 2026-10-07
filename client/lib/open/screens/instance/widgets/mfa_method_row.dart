@@ -24,6 +24,7 @@ Widget mfaMethodRow({
   final availability = mfaMethodAvailability(
     entry,
     biometricAvailable: biometricAvailable,
+    contract: instance.mfaContract,
   );
   final usable = availability == MfaMethodAvailability.usable;
 

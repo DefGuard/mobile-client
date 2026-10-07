@@ -52,7 +52,12 @@ void main() {
     final settings = logger.settings;
 
     for (final path in [
+      'https://proxy.example/api/v1/client-mfa/start',
       'https://proxy.example/api/v1/client-mfa/finish',
+      'https://proxy.example/api/v1/client-mfa/finish-remote',
+      'https://proxy.example/api/v1/mfa-flow/start',
+      'https://proxy.example/api/v1/mfa-flow/step-start',
+      'https://proxy.example/api/v1/mfa-flow/step-finish',
       'https://proxy.example/api/v1/mfa-flow/approve',
     ]) {
       final request = RequestOptions(path: path);

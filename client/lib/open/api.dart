@@ -9,6 +9,7 @@ import 'package:mobile/data/db/enums.dart';
 import 'package:mobile/data/proxy/config.dart';
 import 'package:mobile/data/proxy/enrollment.dart';
 import 'package:mobile/data/proxy/mfa.dart';
+import 'package:mobile/data/proxy/mfa_flow.dart' as wire;
 import 'package:mobile/enterprise/postures.dart';
 import 'package:mobile/open/client_headers_interceptor.dart';
 import 'package:native_dio_adapter/native_dio_adapter.dart';
@@ -40,9 +41,39 @@ class MfaMethodNotAvailableException implements Exception {
   const MfaMethodNotAvailableException(this.method);
 
   @override
-  String toString() {
-    return "Requested Mfa method not available on the account - ${method.toReadableString()}";
-  }
+  String toString() =>
+      'Requested MFA method is not available on the account: ${method.toReadableString()}';
+}
+
+class MfaRequestException implements Exception {
+  final String operation;
+  final int? statusCode;
+  final bool isNetworkError;
+
+  const MfaRequestException(
+    this.operation, {
+    this.statusCode,
+    this.isNetworkError = false,
+  });
+
+  @override
+  String toString() => statusCode == null
+      ? '$operation failed'
+      : '$operation failed. Status: $statusCode';
+}
+
+MfaRequestException _mfaRequestException(String operation, DioException error) {
+  final networkError =
+      error.response == null &&
+      (error.type == DioExceptionType.connectionError ||
+          error.type == DioExceptionType.connectionTimeout ||
+          (error.error?.toString().contains('-1005') ?? false) ||
+          (error.message?.contains('-1005') ?? false));
+  return MfaRequestException(
+    operation,
+    statusCode: error.response?.statusCode,
+    isNetworkError: networkError,
+  );
 }
 
 /// The only sanctioned path to the proxy. Every request through this Dio is
@@ -116,8 +147,12 @@ class ProxyApi {
       }
       final responseData = InstanceInfoResponse.fromJson(response.data);
       return (responseData.deviceConfig, status, response.headers);
-    } catch (e) {
-      talker.error("Failed to poll configuration!", e);
+    } on DioException catch (e) {
+      talker.error(
+        'Failed to poll configuration. Status: ${e.response?.statusCode}',
+      );
+    } catch (_) {
+      talker.error('Failed to parse configuration response');
     }
     return (null, null, null);
   }
@@ -183,43 +218,45 @@ class ProxyApi {
 
     try {
       final response = await _dio.postUri(endpoint, data: data.toJson());
-      final startResponse = StartMfaResponse.fromJson(response.data);
-      if (startResponse.rejections.isNotEmpty) {
-        throw MfaRejectedException(startResponse.rejections);
-      }
-      return startResponse;
-    } on MfaRejectedException {
-      rethrow;
+      return StartMfaResponse.fromJson(response.data);
     } on DioException catch (e) {
-      if (e.response != null) {
-        if (e.response!.data != null &&
-            e.response!.data is Map<String, dynamic>) {
-          final responseData = e.response!.data!;
-          final dataError = responseData['error'];
-          final missingMFAMethodError = "selected MFA method not available"
-              .toLowerCase();
-          if (dataError is String &&
-              data.selectedMethods.length <= 1 &&
-              dataError.toLowerCase().trim() == missingMFAMethodError) {
-            throw MfaMethodNotAvailableException(data.method);
-          }
-
-          if (e.response?.statusCode == 403) {
-            final error = responseData['error'] ?? responseData['message'];
-            if (error is String) {
-              throw HttpException(error);
-            }
-          }
-        }
-        throw HttpException(
-          "Failed to start MFA. Status: ${e.response?.statusCode} Body: ${e.response?.data}",
-        );
+      final responseData = e.response?.data;
+      final dataError = responseData is Map<String, dynamic>
+          ? responseData['error']
+          : null;
+      if (dataError is String &&
+          dataError.toLowerCase().trim() ==
+              'selected mfa method not available') {
+        throw MfaMethodNotAvailableException(data.method);
       }
-      rethrow;
-    } catch (e) {
-      throw FormatException(
-        "Invalid JSON sent by start MFA endpoint! Error: $e",
-      );
+      if (e.response?.statusCode == 403) {
+        throw HttpException('MFA start rejected by the proxy');
+      }
+      throw _mfaRequestException('MFA start', e);
+    } catch (_) {
+      throw const FormatException('Invalid MFA start response');
+    }
+  }
+
+  Future<wire.MfaFlowStartResponse> startMfaFlow(
+    Uri url,
+    wire.MfaFlowStartRequest data,
+  ) async {
+    final endpoint = url.replace(
+      pathSegments: [
+        ...url.pathSegments,
+        ..._apiV1Segments,
+        'mfa-flow',
+        'start',
+      ],
+    );
+    try {
+      final response = await _dio.postUri(endpoint, data: data.toJson());
+      return wire.MfaFlowStartResponse.fromJson(response.data);
+    } on DioException catch (e) {
+      throw _mfaRequestException('MFA flow start', e);
+    } catch (_) {
+      throw const FormatException('Invalid MFA flow start response');
     }
   }
 
@@ -256,33 +293,32 @@ class ProxyApi {
     }
   }
 
-  Future<StepStartMfaResponse> stepStartMfa(
+  Future<wire.MfaFlowStepStartResponse> startMfaFlowStep(
     Uri url,
-    StepStartMfaRequest data,
+    wire.MfaFlowStepStartRequest data,
   ) async {
     final endpoint = url.replace(
-      pathSegments: [...url.pathSegments, ...mfaPathSegments, 'step-start'],
+      pathSegments: [
+        ...url.pathSegments,
+        ..._apiV1Segments,
+        'mfa-flow',
+        'step-start',
+      ],
     );
-
     try {
       final response = await _dio.postUri(endpoint, data: data.toJson());
-      return StepStartMfaResponse.fromJson(response.data);
+      return wire.MfaFlowStepStartResponse.fromJson(response.data);
     } on DioException catch (e) {
-      if (e.response != null) {
-        throw HttpException(
-          "Failed to start MFA step. Status: ${e.response?.statusCode} "
-          "Body: ${e.response?.data}",
-        );
-      }
-      rethrow;
-    } catch (e) {
-      throw FormatException(
-        "Invalid JSON sent by MFA step start endpoint! Error: $e",
-      );
+      throw _mfaRequestException('MFA flow step start', e);
+    } catch (_) {
+      throw const FormatException('Invalid MFA flow step start response');
     }
   }
 
-  Future<FinishMfaResponse> finishMfa(Uri url, FinishMfaRequest data) async {
+  Future<FinishMfaResponse?> finishMfa(
+    Uri url,
+    FinishMfaRequest data,
+  ) async {
     final endpoint = url.replace(
       pathSegments: [...url.pathSegments, ...mfaPathSegments, 'finish'],
     );
@@ -295,15 +331,40 @@ class ProxyApi {
               status != null && (status < 400 || status == 428),
         ),
       );
-      if (response.statusCode == 428) {
-        return const FinishMfaResponse(outcome: MfaAwaitingExternal());
-      }
+      if (response.statusCode == 428) return null;
       return FinishMfaResponse.fromJson(response.data);
     } on DioException catch (e) {
       if (e.response?.statusCode == 401) {
         throw const MfaCodeRejectedException();
       }
-      rethrow;
+      throw _mfaRequestException('MFA finish', e);
+    } catch (_) {
+      throw const FormatException('Invalid MFA finish response');
+    }
+  }
+
+  Future<wire.MfaFlowStepFinishResponse> finishMfaFlow(
+    Uri url,
+    wire.MfaFlowStepFinishRequest data,
+  ) async {
+    final endpoint = url.replace(
+      pathSegments: [
+        ...url.pathSegments,
+        ..._apiV1Segments,
+        'mfa-flow',
+        'step-finish',
+      ],
+    );
+    try {
+      final response = await _dio.postUri(endpoint, data: data.toJson());
+      return wire.MfaFlowStepFinishResponse.fromJson(response.data);
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 401) {
+        throw const MfaCodeRejectedException();
+      }
+      throw _mfaRequestException('MFA flow step finish', e);
+    } catch (_) {
+      throw const FormatException('Invalid MFA flow step finish response');
     }
   }
 
@@ -311,7 +372,11 @@ class ProxyApi {
     final endpoint = url.replace(
       pathSegments: [...url.pathSegments, ...mfaPathSegments, 'finish-remote'],
     );
-    await _dio.postUri(endpoint, data: data.toJson());
+    try {
+      await _dio.postUri(endpoint, data: data.toJson());
+    } on DioException catch (e) {
+      throw _mfaRequestException('Remote MFA finish', e);
+    }
   }
 
   Future<void> approveMfaFlow(Uri url, MfaFlowApproveRequest data) async {
@@ -323,7 +388,11 @@ class ProxyApi {
         'approve',
       ],
     );
-    await _dio.postUri(endpoint, data: data.toJson());
+    try {
+      await _dio.postUri(endpoint, data: data.toJson());
+    } on DioException catch (e) {
+      throw _mfaRequestException('MFA flow approval', e);
+    }
   }
 
   Future<NetworkInfoResponse> networkInfo(Uri url, String pubKey) async {

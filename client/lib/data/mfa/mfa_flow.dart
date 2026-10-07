@@ -1,37 +1,320 @@
-import 'dart:convert';
-
 import 'package:mobile/data/db/enums.dart';
 import 'package:mobile/data/proxy/mfa.dart';
+import 'package:mobile/data/proxy/mfa_flow.dart' as wire;
 import 'package:mobile/enterprise/postures.dart';
 import 'package:mobile/open/api.dart';
 
-/// The three calls the MFA flow makes, behind an interface so the flow can be
-/// driven without a proxy in tests.
 abstract class MfaTransport {
-  Future<StartMfaResponse> start(StartMfaRequest request);
+  Future<MfaSessionStart> start({
+    required String devicePubkey,
+    required int networkId,
+    required List<MfaMethod> plan,
+    DevicePostureData? postureData,
+  });
 
-  Future<StepStartMfaResponse> stepStart(StepStartMfaRequest request);
+  Future<MfaStepChallenge> startStep(String token, MfaMethod method);
 
-  Future<FinishMfaResponse> finish(FinishMfaRequest request);
+  Future<MfaFinishResult> finish({
+    required String token,
+    required String? stepAttemptId,
+    required MfaCredential? credential,
+  });
 }
 
-class ProxyMfaTransport implements MfaTransport {
+class MfaSessionStart {
+  final String token;
+  final MfaStepChallenge firstStep;
+
+  const MfaSessionStart({required this.token, required this.firstStep});
+}
+
+class MfaStepChallenge {
+  final String? stepAttemptId;
+  final String? challenge;
+  final List<String> credentialIds;
+
+  const MfaStepChallenge({
+    this.stepAttemptId,
+    this.challenge,
+    this.credentialIds = const [],
+  });
+}
+
+sealed class MfaCredential {
+  const MfaCredential();
+}
+
+final class MfaCodeCredential extends MfaCredential {
+  final String code;
+
+  const MfaCodeCredential(this.code);
+}
+
+final class MfaBiometricCredential extends MfaCredential {
+  final String signature;
+  final String authPubKey;
+
+  const MfaBiometricCredential({
+    required this.signature,
+    required this.authPubKey,
+  });
+}
+
+final class MfaFido2Credential extends MfaCredential {
+  final List<int> rpIdHash;
+  final List<int> authenticatorData;
+  final List<int> signature;
+  final List<int> credentialId;
+
+  const MfaFido2Credential._({
+    required this.rpIdHash,
+    required this.authenticatorData,
+    required this.signature,
+    required this.credentialId,
+  });
+
+  factory MfaFido2Credential.fromAssertion({
+    required List<int> signature,
+    required List<int> authenticatorData,
+    required List<int> credentialId,
+  }) {
+    if (authenticatorData.length < 32 ||
+        signature.isEmpty ||
+        credentialId.isEmpty) {
+      throw const FormatException('Invalid security key assertion');
+    }
+    return MfaFido2Credential._(
+      rpIdHash: authenticatorData.sublist(0, 32),
+      authenticatorData: List.of(authenticatorData),
+      signature: List.of(signature),
+      credentialId: List.of(credentialId),
+    );
+  }
+}
+
+sealed class MfaFinishResult {
+  const MfaFinishResult();
+}
+
+final class MfaFinishAdvanced extends MfaFinishResult {
+  final int nextStep;
+
+  const MfaFinishAdvanced(this.nextStep);
+}
+
+final class MfaFinishCompleted extends MfaFinishResult {
+  final String? presharedKey;
+
+  const MfaFinishCompleted(this.presharedKey);
+}
+
+final class MfaFinishAwaitingExternal extends MfaFinishResult {
+  const MfaFinishAwaitingExternal();
+}
+
+class MfaStartRejectedException implements Exception {
+  final String message;
+
+  const MfaStartRejectedException(this.message);
+
+  @override
+  String toString() => message;
+}
+
+class LegacyMfaTransport implements MfaTransport {
   final Uri proxyUrl;
+  final ProxyApi _api;
 
-  const ProxyMfaTransport(this.proxyUrl);
-
-  @override
-  Future<StartMfaResponse> start(StartMfaRequest request) =>
-      proxyApi.startMfa(proxyUrl, request);
+  LegacyMfaTransport(this.proxyUrl, {ProxyApi? api}) : _api = api ?? proxyApi;
 
   @override
-  Future<StepStartMfaResponse> stepStart(StepStartMfaRequest request) =>
-      proxyApi.stepStartMfa(proxyUrl, request);
+  Future<MfaSessionStart> start({
+    required String devicePubkey,
+    required int networkId,
+    required List<MfaMethod> plan,
+    DevicePostureData? postureData,
+  }) async {
+    if (plan.length != 1 || plan.single == MfaMethod.fido2) {
+      throw UnsupportedError(
+        'The legacy MFA contract supports one non-FIDO2 step',
+      );
+    }
+    final response = await _api.startMfa(
+      proxyUrl,
+      StartMfaRequest(
+        pubkey: devicePubkey,
+        locationId: networkId,
+        method: plan.single,
+        postureData: postureData,
+      ),
+    );
+    return MfaSessionStart(
+      token: response.token,
+      firstStep: MfaStepChallenge(challenge: response.challenge),
+    );
+  }
 
   @override
-  Future<FinishMfaResponse> finish(FinishMfaRequest request) =>
-      proxyApi.finishMfa(proxyUrl, request);
+  Future<MfaStepChallenge> startStep(String token, MfaMethod method) =>
+      throw UnsupportedError('The legacy MFA contract has no step-start route');
+
+  @override
+  Future<MfaFinishResult> finish({
+    required String token,
+    required String? stepAttemptId,
+    required MfaCredential? credential,
+  }) async {
+    if (stepAttemptId != null) {
+      throw StateError('The legacy MFA contract does not use step attempt IDs');
+    }
+    final request = switch (credential) {
+      null => FinishMfaRequest(token: token),
+      MfaCodeCredential(:final code) => FinishMfaRequest(
+        token: token,
+        code: code,
+      ),
+      MfaBiometricCredential(:final signature, :final authPubKey) =>
+        FinishMfaRequest(
+          token: token,
+          code: signature,
+          authPubKey: authPubKey,
+        ),
+      MfaFido2Credential() => throw UnsupportedError(
+        'FIDO2 is unavailable on the legacy MFA contract',
+      ),
+    };
+    final response = await _api.finishMfa(proxyUrl, request);
+    if (response == null) return const MfaFinishAwaitingExternal();
+    final presharedKey = response.presharedKey;
+    if (presharedKey == null) throw const MfaCodeRejectedException();
+    return MfaFinishCompleted(presharedKey);
+  }
 }
+
+class MfaFlowProxyTransport implements MfaTransport {
+  final Uri proxyUrl;
+  final ProxyApi _api;
+
+  MfaFlowProxyTransport(this.proxyUrl, {ProxyApi? api})
+    : _api = api ?? proxyApi;
+
+  @override
+  Future<MfaSessionStart> start({
+    required String devicePubkey,
+    required int networkId,
+    required List<MfaMethod> plan,
+    DevicePostureData? postureData,
+  }) async {
+    final response = await _api.startMfaFlow(
+      proxyUrl,
+      wire.MfaFlowStartRequest(
+        locationId: networkId,
+        pubkey: devicePubkey,
+        postureData: postureData,
+        selectedMethods: plan,
+      ),
+    );
+    return switch (response.outcome) {
+      wire.MfaFlowAccepted(:final token, :final firstStep) => MfaSessionStart(
+        token: token,
+        firstStep: _stepChallenge(firstStep),
+      ),
+      wire.MfaFlowRejected(:final rejections) =>
+        throw MfaStartRejectedException(
+          rejections.map((rejection) => rejection.message).join(' ').isEmpty
+              ? 'The server rejected the MFA plan.'
+              : rejections.map((rejection) => rejection.message).join(' '),
+        ),
+      wire.MfaFlowStartUnknown() => throw const FormatException(
+        'Unrecognized MFA flow start response',
+      ),
+    };
+  }
+
+  @override
+  Future<MfaStepChallenge> startStep(String token, MfaMethod method) async {
+    final response = await _api.startMfaFlowStep(
+      proxyUrl,
+      wire.MfaFlowStepStartRequest(token: token, method: method),
+    );
+    final started = response.started;
+    if (started == null) {
+      throw const FormatException(
+        'MFA flow step response did not include a step',
+      );
+    }
+    return _stepChallenge(started);
+  }
+
+  @override
+  Future<MfaFinishResult> finish({
+    required String token,
+    required String? stepAttemptId,
+    required MfaCredential? credential,
+  }) async {
+    if (stepAttemptId == null || stepAttemptId.isEmpty) {
+      throw StateError('The MFA flow contract requires a step attempt ID');
+    }
+    final submission = switch (credential) {
+      null => null,
+      MfaCodeCredential(:final code) => wire.MfaFlowCodeSubmission(code),
+      MfaBiometricCredential(:final signature) =>
+        wire.MfaFlowBiometricSubmission(signature),
+      MfaFido2Credential(
+        :final rpIdHash,
+        :final authenticatorData,
+        :final signature,
+        :final credentialId,
+      ) =>
+        wire.MfaFlowFido2Submission(
+          rpIdHash: rpIdHash,
+          authenticatorData: authenticatorData,
+          signature: signature,
+          credentialId: credentialId,
+        ),
+    };
+    final response = await _api.finishMfaFlow(
+      proxyUrl,
+      wire.MfaFlowStepFinishRequest(
+        token: token,
+        stepAttemptId: stepAttemptId,
+        submission: submission,
+      ),
+    );
+    return switch (response.result) {
+      wire.MfaFlowAdvanced(:final nextStep) => MfaFinishAdvanced(nextStep),
+      wire.MfaFlowCompleted(:final presharedKey) => MfaFinishCompleted(
+        presharedKey,
+      ),
+      wire.MfaFlowAwaitingExternal() => const MfaFinishAwaitingExternal(),
+      _ => throw const FormatException('Unrecognized MFA flow finish response'),
+    };
+  }
+}
+
+MfaStepChallenge _stepChallenge(wire.MfaFlowStepStarted step) =>
+    switch (step.challenge) {
+      null => MfaStepChallenge(stepAttemptId: step.stepAttemptId),
+      wire.MfaSignatureChallenge(:final challenge) => MfaStepChallenge(
+        stepAttemptId: step.stepAttemptId,
+        challenge: challenge,
+      ),
+      wire.MfaFido2Challenge(:final challenge, :final credentialIds) =>
+        MfaStepChallenge(
+          stepAttemptId: step.stepAttemptId,
+          challenge: challenge,
+          credentialIds: credentialIds,
+        ),
+      wire.MfaUnknownChallenge() => throw const FormatException(
+        'Unrecognized MFA flow challenge',
+      ),
+    };
+
+MfaTransport mfaTransportForContract(MfaContract contract, Uri proxyUrl) =>
+    switch (contract) {
+      MfaContract.legacy => LegacyMfaTransport(proxyUrl),
+      MfaContract.multiStep => MfaFlowProxyTransport(proxyUrl),
+    };
 
 /// What the server said about the proof just submitted.
 sealed class MfaStepProgress {
@@ -50,19 +333,16 @@ class MfaStepAwaiting extends MfaStepProgress {
   const MfaStepAwaiting();
 }
 
-/// Drives one connect-time MFA flow: opens each step, submits its proof, and
-/// decides what the server's answer means. Holds the preshared key privately so
-/// it never reaches a widget.
+typedef MfaPlanRefresh = Future<List<MfaMethod>?> Function();
+
+/// Drives one connect-time MFA flow and keeps the preshared key out of widgets.
 class MfaFlowController {
-  /// One method per step, in flow order.
-  final List<MfaMethod> plan;
+  List<MfaMethod> _plan;
   final String devicePubkey;
   final int networkId;
-
-  /// Collected once for the whole flow and sent only with the first call.
   final DevicePostureData? postureData;
-
   final MfaTransport transport;
+  final MfaPlanRefresh? refreshPlan;
 
   int _stepIndex = 0;
   String? _token;
@@ -72,121 +352,103 @@ class MfaFlowController {
   String? _presharedKey;
   bool _cancelled = false;
   bool _stepOpen = false;
+  bool _startRetried = false;
 
   MfaFlowController({
     required this.transport,
-    required this.plan,
+    required List<MfaMethod> plan,
     required this.devicePubkey,
     required this.networkId,
     this.postureData,
-  }) : assert(plan.isNotEmpty, "a flow needs at least one step");
+    this.refreshPlan,
+  }) : _plan = List.unmodifiable(plan),
+       assert(plan.isNotEmpty, 'a flow needs at least one step');
+
+  List<MfaMethod> get plan => _plan;
 
   int get stepIndex => _stepIndex;
 
-  int get stepCount => plan.length;
+  int get stepCount => _plan.length;
 
-  MfaMethod get method => plan[_stepIndex];
+  MfaMethod get method => _plan[_stepIndex];
 
   String? get token => _token;
 
   String? get challenge => _challenge;
 
-  /// Security keys the server will accept for the current FIDO2 step.
+  String? get stepAttemptId => _stepAttemptId;
+
   List<String> get credentialIds => _credentialIds;
 
   bool get isCancelled => _cancelled;
 
-  /// Only shown for a flow with more than one step.
   String? get stepLabel =>
-      plan.length > 1 ? "Step ${_stepIndex + 1}/${plan.length}" : null;
+      _plan.length > 1 ? 'Step ${_stepIndex + 1}/${_plan.length}' : null;
 
   void cancel() => _cancelled = true;
 
-  /// Reads the preshared key out, leaving nothing behind.
   String? takePresharedKey() {
     final key = _presharedKey;
     _presharedKey = null;
     return key;
   }
 
-  /// Opens the current step. The first call creates the session and submits the
-  /// whole plan; later ones open a step within it. A single-step flow never
-  /// calls step-start, which a pre-2.2 proxy does not have.
   Future<void> startStep() async {
     final token = _token;
-    if (token != null && plan.length > 1) {
-      final step = await transport.stepStart(
-        StepStartMfaRequest(token: token, method: method),
-      );
-      _stepAttemptId = step.stepAttemptId;
-      _challenge = step.challenge;
-      _credentialIds = step.credentialIds;
-      _stepOpen = true;
+    if (token != null && _plan.length > 1) {
+      _setStep(await transport.startStep(token, method));
       return;
     }
 
-    final session = await transport.start(
-      StartMfaRequest(
-        pubkey: devicePubkey,
-        locationId: networkId,
-        method: plan.first,
-        selectedMethods: plan,
-        postureData: postureData,
-      ),
-    );
+    final session = await _startWithRetry();
     _token = session.token;
-    _challenge = session.challenge;
-    _credentialIds = session.credentialIds;
-    _stepAttemptId = null;
+    _setStep(session.firstStep);
+  }
+
+  Future<MfaSessionStart> _startWithRetry() async {
+    try {
+      return await _start();
+    } on MfaStartRejectedException {
+      final refresh = refreshPlan;
+      if (_startRetried || refresh == null) rethrow;
+      _startRetried = true;
+      final refreshedPlan = await refresh();
+      if (refreshedPlan == null || refreshedPlan.isEmpty) rethrow;
+      _plan = List.unmodifiable(refreshedPlan);
+      return _start();
+    }
+  }
+
+  Future<MfaSessionStart> _start() => transport.start(
+    devicePubkey: devicePubkey,
+    networkId: networkId,
+    plan: _plan,
+    postureData: postureData,
+  );
+
+  void _setStep(MfaStepChallenge step) {
+    _stepAttemptId = step.stepAttemptId;
+    _challenge = step.challenge;
+    _credentialIds = step.credentialIds;
     _stepOpen = true;
   }
 
-  /// Submits a proof for the current step, or polls for an out-of-band one when
-  /// [code] is null. The attempt id is reused across retries, so a rejected code
-  /// does not need the step reopening.
-  Future<MfaStepProgress> submit({String? code}) => _finish(
-    (token) => FinishMfaRequest(
-      token: token,
-      code: code,
-      stepAttemptId: _stepAttemptId,
-    ),
-  );
-
-  /// Submits a security key assertion. The server reads the signature from
-  /// `auth_pub_key`, as the desktop client sends it.
-  Future<MfaStepProgress> submitFido2({
-    required List<int> signature,
-    required List<int> authData,
-    required List<int> credentialId,
-  }) => _finish(
-    (token) => FinishMfaRequest(
-      token: token,
-      authPubKey: base64Url.encode(signature).replaceAll('=', ''),
-      authData: authData,
-      credentialId: credentialId,
-      stepAttemptId: _stepAttemptId,
-    ),
-  );
-
-  Future<MfaStepProgress> _finish(
-    FinishMfaRequest Function(String token) buildRequest,
-  ) async {
+  Future<MfaStepProgress> submit({MfaCredential? credential}) async {
     final token = _token;
     if (token == null || !_stepOpen) {
-      // The previous step's screen stays on top while the next one is being
-      // opened, so it can still be tapped in that gap.
-      throw StateError("MFA proof submitted while no step was open");
+      throw StateError('MFA proof submitted while no step was open');
     }
+    _validateCredential(credential);
+    final result = await transport.finish(
+      token: token,
+      stepAttemptId: _stepAttemptId,
+      credential: credential,
+    );
 
-    final response = await transport.finish(buildRequest(token));
-
-    switch (response.outcome) {
-      case MfaAdvanced(:final nextStep):
-        if (nextStep < 0 || nextStep >= plan.length) {
-          throw FormatException(
-            "Server advanced to step ${nextStep + 1} of a "
-            "${plan.length}-step flow",
-          );
+    switch (result) {
+      case MfaFinishAdvanced(:final nextStep):
+        if (nextStep < 0 || nextStep >= _plan.length) {
+          throw const FormatException('Invalid MFA flow step transition');
         }
         _stepIndex = nextStep;
         _challenge = null;
@@ -194,21 +456,38 @@ class MfaFlowController {
         _stepAttemptId = null;
         _stepOpen = false;
         return const MfaStepAdvanced();
-      case MfaCompleted(:final presharedKey):
+      case MfaFinishCompleted(:final presharedKey):
         _presharedKey = presharedKey;
         _stepOpen = false;
         return const MfaStepCompleted();
-      case MfaAwaitingExternal():
+      case MfaFinishAwaitingExternal():
         return const MfaStepAwaiting();
-      case null:
-        // Pre-2.2 proxies report completion through the deprecated field only,
-        // and an absent key there has always meant the proof was not accepted.
-        if (response.presharedKey == null) {
-          throw const MfaCodeRejectedException();
-        }
-        _presharedKey = response.presharedKey;
-        _stepOpen = false;
-        return const MfaStepCompleted();
     }
   }
+
+  void _validateCredential(MfaCredential? credential) {
+    final valid = switch (credential) {
+      MfaCodeCredential() =>
+        method == MfaMethod.totp || method == MfaMethod.email,
+      MfaBiometricCredential(:final signature, :final authPubKey) =>
+        method == MfaMethod.biometric &&
+            signature.isNotEmpty &&
+            authPubKey.isNotEmpty,
+      MfaFido2Credential() => method == MfaMethod.fido2,
+      null => method == MfaMethod.openid,
+    };
+    if (!valid) throw StateError('Credential does not match the MFA step');
+  }
+
+  Future<MfaStepProgress> submitFido2({
+    required List<int> signature,
+    required List<int> authData,
+    required List<int> credentialId,
+  }) => submit(
+    credential: MfaFido2Credential.fromAssertion(
+      signature: signature,
+      authenticatorData: authData,
+      credentialId: credentialId,
+    ),
+  );
 }

@@ -38,14 +38,8 @@ List<MfaMethod?> sanitizeMfaStepPlan(
 /// Why a step's method cannot be used right now.
 enum MfaMethodAvailability {
   usable,
-
-  /// Supported, but the user has not set it up on the server.
   notConfigured,
-
-  /// Biometric, but this device has no usable biometric storage.
   biometryUnavailable,
-
-  /// A factor this client cannot perform at all.
   unsupported,
 }
 
@@ -55,10 +49,15 @@ enum MfaUnpassableReason { setUpBiometry, notConfigured, desktopOnly }
 MfaMethodAvailability mfaMethodAvailability(
   MfaStepMethod entry, {
   required bool biometricAvailable,
+  MfaContract contract = MfaContract.legacy,
 }) {
-  if (entry.method == null) return MfaMethodAvailability.unsupported;
+  final method = entry.method;
+  if (method == null ||
+      (method == MfaMethod.fido2 && contract == MfaContract.legacy)) {
+    return MfaMethodAvailability.unsupported;
+  }
   if (!entry.configured) return MfaMethodAvailability.notConfigured;
-  if (entry.method == MfaMethod.biometric && !biometricAvailable) {
+  if (method == MfaMethod.biometric && !biometricAvailable) {
     return MfaMethodAvailability.biometryUnavailable;
   }
   return MfaMethodAvailability.usable;
@@ -68,12 +67,14 @@ MfaMethodAvailability mfaMethodAvailability(
 List<MfaStepMethod> usableMfaMethods(
   MfaStep step, {
   required bool biometricAvailable,
+  MfaContract contract = MfaContract.legacy,
 }) => step.methods
     .where(
       (entry) =>
           mfaMethodAvailability(
             entry,
             biometricAvailable: biometricAvailable,
+            contract: contract,
           ) ==
           MfaMethodAvailability.usable,
     )
@@ -82,9 +83,17 @@ List<MfaStepMethod> usableMfaMethods(
 /// Methods of [step] worth showing, unusable ones included so the user can see
 /// why. Falls back to the raw list so a step made entirely of factors this
 /// client cannot perform still renders something.
-List<MfaStepMethod> pickableMfaMethods(MfaStep step) {
+List<MfaStepMethod> pickableMfaMethods(
+  MfaStep step, {
+  MfaContract contract = MfaContract.legacy,
+}) {
   final supported = step.methods
-      .where((entry) => entry.method != null)
+      .where(
+        (entry) =>
+            entry.method != null &&
+            !(contract == MfaContract.legacy &&
+                entry.method == MfaMethod.fido2),
+      )
       .toList(growable: false);
   return supported.isNotEmpty ? supported : step.methods;
 }
@@ -95,14 +104,19 @@ List<MfaMethod?> resolveMfaStepPlan(
   Location location, {
   List<MfaMethod?> oneOff = const [],
   required bool biometricAvailable,
+  MfaContract contract = MfaContract.legacy,
 }) {
   final steps = effectiveMfaSteps(location);
+  if (contract == MfaContract.legacy && steps.length > 1) {
+    return List<MfaMethod?>.filled(steps.length, null, growable: false);
+  }
   final saved = location.mfaStepPlan;
 
   return List<MfaMethod?>.generate(steps.length, (index) {
     final usable = usableMfaMethods(
       steps[index],
       biometricAvailable: biometricAvailable,
+      contract: contract,
     );
     bool isUsable(MfaMethod? method) =>
         method != null && usable.any((entry) => entry.method == method);
@@ -115,21 +129,56 @@ List<MfaMethod?> resolveMfaStepPlan(
   }, growable: false);
 }
 
+/// Resolves a retry only when refresh kept the contract used for this attempt.
+List<MfaMethod>? resolveMfaRetryPlan(
+  Location location, {
+  required MfaContract attemptContract,
+  required MfaContract refreshedContract,
+  List<MfaMethod?> oneOff = const [],
+  required bool biometricAvailable,
+}) {
+  if (attemptContract != refreshedContract) return null;
+  final plan = resolveMfaStepPlan(
+    location,
+    oneOff: oneOff,
+    biometricAvailable: biometricAvailable,
+    contract: refreshedContract,
+  );
+  if (plan.isEmpty || plan.contains(null)) return null;
+  return plan.cast<MfaMethod>();
+}
+
 bool hasUnpassableMfaStep(
   Location location, {
   required bool biometricAvailable,
-}) => effectiveMfaSteps(location).any(
-  (step) =>
-      usableMfaMethods(step, biometricAvailable: biometricAvailable).isEmpty,
-);
+  MfaContract contract = MfaContract.legacy,
+}) {
+  final steps = effectiveMfaSteps(location);
+  return (contract == MfaContract.legacy && steps.length > 1) ||
+      steps.any(
+        (step) => usableMfaMethods(
+          step,
+          biometricAvailable: biometricAvailable,
+          contract: contract,
+        ).isEmpty,
+      );
+}
 
 MfaUnpassableReason? unpassableStepReason(
   Location location, {
   required bool biometricAvailable,
+  MfaContract contract = MfaContract.legacy,
 }) {
-  final step = effectiveMfaSteps(location).firstWhereOrNull(
-    (step) =>
-        usableMfaMethods(step, biometricAvailable: biometricAvailable).isEmpty,
+  final steps = effectiveMfaSteps(location);
+  if (contract == MfaContract.legacy && steps.length > 1) {
+    return MfaUnpassableReason.desktopOnly;
+  }
+  final step = steps.firstWhereOrNull(
+    (step) => usableMfaMethods(
+      step,
+      biometricAvailable: biometricAvailable,
+      contract: contract,
+    ).isEmpty,
   );
   if (step == null) return null;
 
@@ -138,6 +187,7 @@ MfaUnpassableReason? unpassableStepReason(
         (entry) => mfaMethodAvailability(
           entry,
           biometricAvailable: biometricAvailable,
+          contract: contract,
         ),
       )
       .toSet();
@@ -150,4 +200,4 @@ MfaUnpassableReason? unpassableStepReason(
   return MfaUnpassableReason.desktopOnly;
 }
 
-String mfaStepsToText(int count) => "$count-step verification";
+String mfaStepsToText(int count) => '$count-step verification';

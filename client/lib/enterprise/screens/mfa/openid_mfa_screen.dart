@@ -9,6 +9,25 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:mobile/logging.dart';
 import 'openid_mfa_waiting_screen.dart';
 
+Uri buildOpenIdMfaUri({
+  required String proxyUrl,
+  required String token,
+  String? stepAttemptId,
+}) {
+  final base = Uri.parse(proxyUrl);
+  return base.replace(
+    pathSegments: [
+      ...base.pathSegments.where((segment) => segment.isNotEmpty),
+      'openid',
+      'mfa',
+    ],
+    queryParameters: {
+      'token': token,
+      'step_attempt_id': ?stepAttemptId,
+    },
+  );
+}
+
 class OpenIdMfaScreen extends HookConsumerWidget {
   final MfaStepHost host;
   final String proxyUrl;
@@ -24,10 +43,14 @@ class OpenIdMfaScreen extends HookConsumerWidget {
   });
 
   Future<bool> _launchUrl() async {
-    final url = Uri.parse(
-      "${proxyUrl}openid/mfa?token=${host.controller.token}",
+    final token = host.controller.token;
+    if (token == null) throw StateError('MFA session has not started');
+    final url = buildOpenIdMfaUri(
+      proxyUrl: proxyUrl,
+      token: token,
+      stepAttemptId: host.controller.stepAttemptId,
     );
-    return await launchUrl(url, mode: LaunchMode.externalApplication);
+    return launchUrl(url, mode: LaunchMode.externalApplication);
   }
 
   @override
@@ -56,7 +79,7 @@ class OpenIdMfaScreen extends HookConsumerWidget {
               ),
             );
           } catch (e) {
-            talker.error("Failed to open browser! Reason: $e");
+            talker.error('Failed to open MFA browser');
             toaster.showError(message: "Failed to open the browser.");
           }
         },

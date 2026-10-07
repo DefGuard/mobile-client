@@ -1,8 +1,8 @@
-import 'package:dio/dio.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:mobile/data/mfa/mfa_flow.dart';
+import 'package:mobile/open/api.dart';
 import 'package:mobile/open/screens/mfa/mfa_step_chrome.dart';
 import 'package:mobile/open/widgets/icons/dg_icon.dart';
 import 'package:mobile/open/widgets/dg_app_bar.dart';
@@ -21,9 +21,8 @@ class OpenIdMfaWaitingScreen extends HookConsumerWidget {
 
   const OpenIdMfaWaitingScreen({super.key, required this.host});
 
-  /// Polls until the browser hop resolves. An unresolved factor comes back
-  /// either as an `awaitingExternal` outcome or, from a pre-2.2 proxy, as a 428
-  /// that the api layer normalizes into the same thing.
+  /// Polls until the browser hop resolves. The legacy API maps its 428 response
+  /// and the flow API returns `awaitingExternal` for the same pending state.
   Future<MfaStepProgress?> _pollOpenidMfa(bool Function() isCancelled) async {
     final startTime = DateTime.now();
     const timeoutDuration = Duration(minutes: 2);
@@ -46,15 +45,9 @@ class OpenIdMfaWaitingScreen extends HookConsumerWidget {
         }
         talker.debug("User did not complete openid browser login, waiting");
         await Future.delayed(const Duration(seconds: 2));
-      } on DioException catch (e) {
-        final isNetworkError =
-            e.type == DioExceptionType.connectionError ||
-            e.type == DioExceptionType.connectionTimeout ||
-            (e.error?.toString().contains("-1005") ?? false) ||
-            (e.message?.contains("-1005") ?? false);
-
-        if (!isNetworkError) rethrow;
-        talker.warning("Network error during MFA polling, retrying: $e");
+      } on MfaRequestException catch (e) {
+        if (!e.isNetworkError) rethrow;
+        talker.warning('Network error during MFA polling, retrying');
         await Future.delayed(const Duration(seconds: 2));
       }
     }

@@ -259,6 +259,7 @@ void main() {
           _location(steps: steps, plan: [MfaMethod.totp, MfaMethod.email]),
           oneOff: [MfaMethod.email],
           biometricAvailable: true,
+          contract: MfaContract.multiStep,
         ),
         [MfaMethod.email, MfaMethod.email],
       );
@@ -269,6 +270,7 @@ void main() {
         resolveMfaStepPlan(
           _location(steps: steps, plan: [MfaMethod.email, MfaMethod.biometric]),
           biometricAvailable: true,
+          contract: MfaContract.multiStep,
         ),
         [MfaMethod.email, MfaMethod.biometric],
       );
@@ -276,7 +278,11 @@ void main() {
 
     test('then the first usable method', () {
       expect(
-        resolveMfaStepPlan(_location(steps: steps), biometricAvailable: true),
+        resolveMfaStepPlan(
+          _location(steps: steps),
+          biometricAvailable: true,
+          contract: MfaContract.multiStep,
+        ),
         [MfaMethod.totp, MfaMethod.email],
       );
     });
@@ -287,6 +293,7 @@ void main() {
           _location(steps: steps, plan: [MfaMethod.biometric, null]),
           oneOff: [MfaMethod.openid],
           biometricAvailable: true,
+          contract: MfaContract.multiStep,
         ),
         [MfaMethod.totp, MfaMethod.email],
       );
@@ -297,6 +304,7 @@ void main() {
         resolveMfaStepPlan(
           _location(steps: steps, plan: [MfaMethod.totp, MfaMethod.biometric]),
           biometricAvailable: false,
+          contract: MfaContract.multiStep,
         ),
         [MfaMethod.totp, MfaMethod.email],
       );
@@ -321,6 +329,7 @@ void main() {
         resolveMfaStepPlan(
           _location(steps: steps, plan: [MfaMethod.email]),
           biometricAvailable: true,
+          contract: MfaContract.multiStep,
         ),
         [MfaMethod.email, MfaMethod.email],
       );
@@ -357,6 +366,38 @@ void main() {
     });
   });
 
+  group('resolveMfaRetryPlan', () {
+    final location = _location(
+      steps: [
+        _step([_entry(MfaMethod.totp)]),
+      ],
+    );
+
+    test('fails closed when refresh changes the contract', () {
+      expect(
+        resolveMfaRetryPlan(
+          location,
+          attemptContract: MfaContract.multiStep,
+          refreshedContract: MfaContract.legacy,
+          biometricAvailable: true,
+        ),
+        isNull,
+      );
+    });
+
+    test('resolves a plan when the contract remains unchanged', () {
+      expect(
+        resolveMfaRetryPlan(
+          location,
+          attemptContract: MfaContract.multiStep,
+          refreshedContract: MfaContract.multiStep,
+          biometricAvailable: true,
+        ),
+        [MfaMethod.totp],
+      );
+    });
+  });
+
   group('unpassable steps', () {
     test('a flow with a usable method for every step is passable', () {
       final location = _location(
@@ -366,10 +407,39 @@ void main() {
         ],
       );
       expect(
-        hasUnpassableMfaStep(location, biometricAvailable: false),
+        hasUnpassableMfaStep(
+          location,
+          biometricAvailable: false,
+          contract: MfaContract.multiStep,
+        ),
         isFalse,
       );
-      expect(unpassableStepReason(location, biometricAvailable: false), isNull);
+      expect(
+        unpassableStepReason(
+          location,
+          biometricAvailable: false,
+          contract: MfaContract.multiStep,
+        ),
+        isNull,
+      );
+    });
+
+    test('legacy cannot run a multi-step location', () {
+      final location = _location(
+        steps: [
+          _step([_entry(MfaMethod.totp)]),
+          _step([_entry(MfaMethod.email)]),
+        ],
+      );
+      expect(resolveMfaStepPlan(location, biometricAvailable: true), [
+        null,
+        null,
+      ]);
+      expect(hasUnpassableMfaStep(location, biometricAvailable: true), isTrue);
+      expect(
+        unpassableStepReason(location, biometricAvailable: true),
+        MfaUnpassableReason.desktopOnly,
+      );
     });
 
     test('points at biometry setup when that is the fixable cause', () {
@@ -442,7 +512,11 @@ void main() {
     test('is usable on Android', () {
       debugDefaultTargetPlatformOverride = TargetPlatform.android;
       expect(
-        mfaMethodAvailability(fido2, biometricAvailable: false),
+        mfaMethodAvailability(
+          fido2,
+          biometricAvailable: false,
+          contract: MfaContract.multiStep,
+        ),
         MfaMethodAvailability.usable,
       );
       expect(
@@ -453,6 +527,7 @@ void main() {
             ],
           ),
           biometricAvailable: false,
+          contract: MfaContract.multiStep,
         ),
         [MfaMethod.fido2],
       );
@@ -461,7 +536,11 @@ void main() {
     test('is usable on iOS', () {
       debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
       expect(
-        mfaMethodAvailability(fido2, biometricAvailable: false),
+        mfaMethodAvailability(
+          fido2,
+          biometricAvailable: false,
+          contract: MfaContract.multiStep,
+        ),
         MfaMethodAvailability.usable,
       );
       expect(
@@ -472,8 +551,28 @@ void main() {
             ],
           ),
           biometricAvailable: false,
+          contract: MfaContract.multiStep,
         ),
         [MfaMethod.fido2],
+      );
+    });
+
+    test('is unavailable on the legacy contract', () {
+      expect(
+        mfaMethodAvailability(
+          fido2,
+          biometricAvailable: true,
+          contract: MfaContract.legacy,
+        ),
+        MfaMethodAvailability.unsupported,
+      );
+      expect(
+        usableMfaMethods(
+          _step([fido2]),
+          biometricAvailable: true,
+          contract: MfaContract.legacy,
+        ),
+        isEmpty,
       );
     });
 
@@ -486,6 +585,7 @@ void main() {
             configured: false,
           ),
           biometricAvailable: true,
+          contract: MfaContract.multiStep,
         ),
         MfaMethodAvailability.notConfigured,
       );
