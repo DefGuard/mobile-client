@@ -86,6 +86,19 @@ class SecureInstanceStorage {
   });
 }
 
+final _uuid = RegExp(
+  r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$',
+);
+
+/// Core issues the challenge and step attempt ID as short alphanumeric strings;
+/// the cap leaves room for longer ones without trusting any size.
+final _qrSecret = RegExp(r'^[A-Za-z0-9]{1,128}$');
+
+/// A 2.2 token is alphanumeric, but a pre-2.2 token is a JWT.
+final _qrToken = RegExp(r'^[A-Za-z0-9._-]{1,4096}$');
+
+bool _isQrSecret(Object? value) => value is String && _qrSecret.hasMatch(value);
+
 sealed class RemoteMfaQr {
   final String instanceId;
   final String token;
@@ -101,7 +114,11 @@ sealed class RemoteMfaQr {
     final instanceId = json['instance_id'];
     final token = json['token'];
     final challenge = json['challenge'];
-    if (instanceId is! String || token is! String || challenge is! String) {
+    if (instanceId is! String ||
+        !_uuid.hasMatch(instanceId) ||
+        token is! String ||
+        !_qrToken.hasMatch(token) ||
+        !_isQrSecret(challenge)) {
       throw const FormatException('Invalid remote MFA QR');
     }
 
@@ -114,7 +131,7 @@ sealed class RemoteMfaQr {
     }
 
     final stepAttemptId = json['step_attempt_id'];
-    if (stepAttemptId is! String || stepAttemptId.isEmpty) {
+    if (!_isQrSecret(stepAttemptId)) {
       throw const FormatException('Invalid remote MFA flow QR');
     }
     return MfaFlowRemoteMfaQr(

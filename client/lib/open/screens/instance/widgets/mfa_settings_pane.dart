@@ -16,7 +16,7 @@ class MfaSettingsPane extends StatelessWidget {
   final List<MfaMethod?> working;
   final List<MfaMethod?> savedPlan;
 
-  final bool biometricAvailable;
+  final MfaCapabilities capabilities;
   final DefguardInstance instance;
   final bool isSaving;
   final void Function(int step, MfaMethod method) onSelected;
@@ -28,7 +28,7 @@ class MfaSettingsPane extends StatelessWidget {
     required this.steps,
     required this.working,
     required this.savedPlan,
-    required this.biometricAvailable,
+    required this.capabilities,
     required this.instance,
     required this.isSaving,
     required this.onSelected,
@@ -82,7 +82,7 @@ class MfaSettingsPane extends StatelessWidget {
                 savedDefault: index < savedPlan.length
                     ? savedPlan[index]
                     : null,
-                biometricAvailable: biometricAvailable,
+                capabilities: capabilities,
                 instance: instance,
                 onSelected: (method) => onSelected(index, method),
               ),
@@ -106,7 +106,7 @@ class _StepSection extends StatelessWidget {
   final int number;
   final MfaMethod? selected;
   final MfaMethod? savedDefault;
-  final bool biometricAvailable;
+  final MfaCapabilities capabilities;
   final DefguardInstance instance;
   final ValueChanged<MfaMethod> onSelected;
 
@@ -115,7 +115,7 @@ class _StepSection extends StatelessWidget {
     required this.number,
     required this.selected,
     required this.savedDefault,
-    required this.biometricAvailable,
+    required this.capabilities,
     required this.instance,
     required this.onSelected,
   });
@@ -132,11 +132,11 @@ class _StepSection extends StatelessWidget {
         ),
         for (final entry in pickableMfaMethods(
           step,
-          contract: instance.mfaContract,
+          capabilities: capabilities,
         ))
           mfaMethodRow(
             entry: entry,
-            biometricAvailable: biometricAvailable,
+            capabilities: capabilities,
             instance: instance,
             selected: selected,
             savedDefault: savedDefault,

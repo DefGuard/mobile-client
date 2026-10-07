@@ -21,7 +21,7 @@ class ConnectPane extends StatelessWidget {
   final List<MfaMethod?> plan;
 
   final List<MfaMethod?> savedPlan;
-  final bool biometricAvailable;
+  final MfaCapabilities capabilities;
   final DefguardInstance instance;
   final bool allTraffic;
   final bool canChangeTraffic;
@@ -38,7 +38,7 @@ class ConnectPane extends StatelessWidget {
     required this.steps,
     required this.plan,
     required this.savedPlan,
-    required this.biometricAvailable,
+    required this.capabilities,
     required this.instance,
     required this.allTraffic,
     required this.canChangeTraffic,
@@ -103,6 +103,7 @@ class ConnectPane extends StatelessWidget {
             _StepSummary(
               steps: steps,
               plan: plan,
+              capabilities: capabilities,
               instance: instance,
             )
           else
@@ -110,7 +111,7 @@ class ConnectPane extends StatelessWidget {
               step: steps.single,
               selected: plan.single,
               savedDefault: savedPlan.isEmpty ? null : savedPlan.first,
-              biometricAvailable: biometricAvailable,
+              capabilities: capabilities,
               instance: instance,
               onSelected: onMethodSelected,
             ),
@@ -144,11 +145,13 @@ class ConnectPane extends StatelessWidget {
 class _StepSummary extends StatelessWidget {
   final List<MfaStep> steps;
   final List<MfaMethod?> plan;
+  final MfaCapabilities capabilities;
   final DefguardInstance instance;
 
   const _StepSummary({
     required this.steps,
     required this.plan,
+    required this.capabilities,
     required this.instance,
   });
 
@@ -179,7 +182,7 @@ class _StepSummary extends StatelessWidget {
   }
 
   String _unusableLabel(MfaStep step) {
-    final entries = pickableMfaMethods(step);
+    final entries = pickableMfaMethods(step, capabilities: capabilities);
     if (entries.isEmpty) return "No method available";
     return entries.first.method?.toUiString(
           openidDisplayName: instance.openidDisplayName,
@@ -192,7 +195,7 @@ class _MethodPicker extends StatelessWidget {
   final MfaStep step;
   final MfaMethod? selected;
   final MfaMethod? savedDefault;
-  final bool biometricAvailable;
+  final MfaCapabilities capabilities;
   final DefguardInstance instance;
   final ValueChanged<MfaMethod> onSelected;
 
@@ -200,7 +203,7 @@ class _MethodPicker extends StatelessWidget {
     required this.step,
     required this.selected,
     required this.savedDefault,
-    required this.biometricAvailable,
+    required this.capabilities,
     required this.instance,
     required this.onSelected,
   });
@@ -211,10 +214,13 @@ class _MethodPicker extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       spacing: DgSpacing.md,
       children: [
-        for (final entry in pickableMfaMethods(step))
+        for (final entry in pickableMfaMethods(
+          step,
+          capabilities: capabilities,
+        ))
           mfaMethodRow(
             entry: entry,
-            biometricAvailable: biometricAvailable,
+            capabilities: capabilities,
             instance: instance,
             selected: selected,
             savedDefault: savedDefault,

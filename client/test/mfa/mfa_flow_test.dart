@@ -3,6 +3,7 @@ import 'dart:collection';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mobile/data/db/enums.dart';
 import 'package:mobile/data/mfa/mfa_flow.dart';
+import 'package:mobile/data/mfa/mfa_transport.dart';
 import 'package:mobile/data/proxy/mfa.dart';
 import 'package:mobile/enterprise/postures.dart';
 

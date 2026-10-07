@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mobile/data/db/database.dart';
 import 'package:mobile/data/db/enums.dart';
 import 'package:mobile/data/mfa/mfa_flow.dart';
+import 'package:mobile/data/mfa/mfa_transport.dart';
 import 'package:mobile/data/mfa/mfa_plan.dart';
 import 'package:mobile/data/mfa/mfa_steps.dart';
 import 'package:mobile/enterprise/postures.dart';
@@ -70,8 +71,8 @@ void main() {
     final absent = InstanceInfo.fromJson(base);
     final nullValue = InstanceInfo.fromJson({...base, 'mfa_user_state': null});
 
-    expect(mfaContractFromInstanceInfo(absent), MfaContract.legacy);
-    expect(mfaContractFromInstanceInfo(nullValue), MfaContract.legacy);
+    expect(absent.mfaContract, MfaContract.legacy);
+    expect(nullValue.mfaContract, MfaContract.legacy);
     expect(absent.toCompanion().mfaContract.value, MfaContract.legacy);
   });
 
@@ -89,7 +90,7 @@ void main() {
     });
     final info = response.deviceConfig!.instance!;
 
-    expect(mfaContractFromInstanceInfo(info), MfaContract.multiStep);
+    expect(info.mfaContract, MfaContract.multiStep);
     expect(info.toCompanion().mfaContract.value, MfaContract.multiStep);
   });
 
@@ -199,9 +200,11 @@ void main() {
           );
           return resolveMfaRetryPlan(
             refreshedLocation,
-            attemptContract: instance.mfaContract,
+            attempt: MfaCapabilities(
+              biometricAvailable: true,
+              contract: instance.mfaContract,
+            ),
             refreshedContract: refreshed.mfaContract,
-            biometricAvailable: true,
           );
         },
       );

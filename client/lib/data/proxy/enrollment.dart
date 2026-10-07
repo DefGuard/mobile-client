@@ -308,7 +308,7 @@ class InstanceInfo {
         getPolicy() == other.clientTrafficPolicy &&
         openidDisplayName == other.openidDisplayName &&
         openidProviderKind == other.openidProviderKind &&
-        mfaContractFromInstanceInfo(this) == other.mfaContract;
+        mfaContract == other.mfaContract;
   }
 
   DefguardInstancesCompanion toCompanion({DefguardInstance? instance}) {
@@ -325,7 +325,7 @@ class InstanceInfo {
       uuid: d.Value(id),
       openidDisplayName: d.Value(openidDisplayName),
       openidProviderKind: d.Value(openidProviderKind),
-      mfaContract: d.Value(mfaContractFromInstanceInfo(this)),
+      mfaContract: d.Value(mfaContract),
     );
   }
 
@@ -336,10 +336,10 @@ class InstanceInfo {
             ? ClientTrafficPolicy.disableAllTraffic
             : ClientTrafficPolicy.none);
   }
-}
 
-MfaContract mfaContractFromInstanceInfo(InstanceInfo info) =>
-    info.mfaUserState == null ? MfaContract.legacy : MfaContract.multiStep;
+  MfaContract get mfaContract =>
+      mfaUserState == null ? MfaContract.legacy : MfaContract.multiStep;
+}
 
 @JsonSerializable()
 class AppInfoResponse {

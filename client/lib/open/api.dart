@@ -20,11 +20,15 @@ import '../logging.dart';
 const _apiV1Segments = ['api', 'v1'];
 final enrollmentPathSegments = ['api', 'v1', 'enrollment'];
 final mfaPathSegments = ['api', 'v1', 'client-mfa'];
+final mfaFlowPathSegments = [..._apiV1Segments, 'mfa-flow'];
 final posturePathSegments = ['api', 'v1', 'posture'];
 
+/// iOS `NSURLErrorNetworkConnectionLost`.
+const _iosConnectionLostCode = '-1005';
+
 bool _isMfaEndpoint(Uri uri) =>
-    uri.pathSegments.contains('client-mfa') ||
-    uri.pathSegments.contains('mfa-flow');
+    uri.pathSegments.contains(mfaPathSegments.last) ||
+    uri.pathSegments.contains(mfaFlowPathSegments.last);
 
 class PostureCheckException implements Exception {
   final String message;
@@ -67,8 +71,8 @@ MfaRequestException _mfaRequestException(String operation, DioException error) {
       error.response == null &&
       (error.type == DioExceptionType.connectionError ||
           error.type == DioExceptionType.connectionTimeout ||
-          (error.error?.toString().contains('-1005') ?? false) ||
-          (error.message?.contains('-1005') ?? false));
+          (error.error?.toString().contains(_iosConnectionLostCode) ?? false) ||
+          (error.message?.contains(_iosConnectionLostCode) ?? false));
   return MfaRequestException(
     operation,
     statusCode: error.response?.statusCode,
@@ -243,12 +247,7 @@ class ProxyApi {
     wire.MfaFlowStartRequest data,
   ) async {
     final endpoint = url.replace(
-      pathSegments: [
-        ...url.pathSegments,
-        ..._apiV1Segments,
-        'mfa-flow',
-        'start',
-      ],
+      pathSegments: [...url.pathSegments, ...mfaFlowPathSegments, 'start'],
     );
     try {
       final response = await _dio.postUri(endpoint, data: data.toJson());
@@ -298,12 +297,7 @@ class ProxyApi {
     wire.MfaFlowStepStartRequest data,
   ) async {
     final endpoint = url.replace(
-      pathSegments: [
-        ...url.pathSegments,
-        ..._apiV1Segments,
-        'mfa-flow',
-        'step-start',
-      ],
+      pathSegments: [...url.pathSegments, ...mfaFlowPathSegments, 'step-start'],
     );
     try {
       final response = await _dio.postUri(endpoint, data: data.toJson());
@@ -350,8 +344,7 @@ class ProxyApi {
     final endpoint = url.replace(
       pathSegments: [
         ...url.pathSegments,
-        ..._apiV1Segments,
-        'mfa-flow',
+        ...mfaFlowPathSegments,
         'step-finish',
       ],
     );
@@ -381,12 +374,7 @@ class ProxyApi {
 
   Future<void> approveMfaFlow(Uri url, MfaFlowApproveRequest data) async {
     final endpoint = url.replace(
-      pathSegments: [
-        ...url.pathSegments,
-        ..._apiV1Segments,
-        'mfa-flow',
-        'approve',
-      ],
+      pathSegments: [...url.pathSegments, ...mfaFlowPathSegments, 'approve'],
     );
     try {
       await _dio.postUri(endpoint, data: data.toJson());

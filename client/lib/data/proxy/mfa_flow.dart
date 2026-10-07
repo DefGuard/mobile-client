@@ -78,27 +78,16 @@ class MfaFlowStartResponse {
 
   const MfaFlowStartResponse(this.outcome);
 
-  factory MfaFlowStartResponse.fromJson(Map<String, dynamic> json) {
-    final outcome = _object(json['outcome']);
-    if (outcome == null || outcome.length != 1) {
-      return const MfaFlowStartResponse(MfaFlowStartUnknown());
-    }
-
-    final body = _object(outcome.values.single);
-    if (body == null) {
-      return const MfaFlowStartResponse(MfaFlowStartUnknown());
-    }
-
-    return switch (outcome.keys.single) {
-      'Accepted' => MfaFlowStartResponse(
-        MfaFlowAccepted.fromJson(body),
-      ),
-      'Rejected' => MfaFlowStartResponse(
-        MfaFlowRejected.fromJson(body),
-      ),
-      _ => const MfaFlowStartResponse(MfaFlowStartUnknown()),
-    };
-  }
+  factory MfaFlowStartResponse.fromJson(Map<String, dynamic> json) =>
+      switch (_variant(json['outcome'])) {
+        ('Accepted', final body) => MfaFlowStartResponse(
+          MfaFlowAccepted.fromJson(body),
+        ),
+        ('Rejected', final body) => MfaFlowStartResponse(
+          MfaFlowRejected.fromJson(body),
+        ),
+        _ => const MfaFlowStartResponse(MfaFlowStartUnknown()),
+      };
 }
 
 @JsonSerializable(createFactory: false)
@@ -155,19 +144,12 @@ class MfaFlowStepStarted {
 
 MfaFlowChallenge? _parseChallenge(Object? value) {
   if (value == null) return null;
-  final challenge = _object(value);
-  if (challenge == null || challenge.length != 1) {
-    return const MfaUnknownChallenge();
-  }
-  final body = _object(challenge.values.single);
-  if (body == null) return const MfaUnknownChallenge();
-
-  return switch (challenge.keys.single) {
-    'Signature' =>
+  return switch (_variant(value)) {
+    ('Signature', final body) =>
       body['challenge'] is String
           ? MfaSignatureChallenge(body['challenge'] as String)
           : const MfaUnknownChallenge(),
-    'Fido2' => _parseFido2Challenge(body),
+    ('Fido2', final body) => _parseFido2Challenge(body),
     _ => const MfaUnknownChallenge(),
   };
 }
@@ -301,30 +283,17 @@ class MfaFlowStepFinishResponse {
   factory MfaFlowStepFinishResponse.fromJson(Map<String, dynamic> json) {
     final result = _object(json['result']);
     if (result == null) return const MfaFlowStepFinishResponse();
-    final outcome = _object(result['outcome']);
-    if (outcome == null || outcome.length != 1) {
-      return const MfaFlowStepFinishResponse(
-        result: MfaFlowResultUnknown(),
-      );
-    }
 
-    final body = _object(outcome.values.single);
-    if (body == null) {
-      return const MfaFlowStepFinishResponse(
-        result: MfaFlowResultUnknown(),
-      );
-    }
-
-    final parsed = switch (outcome.keys.single) {
-      'Advanced' =>
+    final parsed = switch (_variant(result['outcome'])) {
+      ('Advanced', final body) =>
         body['next_step'] is int
             ? MfaFlowAdvanced(body['next_step'] as int)
             : const MfaFlowResultUnknown(),
-      'Completed' =>
+      ('Completed', final body) =>
         body['preshared_key'] == null || body['preshared_key'] is String
             ? MfaFlowCompleted(body['preshared_key'] as String?)
             : const MfaFlowResultUnknown(),
-      'AwaitingExternal' => const MfaFlowAwaitingExternal(),
+      ('AwaitingExternal', _) => const MfaFlowAwaitingExternal(),
       _ => const MfaFlowResultUnknown(),
     };
     return MfaFlowStepFinishResponse(result: parsed);
@@ -332,10 +301,21 @@ class MfaFlowStepFinishResponse {
 }
 
 enum MfaStartRejectionReason {
-  unspecified,
-  methodNotInStep,
-  stepEmptyAfterLicense,
-  stepUnavailable,
+  unspecified(0),
+  methodNotInStep(1),
+  stepEmptyAfterLicense(2),
+  stepUnavailable(3);
+
+  /// The proto `MfaStartRejectionReason` number.
+  final int wireValue;
+
+  const MfaStartRejectionReason(this.wireValue);
+
+  /// A newer server may send a reason this client does not know yet.
+  static MfaStartRejectionReason fromWire(int value) => values.firstWhere(
+    (reason) => reason.wireValue == value,
+    orElse: () => unspecified,
+  );
 }
 
 class MfaStepRejection {
@@ -352,9 +332,7 @@ class MfaStepRejection {
     }
     return MfaStepRejection(
       step: step,
-      reason: reason >= 0 && reason < MfaStartRejectionReason.values.length
-          ? MfaStartRejectionReason.values[reason]
-          : MfaStartRejectionReason.unspecified,
+      reason: MfaStartRejectionReason.fromWire(reason),
     );
   }
 
@@ -376,3 +354,13 @@ class MfaStepRejection {
 
 Map<String, dynamic>? _object(Object? value) =>
     value is Map ? Map<String, dynamic>.from(value) : null;
+
+/// Splits a serde externally tagged oneof, `{"Variant": {...}}`, into its tag
+/// and body. Anything else yields null so callers fall through to "unknown".
+(String, Map<String, dynamic>)? _variant(Object? value) {
+  final tagged = _object(value);
+  if (tagged == null || tagged.length != 1) return null;
+  final body = _object(tagged.values.single);
+  if (body == null) return null;
+  return (tagged.keys.single, body);
+}

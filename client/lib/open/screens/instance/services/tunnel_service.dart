@@ -5,6 +5,7 @@ import 'package:drift/drift.dart' as drift;
 import 'package:material_ui/material_ui.dart';
 import 'package:mobile/data/db/database.dart';
 import 'package:mobile/data/mfa/mfa_flow.dart';
+import 'package:mobile/data/mfa/mfa_transport.dart';
 import 'package:mobile/data/mfa/mfa_plan.dart';
 import 'package:mobile/data/plugin/plugin.dart';
 import 'package:mobile/enterprise/postures.dart';
@@ -107,13 +108,15 @@ class TunnelService {
     MfaMethod? authorizedWith;
 
     if (shouldStartMfa(location)) {
-      final biometricAvailable =
-          instance.mfaKeysStored && biometricsStatus.canOpenStorage;
+      final capabilities = MfaCapabilities(
+        biometricAvailable:
+            instance.mfaKeysStored && biometricsStatus.canOpenStorage,
+        contract: instance.mfaContract,
+      );
       final resolved = resolveMfaStepPlan(
         location,
         oneOff: mfaPlan,
-        biometricAvailable: biometricAvailable,
-        contract: instance.mfaContract,
+        capabilities: capabilities,
       );
       if (resolved.isEmpty || resolved.contains(null)) {
         return const ConnectResult.failed(
@@ -145,7 +148,7 @@ class TunnelService {
                   instance: instance,
                   location: location,
                   oneOff: mfaPlan,
-                  biometricAvailable: biometricAvailable,
+                  capabilities: capabilities,
                 )
               : null,
         ),
@@ -258,7 +261,7 @@ class TunnelService {
     required DefguardInstance instance,
     required Location location,
     required List<MfaMethod?> oneOff,
-    required bool biometricAvailable,
+    required MfaCapabilities capabilities,
   }) async {
     final token = await instance.poolingToken();
     if (token == null) return null;
@@ -290,10 +293,9 @@ class TunnelService {
 
     return resolveMfaRetryPlan(
       refreshedLocation,
-      attemptContract: instance.mfaContract,
+      attempt: capabilities,
       refreshedContract: refreshedInstance.mfaContract,
       oneOff: oneOff,
-      biometricAvailable: biometricAvailable,
     );
   }
 

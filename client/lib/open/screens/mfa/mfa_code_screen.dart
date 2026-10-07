@@ -1,6 +1,7 @@
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:mobile/data/mfa/mfa_flow.dart';
+import 'package:mobile/data/mfa/mfa_transport.dart';
 import 'package:mobile/data/proxy/mfa.dart';
 import 'package:mobile/open/screens/mfa/mfa_step_chrome.dart';
 import 'package:mobile/open/widgets/dg_code_entry_layout.dart';

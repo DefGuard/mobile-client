@@ -34,8 +34,11 @@ class ConnectDialog extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final biometricsStatus = ref.watch(biometricsCapabilityProvider);
-    final biometricAvailable =
-        instance.mfaKeysStored && biometricsStatus.canOpenStorage;
+    final capabilities = MfaCapabilities(
+      biometricAvailable:
+          instance.mfaKeysStored && biometricsStatus.canOpenStorage,
+      contract: instance.mfaContract,
+    );
     final steps = effectiveMfaSteps(location);
 
     final bool canChangeTraffic =
@@ -53,36 +56,29 @@ class ConnectDialog extends HookConsumerWidget {
       () => resolveMfaStepPlan(
         location.copyWith(mfaStepPlan: savedPlan.value),
         oneOff: selection.value == null ? const [] : [selection.value],
-        biometricAvailable: biometricAvailable,
-        contract: instance.mfaContract,
+        capabilities: capabilities,
       ),
       [
         location,
         savedPlan.value,
         selection.value,
-        biometricAvailable,
-        instance.mfaContract,
+        capabilities.biometricAvailable,
+        capabilities.contract,
       ],
     );
 
     final unpassable = plan.contains(null);
     final canEditDefaults =
-        instance.mfaContract == MfaContract.multiStep &&
+        capabilities.supportsMultipleSteps &&
         steps.length > 1 &&
         steps.any(
           (step) =>
-              usableMfaMethods(
-                step,
-                biometricAvailable: biometricAvailable,
-                contract: instance.mfaContract,
-              ).length >
-              1,
+              usableMfaMethods(step, capabilities: capabilities).length > 1,
         );
 
     List<MfaMethod?> mfaDefaults(List<MfaMethod?> saved) => resolveMfaStepPlan(
       location.copyWith(mfaStepPlan: saved),
-      biometricAvailable: biometricAvailable,
-      contract: instance.mfaContract,
+      capabilities: capabilities,
     );
 
     final showingMfa = useState(false);
@@ -145,7 +141,7 @@ class ConnectDialog extends HookConsumerWidget {
       steps: steps,
       plan: plan,
       savedPlan: savedPlan.value,
-      biometricAvailable: biometricAvailable,
+      capabilities: capabilities,
       instance: instance,
       allTraffic: allTraffic.value,
       canChangeTraffic: canChangeTraffic,
@@ -158,8 +154,7 @@ class ConnectDialog extends HookConsumerWidget {
               context,
               reason: unpassableStepReason(
                 location,
-                biometricAvailable: biometricAvailable,
-                contract: instance.mfaContract,
+                capabilities: capabilities,
               ),
               instanceId: instance.id,
             )
@@ -182,7 +177,7 @@ class ConnectDialog extends HookConsumerWidget {
           steps: steps,
           working: mfaWorking.value,
           savedPlan: savedPlan.value,
-          biometricAvailable: biometricAvailable,
+          capabilities: capabilities,
           instance: instance,
           isSaving: isSaving.value,
           onSelected: (index, method) {

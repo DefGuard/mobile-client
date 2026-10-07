@@ -15,7 +15,7 @@ String availabilityNote(MfaMethodAvailability availability) =>
 
 Widget mfaMethodRow({
   required MfaStepMethod entry,
-  required bool biometricAvailable,
+  required MfaCapabilities capabilities,
   required DefguardInstance instance,
   required MfaMethod? selected,
   required MfaMethod? savedDefault,
@@ -23,8 +23,7 @@ Widget mfaMethodRow({
 }) {
   final availability = mfaMethodAvailability(
     entry,
-    biometricAvailable: biometricAvailable,
-    contract: instance.mfaContract,
+    capabilities: capabilities,
   );
   final usable = availability == MfaMethodAvailability.usable;
 
