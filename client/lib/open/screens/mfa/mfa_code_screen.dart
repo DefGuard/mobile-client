@@ -1,6 +1,7 @@
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:mobile/data/mfa/mfa_flow.dart';
+import 'package:mobile/data/mfa/mfa_transport.dart';
 import 'package:mobile/data/proxy/mfa.dart';
 import 'package:mobile/open/screens/mfa/mfa_step_chrome.dart';
 import 'package:mobile/open/widgets/dg_code_entry_layout.dart';
@@ -38,7 +39,9 @@ class MfaCodeScreen extends ConsumerWidget {
         onBack: host.abort,
         onSubmit: (code, setError) async {
           try {
-            final progress = await host.controller.submit(code: code);
+            final progress = await host.controller.submit(
+              credential: MfaCodeCredential(code),
+            );
             if (progress is MfaStepAwaiting) {
               toaster.showError(
                 message: "Unexpected verification state. Please try again.",
@@ -51,6 +54,7 @@ class MfaCodeScreen extends ConsumerWidget {
           } on MfaCodeRejectedException {
             setError('Enter valid code');
           } catch (e) {
+            if (reportIfAttemptLimit(host, e)) return;
             toaster.showError(
               message: ErrorHandler.getHumanReadableError(e),
               logMessage: "$logLabel MFA code submit failed!",

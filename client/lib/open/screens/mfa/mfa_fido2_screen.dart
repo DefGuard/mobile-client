@@ -95,6 +95,7 @@ class MfaFido2Screen extends HookConsumerWidget {
               error: e,
             );
           } catch (e) {
+            if (reportIfAttemptLimit(host, e)) return;
             toaster.showError(
               message: ErrorHandler.getHumanReadableError(e),
               logMessage: "FIDO2 MFA assertion submit failed",

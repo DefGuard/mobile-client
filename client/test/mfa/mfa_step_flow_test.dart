@@ -2,28 +2,39 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:mobile/data/db/enums.dart';
 import 'package:mobile/data/mfa/mfa_flow.dart';
-import 'package:mobile/data/proxy/mfa.dart';
+import 'package:mobile/data/mfa/mfa_transport.dart';
+import 'package:mobile/enterprise/postures.dart';
 import 'package:mobile/open/screens/mfa/mfa_step_chrome.dart';
 import 'package:mobile/open/screens/mfa/mfa_step_flow.dart';
 
 class _StubTransport implements MfaTransport {
-  final List<FinishMfaResponse> answers;
+  final List<MfaFinishResult> answers;
   int _finishes = 0;
   int _attempts = 0;
 
   _StubTransport(this.answers);
 
   @override
-  Future<StartMfaResponse> start(StartMfaRequest request) async =>
-      const StartMfaResponse(token: 'token', challenge: null, rejections: []);
+  Future<MfaSessionStart> start({
+    required String devicePubkey,
+    required int networkId,
+    required List<MfaMethod> plan,
+    DevicePostureData? postureData,
+  }) async => MfaSessionStart(
+    token: 'token',
+    firstStep: const MfaStepChallenge(stepAttemptId: 'first-attempt'),
+  );
 
   @override
-  Future<StepStartMfaResponse> stepStart(StepStartMfaRequest request) async =>
-      StepStartMfaResponse(stepAttemptId: 'attempt-${++_attempts}');
+  Future<MfaStepChallenge> startStep(String token, MfaMethod method) async =>
+      MfaStepChallenge(stepAttemptId: 'attempt-${++_attempts}');
 
   @override
-  Future<FinishMfaResponse> finish(FinishMfaRequest request) async =>
-      answers[_finishes++];
+  Future<MfaFinishResult> finish({
+    required String token,
+    required String? stepAttemptId,
+    required MfaCredential? credential,
+  }) async => answers[_finishes++];
 }
 
 /// Stands in for a real step screen: shows which step it is and nothing else.
@@ -43,8 +54,6 @@ class _StubStep extends StatelessWidget {
 
 const String _sheetRoute = 'connect-sheet';
 
-/// Counts the stacked step routes. Routes below the top one stay in the tree
-/// offstage, so a step left behind still shows up here.
 int _stepRouteCount() =>
     find.byType(_StubStep, skipOffstage: false).evaluate().length;
 
@@ -54,7 +63,7 @@ void main() {
   Future<MfaStepFlow> pumpFlow(
     WidgetTester tester, {
     required List<MfaMethod> plan,
-    required List<FinishMfaResponse> answers,
+    required List<MfaFinishResult> answers,
   }) async {
     final key = GlobalKey<NavigatorState>();
     await tester.pumpWidget(
@@ -88,7 +97,7 @@ void main() {
     final flow = await pumpFlow(
       tester,
       plan: [MfaMethod.totp],
-      answers: [const FinishMfaResponse(outcome: MfaCompleted('psk'))],
+      answers: [const MfaFinishCompleted('psk')],
     );
 
     final result = flow.run();
@@ -96,7 +105,11 @@ void main() {
     expect(find.text('step 0'), findsOneWidget);
     expect(_stepRouteCount(), 1);
 
-    flow.reportProgress(await flow.controller.submit(code: '123456'));
+    flow.reportProgress(
+      await flow.controller.submit(
+        credential: const MfaCodeCredential('123456'),
+      ),
+    );
     await tester.pumpAndSettle();
 
     expect(await result, isA<MfaFlowConnected>());
@@ -112,26 +125,38 @@ void main() {
       tester,
       plan: [MfaMethod.totp, MfaMethod.email, MfaMethod.totp],
       answers: [
-        const FinishMfaResponse(outcome: MfaAdvanced(1)),
-        const FinishMfaResponse(outcome: MfaAdvanced(2)),
-        const FinishMfaResponse(outcome: MfaCompleted('psk')),
+        const MfaFinishAdvanced(1),
+        const MfaFinishAdvanced(2),
+        const MfaFinishCompleted('psk'),
       ],
     );
 
     final result = flow.run();
     await tester.pumpAndSettle();
 
-    flow.reportProgress(await flow.controller.submit(code: '111111'));
+    flow.reportProgress(
+      await flow.controller.submit(
+        credential: const MfaCodeCredential('111111'),
+      ),
+    );
     await tester.pumpAndSettle();
     expect(find.text('step 1'), findsOneWidget);
     expect(_stepRouteCount(), 2);
 
-    flow.reportProgress(await flow.controller.submit(code: '222222'));
+    flow.reportProgress(
+      await flow.controller.submit(
+        credential: const MfaCodeCredential('222222'),
+      ),
+    );
     await tester.pumpAndSettle();
     expect(find.text('step 2'), findsOneWidget);
     expect(_stepRouteCount(), 3);
 
-    flow.reportProgress(await flow.controller.submit(code: '333333'));
+    flow.reportProgress(
+      await flow.controller.submit(
+        credential: const MfaCodeCredential('333333'),
+      ),
+    );
     await tester.pumpAndSettle();
 
     expect(await result, isA<MfaFlowConnected>());
@@ -143,12 +168,16 @@ void main() {
     final flow = await pumpFlow(
       tester,
       plan: [MfaMethod.totp, MfaMethod.email],
-      answers: [const FinishMfaResponse(outcome: MfaAdvanced(1))],
+      answers: [const MfaFinishAdvanced(1)],
     );
 
     final result = flow.run();
     await tester.pumpAndSettle();
-    flow.reportProgress(await flow.controller.submit(code: '111111'));
+    flow.reportProgress(
+      await flow.controller.submit(
+        credential: const MfaCodeCredential('111111'),
+      ),
+    );
     await tester.pumpAndSettle();
     expect(_stepRouteCount(), 2);
 
@@ -183,8 +212,8 @@ void main() {
   ) async {
     final flow = await pumpFlow(
       tester,
-      plan: [MfaMethod.totp],
-      answers: [const FinishMfaResponse(outcome: MfaAwaitingExternal())],
+      plan: [MfaMethod.openid],
+      answers: [const MfaFinishAwaitingExternal()],
     );
 
     flow.run();

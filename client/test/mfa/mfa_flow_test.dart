@@ -1,218 +1,170 @@
+import 'dart:collection';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mobile/data/db/enums.dart';
 import 'package:mobile/data/mfa/mfa_flow.dart';
+import 'package:mobile/data/mfa/mfa_transport.dart';
 import 'package:mobile/data/proxy/mfa.dart';
+import 'package:mobile/enterprise/postures.dart';
 
 class _FakeTransport implements MfaTransport {
-  final List<String> calls = [];
-  final List<FinishMfaRequest> finishes = [];
-  final List<StartMfaRequest> starts = [];
+  final Queue<Object> startAnswers;
+  final Queue<MfaStepChallenge> stepAnswers;
+  final Queue<Object> finishAnswers;
+  final calls = <String>[];
+  final plans = <List<MfaMethod>>[];
+  final openedSteps = <MfaMethod>[];
+  final stepAttemptIds = <String?>[];
+  final credentials = <MfaCredential?>[];
 
-  /// Answers for successive finish calls. A response is returned, an exception
-  /// is thrown.
-  final List<Object> finishAnswers;
-
-  int _attempt = 0;
-
-  _FakeTransport({this.finishAnswers = const []});
+  _FakeTransport({
+    Iterable<Object> startAnswers = const [],
+    Iterable<MfaStepChallenge> stepAnswers = const [],
+    Iterable<Object> finishAnswers = const [],
+  }) : startAnswers = Queue.of(startAnswers),
+       stepAnswers = Queue.of(stepAnswers),
+       finishAnswers = Queue.of(finishAnswers);
 
   @override
-  Future<StartMfaResponse> start(StartMfaRequest request) async {
+  Future<MfaSessionStart> start({
+    required String devicePubkey,
+    required int networkId,
+    required List<MfaMethod> plan,
+    DevicePostureData? postureData,
+  }) async {
     calls.add('start');
-    starts.add(request);
-    return StartMfaResponse(
-      token: 'session-token',
-      challenge: 'start-challenge',
-      rejections: const [],
-      credentialIds: request.method == MfaMethod.fido2
-          ? const ['start-key']
-          : const [],
-    );
+    plans.add(List.of(plan));
+    final answer = startAnswers.removeFirst();
+    if (answer is MfaStartRejectedException) throw answer;
+    return answer as MfaSessionStart;
   }
 
   @override
-  Future<StepStartMfaResponse> stepStart(StepStartMfaRequest request) async {
-    calls.add('step-start:${request.method.name}');
-    return StepStartMfaResponse(
-      stepAttemptId: 'attempt-${++_attempt}',
-      challenge: 'step-challenge',
-      credentialIds: request.method == MfaMethod.fido2
-          ? const ['step-key']
-          : const [],
-    );
+  Future<MfaStepChallenge> startStep(String token, MfaMethod method) async {
+    calls.add('step-start');
+    openedSteps.add(method);
+    return stepAnswers.removeFirst();
   }
 
   @override
-  Future<FinishMfaResponse> finish(FinishMfaRequest request) async {
+  Future<MfaFinishResult> finish({
+    required String token,
+    required String? stepAttemptId,
+    required MfaCredential? credential,
+  }) async {
     calls.add('finish');
-    finishes.add(request);
-    final answer = finishAnswers[finishes.length - 1];
-    if (answer is Exception) throw answer;
-    return answer as FinishMfaResponse;
+    stepAttemptIds.add(stepAttemptId);
+    credentials.add(credential);
+    final answer = finishAnswers.removeFirst();
+    if (answer is MfaCodeRejectedException) throw answer;
+    return answer as MfaFinishResult;
   }
 }
 
-MfaFlowController _controller(_FakeTransport transport, List<MfaMethod> plan) =>
-    MfaFlowController(
-      transport: transport,
-      plan: plan,
-      devicePubkey: 'device-pubkey',
-      networkId: 11,
-    );
+MfaSessionStart _session({
+  String token = 'token',
+  String? attemptId = 'first-attempt',
+  String? challenge = 'start-challenge',
+  List<String> credentialIds = const [],
+}) => MfaSessionStart(
+  token: token,
+  firstStep: MfaStepChallenge(
+    stepAttemptId: attemptId,
+    challenge: challenge,
+    credentialIds: credentialIds,
+  ),
+);
 
-FinishMfaResponse _advanced(int nextStep) =>
-    FinishMfaResponse(outcome: MfaAdvanced(nextStep));
+MfaStepChallenge _step({
+  String attemptId = 'step-attempt',
+  String? challenge = 'step-challenge',
+  List<String> credentialIds = const [],
+}) => MfaStepChallenge(
+  stepAttemptId: attemptId,
+  challenge: challenge,
+  credentialIds: credentialIds,
+);
 
-FinishMfaResponse _completed([String? psk = 'psk']) =>
-    FinishMfaResponse(outcome: MfaCompleted(psk));
+MfaFlowController _controller(
+  MfaTransport transport,
+  List<MfaMethod> plan, {
+  MfaPlanRefresh? refreshPlan,
+}) => MfaFlowController(
+  transport: transport,
+  plan: plan,
+  devicePubkey: 'device-pubkey',
+  networkId: 11,
+  refreshPlan: refreshPlan,
+);
 
 void main() {
-  test('a single-step flow never opens a step separately', () async {
-    final transport = _FakeTransport(finishAnswers: [_completed()]);
-    final controller = _controller(transport, [MfaMethod.totp]);
-
-    await controller.startStep();
-    expect(await controller.submit(code: '123456'), isA<MfaStepCompleted>());
-
-    expect(transport.calls, ['start', 'finish']);
-    expect(transport.starts.single.selectedMethods, [MfaMethod.totp]);
-    expect(transport.starts.single.method, MfaMethod.totp);
-    expect(transport.finishes.single.stepAttemptId, isNull);
-    expect(controller.takePresharedKey(), 'psk');
-    expect(controller.stepLabel, isNull);
-  });
-
-  test('a pre-2.2 completion comes through the deprecated field', () async {
+  test('opens each step and advances only from the server result', () async {
     final transport = _FakeTransport(
-      finishAnswers: [const FinishMfaResponse(presharedKey: 'legacy-psk')],
-    );
-    final controller = _controller(transport, [MfaMethod.email]);
-
-    await controller.startStep();
-    expect(await controller.submit(code: '123456'), isA<MfaStepCompleted>());
-    expect(controller.takePresharedKey(), 'legacy-psk');
-  });
-
-  test('a pre-2.2 response with no key at all is a rejected proof', () async {
-    final transport = _FakeTransport(
-      finishAnswers: [const FinishMfaResponse()],
-    );
-    final controller = _controller(transport, [MfaMethod.totp]);
-
-    await controller.startStep();
-    await expectLater(
-      controller.submit(code: '000000'),
-      throwsA(isA<MfaCodeRejectedException>()),
-    );
-  });
-
-  test('a three-step flow opens every step but the first', () async {
-    final transport = _FakeTransport(
-      finishAnswers: [_advanced(1), _advanced(2), _completed()],
-    );
-    final plan = [MfaMethod.totp, MfaMethod.email, MfaMethod.biometric];
-    final controller = _controller(transport, plan);
-
-    await controller.startStep();
-    expect(controller.stepLabel, 'Step 1/3');
-    expect(await controller.submit(code: '111111'), isA<MfaStepAdvanced>());
-    expect(controller.stepIndex, 1);
-
-    await controller.startStep();
-    expect(controller.stepLabel, 'Step 2/3');
-    expect(await controller.submit(code: '222222'), isA<MfaStepAdvanced>());
-
-    await controller.startStep();
-    expect(controller.method, MfaMethod.biometric);
-    expect(await controller.submit(code: 'signature'), isA<MfaStepCompleted>());
-
-    expect(transport.calls, [
-      'start',
-      'finish',
-      'step-start:email',
-      'finish',
-      'step-start:biometric',
-      'finish',
-    ]);
-    expect(transport.starts.single.selectedMethods, plan);
-    expect(transport.finishes.map((r) => r.stepAttemptId), [
-      null,
-      'attempt-1',
-      'attempt-2',
-    ]);
-    expect(controller.takePresharedKey(), 'psk');
-  });
-
-  test('the server decides which step comes next', () async {
-    final transport = _FakeTransport(
-      finishAnswers: [_advanced(2), _completed()],
-    );
-    final controller = _controller(transport, [
-      MfaMethod.totp,
-      MfaMethod.email,
-      MfaMethod.biometric,
-    ]);
-
-    await controller.startStep();
-    await controller.submit(code: '111111');
-    expect(controller.stepIndex, 2);
-    expect(controller.method, MfaMethod.biometric);
-  });
-
-  test('an advance past the end of the plan is refused', () async {
-    final transport = _FakeTransport(finishAnswers: [_advanced(2)]);
-    final controller = _controller(transport, [
-      MfaMethod.totp,
-      MfaMethod.email,
-    ]);
-
-    await controller.startStep();
-    await expectLater(
-      controller.submit(code: '111111'),
-      throwsA(isA<FormatException>()),
-    );
-  });
-
-  test('a rejected code is retried on the same attempt', () async {
-    final transport = _FakeTransport(
+      startAnswers: [_session()],
+      stepAnswers: [_step(attemptId: 'second-attempt')],
       finishAnswers: [
-        _advanced(1),
-        const MfaCodeRejectedException(),
-        _completed(),
+        const MfaFinishAdvanced(1),
+        const MfaFinishCompleted('psk'),
       ],
     );
     final controller = _controller(transport, [
       MfaMethod.totp,
-      MfaMethod.email,
+      MfaMethod.biometric,
     ]);
 
     await controller.startStep();
-    await controller.submit(code: '111111');
-    await controller.startStep();
+    expect(controller.token, 'token');
+    expect(controller.stepAttemptId, 'first-attempt');
+    expect(controller.challenge, 'start-challenge');
+    expect(transport.calls, ['start']);
 
-    await expectLater(
-      controller.submit(code: 'wrong'),
-      throwsA(isA<MfaCodeRejectedException>()),
+    expect(
+      await controller.submit(credential: const MfaCodeCredential('123456')),
+      isA<MfaStepAdvanced>(),
     );
-    expect(await controller.submit(code: 'right'), isA<MfaStepCompleted>());
+    expect(controller.stepIndex, 1);
+    expect(controller.stepAttemptId, isNull);
+    await controller.startStep();
+    expect(transport.openedSteps, [MfaMethod.biometric]);
+    expect(controller.stepAttemptId, 'second-attempt');
+    expect(controller.challenge, 'step-challenge');
 
-    expect(transport.calls, [
-      'start',
-      'finish',
-      'step-start:email',
-      'finish',
-      'finish',
-    ]);
-    expect(transport.finishes.last.stepAttemptId, 'attempt-1');
+    expect(
+      await controller.submit(
+        credential: const MfaBiometricCredential(
+          signature: 'signature',
+          authPubKey: 'auth-public-key',
+        ),
+      ),
+      isA<MfaStepCompleted>(),
+    );
+    expect(controller.takePresharedKey(), 'psk');
+    expect(controller.takePresharedKey(), isNull);
+  });
+
+  test('a single step never calls step-start', () async {
+    final transport = _FakeTransport(
+      startAnswers: [_session()],
+      finishAnswers: [const MfaFinishCompleted('psk')],
+    );
+    final controller = _controller(transport, [MfaMethod.totp]);
+
+    await controller.startStep();
+    expect(
+      await controller.submit(credential: const MfaCodeCredential('123456')),
+      isA<MfaStepCompleted>(),
+    );
+    expect(transport.calls, ['start', 'finish']);
   });
 
   test(
-    'an unresolved external factor is neither success nor failure',
+    'OIDC polling stays pending until external completion on the same attempt',
     () async {
       final transport = _FakeTransport(
+        startAnswers: [_session()],
         finishAnswers: [
-          const FinishMfaResponse(outcome: MfaAwaitingExternal()),
-          _completed(),
+          const MfaFinishAwaitingExternal(),
+          const MfaFinishCompleted('psk'),
         ],
       );
       final controller = _controller(transport, [MfaMethod.openid]);
@@ -222,143 +174,288 @@ void main() {
       expect(controller.takePresharedKey(), isNull);
       expect(await controller.submit(), isA<MfaStepCompleted>());
       expect(controller.takePresharedKey(), 'psk');
+      expect(transport.stepAttemptIds, ['first-attempt', 'first-attempt']);
+      expect(transport.credentials, [null, null]);
     },
   );
 
-  test('a completion with no preshared key still completes', () async {
-    final transport = _FakeTransport(finishAnswers: [_completed(null)]);
+  test('a completion without a preshared key still completes', () async {
+    final transport = _FakeTransport(
+      startAnswers: [_session()],
+      finishAnswers: [const MfaFinishCompleted(null)],
+    );
     final controller = _controller(transport, [MfaMethod.totp]);
 
     await controller.startStep();
-    expect(await controller.submit(code: '123456'), isA<MfaStepCompleted>());
+    expect(
+      await controller.submit(credential: const MfaCodeCredential('123456')),
+      isA<MfaStepCompleted>(),
+    );
     expect(controller.takePresharedKey(), isNull);
   });
 
-  test('the preshared key is handed over exactly once', () async {
-    final transport = _FakeTransport(finishAnswers: [_completed()]);
-    final controller = _controller(transport, [MfaMethod.totp]);
-
-    await controller.startStep();
-    await controller.submit(code: '123456');
-    expect(controller.takePresharedKey(), 'psk');
-    expect(controller.takePresharedKey(), isNull);
-  });
-
-  test('the challenge follows the step being opened', () async {
-    final transport = _FakeTransport(finishAnswers: [_advanced(1)]);
-    final controller = _controller(transport, [
-      MfaMethod.totp,
-      MfaMethod.biometric,
-    ]);
-
-    await controller.startStep();
-    expect(controller.challenge, 'start-challenge');
-    await controller.submit(code: '111111');
-    expect(controller.challenge, isNull);
-    await controller.startStep();
-    expect(controller.challenge, 'step-challenge');
-  });
-
-  test('a FIDO2 first step exposes the offered keys', () async {
-    final transport = _FakeTransport(finishAnswers: [_completed()]);
+  test('FIDO2 sends the raw assertion and authenticator rpId hash', () async {
+    final transport = _FakeTransport(
+      startAnswers: [
+        _session(
+          attemptId: 'fido-attempt',
+          challenge: 'fido-challenge',
+          credentialIds: ['offered-key'],
+        ),
+      ],
+      finishAnswers: [const MfaFinishCompleted('psk')],
+    );
     final controller = _controller(transport, [MfaMethod.fido2]);
 
     await controller.startStep();
-    expect(controller.credentialIds, ['start-key']);
-  });
-
-  test('the offered keys follow the step being opened', () async {
-    final transport = _FakeTransport(finishAnswers: [_advanced(1)]);
-    final controller = _controller(transport, [
-      MfaMethod.totp,
-      MfaMethod.fido2,
-    ]);
-
-    await controller.startStep();
-    expect(controller.credentialIds, isEmpty);
-    await controller.submit(code: '111111');
-    await controller.startStep();
-    expect(controller.credentialIds, ['step-key']);
-  });
-
-  test('a FIDO2 proof carries the signature as unpadded base64url', () async {
-    final transport = _FakeTransport(
-      finishAnswers: [_advanced(1), _completed()],
-    );
-    final controller = _controller(transport, [
-      MfaMethod.totp,
-      MfaMethod.fido2,
-    ]);
-
-    await controller.startStep();
-    await controller.submit(code: '111111');
-    await controller.startStep();
-    final progress = await controller.submitFido2(
+    expect(controller.credentialIds, ['offered-key']);
+    await controller.submitFido2(
       signature: [0xfb, 0xff],
-      authData: [1, 2, 3],
-      credentialId: [7],
+      authData: List<int>.generate(37, (index) => index),
+      credentialId: [7, 8],
     );
 
-    expect(progress, isA<MfaStepCompleted>());
-    final finish = transport.finishes.last;
-    expect(finish.authPubKey, '-_8');
-    expect(finish.code, isNull);
-    expect(finish.authData, [1, 2, 3]);
-    expect(finish.credentialId, [7]);
-    expect(finish.stepAttemptId, 'attempt-1');
+    final assertion = transport.credentials.single as MfaFido2Credential;
+    expect(assertion.rpIdHash, List<int>.generate(32, (index) => index));
+    expect(
+      assertion.authenticatorData,
+      List<int>.generate(37, (index) => index),
+    );
+    expect(assertion.signature, [0xfb, 0xff]);
+    expect(assertion.credentialId, [7, 8]);
+    expect(transport.stepAttemptIds.single, 'fido-attempt');
   });
 
-  test('cancelling is observable and submits nothing further', () async {
-    final transport = _FakeTransport(finishAnswers: [_advanced(1)]);
-    final controller = _controller(transport, [
-      MfaMethod.totp,
-      MfaMethod.email,
-    ]);
-
+  test('malformed FIDO2 assertions are never submitted', () async {
+    final transport = _FakeTransport(startAnswers: [_session()]);
+    final controller = _controller(transport, [MfaMethod.fido2]);
     await controller.startStep();
-    await controller.submit(code: '111111');
-    controller.cancel();
 
-    expect(controller.isCancelled, isTrue);
-    expect(transport.calls, ['start', 'finish']);
+    expect(
+      () => controller.submitFido2(
+        signature: [],
+        authData: List<int>.filled(37, 1),
+        credentialId: [1],
+      ),
+      throwsFormatException,
+    );
+    expect(
+      () => controller.submitFido2(
+        signature: [1],
+        authData: List<int>.filled(36, 1),
+        credentialId: [1],
+      ),
+      throwsFormatException,
+    );
+    expect(
+      () => controller.submitFido2(
+        signature: [1],
+        authData: List<int>.filled(37, 1),
+        credentialId: [],
+      ),
+      throwsFormatException,
+    );
+    expect(transport.calls, ['start']);
   });
 
-  test('submitting before the session exists is a programming error', () async {
-    final controller = _controller(_FakeTransport(), [MfaMethod.totp]);
-    await expectLater(controller.submit(code: '123456'), throwsStateError);
-  });
-
-  test('a proof cannot be submitted into the gap between steps', () async {
-    final transport = _FakeTransport(finishAnswers: [_advanced(1)]);
-    final controller = _controller(transport, [
-      MfaMethod.totp,
-      MfaMethod.email,
-    ]);
-
-    await controller.startStep();
-    await controller.submit(code: '111111');
-
-    // The previous step's screen is still on top until the next one is pushed.
-    await expectLater(controller.submit(code: '111111'), throwsStateError);
-    expect(transport.calls, ['start', 'finish']);
-
-    await controller.startStep();
-    expect(transport.calls.last, 'step-start:email');
-  });
-
-  test('polling an open external step does not close it', () async {
+  test('a rejected start refreshes the plan and retries once', () async {
     final transport = _FakeTransport(
-      finishAnswers: [
-        const FinishMfaResponse(outcome: MfaAwaitingExternal()),
-        const FinishMfaResponse(outcome: MfaAwaitingExternal()),
-        _completed(),
+      startAnswers: [
+        const MfaStartRejectedException('stale plan'),
+        _session(),
       ],
     );
-    final controller = _controller(transport, [MfaMethod.openid]);
+    var refreshes = 0;
+    final controller = _controller(
+      transport,
+      [MfaMethod.totp],
+      refreshPlan: () async {
+        refreshes++;
+        return [MfaMethod.email];
+      },
+    );
 
     await controller.startStep();
-    expect(await controller.submit(), isA<MfaStepAwaiting>());
-    expect(await controller.submit(), isA<MfaStepAwaiting>());
-    expect(await controller.submit(), isA<MfaStepCompleted>());
+    expect(refreshes, 1);
+    expect(transport.calls, ['start', 'start']);
+    expect(transport.plans, [
+      [MfaMethod.totp],
+      [MfaMethod.email],
+    ]);
+    expect(controller.plan, [MfaMethod.email]);
+    expect(controller.method, MfaMethod.email);
+  });
+
+  test('a second rejection stops without a third start', () async {
+    final transport = _FakeTransport(
+      startAnswers: [
+        const MfaStartRejectedException('stale plan'),
+        const MfaStartRejectedException('still stale'),
+      ],
+    );
+    var refreshes = 0;
+    final controller = _controller(
+      transport,
+      [MfaMethod.totp],
+      refreshPlan: () async {
+        refreshes++;
+        return [MfaMethod.email];
+      },
+    );
+
+    await expectLater(
+      controller.startStep(),
+      throwsA(
+        isA<MfaStartRejectedException>().having(
+          (error) => error.message,
+          'message',
+          'still stale',
+        ),
+      ),
+    );
+    expect(refreshes, 1);
+    expect(transport.calls, ['start', 'start']);
+  });
+
+  test('a legacy transport refuses multi-step and FIDO2 starts', () async {
+    final transport = mfaTransportForContract(
+      MfaContract.legacy,
+      Uri.parse('https://proxy.example'),
+    );
+    expect(transport, isA<LegacyMfaTransport>());
+    await expectLater(
+      transport.start(
+        devicePubkey: 'device-pubkey',
+        networkId: 11,
+        plan: [MfaMethod.totp, MfaMethod.email],
+      ),
+      throwsUnsupportedError,
+    );
+    await expectLater(
+      transport.start(
+        devicePubkey: 'device-pubkey',
+        networkId: 11,
+        plan: [MfaMethod.fido2],
+      ),
+      throwsUnsupportedError,
+    );
+  });
+
+  test('contract selection chooses one transport', () {
+    expect(
+      mfaTransportForContract(
+        MfaContract.multiStep,
+        Uri.parse('https://proxy.example'),
+      ),
+      isA<MfaFlowProxyTransport>(),
+    );
+  });
+
+  test('the server selects the next step and opens its challenge', () async {
+    final transport = _FakeTransport(
+      startAnswers: [_session()],
+      stepAnswers: [
+        _step(
+          attemptId: 'fido-attempt',
+          challenge: 'fido-challenge',
+          credentialIds: ['offered-key'],
+        ),
+      ],
+      finishAnswers: [
+        const MfaFinishAdvanced(2),
+        const MfaFinishCompleted('psk'),
+      ],
+    );
+    final controller = _controller(transport, [
+      MfaMethod.totp,
+      MfaMethod.email,
+      MfaMethod.fido2,
+    ]);
+
+    await controller.startStep();
+    expect(
+      await controller.submit(credential: const MfaCodeCredential('123456')),
+      isA<MfaStepAdvanced>(),
+    );
+    expect(controller.stepIndex, 2);
+    await expectLater(
+      controller.submit(credential: const MfaCodeCredential('123456')),
+      throwsStateError,
+    );
+
+    await controller.startStep();
+    expect(transport.openedSteps, [MfaMethod.fido2]);
+    expect(controller.challenge, 'fido-challenge');
+    expect(controller.credentialIds, ['offered-key']);
+    await controller.submitFido2(
+      signature: [1],
+      authData: List<int>.generate(37, (index) => index),
+      credentialId: [2],
+    );
+    expect(transport.stepAttemptIds, ['first-attempt', 'fido-attempt']);
+    expect(controller.takePresharedKey(), 'psk');
+  });
+
+  test('an advance beyond the plan is rejected', () async {
+    final transport = _FakeTransport(
+      startAnswers: [_session()],
+      finishAnswers: [const MfaFinishAdvanced(1)],
+    );
+    final controller = _controller(transport, [MfaMethod.totp]);
+    await controller.startStep();
+
+    await expectLater(
+      controller.submit(credential: const MfaCodeCredential('123456')),
+      throwsA(isA<FormatException>()),
+    );
+    expect(controller.stepIndex, 0);
+    expect(transport.calls, ['start', 'finish']);
+  });
+
+  test('a rejected proof can be retried on the same step attempt', () async {
+    final transport = _FakeTransport(
+      startAnswers: [_session()],
+      finishAnswers: [
+        const MfaCodeRejectedException(),
+        const MfaFinishCompleted('psk'),
+      ],
+    );
+    final controller = _controller(transport, [MfaMethod.totp]);
+    await controller.startStep();
+
+    await expectLater(
+      controller.submit(credential: const MfaCodeCredential('bad-code')),
+      throwsA(isA<MfaCodeRejectedException>()),
+    );
+    expect(controller.stepAttemptId, 'first-attempt');
+    expect(controller.stepIndex, 0);
+    await controller.submit(credential: const MfaCodeCredential('123456'));
+    expect(transport.stepAttemptIds, ['first-attempt', 'first-attempt']);
+    expect(controller.takePresharedKey(), 'psk');
+  });
+
+  test('submitting before a step is open is a programming error', () async {
+    final controller = _controller(_FakeTransport(), [MfaMethod.totp]);
+    await expectLater(
+      controller.submit(credential: const MfaCodeCredential('123456')),
+      throwsStateError,
+    );
+  });
+
+  test('a credential for another method never reaches the transport', () async {
+    final transport = _FakeTransport(startAnswers: [_session()]);
+    final controller = _controller(transport, [MfaMethod.totp]);
+    await controller.startStep();
+
+    await expectLater(
+      controller.submit(
+        credential: const MfaBiometricCredential(
+          signature: 'signature',
+          authPubKey: 'auth-public-key',
+        ),
+      ),
+      throwsStateError,
+    );
+    expect(transport.calls, ['start']);
   });
 }

@@ -2,6 +2,7 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:mobile/data/mfa/mfa_flow.dart';
+import 'package:mobile/data/mfa/mfa_transport.dart';
 import 'package:mobile/data/proxy/mfa.dart';
 import 'package:mobile/open/screens/mfa/mfa_step_chrome.dart';
 import 'package:mobile/open/widgets/icons/dg_icon.dart';
@@ -73,13 +74,19 @@ class MfaBiometricScreen extends HookConsumerWidget {
 
       try {
         final signed = signChallenge(challenge, storage.privateKey);
-        final progress = await host.controller.submit(code: signed);
+        final progress = await host.controller.submit(
+          credential: MfaBiometricCredential(
+            signature: signed,
+            authPubKey: storage.publicKey,
+          ),
+        );
         if (progress is MfaStepAwaiting) {
           throw StateError("biometric step returned an out-of-band outcome");
         }
         host.reportProgress(progress);
         return;
       } catch (e) {
+        if (reportIfAttemptLimit(host, e)) return;
         toaster.showError(
           message: "Verification failed. Please try again.",
           logMessage: "Biometric MFA challenge submit failed!",

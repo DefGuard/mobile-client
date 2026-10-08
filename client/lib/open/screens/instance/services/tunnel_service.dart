@@ -5,6 +5,7 @@ import 'package:drift/drift.dart' as drift;
 import 'package:material_ui/material_ui.dart';
 import 'package:mobile/data/db/database.dart';
 import 'package:mobile/data/mfa/mfa_flow.dart';
+import 'package:mobile/data/mfa/mfa_transport.dart';
 import 'package:mobile/data/mfa/mfa_plan.dart';
 import 'package:mobile/data/plugin/plugin.dart';
 import 'package:mobile/enterprise/postures.dart';
@@ -13,6 +14,7 @@ import 'package:mobile/open/api.dart';
 import 'package:mobile/open/riverpod/biometrics_state.dart';
 import 'package:mobile/open/screens/mfa/mfa_step_flow.dart';
 import 'package:mobile/utils/instance_secrets.dart';
+import 'package:mobile/utils/update_instance.dart';
 
 import '../../../../data/db/enums.dart';
 import '../../../../utils/notifications.dart';
@@ -82,15 +84,6 @@ class TunnelService {
   }) async {
     final navigator = Navigator.of(context);
 
-    // The instance policy outranks whatever the caller asked for - it is the
-    // administrator's setting, not a user preference.
-    final RoutingMethod selectedTrafficMethod =
-        switch (instance.clientTrafficPolicy) {
-          ClientTrafficPolicy.disableAllTraffic => RoutingMethod.predefined,
-          ClientTrafficPolicy.forceAllTraffic => RoutingMethod.all,
-          ClientTrafficPolicy.none => trafficMethod,
-        };
-
     final privateKey = await instance.wireguardPrivateKey();
     if (privateKey == null) {
       reportMissingSecret(instance.logName, "WireGuard private key");
@@ -99,19 +92,21 @@ class TunnelService {
     PluginConnectPayload payload = _makePayload(
       instance,
       location,
-      selectedTrafficMethod,
+      trafficMethod,
       privateKey,
     );
-
     MfaMethod? authorizedWith;
 
     if (shouldStartMfa(location)) {
-      final biometricAvailable =
-          instance.mfaKeysStored && biometricsStatus.canOpenStorage;
+      final capabilities = MfaCapabilities(
+        biometricAvailable:
+            instance.mfaKeysStored && biometricsStatus.canOpenStorage,
+        contract: instance.mfaContract,
+      );
       final resolved = resolveMfaStepPlan(
         location,
         oneOff: mfaPlan,
-        biometricAvailable: biometricAvailable,
+        capabilities: capabilities,
       );
       if (resolved.isEmpty || resolved.contains(null)) {
         return const ConnectResult.failed(
@@ -129,11 +124,41 @@ class TunnelService {
       final flow = MfaStepFlow(
         navigator: navigator,
         controller: MfaFlowController(
-          transport: ProxyMfaTransport(Uri.parse(instance.proxyUrl)),
+          transport: mfaTransportForContract(
+            instance.mfaContract,
+            Uri.parse(instance.proxyUrl),
+          ),
           plan: plan,
           devicePubkey: payload.devicePublicKey,
           networkId: payload.networkId,
           postureData: payload.postureCheckRequired ? await getPosture() : null,
+          refreshPlan: instance.mfaContract == MfaContract.multiStep
+              ? () async {
+                  final retry = await _refreshMfaPlan(
+                    db: db,
+                    instance: instance,
+                    location: location,
+                    oneOff: mfaPlan,
+                    capabilities: capabilities,
+                  );
+                  if (retry == null) return null;
+                  final refreshed = _makePayload(
+                    retry.instance,
+                    retry.location,
+                    trafficMethod,
+                    privateKey,
+                  );
+                  if (!canReuseMfaAttempt(payload, refreshed)) {
+                    talker.warning(
+                      "Not retrying MFA for networkId ${payload.networkId}: "
+                      "the refresh changed what the started attempt was bound to",
+                    );
+                    return null;
+                  }
+                  payload = refreshed;
+                  return retry.plan;
+                }
+              : null,
         ),
         proxyUrl: instance.proxyUrl,
         instanceUrl: instance.url,
@@ -154,9 +179,10 @@ class TunnelService {
         case MfaFlowConnected():
           payload.presharedKey = flow.controller.takePresharedKey();
       }
-      // Only meaningful for a single-step flow; a multi-step one is described
-      // by its step count instead.
-      authorizedWith = plan.length == 1 ? plan.single : null;
+      // Only a single-step flow has one method to show. A multi-step one shows
+      // its step count instead.
+      final completedPlan = flow.controller.plan;
+      authorizedWith = completedPlan.length == 1 ? completedPlan.single : null;
     } else if (payload.postureCheckRequired) {
       final poolingToken = await instance.poolingToken();
       if (poolingToken == null) {
@@ -176,6 +202,8 @@ class TunnelService {
 
     await wireguardPlugin.startTunnel(jsonEncode(payload.toJson()));
 
+    // The original instance, not a refreshed one: its policy decided whether
+    // the connect sheet let the user pick [trafficMethod].
     await _rememberPreferences(
       db,
       instance,
@@ -236,6 +264,69 @@ class TunnelService {
         e,
       );
     }
+  }
+
+  /// The started attempt is bound to the device key, network and posture data,
+  /// so a retry may reuse it only when the refresh left those unchanged.
+  @visibleForTesting
+  static bool canReuseMfaAttempt(
+    PluginConnectPayload attempt,
+    PluginConnectPayload refreshed,
+  ) =>
+      attempt.devicePublicKey == refreshed.devicePublicKey &&
+      attempt.networkId == refreshed.networkId &&
+      attempt.postureCheckRequired == refreshed.postureCheckRequired;
+
+  static Future<
+    ({List<MfaMethod> plan, DefguardInstance instance, Location location})?
+  >
+  _refreshMfaPlan({
+    required AppDatabase db,
+    required DefguardInstance instance,
+    required Location location,
+    required List<MfaMethod?> oneOff,
+    required MfaCapabilities capabilities,
+  }) async {
+    final token = await instance.poolingToken();
+    if (token == null) return null;
+
+    final (config, _, _) = await proxyApi.pollConfiguration(
+      instance.proxyUrl,
+      token,
+    );
+    if (config == null) return null;
+
+    final update = await updateInstance(
+      db: db,
+      instance: instance,
+      configs: config.configs,
+      info: config.instance,
+      token: config.token,
+    );
+    if (update == null) return null;
+
+    final refreshedInstance = await db.managers.defguardInstances
+        .filter((row) => row.id.equals(instance.id))
+        .getSingleOrNull();
+    if (refreshedInstance == null) return null;
+
+    final refreshedLocation = await db.managers.locations
+        .filter((row) => row.id.equals(location.id))
+        .getSingleOrNull();
+    if (refreshedLocation == null) return null;
+
+    final plan = resolveMfaRetryPlan(
+      refreshedLocation,
+      attempt: capabilities,
+      refreshedContract: refreshedInstance.mfaContract,
+      oneOff: oneOff,
+    );
+    if (plan == null) return null;
+    return (
+      plan: plan,
+      instance: refreshedInstance,
+      location: refreshedLocation,
+    );
   }
 
   /// Whether the location has an MFA flow to satisfy. Legacy single-mode
@@ -308,6 +399,12 @@ class TunnelService {
     RoutingMethod trafficMethod,
     String privateKey,
   ) {
+    // The administrator's instance policy outranks the caller's choice.
+    final selectedTrafficMethod = switch (instance.clientTrafficPolicy) {
+      ClientTrafficPolicy.disableAllTraffic => RoutingMethod.predefined,
+      ClientTrafficPolicy.forceAllTraffic => RoutingMethod.all,
+      ClientTrafficPolicy.none => trafficMethod,
+    };
     return PluginConnectPayload(
       publicKey: location.pubKey,
       devicePublicKey: instance.pubKey,
@@ -321,7 +418,7 @@ class TunnelService {
       locationId: location.id,
       networkId: location.networkId,
       instanceId: instance.id,
-      traffic: trafficMethod,
+      traffic: selectedTrafficMethod,
       postureCheckRequired: location.postureCheckRequired == true,
     );
   }

@@ -63,6 +63,12 @@ void main() {
   });
 
   group('MfaStep parsing', () {
+    test('reads future method values as an explicit unknown', () {
+      final entry = MfaStepMethod.fromJson({'method': 99, 'configured': true});
+      expect(entry.apiMethod, ApiMfaMethod.unknown);
+      expect(entry.method, isNull);
+    });
+
     test('keeps the raw method and marks it unsupported', () {
       final entry = MfaStepMethod.fromJson({'method': 4, 'configured': true});
       expect(entry.apiMethod, ApiMfaMethod.mobileApprove);

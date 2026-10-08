@@ -47,6 +47,37 @@ void main() {
     );
   });
 
+  test('MFA requests, responses, and errors are excluded from Dio logs', () {
+    final logger = dio.interceptors.whereType<TalkerDioLogger>().single;
+    final settings = logger.settings;
+
+    for (final path in [
+      'https://proxy.example/api/v1/client-mfa/start',
+      'https://proxy.example/api/v1/client-mfa/finish',
+      'https://proxy.example/api/v1/client-mfa/finish-remote',
+      'https://proxy.example/api/v1/mfa-flow/start',
+      'https://proxy.example/api/v1/mfa-flow/step-start',
+      'https://proxy.example/api/v1/mfa-flow/step-finish',
+      'https://proxy.example/api/v1/mfa-flow/approve',
+    ]) {
+      final request = RequestOptions(path: path);
+      expect(settings.requestFilter!(request), isFalse);
+      expect(
+        settings.responseFilter!(Response(requestOptions: request)),
+        isFalse,
+      );
+      expect(
+        settings.errorFilter!(DioException(requestOptions: request)),
+        isFalse,
+      );
+    }
+
+    final otherRequest = RequestOptions(
+      path: 'https://proxy.example/api/v1/poll',
+    );
+    expect(settings.requestFilter!(otherRequest), isTrue);
+  });
+
   test('base options carry no capability headers', () {
     expect(dio.options.headers.containsKey(clientVersionHeader), isFalse);
     expect(dio.options.headers.containsKey(clientPlatformHeader), isFalse);

@@ -277,6 +277,7 @@ class InstanceInfo {
   final String? openidDisplayName;
   @JsonKey(unknownEnumValue: JsonKey.nullForUndefinedEnumValue)
   final OpenIdProvider? openidProviderKind;
+  final Map<String, dynamic>? mfaUserState;
 
   const InstanceInfo({
     required this.id,
@@ -289,6 +290,7 @@ class InstanceInfo {
     required this.clientTrafficPolicy,
     this.openidDisplayName,
     this.openidProviderKind,
+    this.mfaUserState,
   });
 
   factory InstanceInfo.fromJson(Map<String, dynamic> json) =>
@@ -305,7 +307,8 @@ class InstanceInfo {
         enterpriseEnabled == other.enterpriseEnabled &&
         getPolicy() == other.clientTrafficPolicy &&
         openidDisplayName == other.openidDisplayName &&
-        openidProviderKind == other.openidProviderKind;
+        openidProviderKind == other.openidProviderKind &&
+        mfaContract == other.mfaContract;
   }
 
   DefguardInstancesCompanion toCompanion({DefguardInstance? instance}) {
@@ -322,6 +325,7 @@ class InstanceInfo {
       uuid: d.Value(id),
       openidDisplayName: d.Value(openidDisplayName),
       openidProviderKind: d.Value(openidProviderKind),
+      mfaContract: d.Value(mfaContract),
     );
   }
 
@@ -332,6 +336,9 @@ class InstanceInfo {
             ? ClientTrafficPolicy.disableAllTraffic
             : ClientTrafficPolicy.none);
   }
+
+  MfaContract get mfaContract =>
+      mfaUserState == null ? MfaContract.legacy : MfaContract.multiStep;
 }
 
 @JsonSerializable()

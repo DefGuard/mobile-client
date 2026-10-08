@@ -31,7 +31,7 @@ class RefreshInstanceDialog extends HookConsumerWidget {
       final url = proxyUrlController.text;
       final token = tokenController.text;
       final uri = Uri.parse(url);
-      talker.debug("Submitting instance refresh form ($url | $token)");
+      talker.debug("Submitting instance refresh form");
 
       try {
         // this is only for dio to capture cookies required for network info call
