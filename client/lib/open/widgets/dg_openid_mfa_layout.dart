@@ -64,8 +64,10 @@ class DgOpenIdMfaLayout extends StatelessWidget {
                   "Confirm your identity to continue. You'll be redirected to your identity provider to complete verification.",
                   style: DgText.bodySm400.copyWith(color: DgColor.fgWhite60),
                 ),
-                Expanded(
-                  child: RiveAssetAnimation("assets/next/rive/openid_mfa.riv"),
+                const Expanded(
+                  child: RiveAssetAnimation(
+                    "assets/next/rive/open_id.riv",
+                  ),
                 ),
                 DgExternalProviderButton(
                   text: 'Continue with $providerName',

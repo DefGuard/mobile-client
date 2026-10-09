@@ -40,6 +40,14 @@ class AddInstanceQrScreen extends HookConsumerWidget {
               url,
               requestData,
             );
+            if (!registrationResponse.user.enrolled) {
+              toaster.showError(
+                message: "Only enrolled users can add devices.",
+              );
+              isLoading.value = false;
+              await controller.resume();
+              return;
+            }
             final instanceId = registrationResponse.instance.id;
             final dbInstance = await db.managers.defguardInstances
                 .filter((row) => row.uuid.equals(instanceId))
