@@ -7,6 +7,7 @@ import 'package:mobile/open/screens/add_instance/screens/biometry/biometry_finis
 import 'package:mobile/open/screens/add_instance/screens/biometry/biometry_setup_failed_screen.dart';
 import 'package:mobile/open/screens/add_instance/screens/biometry/biometry_setup_screen.dart';
 import 'package:mobile/open/screens/add_instance/screens/name_device_screen.dart';
+import 'package:mobile/open/screens/instance/refresh_instance_screen.dart';
 import 'package:mobile/open/screens/instances_list/instances_list_screen.dart';
 import 'package:mobile/open/screens/mfa/remote_mfa_qr_screen.dart';
 import 'package:mobile/open/screens/splash.dart';
@@ -82,6 +83,20 @@ class InstanceScreenRoute extends GoRouteData with $InstanceScreenRoute {
   @override
   Widget build(BuildContext context, GoRouterState state) {
     return InstanceScreen(key: ValueKey(id), id: id);
+  }
+}
+
+@TypedGoRoute<RefreshInstanceScreenRoute>(path: "/refresh_instance")
+@immutable
+class RefreshInstanceScreenRoute extends GoRouteData
+    with $RefreshInstanceScreenRoute {
+  const RefreshInstanceScreenRoute(this.$extra);
+
+  final RefreshInstanceScreenData $extra;
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) {
+    return RefreshInstanceScreen(instance: $extra.instance);
   }
 }
 

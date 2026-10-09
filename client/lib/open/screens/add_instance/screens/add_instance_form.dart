@@ -181,6 +181,10 @@ Future<void> _handleSubmit(
   final requestData = EnrollmentStartRequest(token: token);
   final uri = Uri.parse(url);
   final enrolmentResponse = await proxyApi.startEnrollment(uri, requestData);
+  if (!enrolmentResponse.user.enrolled) {
+    toaster.showError(message: "Only enrolled users can add devices.");
+    return;
+  }
   final instanceId = enrolmentResponse.instance.id;
   final dbInstance = await db.managers.defguardInstances
       .filter((row) => row.uuid.equals(instanceId))

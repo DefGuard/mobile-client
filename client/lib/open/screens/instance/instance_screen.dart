@@ -12,11 +12,11 @@ import 'package:mobile/open/api.dart';
 import 'package:mobile/open/riverpod/biometrics_state.dart';
 import 'package:mobile/open/riverpod/plugin/plugin.dart';
 import 'package:mobile/open/screens/add_instance/data_gathering_dialog.dart';
+import 'package:mobile/open/screens/instance/refresh_instance_screen.dart';
 import 'package:mobile/open/screens/instance/services/tunnel_service.dart';
 import 'package:mobile/open/screens/instance/widgets/connect_dialog.dart';
 import 'package:mobile/open/screens/instance/widgets/connection_conflict_dialog.dart';
 import 'package:mobile/open/screens/instance/widgets/delete_instance_dialog.dart';
-import 'package:mobile/open/screens/instance/widgets/refresh_instance_dialog.dart';
 import 'package:mobile/open/screens/mfa/remote_mfa_qr_screen.dart';
 import 'package:mobile/open/widgets/dg_app_bar.dart';
 import 'package:mobile/open/widgets/dg_bottom_sheet.dart';
@@ -364,11 +364,9 @@ class _InstanceAppBar extends ConsumerWidget implements PreferredSizeWidget {
                   onTap: () {
                     final instance = screenDataAsync.value?.instance;
                     if (instance == null) return;
-                    showDialog(
-                      context: context,
-                      builder: (context) =>
-                          RefreshInstanceDialog(instance: instance),
-                    );
+                    RefreshInstanceScreenRoute(
+                      RefreshInstanceScreenData(instance: instance),
+                    ).push(context);
                   },
                 ),
                 DgMenuItem(

@@ -306,43 +306,39 @@ class _InnerInfoCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(
-        vertical: DgSpacing.sm,
-        horizontal: DgSpacing.md,
-      ),
+      padding: const .all(DgSpacing.md),
       decoration: BoxDecoration(
         color: DgColor.bgWhite5,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: .circular(12),
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        spacing: DgSpacing.md,
+      child: Column(
+        mainAxisSize: .min,
+        crossAxisAlignment: .start,
         children: [
           Container(
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: .circular(6),
               color: DgColor.bgWhite10,
             ),
-            width: 36,
-            height: 36,
-            alignment: Alignment.center,
+            width: 24,
+            height: 24,
+            alignment: .center,
             child: getIcon(),
           ),
-          Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            spacing: 2,
-            children: [
-              Text(
-                getLabel(),
-                style: DgText.bodyXxs400.copyWith(color: DgColor.fgWhite50),
-              ),
-              Text(
-                getText(),
-                style: DgText.bodyXs500.copyWith(color: getTextColor()),
-              ),
-            ],
+          const SizedBox(height: DgSpacing.md),
+          Text(
+            getLabel(),
+            style: DgText.bodyXxs400.copyWith(color: DgColor.fgWhite50),
+          ),
+          const SizedBox(height: 2),
+          FittedBox(
+            fit: .scaleDown,
+            alignment: .centerLeft,
+            child: Text(
+              getText(),
+              maxLines: 1,
+              style: DgText.bodyXs500.copyWith(color: getTextColor()),
+            ),
           ),
         ],
       ),
@@ -379,17 +375,17 @@ class _InnerInfoCard extends StatelessWidget {
           break;
       }
     }
-    return DgIcon(iconFileName, size: 20, color: iconColor);
+    return DgIcon(iconFileName, size: 16, color: iconColor);
   }
 
   String getLabel() {
     if (isMfa) {
-      return "MFA";
+      return "Active MFA";
     }
     if (isRouting) {
-      return "Traffic";
+      return "Allowed traffic";
     }
-    return "MFA";
+    return "Active MFA";
   }
 
   String getText() {
