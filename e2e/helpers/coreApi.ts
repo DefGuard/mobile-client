@@ -74,6 +74,7 @@ export class CoreApi {
 			first_name: "E2E",
 			last_name: "Test",
 			email: `${username}@e2e.test`,
+			password: generatePassword(),
 		});
 	}
 
@@ -145,13 +146,13 @@ export class CoreApi {
 		return secret;
 	}
 
-	async startEnrollment(
+	async startDesktopConfiguration(
 		username: string,
 		ephemeral = false,
 	): Promise<EnrollmentFixture> {
 		const response = await this.request(
 			"POST",
-			`/api/v1/user/${username}/start_enrollment`,
+			`/api/v1/user/${username}/start_desktop`,
 			{
 				send_enrollment_notification: false,
 			},
@@ -172,7 +173,7 @@ export class CoreApi {
 			await this.deleteUser(username);
 		}
 		await this.createUser(username);
-		return this.startEnrollment(username, !pinned);
+		return this.startDesktopConfiguration(username, !pinned);
 	}
 }
 

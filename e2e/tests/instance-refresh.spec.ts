@@ -26,7 +26,9 @@ describe("instance refresh", () => {
 		await completeEnrollment(fixture);
 		await waitForInstanceScreen();
 
-		await refreshInstance(await core.startEnrollment(fixture.username));
+		await refreshInstance(
+			await core.startDesktopConfiguration(fixture.username),
+		);
 		await waitForInstanceScreen();
 	});
 });
