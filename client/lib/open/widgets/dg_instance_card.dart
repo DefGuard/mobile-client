@@ -1,5 +1,6 @@
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter/widget_previews.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:mobile/open/widgets/dg_preview_wrapper.dart';
 import 'package:mobile/theme/color.dart';
 import 'package:mobile/theme/spacing.dart';
@@ -22,7 +23,9 @@ class DgInstanceCard extends StatelessWidget {
   });
 
   bool get isConnected => connectedCount != 0;
-  String get icon => isConnected ? "connected_devices" : "device_ip";
+  String get icon => isConnected
+      ? "assets/next/img/connected_instance.svg"
+      : "assets/next/img/idle_instance.svg";
 
   @override
   Widget build(BuildContext context) {
@@ -38,19 +41,10 @@ class DgInstanceCard extends StatelessWidget {
           crossAxisAlignment: .center,
           mainAxisAlignment: .start,
           children: [
-            Container(
+            SizedBox(
               height: 48,
               width: 48,
-              alignment: .center,
-              decoration: BoxDecoration(
-                borderRadius: .circular(14),
-                color: isConnected ? DgColor.bgWhite100 : DgColor.bgDarkBlue20,
-              ),
-              child: DgIcon(
-                icon,
-                size: 24,
-                color: isConnected ? DgColor.fgAction : DgColor.fgWhite60,
-              ),
+              child: SvgPicture.asset(icon),
             ),
             SizedBox(width: DgSpacing.xl),
             Expanded(

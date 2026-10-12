@@ -12,6 +12,7 @@ List<RouteBase> get $appRoutes => [
   $addInstanceQrScreenRoute,
   $remoteMfaQrScreenRoute,
   $instanceScreenRoute,
+  $refreshInstanceScreenRoute,
   $nameDeviceScreenRoute,
   $addInstanceFormScreenRoute,
   $addInstanceScreenRoute,
@@ -251,6 +252,37 @@ mixin $BiometryFinishScreenRoute on GoRouteData {
 
   @override
   void replace(BuildContext context) => context.replace(location);
+}
+
+RouteBase get $refreshInstanceScreenRoute => GoRouteData.$route(
+  path: '/refresh_instance',
+  hasOverriddenOnExit: false,
+  factory: $RefreshInstanceScreenRoute._fromState,
+);
+
+mixin $RefreshInstanceScreenRoute on GoRouteData {
+  static RefreshInstanceScreenRoute _fromState(GoRouterState state) =>
+      RefreshInstanceScreenRoute(state.extra as RefreshInstanceScreenData);
+
+  RefreshInstanceScreenRoute get _self => this as RefreshInstanceScreenRoute;
+
+  @override
+  String get location => GoRouteData.$location('/refresh_instance');
+
+  @override
+  void go(BuildContext context) => context.go(location, extra: _self.$extra);
+
+  @override
+  Future<T?> push<T>(BuildContext context) =>
+      context.push<T>(location, extra: _self.$extra);
+
+  @override
+  void pushReplacement(BuildContext context) =>
+      context.pushReplacement(location, extra: _self.$extra);
+
+  @override
+  void replace(BuildContext context) =>
+      context.replace(location, extra: _self.$extra);
 }
 
 RouteBase get $nameDeviceScreenRoute => GoRouteData.$route(

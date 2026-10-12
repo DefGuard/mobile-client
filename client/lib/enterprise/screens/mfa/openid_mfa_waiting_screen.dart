@@ -9,6 +9,7 @@ import 'package:mobile/open/widgets/dg_app_bar.dart';
 import 'package:mobile/open/widgets/dg_mfa_step_label.dart';
 import 'package:mobile/open/widgets/dg_button.dart';
 import 'package:mobile/open/widgets/dg_icon_button.dart';
+import 'package:mobile/open/widgets/rive_asset_animation.dart';
 import 'package:mobile/open/widgets/toaster/toast_manager.dart';
 import 'package:mobile/theme/color.dart';
 import 'package:mobile/theme/text.dart';
@@ -117,9 +118,13 @@ class OpenIdMfaWaitingScreen extends HookConsumerWidget {
                   const SizedBox(height: 8),
                   Text(
                     "Waiting for authentication in your browser...",
-                    style: DgText.bodyXs400.copyWith(color: DgColor.fgWhite60),
+                    style: DgText.bodySm400.copyWith(color: DgColor.fgWhite60),
                   ),
-                  const Spacer(),
+                  const Expanded(
+                    child: RiveAssetAnimation(
+                      "assets/next/rive/open_id.riv",
+                    ),
+                  ),
                   DgButton(
                     text: 'Cancel',
                     style: DgButtonStyle.outlined,

@@ -118,9 +118,7 @@ class ConfigurationUpdater extends HookConsumerWidget {
                   instance.name,
                   updateResult,
                 );
-                toaster.show(
-                  message: "Instance ${instance.name} updated: $message",
-                );
+                talker.info("Instance ${instance.logName} updated: $message");
               }
             }
           } catch (e) {
