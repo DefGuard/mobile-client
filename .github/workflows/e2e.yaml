@@ -8,11 +8,15 @@ on:
     branches: [main, dev]
 
 concurrency:
-  group: mobile-e2e
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   e2e-android:
     runs-on: [self-hosted, macOS, native]
+    concurrency:
+      group: mobile-e2e
+      queue: max
     timeout-minutes: 90
     steps:
       - uses: actions/checkout@v7
@@ -109,6 +113,9 @@ jobs:
     needs: [e2e-android]
     if: success() || failure()
     runs-on: [self-hosted, macOS, native]
+    concurrency:
+      group: mobile-e2e
+      queue: max
     timeout-minutes: 90
     steps:
       - uses: actions/checkout@v7

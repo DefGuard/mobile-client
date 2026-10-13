@@ -3,6 +3,10 @@ name: Run Flutter Lint and Tests
 env:
   IOS_SIMULATOR: "iPhone 17 Pro"
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 on:
   push:
     branches:
