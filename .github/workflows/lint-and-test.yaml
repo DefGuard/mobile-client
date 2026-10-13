@@ -1,5 +1,8 @@
 name: Run Flutter Lint and Tests
 
+env:
+  IOS_SIMULATOR: "iPhone 17 Pro"
+
 on:
   push:
     branches:
@@ -237,9 +240,6 @@ jobs:
       - name: Generate Xcode config
         run: flutter build ios --simulator --config-only
 
-      - name: Pick iOS simulator
-        run: echo "IOS_SIMULATOR_UDID=$(xcrun simctl list devices available iPhone | grep -m1 -oE '[0-9A-F-]{36}')" >> "$GITHUB_ENV"
-
       - name: run plugin tests
-        run: xcodebuild test -workspace Runner.xcworkspace -scheme Runner -destination "id=$IOS_SIMULATOR_UDID"
+        run: xcodebuild test -workspace Runner.xcworkspace -scheme Runner -destination "platform=iOS Simulator,name=$IOS_SIMULATOR"
         working-directory: ./client/ios
