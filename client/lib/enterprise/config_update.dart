@@ -2,7 +2,7 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:mobile/data/db/database.dart';
-import 'package:mobile/data/db/enums.dart';
+import 'package:mobile/enterprise/refresh_instance.dart';
 import 'package:mobile/open/api.dart';
 import 'package:mobile/open/widgets/toaster/toast_manager.dart';
 import 'package:mobile/utils/instance_secrets.dart';
@@ -87,11 +87,7 @@ class ConfigurationUpdater extends HookConsumerWidget {
             talker.error("Failed to parse versions for ${instance.logName}", e);
           }
           if (responseStatus == 402) {
-            final instanceUpdate = instance.copyWith(
-              clientTrafficPolicy: ClientTrafficPolicy.none,
-              enterpriseEnabled: false,
-            );
-            await db.managers.defguardInstances.replace(instanceUpdate);
+            await disableEnterprise(db, instance);
             continue;
           }
           if (responseData == null) {
