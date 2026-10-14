@@ -13,6 +13,7 @@ import 'package:mobile/open/widgets/toaster/toast_manager.dart';
 import 'package:mobile/theme/color.dart';
 import 'package:mobile/theme/spacing.dart';
 import 'package:mobile/theme/text.dart';
+import 'package:mobile/utils/error_handler.dart';
 import 'package:mobile/utils/update_instance.dart';
 
 class RefreshInstanceScreenData {
@@ -196,7 +197,10 @@ Future<bool> _refreshInstance(
     return true;
   } catch (e, st) {
     toaster.showError(
-      message: "Failed to refresh instance information",
+      message: switch (e) {
+        ProxyTlsException() => ErrorHandler.getHumanReadableError(e),
+        _ => "Failed to refresh instance information",
+      },
       error: e,
       stackTrace: st,
     );
