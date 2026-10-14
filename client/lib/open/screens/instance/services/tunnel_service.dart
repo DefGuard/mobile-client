@@ -184,15 +184,15 @@ class TunnelService {
       final completedPlan = flow.controller.plan;
       authorizedWith = completedPlan.length == 1 ? completedPlan.single : null;
     } else if (payload.postureCheckRequired) {
-      final poolingToken = await instance.poolingToken();
-      if (poolingToken == null) {
+      final pollingToken = await instance.pollingToken();
+      if (pollingToken == null) {
         reportMissingSecret(instance.logName, "Proxy token");
         return const ConnectResult.failed(message: missingSecretsMessage);
       }
       final postureOutcome = await _performPostureCheck(
         proxyUrl: instance.proxyUrl,
         payload: payload,
-        pollingToken: poolingToken,
+        pollingToken: pollingToken,
       );
       if (postureOutcome.failure != null) {
         return postureOutcome.failure!;
@@ -287,7 +287,7 @@ class TunnelService {
     required List<MfaMethod?> oneOff,
     required MfaCapabilities capabilities,
   }) async {
-    final token = await instance.poolingToken();
+    final token = await instance.pollingToken();
     if (token == null) return null;
 
     final (config, _, _) = await proxyApi.pollConfiguration(
@@ -379,14 +379,14 @@ class TunnelService {
     String url,
     String pubkey,
     int networkId,
-    String poolingToken,
+    String pollingToken,
   ) async {
     talker.debug('Starting posture check for networkId: $networkId');
     final request = PostureConnectRequest(
       locationId: networkId,
       pubkey: pubkey,
       devicePostureData: await getPosture(),
-      token: poolingToken,
+      token: pollingToken,
     );
 
     final response = await proxyApi.postureConnect(Uri.parse(url), request);

@@ -17,7 +17,7 @@ Future<void> storeInstanceSecrets({
   required String uuid,
   required int deviceId,
   required String privateKey,
-  required String poolingToken,
+  required String pollingToken,
 }) async {
   await secureStorage.write(
     key: wireguardKeyStorageKey(uuid, deviceId),
@@ -25,7 +25,7 @@ Future<void> storeInstanceSecrets({
   );
   await secureStorage.write(
     key: tokenStorageKey(uuid, deviceId),
-    value: poolingToken,
+    value: pollingToken,
   );
 }
 

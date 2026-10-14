@@ -196,7 +196,7 @@ class AppDatabase extends _$AppDatabase {
               uuid: instance.read<String>('uuid'),
               deviceId: instance.read<int>('device_id'),
               privateKey: instance.read<String>('private_key'),
-              poolingToken: instance.read<String>('pooling_token'),
+              pollingToken: instance.read<String>('pooling_token'),
             );
           }
           await m.dropColumn(schema.defguardInstances, 'private_key');
@@ -253,7 +253,7 @@ extension DefguardInstanceSecrets on DefguardInstance {
   Future<String?> wireguardPrivateKey() =>
       secureStorage.read(key: wireguardKeyStorageKey(uuid, deviceId));
 
-  Future<String?> poolingToken() =>
+  Future<String?> pollingToken() =>
       secureStorage.read(key: tokenStorageKey(uuid, deviceId));
 
   Future<void> storeToken(String token) =>

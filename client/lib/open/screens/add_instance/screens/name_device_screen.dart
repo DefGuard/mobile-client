@@ -62,7 +62,7 @@ class NameDeviceScreen extends HookConsumerWidget {
       uuid: uuid,
       deviceId: deviceId,
       privateKey: keyPair.privKey,
-      poolingToken: createResponse.token,
+      pollingToken: createResponse.token,
     );
     try {
       final instance = await db.managers.defguardInstances.createReturning(

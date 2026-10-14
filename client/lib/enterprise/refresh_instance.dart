@@ -31,7 +31,7 @@ Future<InstanceRefreshOutcome> refreshInstance(
   ProxyApi? api,
 }) async {
   try {
-    final token = await instance.poolingToken();
+    final token = await instance.pollingToken();
     if (token == null) {
       reportMissingSecret(instance.logName, "Proxy token");
       return .missingToken;

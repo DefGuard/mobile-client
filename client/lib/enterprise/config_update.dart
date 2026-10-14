@@ -46,7 +46,7 @@ class ConfigurationUpdater extends HookConsumerWidget {
           talker.debug(
             "Auto configuration update started for ${instance.name} (${instance.id})",
           );
-          final token = await instance.poolingToken();
+          final token = await instance.pollingToken();
           if (token == null) {
             reportMissingSecret(instance.logName, "Proxy token");
             continue;
