@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:collection/collection.dart';
 import 'package:drift/drift.dart' as drift;
 import 'package:flutter_hooks/flutter_hooks.dart';
@@ -7,8 +9,8 @@ import 'package:material_ui/material_ui.dart';
 import 'package:mobile/data/db/database.dart';
 import 'package:mobile/data/mfa/mfa_plan.dart';
 import 'package:mobile/data/plugin/plugin.dart';
+import 'package:mobile/enterprise/refresh_instance.dart';
 import 'package:mobile/logging.dart';
-import 'package:mobile/open/api.dart';
 import 'package:mobile/open/riverpod/biometrics_state.dart';
 import 'package:mobile/open/riverpod/plugin/plugin.dart';
 import 'package:mobile/open/screens/add_instance/data_gathering_dialog.dart';
@@ -32,7 +34,6 @@ import 'package:mobile/theme/color.dart';
 import 'package:mobile/theme/spacing.dart';
 import 'package:mobile/theme/text.dart';
 import 'package:mobile/utils/instance_secrets.dart';
-import 'package:mobile/utils/update_instance.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wireguard_plugin/wireguard_plugin.dart';
@@ -97,42 +98,34 @@ class InstanceScreen extends HookConsumerWidget {
     final toaster = ref.read(toastManagerProvider.notifier);
 
     final onRefresh = useCallback(() async {
-      try {
-        final instance = screenDataAsync.value?.instance;
-        if (instance == null) return;
-        // the proxy token lives in the keychain, not on the instance row
-        final token = await instance.poolingToken();
-        if (token == null) {
-          reportMissingSecret(instance.logName, "Proxy token");
+      final instance = screenDataAsync.value?.instance;
+      if (instance == null) return;
+      final db = ref.read(databaseProvider);
+      switch (await refreshInstance(db, instance)) {
+        case .refreshed:
+          toaster.show(message: "Instance information updated");
+        case .licenseError:
+          final updated = await db.managers.defguardInstances
+              .filter((f) => f.id(instance.id))
+              .getSingleOrNull();
+          if (updated == null || !context.mounted) return;
+          toaster.show(
+            message:
+                "Automatic refresh is unavailable, refresh the instance manually.",
+          );
+          unawaited(
+            RefreshInstanceScreenRoute(
+              RefreshInstanceScreenData(instance: updated),
+            ).push(context),
+          );
+        case .missingToken:
           toaster.showError(message: missingSecretsMessage);
-          return;
-        }
-        final (responseData, responseStatus, _) = await proxyApi
-            .pollConfiguration(instance.proxyUrl, token);
-        if (responseData == null) {
+        case .failed:
           toaster.showError(
             message: "Failed to get new information for instance.",
-            logMessage:
-                "Failed to pull refresh instance data. Proxy response status: $responseStatus",
           );
-          return;
-        }
-        await updateInstance(
-          db: ref.read(databaseProvider),
-          instance: instance,
-          configs: responseData.configs,
-          info: responseData.instance,
-          token: responseData.token,
-        );
-        toaster.show(message: "Instance information updated");
-      } catch (e) {
-        toaster.showError(
-          message: "Failed to get new information for instance.",
-          logMessage: "Failed pull refresh instance data.",
-          error: e,
-        );
       }
-    }, [screenDataAsync.value, ref]);
+    }, [screenDataAsync.value, ref, context]);
 
     final onDeleteInstance = useCallback(() async {
       try {

@@ -1,11 +1,13 @@
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:mobile/data/db/database.dart';
+import 'package:mobile/enterprise/refresh_instance.dart';
 import 'package:mobile/open/riverpod/plugin/plugin.dart';
 import 'package:mobile/open/widgets/dg_app_bar.dart';
 import 'package:mobile/open/widgets/dg_drawer.dart';
 import 'package:mobile/open/widgets/dg_icon_button.dart';
 import 'package:mobile/open/widgets/dg_instance_card.dart';
+import 'package:mobile/open/widgets/toaster/toast_manager.dart';
 import 'package:mobile/router/routes.dart';
 import 'package:mobile/theme/color.dart';
 import 'package:mobile/theme/spacing.dart';
@@ -67,6 +69,20 @@ class InstancesListScreen extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final instancesAsync = ref.watch(_instancesListDataProvider);
+    final isRefreshing = ref.watch(enterpriseRefreshProvider);
+
+    Future<void> onRefresh() async {
+      final toaster = ref.read(toastManagerProvider.notifier);
+      final result = await ref
+          .read(enterpriseRefreshProvider.notifier)
+          .refreshAll();
+      if (result == null) return;
+      final (:refreshed, :total) = result;
+      toaster.show(
+        message:
+            "$refreshed of $total ${total == 1 ? "instance" : "instances"} refreshed",
+      );
+    }
 
     return Scaffold(
       drawer: const DgDrawer(),
@@ -102,7 +118,8 @@ class InstancesListScreen extends HookConsumerWidget {
                   .where((i) => i.connectedCount == 0)
                   .toList();
 
-              return ListView(
+              Widget list = ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
                 padding: const EdgeInsets.fromLTRB(
                   DgSpacing.xl,
                   DgSpacing.sm,
@@ -176,6 +193,19 @@ class InstancesListScreen extends HookConsumerWidget {
                     ),
                 ],
               );
+
+              if (instances.any((i) => i.instance.enterpriseEnabled)) {
+                list = RefreshIndicator(
+                  color: DgColor.bgWhite100,
+                  backgroundColor: DgColor.bgDarkBlue80,
+                  notificationPredicate: (notification) =>
+                      !isRefreshing && notification.depth == 0,
+                  onRefresh: onRefresh,
+                  child: list,
+                );
+              }
+
+              return list;
             },
             loading: () => const Center(
               child: CircularProgressIndicator(color: DgColor.fgWhite100),
