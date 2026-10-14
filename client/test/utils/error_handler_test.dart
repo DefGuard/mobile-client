@@ -45,4 +45,27 @@ void main() {
       isNot(contains('MFA flow start')),
     );
   });
+
+  test('TLS failures get a message per cause without request details', () {
+    String tls(ProxyTlsFailure failure) => ErrorHandler.getHumanReadableError(
+      ProxyTlsException(failure, cause: 'uri=https://proxy.example'),
+    );
+
+    expect(
+      tls(.untrusted),
+      "The server's certificate isn't trusted by this device. Contact your administrator.",
+    );
+    expect(
+      tls(.expired),
+      "The server's certificate is expired or not yet valid. Check your device's date or contact your administrator.",
+    );
+    expect(
+      tls(.hostnameMismatch),
+      "The server's certificate doesn't match its address. Check the URL or contact your administrator.",
+    );
+    expect(
+      tls(.other),
+      "Couldn't establish a secure connection to the server. Contact your administrator.",
+    );
+  });
 }

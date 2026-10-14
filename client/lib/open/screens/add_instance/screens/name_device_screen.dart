@@ -22,6 +22,7 @@ import 'package:mobile/router/routes.dart';
 import 'package:mobile/theme/color.dart';
 import 'package:mobile/theme/spacing.dart';
 import 'package:mobile/theme/text.dart';
+import 'package:mobile/utils/error_handler.dart';
 import 'package:mobile/utils/instance_secrets.dart';
 
 import '../../../api.dart';
@@ -252,8 +253,12 @@ class NameDeviceScreen extends HookConsumerWidget {
                                 }
                               } catch (e, st) {
                                 toaster.showError(
-                                  message:
+                                  message: switch (e) {
+                                    ProxyTlsException() =>
+                                      ErrorHandler.getHumanReadableError(e),
+                                    _ =>
                                       "Something went wrong. Please try again.",
+                                  },
                                   error: e,
                                   stackTrace: st,
                                 );

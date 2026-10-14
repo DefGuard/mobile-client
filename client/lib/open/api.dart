@@ -90,6 +90,49 @@ MfaRequestException _mfaRequestException(
   );
 }
 
+enum ProxyTlsFailure { untrusted, expired, hostnameMismatch, other }
+
+class ProxyTlsException implements Exception {
+  final ProxyTlsFailure failure;
+  final Object? cause;
+
+  const ProxyTlsException(this.failure, {this.cause});
+
+  @override
+  String toString() =>
+      'TLS connection to proxy failed (${failure.name}): $cause';
+}
+
+final _nsUrlErrorCode = RegExp(r'domain=NSURLErrorDomain, code=(-\d+)');
+
+ProxyTlsFailure? _tlsFailure(DioException error) {
+  if (error.response != null) return null;
+  final cause = error.error?.toString() ?? '';
+
+  if (cause.contains('net::ERR_CERT_AUTHORITY_INVALID')) {
+    return .untrusted;
+  }
+  if (cause.contains('net::ERR_CERT_DATE_INVALID')) {
+    return .expired;
+  }
+  if (cause.contains('net::ERR_CERT_COMMON_NAME_INVALID')) {
+    return .hostnameMismatch;
+  }
+  if (cause.contains('net::ERR_CERT_') ||
+      cause.contains('net::ERR_SSL_') ||
+      cause.contains('net::ERR_BAD_SSL_CLIENT_AUTH_CERT')) {
+    return .other;
+  }
+
+  // iOS reports a hostname mismatch as -1202 too
+  return switch (_nsUrlErrorCode.firstMatch(cause)?.group(1)) {
+    '-1202' || '-1203' => .untrusted,
+    '-1201' || '-1204' => .expired,
+    '-1200' || '-1205' || '-1206' => .other,
+    _ => null,
+  };
+}
+
 const _startFailures = {
   403: MfaRequestFailure.policyDenied,
   428: MfaRequestFailure.notReady,
@@ -193,6 +236,9 @@ class ProxyApi {
           'Failed to start enrollment. Status: ${e.response?.statusCode} Body: ${e.response?.data}',
         );
       }
+      if (_tlsFailure(e) case final failure?) {
+        throw ProxyTlsException(failure, cause: e.error);
+      }
       rethrow;
     } catch (e) {
       throw FormatException(
@@ -221,6 +267,9 @@ class ProxyApi {
         throw HttpException(
           "Failed to create device. Status: ${e.response?.statusCode} Body: ${e.response?.data}",
         );
+      }
+      if (_tlsFailure(e) case final failure?) {
+        throw ProxyTlsException(failure, cause: e.error);
       }
       rethrow;
     } catch (e) {

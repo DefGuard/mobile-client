@@ -8,6 +8,7 @@ import 'package:mobile/open/api.dart';
 import 'package:mobile/open/screens/add_instance/screens/name_device_screen.dart';
 import 'package:mobile/open/widgets/dg_qr_scanner.dart';
 import 'package:mobile/router/routes.dart';
+import 'package:mobile/utils/error_handler.dart';
 
 import 'package:mobile/logging.dart';
 import 'package:mobile/open/widgets/toaster/toast_manager.dart';
@@ -76,7 +77,10 @@ class AddInstanceQrScreen extends HookConsumerWidget {
           } catch (e, st) {
             if (context.mounted) {
               toaster.showError(
-                message: "Something went wrong. Try again.",
+                message: switch (e) {
+                  ProxyTlsException() => ErrorHandler.getHumanReadableError(e),
+                  _ => "Something went wrong. Try again.",
+                },
                 logMessage: "Enrollment via QR start failed!",
                 error: e,
                 stackTrace: st,

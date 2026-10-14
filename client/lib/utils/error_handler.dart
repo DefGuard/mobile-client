@@ -41,6 +41,19 @@ class ErrorHandler {
       };
     }
 
+    if (e is ProxyTlsException) {
+      return switch (e.failure) {
+        ProxyTlsFailure.untrusted =>
+          "The server's certificate isn't trusted by this device. Contact your administrator.",
+        ProxyTlsFailure.expired =>
+          "The server's certificate is expired or not yet valid. Check your device's date or contact your administrator.",
+        ProxyTlsFailure.hostnameMismatch =>
+          "The server's certificate doesn't match its address. Check the URL or contact your administrator.",
+        ProxyTlsFailure.other =>
+          "Couldn't establish a secure connection to the server. Contact your administrator.",
+      };
+    }
+
     final s = e.toString();
     if (s.startsWith("Exception: ")) {
       return s.substring(11);
