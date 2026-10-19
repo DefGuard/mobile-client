@@ -187,7 +187,10 @@ Future<void> _handleSubmit(
   final uri = Uri.parse(url);
   final enrolmentResponse = await proxyApi.startEnrollment(uri, requestData);
   if (!enrolmentResponse.user.enrolled) {
-    toaster.showError(message: "Only enrolled users can add devices.");
+    toaster.showError(
+      message:
+          "Enrol via the Defguard Desktop App first to add mobile devices.",
+    );
     return;
   }
   final instanceId = enrolmentResponse.instance.id;
