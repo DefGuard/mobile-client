@@ -43,7 +43,8 @@ class AddInstanceQrScreen extends HookConsumerWidget {
             );
             if (!registrationResponse.user.enrolled) {
               toaster.showError(
-                message: "Only enrolled users can add devices.",
+                message:
+                    "Enrol via the Defguard Desktop App first to add mobile devices.",
               );
               isLoading.value = false;
               await controller.resume();
