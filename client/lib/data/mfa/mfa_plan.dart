@@ -70,7 +70,12 @@ enum MfaMethodAvailability {
 }
 
 /// Why a whole step cannot be passed, in the order worth telling the user about.
-enum MfaUnpassableReason { setUpBiometry, notConfigured, desktopOnly }
+enum MfaUnpassableReason {
+  setUpBiometry,
+  registerSecurityKey,
+  notConfigured,
+  desktopOnly,
+}
 
 MfaMethodAvailability mfaMethodAvailability(
   MfaStepMethod entry, {
@@ -179,15 +184,20 @@ MfaUnpassableReason? unpassableStepReason(
   );
   if (step == null) return null;
 
-  final states = step.methods
-      .map((entry) => mfaMethodAvailability(entry, capabilities: capabilities))
-      .toSet();
+  MfaMethodAvailability availability(MfaStepMethod entry) =>
+      mfaMethodAvailability(entry, capabilities: capabilities);
+  final states = step.methods.map(availability).toSet();
   if (states.contains(MfaMethodAvailability.biometryUnavailable)) {
     return MfaUnpassableReason.setUpBiometry;
   }
-  if (states.contains(MfaMethodAvailability.notConfigured)) {
-    return MfaUnpassableReason.notConfigured;
+  final notConfigured = step.methods.where(
+    (entry) => availability(entry) == MfaMethodAvailability.notConfigured,
+  );
+  if (notConfigured.isNotEmpty &&
+      notConfigured.every((entry) => entry.method == MfaMethod.fido2)) {
+    return MfaUnpassableReason.registerSecurityKey;
   }
+  if (notConfigured.isNotEmpty) return MfaUnpassableReason.notConfigured;
   return MfaUnpassableReason.desktopOnly;
 }
 

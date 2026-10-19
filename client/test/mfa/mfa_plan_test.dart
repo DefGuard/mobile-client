@@ -771,5 +771,50 @@ void main() {
         MfaMethodAvailability.notConfigured,
       );
     });
+
+    group('unpassable reason', () {
+      final capabilities = MfaCapabilities(
+        biometricAvailable: false,
+        contract: MfaContract.multiStep,
+      );
+
+      MfaUnpassableReason? reasonFor(List<MfaStepMethod> methods) =>
+          unpassableStepReason(
+            _location(steps: [_step(methods)]),
+            capabilities: capabilities,
+          );
+
+      setUp(() => debugDefaultTargetPlatformOverride = TargetPlatform.android);
+
+      test('asks for a registered key when only FIDO2 is unconfigured', () {
+        expect(
+          reasonFor([
+            _entry(MfaMethod.fido2, configured: false),
+            _unsupported,
+          ]),
+          MfaUnpassableReason.registerSecurityKey,
+        );
+      });
+
+      test('stays generic when another method is unconfigured too', () {
+        expect(
+          reasonFor([
+            _entry(MfaMethod.fido2, configured: false),
+            _entry(MfaMethod.totp, configured: false),
+          ]),
+          MfaUnpassableReason.notConfigured,
+        );
+      });
+
+      test('still prefers biometry setup', () {
+        expect(
+          reasonFor([
+            _entry(MfaMethod.fido2, configured: false),
+            _entry(MfaMethod.biometric),
+          ]),
+          MfaUnpassableReason.setUpBiometry,
+        );
+      });
+    });
   });
 }
