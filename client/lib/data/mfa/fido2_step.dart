@@ -14,8 +14,8 @@ class Fido2Success extends Fido2Attempt {
   const Fido2Success(this.assertion);
 }
 
-/// The key demanded a PIN, or has one set and may be hiding a credential
-/// registered with `credProtect=3`.
+/// The core rejects assertions without user verification, and on these keys
+/// only the PIN provides it.
 class Fido2NeedsPin extends Fido2Attempt {
   const Fido2NeedsPin();
 }
@@ -25,7 +25,7 @@ class Fido2WrongKey extends Fido2Attempt {
   const Fido2WrongKey();
 }
 
-/// A PIN was entered for a key that has none.
+/// The key has no PIN, so it cannot verify the user.
 class Fido2PinNotSet extends Fido2Attempt {
   const Fido2PinNotSet();
 }
@@ -60,7 +60,8 @@ class Fido2StepRunner {
     required List<String> credentialIds,
     String? pin,
   }) async {
-    if (pin != null && (pin.runes.length < 4 || utf8.encode(pin).length > 63)) {
+    if (pin == null || pin.isEmpty) return const Fido2NeedsPin();
+    if (pin.runes.length < 4 || utf8.encode(pin).length > 63) {
       return const Fido2PinMalformed();
     }
     final Fido2Assertion assertion;

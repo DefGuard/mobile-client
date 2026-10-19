@@ -60,7 +60,7 @@ class MfaFido2Screen extends HookConsumerWidget {
         return;
       }
 
-      final pin = pinController.text.isEmpty ? null : pinController.text;
+      final pin = pinController.text;
       pinError.value = null;
       waiting.value = true;
 
@@ -90,7 +90,9 @@ class MfaFido2Screen extends HookConsumerWidget {
             );
           } on MfaCodeRejectedException catch (e) {
             toaster.showError(
-              message: "Your security key was not accepted. Please try again.",
+              message:
+                  "Your security key was not accepted. Use a key registered "
+                  "in the Defguard desktop client and enter its PIN.",
               logMessage: "FIDO2 MFA assertion rejected",
               error: e,
             );
@@ -103,11 +105,10 @@ class MfaFido2Screen extends HookConsumerWidget {
             );
           }
         case Fido2NeedsPin():
-          pinError.value =
-              "This security key requires a PIN. Enter it and tap the key again.";
+          pinError.value = "Enter your security key PIN, then tap the key.";
         case Fido2PinNotSet():
           pinError.value =
-              "This security key has no PIN. Leave this field empty.";
+              "This security key has no PIN. Set one on the key to use it.";
         case Fido2PinMalformed():
           pinError.value = "Incorrect PIN. A PIN has 4 to 63 characters.";
         case Fido2WrongKey():
@@ -200,7 +201,7 @@ class MfaFido2Screen extends HookConsumerWidget {
                           const SizedBox(height: DgSpacing.xl3),
                           DgTextFormField(
                             identifier: "mfa_fido2_pin",
-                            label: "Security key PIN (if set)",
+                            label: "Security key PIN",
                             controller: pinController,
                             obscureText: true,
                             disabled: waiting.value,
@@ -340,7 +341,7 @@ String _description({
       ? "near the top of your iPhone"
       : "against the back of the mobile phone";
   if (waiting) return "Hold your security key $where.";
-  return "Tap “Verify” and hold your security key $where.";
+  return "Enter the key's PIN, tap “Verify” and hold your security key $where.";
 }
 
 /// Null when the user caused it and needs no telling.

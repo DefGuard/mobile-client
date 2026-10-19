@@ -74,7 +74,7 @@ void main() {
   }
 
   test('signs SHA-256 of the challenge with the offered keys', () async {
-    final (attempt, platform) = await run([_assertion]);
+    final (attempt, platform) = await run([_assertion], pin: '1234');
 
     expect(attempt, isA<Fido2Success>());
     final call = platform.calls.single;
@@ -84,14 +84,15 @@ void main() {
       sha256.convert(utf8.encode('the-challenge')).bytes,
     );
     expect(call.allowCredentials.single, utf8.encode('key-a'));
-    expect(call.pin, isNull);
+    expect(call.pin, '1234');
   });
 
-  test('no credential on a key without a PIN is the wrong key', () async {
-    final (attempt, _) = await run([
-      const Fido2Exception(Fido2ErrorCode.noCredentials),
-    ]);
-    expect(attempt, isA<Fido2WrongKey>());
+  test('the key is not tapped until a PIN is entered', () async {
+    for (final pin in [null, '']) {
+      final (attempt, platform) = await run([_assertion], pin: pin);
+      expect(attempt, isA<Fido2NeedsPin>());
+      expect(platform.calls, isEmpty);
+    }
   });
 
   test('a PIN sent to a key without one says so', () async {
@@ -104,7 +105,7 @@ void main() {
   test('a key demanding a PIN token asks for the PIN', () async {
     final (attempt, _) = await run([
       const Fido2Exception(Fido2ErrorCode.pinRequired),
-    ]);
+    ], pin: '1234');
     expect(attempt, isA<Fido2NeedsPin>());
   });
 
@@ -141,13 +142,15 @@ void main() {
   test('other plugin errors pass through', () async {
     final (attempt, _) = await run([
       const Fido2Exception(Fido2ErrorCode.timeout),
-    ]);
+    ], pin: '1234');
     expect(attempt, isA<Fido2Failed>());
     expect((attempt as Fido2Failed).error.code, Fido2ErrorCode.timeout);
   });
 
   test('errors from outside the plugin become a failure', () async {
-    final (attempt, _) = await run([const FormatException('boom')]);
+    final (attempt, _) = await run([
+      const FormatException('boom'),
+    ], pin: '1234');
     expect(attempt, isA<Fido2Failed>());
     expect((attempt as Fido2Failed).error.code, Fido2ErrorCode.unknown);
   });
@@ -158,6 +161,7 @@ void main() {
       rpId: 'core.example',
       challenge: 'the-challenge',
       credentialIds: const ['not base64!'],
+      pin: '1234',
     );
     expect(attempt, isA<Fido2Failed>());
   });

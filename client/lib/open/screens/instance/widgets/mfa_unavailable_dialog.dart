@@ -31,9 +31,11 @@ class _MfaUnavailableDialog extends StatelessWidget {
     return DgDialog(
       onClose: () => Navigator.of(context).pop(),
       children: [
-        DgDialogTitle(
-          setUpBiometry ? "Biometrics Required" : "Location Not Supported",
-        ),
+        DgDialogTitle(switch (reason) {
+          .setUpBiometry => "Biometrics Required",
+          .registerSecurityKey => "Security Key Required",
+          _ => "Location Not Supported",
+        }),
         DgDialogDescription(_description(reason)),
         if (setUpBiometry)
           DgButton(
@@ -64,6 +66,9 @@ class _MfaUnavailableDialog extends StatelessWidget {
     MfaUnpassableReason.setUpBiometry =>
       "This location requires biometric verification, which is not set up on "
           "this device yet. Enable it to connect.",
+    MfaUnpassableReason.registerSecurityKey =>
+      "This location requires a hardware security key. Register a certified "
+          "key from the Defguard desktop client, then try again.",
     MfaUnpassableReason.notConfigured =>
       "This location requires a verification method you have not configured "
           "yet. Set it up in Defguard, then try again.",
