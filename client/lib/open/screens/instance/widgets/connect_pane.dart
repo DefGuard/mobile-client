@@ -63,37 +63,42 @@ class ConnectPane extends StatelessWidget {
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
-        const Padding(
-          padding: EdgeInsets.only(top: 20, bottom: 16),
-          child: Divider(height: 1, color: DgColor.bgWhite10),
-        ),
-        Semantics(
-          identifier: allTraffic
-              ? "traffic_mode_all"
-              : "traffic_mode_predefined",
-          child: GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTap: canChangeTraffic ? onToggleTraffic : null,
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(minHeight: 44),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    allTraffic ? "All traffic" : "Predefined traffic only",
-                    style: DgText.bodySm400.copyWith(color: DgColor.fgWhite100),
-                  ),
-                  DgToggle(value: allTraffic),
-                ],
+        if (canChangeTraffic || steps.isNotEmpty)
+          const Padding(
+            padding: EdgeInsets.only(top: 20, bottom: 16),
+            child: Divider(height: 1, color: DgColor.bgWhite10),
+          ),
+        if (canChangeTraffic)
+          Semantics(
+            identifier: allTraffic
+                ? "traffic_mode_all"
+                : "traffic_mode_predefined",
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: onToggleTraffic,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(minHeight: 44),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      allTraffic ? "All traffic" : "Predefined traffic only",
+                      style: DgText.bodySm400.copyWith(
+                        color: DgColor.fgWhite100,
+                      ),
+                    ),
+                    DgToggle(value: allTraffic),
+                  ],
+                ),
               ),
             ),
           ),
-        ),
         if (steps.isNotEmpty) ...[
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 12),
-            child: Divider(color: DgColor.bgWhite10, height: 1),
-          ),
+          if (canChangeTraffic)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 12),
+              child: Divider(color: DgColor.bgWhite10, height: 1),
+            ),
           Text(
             "Multi-Factor Authentication",
             style: DgText.bodySm400.copyWith(color: DgColor.fgWhite60),
