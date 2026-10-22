@@ -48,7 +48,15 @@ class MfaMethodNotAvailableException implements Exception {
       'Requested MFA method is not available on the account: ${method.toReadableString()}';
 }
 
-enum MfaRequestFailure { network, policyDenied, attemptLimit, notReady, server }
+enum MfaRequestFailure {
+  network,
+  policyDenied,
+  attemptLimit,
+  sessionExpired,
+  staleAttempt,
+  notReady,
+  server,
+}
 
 class MfaRequestException implements Exception {
   final String operation;
@@ -69,10 +77,32 @@ class MfaRequestException implements Exception {
       : '$operation failed. Status: $statusCode';
 }
 
+MfaRequestFailure? _mfaResponseFailure(DioException error) {
+  final response = error.response;
+  final data = response?.data;
+  final message = data is Map ? data['error'] : null;
+
+  if (response?.statusCode == 400 && message == 'login session not found') {
+    return MfaRequestFailure.sessionExpired;
+  }
+  if (response?.statusCode == 401 && message == 'invalid token') {
+    return MfaRequestFailure.sessionExpired;
+  }
+  if (response?.statusCode == 400 && message == 'stale MFA attempt') {
+    return MfaRequestFailure.staleAttempt;
+  }
+  if (response?.statusCode == 403 &&
+      message == 'Too many failed MFA attempts. Please try connecting again.') {
+    return MfaRequestFailure.attemptLimit;
+  }
+  return null;
+}
+
 MfaRequestException _mfaRequestException(
   String operation,
   DioException error, {
   Map<int, MfaRequestFailure> statusFailures = const {},
+  bool classifyResponse = false,
 }) {
   final statusCode = error.response?.statusCode;
   final networkError =
@@ -86,7 +116,9 @@ MfaRequestException _mfaRequestException(
     statusCode: statusCode,
     failure: networkError
         ? MfaRequestFailure.network
-        : statusFailures[statusCode] ?? MfaRequestFailure.server,
+        : (classifyResponse ? _mfaResponseFailure(error) : null) ??
+              statusFailures[statusCode] ??
+              MfaRequestFailure.server,
   );
 }
 
@@ -404,10 +436,10 @@ class ProxyApi {
       if (response.statusCode == 428) return null;
       return FinishMfaResponse.fromJson(response.data);
     } on DioException catch (e) {
-      if (e.response?.statusCode == 401) {
+      if (e.response?.statusCode == 401 && _mfaResponseFailure(e) == null) {
         throw const MfaCodeRejectedException();
       }
-      throw _mfaRequestException('MFA finish', e);
+      throw _mfaRequestException('MFA finish', e, classifyResponse: true);
     } catch (e) {
       talker.error('Invalid MFA finish response: ${e.runtimeType}');
       throw const FormatException('Invalid MFA finish response');
@@ -429,13 +461,13 @@ class ProxyApi {
       final response = await _dio.postUri(endpoint, data: data.toJson());
       return wire.MfaFlowStepFinishResponse.fromJson(response.data);
     } on DioException catch (e) {
-      if (e.response?.statusCode == 401) {
+      if (e.response?.statusCode == 401 && _mfaResponseFailure(e) == null) {
         throw const MfaCodeRejectedException();
       }
       throw _mfaRequestException(
         'MFA flow step finish',
         e,
-        statusFailures: const {403: MfaRequestFailure.attemptLimit},
+        classifyResponse: true,
       );
     } catch (e) {
       talker.error('Invalid MFA flow step finish response: ${e.runtimeType}');
