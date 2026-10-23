@@ -9,15 +9,19 @@ import 'package:mobile/data/mfa/mfa_flow.dart';
 import 'package:mobile/data/mfa/mfa_transport.dart';
 import 'package:mobile/enterprise/postures.dart';
 import 'package:mobile/enterprise/screens/mfa/openid_mfa_waiting_screen.dart';
+import 'package:mobile/open/api.dart';
 import 'package:mobile/open/screens/mfa/mfa_step_chrome.dart';
 
 class _PollingTransport implements MfaTransport {
   final Queue<MfaFinishResult> results;
+  final Object? finishError;
   final stepAttemptIds = <String?>[];
   final credentials = <MfaCredential?>[];
 
-  _PollingTransport(Iterable<MfaFinishResult> results)
-    : results = Queue.of(results);
+  _PollingTransport(
+    Iterable<MfaFinishResult> results, {
+    this.finishError,
+  }) : results = Queue.of(results);
 
   @override
   Future<MfaSessionStart> start({
@@ -42,6 +46,7 @@ class _PollingTransport implements MfaTransport {
   }) async {
     stepAttemptIds.add(stepAttemptId);
     credentials.add(credential);
+    if (finishError != null) throw finishError!;
     return results.removeFirst();
   }
 }
@@ -50,6 +55,7 @@ class _Host implements MfaStepHost {
   @override
   final MfaFlowController controller;
   final progress = Completer<MfaStepProgress>();
+  final failure = Completer<String>();
 
   _Host(this.controller);
 
@@ -64,7 +70,7 @@ class _Host implements MfaStepHost {
     String? logMessage,
     Object? error,
   }) {
-    if (!progress.isCompleted) progress.completeError(StateError(message));
+    if (!failure.isCompleted) failure.complete(message);
   }
 
   @override
@@ -75,6 +81,67 @@ class _Host implements MfaStepHost {
 }
 
 void main() {
+  testWidgets('reports a safe OIDC failure through the host', (tester) async {
+    final transport = _PollingTransport(
+      [],
+      finishError: MfaRequestException(
+        'MFA flow step finish',
+        statusCode: 400,
+        failure: MfaRequestFailure.sessionExpired,
+      ),
+    );
+    final controller = MfaFlowController(
+      transport: transport,
+      plan: [MfaMethod.openid],
+      devicePubkey: 'device-pubkey',
+      networkId: 11,
+    );
+    await controller.startStep();
+    final host = _Host(controller);
+
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(home: OpenIdMfaWaitingScreen(host: host)),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(await host.failure.future, 'Session expired. Please try again.');
+  });
+
+  testWidgets('hides unknown OIDC response details from the host', (
+    tester,
+  ) async {
+    final transport = _PollingTransport(
+      [],
+      finishError: MfaRequestException(
+        'MFA flow step finish',
+        statusCode: 400,
+        failure: MfaRequestFailure.server,
+      ),
+    );
+    final controller = MfaFlowController(
+      transport: transport,
+      plan: [MfaMethod.openid],
+      devicePubkey: 'device-pubkey',
+      networkId: 11,
+    );
+    await controller.startStep();
+    final host = _Host(controller);
+
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(home: OpenIdMfaWaitingScreen(host: host)),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      await host.failure.future,
+      'Authentication failed. Please try again.',
+    );
+  });
+
   testWidgets('polls without a proof until the OIDC attempt completes', (
     tester,
   ) async {
