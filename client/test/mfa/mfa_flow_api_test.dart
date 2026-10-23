@@ -415,7 +415,7 @@ void main() {
       },
     );
 
-    test('finish classifies known attempt-limit reasons only', () async {
+    test('finish classifies only the known attempt-limit reason as such', () async {
       await expectFailure(
         403,
         () => api.finishMfa(
@@ -426,6 +426,37 @@ void main() {
         responseBody:
             '{"error":"Too many failed MFA attempts. Please try connecting again."}',
       );
+      await expectFailure(
+        403,
+        () => api.finishMfaFlow(
+          url,
+          const flow.MfaFlowStepFinishRequest(
+            token: 'flow-token',
+            stepAttemptId: 'attempt-1',
+          ),
+        ),
+        MfaRequestFailure.attemptLimit,
+        responseBody:
+            '{"error":"Too many failed MFA attempts. Please try connecting again."}',
+      );
+    });
+
+    test('an empty flow-finish 403 is treated as an attempt limit', () async {
+      await expectFailure(
+        403,
+        () => api.finishMfaFlow(
+          url,
+          const flow.MfaFlowStepFinishRequest(
+            token: 'flow-token',
+            stepAttemptId: 'attempt-1',
+          ),
+        ),
+        MfaRequestFailure.attemptLimit,
+        responseBody: '',
+      );
+    });
+
+    test('an explicit unrelated flow-finish 403 stays generic', () async {
       await expectFailure(
         403,
         () => api.finishMfaFlow(

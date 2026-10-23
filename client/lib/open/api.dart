@@ -77,7 +77,10 @@ class MfaRequestException implements Exception {
       : '$operation failed. Status: $statusCode';
 }
 
-MfaRequestFailure? _mfaResponseFailure(DioException error) {
+MfaRequestFailure? _mfaResponseFailure(
+  DioException error, {
+  bool emptyForbiddenIsAttemptLimit = false,
+}) {
   final response = error.response;
   final data = response?.data;
   final message = data is Map ? data['error'] : null;
@@ -92,7 +95,9 @@ MfaRequestFailure? _mfaResponseFailure(DioException error) {
     return MfaRequestFailure.staleAttempt;
   }
   if (response?.statusCode == 403 &&
-      message == 'Too many failed MFA attempts. Please try connecting again.') {
+      (message ==
+              'Too many failed MFA attempts. Please try connecting again.' ||
+          (emptyForbiddenIsAttemptLimit && (data == null || data == '')))) {
     return MfaRequestFailure.attemptLimit;
   }
   return null;
@@ -103,6 +108,7 @@ MfaRequestException _mfaRequestException(
   DioException error, {
   Map<int, MfaRequestFailure> statusFailures = const {},
   bool classifyResponse = false,
+  bool emptyForbiddenIsAttemptLimit = false,
 }) {
   final statusCode = error.response?.statusCode;
   final networkError =
@@ -116,7 +122,13 @@ MfaRequestException _mfaRequestException(
     statusCode: statusCode,
     failure: networkError
         ? MfaRequestFailure.network
-        : (classifyResponse ? _mfaResponseFailure(error) : null) ??
+        : (classifyResponse
+                  ? _mfaResponseFailure(
+                      error,
+                      emptyForbiddenIsAttemptLimit:
+                          emptyForbiddenIsAttemptLimit,
+                    )
+                  : null) ??
               statusFailures[statusCode] ??
               MfaRequestFailure.server,
   );
@@ -468,6 +480,7 @@ class ProxyApi {
         'MFA flow step finish',
         e,
         classifyResponse: true,
+        emptyForbiddenIsAttemptLimit: true,
       );
     } catch (e) {
       talker.error('Invalid MFA flow step finish response: ${e.runtimeType}');
