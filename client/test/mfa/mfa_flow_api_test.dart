@@ -295,10 +295,11 @@ void main() {
     Future<void> expectFailure(
       int status,
       Future<Object?> Function() call,
-      MfaRequestFailure failure,
-    ) async {
+      MfaRequestFailure failure, {
+      String responseBody = '{"error":"server text"}',
+    }) async {
       adapter.statusCode = status;
-      adapter.responseBody = '{"error":"server text"}';
+      adapter.responseBody = responseBody;
       await expectLater(call(), failsWith(failure));
     }
 
@@ -350,6 +351,219 @@ void main() {
           ),
         ),
         MfaRequestFailure.attemptLimit,
+        responseBody:
+            '{"error":"Too many failed MFA attempts. Please try connecting again."}',
+      );
+    });
+
+    test(
+      'legacy finish classifies an expired session without retaining text',
+      () async {
+        adapter.statusCode = 400;
+        adapter.responseBody = '{"error":"login session not found"}';
+
+        await expectLater(
+          api.finishMfa(
+            url,
+            const FinishMfaRequest(token: 'legacy-token'),
+          ),
+          throwsA(
+            isA<MfaRequestException>()
+                .having(
+                  (error) => error.failure.name,
+                  'failure',
+                  'sessionExpired',
+                )
+                .having(
+                  (error) => error.toString(),
+                  'safe error text',
+                  isNot(contains('login session not found')),
+                ),
+          ),
+        );
+      },
+    );
+
+    test(
+      'flow finish classifies stale attempts without retaining text',
+      () async {
+        adapter.statusCode = 400;
+        adapter.responseBody = '{"error":"stale MFA attempt"}';
+
+        await expectLater(
+          api.finishMfaFlow(
+            url,
+            const flow.MfaFlowStepFinishRequest(
+              token: 'flow-token',
+              stepAttemptId: 'attempt-1',
+            ),
+          ),
+          throwsA(
+            isA<MfaRequestException>()
+                .having(
+                  (error) => error.failure.name,
+                  'failure',
+                  'staleAttempt',
+                )
+                .having(
+                  (error) => error.toString(),
+                  'safe error text',
+                  isNot(contains('stale MFA attempt')),
+                ),
+          ),
+        );
+      },
+    );
+
+    test('finish classifies only the known attempt-limit reason as such', () async {
+      await expectFailure(
+        403,
+        () => api.finishMfa(
+          url,
+          const FinishMfaRequest(token: 'legacy-token'),
+        ),
+        MfaRequestFailure.attemptLimit,
+        responseBody:
+            '{"error":"Too many failed MFA attempts. Please try connecting again."}',
+      );
+      await expectFailure(
+        403,
+        () => api.finishMfaFlow(
+          url,
+          const flow.MfaFlowStepFinishRequest(
+            token: 'flow-token',
+            stepAttemptId: 'attempt-1',
+          ),
+        ),
+        MfaRequestFailure.attemptLimit,
+        responseBody:
+            '{"error":"Too many failed MFA attempts. Please try connecting again."}',
+      );
+    });
+
+    test('an empty flow-finish 403 is treated as an attempt limit', () async {
+      await expectFailure(
+        403,
+        () => api.finishMfaFlow(
+          url,
+          const flow.MfaFlowStepFinishRequest(
+            token: 'flow-token',
+            stepAttemptId: 'attempt-1',
+          ),
+        ),
+        MfaRequestFailure.attemptLimit,
+        responseBody: '',
+      );
+    });
+
+    test('an explicit unrelated flow-finish 403 stays generic', () async {
+      await expectFailure(
+        403,
+        () => api.finishMfaFlow(
+          url,
+          const flow.MfaFlowStepFinishRequest(
+            token: 'flow-token',
+            stepAttemptId: 'attempt-1',
+          ),
+        ),
+        MfaRequestFailure.server,
+        responseBody: '{"error":"posture rejected"}',
+      );
+    });
+
+    test('invalid tokens on 401 are session-expired failures', () async {
+      adapter.statusCode = 401;
+      adapter.responseBody = '{"error":"invalid token"}';
+
+      final legacyFinish = api.finishMfa(
+        url,
+        const FinishMfaRequest(token: 'legacy-token'),
+      );
+      await expectLater(
+        legacyFinish,
+        throwsA(
+          isA<MfaRequestException>().having(
+            (error) => error.failure.name,
+            'failure',
+            'sessionExpired',
+          ),
+        ),
+      );
+
+      final flowFinish = api.finishMfaFlow(
+        url,
+        const flow.MfaFlowStepFinishRequest(
+          token: 'flow-token',
+          stepAttemptId: 'attempt-1',
+        ),
+      );
+      await expectLater(
+        flowFinish,
+        throwsA(
+          isA<MfaRequestException>().having(
+            (error) => error.failure.name,
+            'failure',
+            'sessionExpired',
+          ),
+        ),
+      );
+    });
+
+    test('known reasons on unexpected statuses stay server failures', () async {
+      await expectFailure(
+        500,
+        () => api.finishMfa(
+          url,
+          const FinishMfaRequest(token: 'legacy-token'),
+        ),
+        MfaRequestFailure.server,
+        responseBody: '{"error":"login session not found"}',
+      );
+      await expectFailure(
+        500,
+        () => api.finishMfaFlow(
+          url,
+          const flow.MfaFlowStepFinishRequest(
+            token: 'flow-token',
+            stepAttemptId: 'attempt-1',
+          ),
+        ),
+        MfaRequestFailure.server,
+        responseBody: '{"error":"stale MFA attempt"}',
+      );
+      await expectFailure(
+        500,
+        () => api.finishMfaFlow(
+          url,
+          const flow.MfaFlowStepFinishRequest(
+            token: 'flow-token',
+            stepAttemptId: 'attempt-1',
+          ),
+        ),
+        MfaRequestFailure.server,
+        responseBody:
+            '{"error":"Too many failed MFA attempts. Please try connecting again."}',
+      );
+      await expectFailure(
+        400,
+        () => api.finishMfaFlow(
+          url,
+          const flow.MfaFlowStepFinishRequest(
+            token: 'flow-token',
+            stepAttemptId: 'attempt-1',
+          ),
+        ),
+        MfaRequestFailure.server,
+        responseBody: '{"error":"invalid token"}',
+      );
+    });
+
+    test('known finish reasons do not classify start errors', () async {
+      await expectFailure(
+        400,
+        () => api.startMfaFlow(url, flowStart),
+        MfaRequestFailure.server,
+        responseBody: '{"error":"stale MFA attempt"}',
       );
     });
 

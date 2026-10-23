@@ -26,8 +26,56 @@ void main() {
       'Too many failed attempts. Start connecting again.',
     );
     expect(
+      message(MfaRequestFailure.sessionExpired, statusCode: 400),
+      'Server returned an error: 400',
+    );
+    expect(
+      message(MfaRequestFailure.staleAttempt, statusCode: 400),
+      'Server returned an error: 400',
+    );
+    expect(
       message(MfaRequestFailure.notReady, statusCode: 428),
       "Verification can't start right now. Try again in a moment.",
+    );
+  });
+
+  test('OpenID failures use fixed desktop-style messages', () {
+    String openId(MfaRequestFailure failure, {int? statusCode}) =>
+        ErrorHandler.getOpenIdMfaError(
+          MfaRequestException(
+            'MFA flow step finish',
+            statusCode: statusCode,
+            failure: failure,
+          ),
+        );
+
+    expect(
+      openId(MfaRequestFailure.sessionExpired),
+      'Session expired. Please try again.',
+    );
+    expect(
+      openId(MfaRequestFailure.staleAttempt),
+      'Authentication request could not be started. Please try again.',
+    );
+    expect(
+      openId(MfaRequestFailure.attemptLimit),
+      'Too many failed MFA attempts. Please try connecting again.',
+    );
+    expect(
+      openId(MfaRequestFailure.network),
+      'Unable to connect to the server. Please check your internet connection.',
+    );
+    expect(
+      openId(MfaRequestFailure.notReady),
+      "Verification can't start right now. Try again in a moment.",
+    );
+    expect(
+      openId(MfaRequestFailure.server, statusCode: 400),
+      'Authentication failed. Please try again.',
+    );
+    expect(
+      ErrorHandler.getOpenIdMfaError(StateError('raw response text')),
+      'Authentication failed. Please try again.',
     );
   });
 

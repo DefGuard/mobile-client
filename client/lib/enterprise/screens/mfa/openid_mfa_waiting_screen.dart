@@ -78,7 +78,7 @@ class OpenIdMfaWaitingScreen extends HookConsumerWidget {
           .catchError((error) {
             if (isGone()) return;
             host.reportFailure(
-              message: ErrorHandler.getHumanReadableError(error),
+              message: ErrorHandler.getOpenIdMfaError(error),
               logMessage: "OpenID MFA polling error!",
               error: error,
             );

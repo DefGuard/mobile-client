@@ -35,6 +35,8 @@ class ErrorHandler {
           "This device does not meet the location's security requirements.",
         MfaRequestFailure.attemptLimit =>
           "Too many failed attempts. Start connecting again.",
+        MfaRequestFailure.sessionExpired => _statusMessage(e.statusCode),
+        MfaRequestFailure.staleAttempt => _statusMessage(e.statusCode),
         MfaRequestFailure.notReady =>
           "Verification can't start right now. Try again in a moment.",
         MfaRequestFailure.server => _statusMessage(e.statusCode),
@@ -59,6 +61,28 @@ class ErrorHandler {
       return s.substring(11);
     }
     return s;
+  }
+
+  static String getOpenIdMfaError(Object e) {
+    if (e is DioException && e.response == null) {
+      return getHumanReadableError(e);
+    }
+    if (e is! MfaRequestException) {
+      return "Authentication failed. Please try again.";
+    }
+    return switch (e.failure) {
+      MfaRequestFailure.network => _connectionErrorMessage,
+      MfaRequestFailure.policyDenied =>
+        "This device does not meet the location's security requirements.",
+      MfaRequestFailure.attemptLimit =>
+        "Too many failed MFA attempts. Please try connecting again.",
+      MfaRequestFailure.sessionExpired => "Session expired. Please try again.",
+      MfaRequestFailure.staleAttempt =>
+        "Authentication request could not be started. Please try again.",
+      MfaRequestFailure.notReady =>
+        "Verification can't start right now. Try again in a moment.",
+      MfaRequestFailure.server => "Authentication failed. Please try again.",
+    };
   }
 
   static const _connectionErrorMessage =
