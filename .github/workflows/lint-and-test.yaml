@@ -1,7 +1,7 @@
 name: Run Flutter Lint and Tests
 
 env:
-  IOS_SIMULATOR: "iPhone 17 Pro"
+  IOS_SIMULATOR: "iPhone 18 Pro"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
