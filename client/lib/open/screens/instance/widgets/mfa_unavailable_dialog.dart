@@ -2,32 +2,33 @@ import 'package:material_ui/material_ui.dart';
 import 'package:mobile/data/mfa/mfa_plan.dart';
 import 'package:mobile/open/widgets/dg_button.dart';
 import 'package:mobile/open/widgets/dg_dialog.dart';
-import 'package:mobile/router/routes.dart';
-import 'package:mobile/theme/spacing.dart';
 
-/// Explains why a location cannot be connected to from this app, and offers the
-/// fix when there is one.
+/// Explains why a location cannot be connected to from this app.
 Future<void> showMfaUnavailableDialog(
   BuildContext context, {
   required MfaUnpassableReason? reason,
-  required int instanceId,
+  required bool biometryRegistered,
 }) => showDialog<void>(
   context: context,
   useSafeArea: false,
   barrierColor: Colors.transparent,
-  builder: (_) => _MfaUnavailableDialog(reason: reason, instanceId: instanceId),
+  builder: (_) => _MfaUnavailableDialog(
+    reason: reason,
+    biometryRegistered: biometryRegistered,
+  ),
 );
 
 class _MfaUnavailableDialog extends StatelessWidget {
   final MfaUnpassableReason? reason;
-  final int instanceId;
+  final bool biometryRegistered;
 
-  const _MfaUnavailableDialog({required this.reason, required this.instanceId});
+  const _MfaUnavailableDialog({
+    required this.reason,
+    required this.biometryRegistered,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final setUpBiometry = reason == MfaUnpassableReason.setUpBiometry;
-
     return DgDialog(
       onClose: () => Navigator.of(context).pop(),
       children: [
@@ -37,23 +38,9 @@ class _MfaUnavailableDialog extends StatelessWidget {
           _ => "Location Not Supported",
         }),
         DgDialogDescription(_description(reason)),
-        if (setUpBiometry)
-          DgButton(
-            text: "Set up biometrics",
-            style: DgButtonStyle.primary,
-            size: DgButtonSize.big,
-            width: double.infinity,
-            onTap: () {
-              Navigator.of(context).pop();
-              BiometrySetupScreenRoute(id: instanceId.toString()).push(context);
-            },
-          ),
-        if (setUpBiometry) const SizedBox(height: DgSpacing.md),
         DgButton(
           text: "Close",
-          style: setUpBiometry
-              ? DgButtonStyle.secondary
-              : DgButtonStyle.primary,
+          style: DgButtonStyle.primary,
           size: DgButtonSize.big,
           width: double.infinity,
           onTap: () => Navigator.of(context).pop(),
@@ -63,9 +50,14 @@ class _MfaUnavailableDialog extends StatelessWidget {
   }
 
   String _description(MfaUnpassableReason? reason) => switch (reason) {
+    MfaUnpassableReason.setUpBiometry when biometryRegistered =>
+      "This location requires biometric verification, but biometrics are not "
+          "available on this device right now. Check your system biometric "
+          "settings, then try again.",
     MfaUnpassableReason.setUpBiometry =>
-      "This location requires biometric verification, which is not set up on "
-          "this device yet. Enable it to connect.",
+      "This location requires biometric verification, which can only be "
+          "enabled while adding an instance. Add this instance again and "
+          "enable biometrics during setup.",
     MfaUnpassableReason.registerSecurityKey =>
       "This location requires a hardware security key. Register a certified "
           "key from the Defguard desktop client, then try again.",
