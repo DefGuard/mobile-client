@@ -156,7 +156,7 @@ class ConnectDialog extends HookConsumerWidget {
                 location,
                 capabilities: capabilities,
               ),
-              instanceId: instance.id,
+              biometryRegistered: instance.mfaKeysStored,
             )
           : connect,
       onOpenMfaSettings: openMfaSettings,
