@@ -1,7 +1,6 @@
 import {
 	type CoreApi,
 	type EnrollmentFixture,
-	type LocationMfaMode,
 	loggedInCoreApi,
 } from "../helpers/coreApi.js";
 import { completeEnrollment } from "../helpers/enrollment.js";
@@ -19,7 +18,7 @@ import {
 describe("vpn connection", () => {
 	let core: CoreApi;
 	let networkId: number;
-	let previousMfaMode: LocationMfaMode | undefined;
+	let previousMfaEnabled: boolean | undefined;
 	let fixture: EnrollmentFixture;
 
 	before(function () {
@@ -34,8 +33,8 @@ describe("vpn connection", () => {
 	});
 
 	afterEach(async () => {
-		if (previousMfaMode) {
-			await core.setLocationMfaMode(networkId, previousMfaMode);
+		if (previousMfaEnabled !== undefined) {
+			await core.setLocationMfaEnabled(networkId, previousMfaEnabled);
 		}
 		if (fixture?.ephemeral) {
 			await core.deleteUser(fixture.username);
@@ -43,7 +42,7 @@ describe("vpn connection", () => {
 	});
 
 	it("connects to a location with predefined and all traffic", async () => {
-		previousMfaMode = await core.setLocationMfaMode(networkId, "disabled");
+		previousMfaEnabled = await core.setLocationMfaEnabled(networkId, false);
 		fixture = await core.createEnrollmentFixture();
 
 		await completeEnrollment(fixture);

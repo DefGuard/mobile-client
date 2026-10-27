@@ -20,6 +20,7 @@ export const projectRoot = here;
 export const sharedConfig: Partial<WebdriverIO.Config> = {
 	hostname: "127.0.0.1",
 	port: APPIUM_PORT,
+	logLevel: "warn",
 	specs: ["./tests/**/*.spec.ts"],
 	maxInstances: 1,
 
