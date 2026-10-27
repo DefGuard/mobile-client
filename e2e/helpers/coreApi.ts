@@ -9,8 +9,6 @@ const generatePassword = (): string =>
 
 const coreUrl = (): string => requireEnv("CORE_URL");
 
-export type LocationMfaMode = "disabled" | "internal" | "external";
-
 export interface EnrollmentFixture {
 	username: string;
 	enrollmentToken: string;
@@ -96,17 +94,43 @@ export class CoreApi {
 		return network.id;
 	}
 
-	async setLocationMfaMode(
+	async setLocationMfaEnabled(
 		networkId: number,
-		mode: LocationMfaMode,
-	): Promise<LocationMfaMode> {
+		enabled: boolean,
+	): Promise<boolean> {
 		const current = (await (
 			await this.request("GET", `/api/v1/network/${networkId}`)
 		).json()) as Record<string, unknown>;
-		const previous = current.location_mfa_mode as LocationMfaMode;
-		if (previous === mode) {
+		const previous = current.mfa_enabled === true;
+		if (previous === enabled) {
 			return previous;
 		}
+		const assignedFlows = (
+			(await (
+				await this.request("GET", `/api/v1/location/${networkId}/mfa-flows`)
+			).json()) as Array<{
+				id: number;
+				is_default: boolean;
+				groups: Array<{ id: number }>;
+			}>
+		).map((flow) => ({
+			flow_id: flow.id,
+			is_default: flow.is_default,
+			group_ids: flow.groups.map((group) => group.id),
+		}));
+		const firstMfaFlowId = async (): Promise<number> => {
+			const [flow] = (await (
+				await this.request("GET", "/api/v1/mfa-flow")
+			).json()) as Array<{ id: number }>;
+			if (!flow) {
+				throw new Error("The core has no MFA flow to assign to the location");
+			}
+			return flow.id;
+		};
+		const mfaFlows =
+			enabled && assignedFlows.length === 0
+				? [{ flow_id: await firstMfaFlowId(), is_default: true, group_ids: [] }]
+				: assignedFlows;
 		const joinList = (value: unknown): string =>
 			Array.isArray(value) ? value.join(",") : ((value as string | null) ?? "");
 		await this.request("PUT", `/api/v1/network/${networkId}`, {
@@ -118,14 +142,18 @@ export class CoreApi {
 			dns: (current.dns as string | null) ?? null,
 			mtu: current.mtu,
 			fwmark: current.fwmark,
+			client_mtu: current.client_mtu ?? null,
 			allow_all_groups: current.allow_all_groups,
 			allowed_groups: current.allowed_groups ?? [],
 			keepalive_interval: current.keepalive_interval,
 			peer_disconnect_threshold: PEER_DISCONNECT_THRESHOLD,
 			acl_enabled: current.acl_enabled,
 			acl_default_allow: current.acl_default_allow,
-			location_mfa_mode: mode,
+			allowed_ips_from_acl: current.allowed_ips_from_acl === true,
+			mfa_enabled: enabled,
 			service_location_mode: current.service_location_mode ?? "disabled",
+			posture_checks: current.posture_checks ?? [],
+			mfa_flows: mfaFlows,
 		});
 		return previous;
 	}

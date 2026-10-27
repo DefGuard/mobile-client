@@ -1,13 +1,13 @@
 import {
 	type CoreApi,
 	type EnrollmentFixture,
-	type LocationMfaMode,
 	loggedInCoreApi,
 } from "../helpers/coreApi.js";
 import { completeEnrollment } from "../helpers/enrollment.js";
 import {
 	connectLocation,
 	disconnect,
+	refreshInstance,
 	waitForInstanceScreen,
 } from "../helpers/instance.js";
 import { expectGatewayReachable, supportsTunnel } from "../helpers/tunnel.js";
@@ -15,7 +15,7 @@ import { expectGatewayReachable, supportsTunnel } from "../helpers/tunnel.js";
 describe("mfa connection", () => {
 	let core: CoreApi;
 	let networkId: number;
-	let previousMfaMode: LocationMfaMode | undefined;
+	let previousMfaEnabled: boolean | undefined;
 	let fixture: EnrollmentFixture;
 
 	before(function () {
@@ -30,8 +30,8 @@ describe("mfa connection", () => {
 	});
 
 	afterEach(async () => {
-		if (previousMfaMode) {
-			await core.setLocationMfaMode(networkId, previousMfaMode);
+		if (previousMfaEnabled !== undefined) {
+			await core.setLocationMfaEnabled(networkId, previousMfaEnabled);
 		}
 		if (fixture?.ephemeral) {
 			await core.deleteUser(fixture.username);
@@ -39,13 +39,17 @@ describe("mfa connection", () => {
 	});
 
 	it("connects to an mfa location with a totp code", async () => {
-		previousMfaMode = await core.setLocationMfaMode(networkId, "internal");
+		previousMfaEnabled = await core.setLocationMfaEnabled(networkId, true);
 		fixture = await core.createEnrollmentFixture();
 
 		await completeEnrollment(fixture);
 		await waitForInstanceScreen();
 
 		const totpSecret = await core.enableTotp(fixture.username);
+		await refreshInstance(
+			await core.startDesktopConfiguration(fixture.username),
+		);
+		await waitForInstanceScreen();
 
 		await connectLocation({ totpSecret });
 		await expectGatewayReachable();
