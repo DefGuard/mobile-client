@@ -4,7 +4,7 @@ import 'dart:typed_data';
 import 'package:crypto/crypto.dart';
 import 'package:fido2_plugin/fido2_plugin.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mobile/data/mfa/fido2_step.dart';
+import 'package:mobile/enterprise/fido2_step.dart';
 
 class _Call {
   final String rpId;
