@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import android.os.SystemClock
 import com.wireguard.android.backend.GoBackend
 import com.wireguard.android.backend.Tunnel
 import com.wireguard.config.Config
@@ -65,6 +66,8 @@ class WireguardPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
         private var futureBackend: CompletableDeferred<GoBackend>? = null
         @JvmStatic
         private var havePermission = false
+        // WireGuard cannot exchange packets while the CPU sleeps, so this holds uptime, which
+        // excludes deep sleep, and a sleeping phone does not count as a silent tunnel.
         @JvmStatic
         private var lastTrafficTimestamp: Long = 0
         @JvmStatic
@@ -344,7 +347,7 @@ class WireguardPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
         Log.d(LOG_TAG, "Starting connection health monitoring")
         
         // Initialize health state
-        Globals.lastTrafficTimestamp = System.currentTimeMillis()
+        Globals.lastTrafficTimestamp = SystemClock.uptimeMillis()
         Globals.isHealthy = true
         Globals.lastDownloadBytes = 0L
         
@@ -370,63 +373,44 @@ class WireguardPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
     }
     
     private fun performHealthCheck() {
-        val currentTime = System.currentTimeMillis()
-        
-        // Check for tunnel activity by examining stats if available
-        Globals.activeTunnel?.let { tunnel ->
+        val tunnel = Globals.activeTunnel ?: return
+        scope.launch(Dispatchers.IO) {
+            // Read stats before judging silence, so traffic since the last check counts.
             try {
-                // Try to get tunnel stats from the backend
-                scope.launch(Dispatchers.IO) {
-                    val stats = futureBackend.await().getStatistics(tunnel)
-                    stats.let { tunnelStats ->
-                        val currentDownloadBytes = tunnelStats.totalRx()
-
-                        // Check if there's been any data transfer since last check
-                        if (currentDownloadBytes > Globals.lastDownloadBytes) {
-                            Globals.lastDownloadBytes = currentDownloadBytes
-                            updateTrafficTimestamp()
-                            Log.d(LOG_TAG, "Traffic detected - RX: $currentDownloadBytes")
-                        } else {
-                            Log.d(LOG_TAG, "No traffic detected - RX: $currentDownloadBytes")
-                        }
-                    }
+                val currentDownloadBytes = futureBackend.await().getStatistics(tunnel).totalRx()
+                if (currentDownloadBytes > Globals.lastDownloadBytes) {
+                    Globals.lastDownloadBytes = currentDownloadBytes
+                    updateTrafficTimestamp()
+                    Log.d(LOG_TAG, "Traffic detected - RX: $currentDownloadBytes")
+                } else {
+                    Log.d(LOG_TAG, "No traffic detected - RX: $currentDownloadBytes")
                 }
             } catch (e: Exception) {
                 Log.e(LOG_TAG, "Error checking tunnel stats: ${e.message}")
             }
-        }
-        
-        val timeSinceLastTraffic = currentTime - Globals.lastTrafficTimestamp
-        val newHealthy = Globals.activeTunnel != null && timeSinceLastTraffic <= DISCONNECTION_THRESHOLD
-        if (newHealthy != Globals.isHealthy) {
-            val oldHealthy = Globals.isHealthy
+
+            // The tunnel was closed or replaced during the read.
+            if (Globals.activeTunnel !== tunnel) return@launch
+
+            val timeSinceLastTraffic = SystemClock.uptimeMillis() - Globals.lastTrafficTimestamp
+            val newHealthy = timeSinceLastTraffic <= DISCONNECTION_THRESHOLD
+            if (newHealthy == Globals.isHealthy) {
+                Log.d(LOG_TAG, "Health check: ${if (newHealthy) "HEALTHY" else "DISCONNECTED"} (traffic silence: ${timeSinceLastTraffic}ms)")
+                return@launch
+            }
             Globals.isHealthy = newHealthy
-            
-            Log.d(LOG_TAG, "Connection health changed: ${if (oldHealthy) "HEALTHY" else "DISCONNECTED"} -> ${if (newHealthy) "HEALTHY" else "DISCONNECTED"} (traffic silence: ${timeSinceLastTraffic}ms)")
-            
-            // Log specific threshold crosses
             if (newHealthy) {
                 Log.i(LOG_TAG, "Connection restored to HEALTHY")
             } else {
                 Log.w(LOG_TAG, "Connection considered DISCONNECTED - no traffic for ${timeSinceLastTraffic}ms (threshold: ${DISCONNECTION_THRESHOLD}ms)")
-                // close the tunnel
-                if (Globals.activeTunnel != null) {
-                    scope.launch(Dispatchers.IO) {
-                        Globals.activeTunnel?.let {
-                            closeTunnel(it);
-                        }
-                    }
-                }
+                closeTunnel(tunnel)
                 emitEvent(WireguardPluginEvent.MFA_SESSION_EXPIRED, null)
             }
-        } else if (Globals.activeTunnel != null) {
-            // Log periodic status when tunnel is active but health hasn't changed
-            Log.d(LOG_TAG, "Health check: ${if (Globals.isHealthy) "HEALTHY" else "DISCONNECTED"} (traffic silence: ${timeSinceLastTraffic}ms)")
         }
     }
     
     private fun updateTrafficTimestamp() {
-        Globals.lastTrafficTimestamp = System.currentTimeMillis()
+        Globals.lastTrafficTimestamp = SystemClock.uptimeMillis()
         
         // If we were disconnected and now have traffic, update immediately
         if (!Globals.isHealthy) {
