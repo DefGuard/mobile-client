@@ -1,6 +1,41 @@
+import 'dart:async';
+
 import 'package:material_ui/material_ui.dart';
 import 'package:mobile/logging.dart';
 import 'package:rive/rive.dart' as rive;
+
+abstract final class RiveFileCache {
+  static final Map<String, rive.File> _files = {};
+  static final Map<String, Future<rive.File?>> _pending = {};
+
+  static rive.File? get(String asset) => _files[asset];
+
+  static Future<rive.File?> load(String asset) async {
+    final cached = _files[asset];
+    if (cached != null) return cached;
+    return _pending[asset] ??= _decode(asset);
+  }
+
+  static Future<rive.File?> _decode(String asset) async {
+    try {
+      final file = await rive.File.asset(
+        asset,
+        riveFactory: rive.Factory.rive,
+      );
+      if (file == null) {
+        talker.error("Rive asset $asset loaded as null");
+      } else {
+        _files[asset] = file;
+      }
+      return file;
+    } catch (e, s) {
+      talker.error("Failed to load Rive asset $asset", e, s);
+      return null;
+    } finally {
+      _pending.remove(asset);
+    }
+  }
+}
 
 class RiveAssetAnimation extends StatefulWidget {
   final String asset;
@@ -22,57 +57,51 @@ class RiveAssetAnimation extends StatefulWidget {
 
 class _RiveAssetAnimationState extends State<RiveAssetAnimation> {
   rive.RiveWidgetController? _controller;
-  rive.File? _file;
 
   @override
   void initState() {
     super.initState();
-    _loadRiveFile();
+    _attach();
   }
 
   @override
   void didUpdateWidget(covariant RiveAssetAnimation oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.asset != widget.asset) {
-      _loadRiveFile();
+      _attach();
     }
   }
 
-  Future<void> _loadRiveFile() async {
-    try {
-      final file = await rive.File.asset(
-        widget.asset,
-        riveFactory: rive.Factory.rive,
-      );
-
-      if (!mounted) return;
-      if (file == null) {
-        talker.error("Rive asset ${widget.asset} loaded as null");
-        return;
-      }
-
-      final stateMachineSelector = widget.stateMachineName != null
-          ? rive.StateMachineNamed(widget.stateMachineName!)
-          : const rive.StateMachineDefault();
-
-      setState(() {
-        _file?.dispose();
-        _controller?.dispose();
-        _file = file;
-        _controller = rive.RiveWidgetController(
-          file,
-          stateMachineSelector: stateMachineSelector,
-        );
-      });
-    } catch (e, s) {
-      talker.error("Failed to load Rive asset ${widget.asset}", e, s);
+  void _attach() {
+    final cached = RiveFileCache.get(widget.asset);
+    if (cached != null) {
+      _replaceController(cached);
+    } else {
+      unawaited(_load());
     }
+  }
+
+  Future<void> _load() async {
+    final asset = widget.asset;
+    final file = await RiveFileCache.load(asset);
+    if (!mounted || file == null || asset != widget.asset) return;
+    setState(() => _replaceController(file));
+  }
+
+  void _replaceController(rive.File file) {
+    final stateMachineName = widget.stateMachineName;
+    _controller?.dispose();
+    _controller = rive.RiveWidgetController(
+      file,
+      stateMachineSelector: stateMachineName != null
+          ? rive.StateMachineNamed(stateMachineName)
+          : const rive.StateMachineDefault(),
+    );
   }
 
   @override
   void dispose() {
     _controller?.dispose();
-    _file?.dispose();
     super.dispose();
   }
 
