@@ -1,5 +1,5 @@
 import 'package:mobile/data/db/enums.dart';
-import 'package:mobile/data/mfa/fido2_support.dart';
+import 'package:mobile/enterprise/fido2_support.dart';
 
 /// MFA methods as the proxy sends them, mirroring `MfaMethod` in
 /// `proto/common/client_types.proto`. Values this client cannot perform are
