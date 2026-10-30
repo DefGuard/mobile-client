@@ -47,7 +47,7 @@ jobs:
       - name: Install pnpm
         uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6
         with:
-          version: 11.28
+          version: 12.15
           run_install: false
 
       - name: Get pnpm store directory
@@ -135,7 +135,7 @@ jobs:
       - name: Install pnpm
         uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6
         with:
-          version: 11.28
+          version: 12.15
           run_install: false
 
       - name: Get pnpm store directory
@@ -207,7 +207,7 @@ jobs:
       - name: Install pnpm
         uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6
         with:
-          version: 11.28
+          version: 12.15
           run_install: false
 
       - name: Install e2e dependencies
