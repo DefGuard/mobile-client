@@ -177,7 +177,7 @@ class MfaFido2Screen extends HookConsumerWidget {
                         children: [
                           DgMfaStepLabel(host.controller.stepLabel),
                           Text(
-                            "Security key",
+                            "FIDO2 Security Key",
                             style: DgText.h4.copyWith(
                               color: DgColor.fgWhite100,
                             ),

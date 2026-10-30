@@ -42,7 +42,7 @@ enum ApiMfaMethod {
   /// by [MfaMethod.toUiString] instead.
   String get unsupportedLabel => switch (this) {
     mobileApprove => "Mobile approval",
-    fido2 => "Security key",
+    fido2 => "FIDO2 Security Key",
     _ => "Unsupported method",
   };
 }
