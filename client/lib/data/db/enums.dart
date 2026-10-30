@@ -66,7 +66,7 @@ enum MfaMethod {
             ? "OpenID"
             : openidDisplayName!;
       case MfaMethod.fido2:
-        return "Security key";
+        return "FIDO2 Security Key";
     }
   }
 }

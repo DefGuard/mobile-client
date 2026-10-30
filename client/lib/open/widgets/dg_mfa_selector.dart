@@ -92,7 +92,6 @@ class DgMfaSelector extends StatelessWidget {
 
   String get getLabel {
     if (label != null) return label!;
-    if (factor == MfaMethod.fido2) return 'FIDO2 Security key';
     return factor?.toUiString(openidDisplayName: instance?.openidDisplayName) ??
         'Unsupported method';
   }
@@ -254,7 +253,7 @@ Widget previewDgMfaSelector() {
           DgMfaSelector(
             active: false,
             factor: null,
-            label: "Security key",
+            label: "FIDO2 Security Key",
             disabled: true,
             trailing: const DgMfaSelectorTrailing.note("Desktop only"),
           ),
