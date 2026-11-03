@@ -30,7 +30,7 @@ jobs:
         uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
         with:
           channel: stable
-          flutter-version: 3.47.2
+          flutter-version: 3.47.9
 
       - name: Enable Swift Package Manager
         run: flutter config --enable-swift-package-manager
@@ -102,7 +102,7 @@ jobs:
         uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
         with:
           channel: stable
-          flutter-version: 3.47.2
+          flutter-version: 3.47.9
 
       - name: Accept licenses
         run: yes | flutter doctor --android-licenses
@@ -172,7 +172,7 @@ jobs:
         uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
         with:
           channel: stable
-          flutter-version: 3.47.2
+          flutter-version: 3.47.9
 
       - name: Configure Flutter JDK
         run: flutter config --jdk-dir "$JAVA_HOME"
