@@ -7,6 +7,7 @@ on:
       - dev
       - "release/**"
       - "hotfix/**"
+      - "stable/**"
     tags:
       - v*.*.*
     paths-ignore:
