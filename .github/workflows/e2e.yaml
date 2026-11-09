@@ -3,9 +3,9 @@ name: Mobile E2E tests
 on:
   workflow_dispatch:
   push:
-    branches: [main, dev]
+    branches: [main, dev, "stable/**"]
   pull_request:
-    branches: [main, dev]
+    branches: [main, dev, "stable/**"]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
