@@ -32,8 +32,9 @@ class DeviceIdentityPlugin : FlutterPlugin, MethodChannel.MethodCallHandler {
     override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
         when (call.method) {
             "generateAttestedIdentity" -> generateAttestedIdentity(call, result)
-            "signPossession", "hasIdentity", "deleteIdentity" ->
-                result.error("UNSUPPORTED", "Device identity is not implemented", null)
+            "signPossession" -> signPossession(call, result)
+            "hasIdentity" -> hasIdentity(call, result)
+            "deleteIdentity" -> deleteIdentity(call, result)
             else -> result.notImplemented()
         }
     }
@@ -56,6 +57,53 @@ class DeviceIdentityPlugin : FlutterPlugin, MethodChannel.MethodCallHandler {
             return
         }
 
+        runKeystoreOperation(result) { KeystoreIdentity.generate(alias, challengeData) }
+    }
+
+    private fun signPossession(call: MethodCall, result: MethodChannel.Result) {
+        val arguments = call.arguments as? Map<*, *>
+        val alias = arguments?.get("alias") as? String
+        if (alias.isNullOrBlank()) {
+            result.error(IdentityErrorCode.IDENTITY_LOST.name, "Identity alias is required", null)
+            return
+        }
+
+        val data = arguments?.get("data") as? ByteArray
+        if (data == null) {
+            result.error(IdentityErrorCode.BACKEND_FAILURE.name, "Signature data must be a byte array", null)
+            return
+        }
+
+        runKeystoreOperation(result) { KeystoreIdentity.sign(alias, data) }
+    }
+
+    private fun hasIdentity(call: MethodCall, result: MethodChannel.Result) {
+        val alias = (call.arguments as? Map<*, *>)?.get("alias") as? String
+        if (alias.isNullOrBlank()) {
+            result.error(IdentityErrorCode.BACKEND_FAILURE.name, "Identity alias is required", null)
+            return
+        }
+
+        runKeystoreOperation(result) { KeystoreIdentity.exists(alias) }
+    }
+
+    private fun deleteIdentity(call: MethodCall, result: MethodChannel.Result) {
+        val alias = (call.arguments as? Map<*, *>)?.get("alias") as? String
+        if (alias.isNullOrBlank()) {
+            result.error(IdentityErrorCode.BACKEND_FAILURE.name, "Identity alias is required", null)
+            return
+        }
+
+        runKeystoreOperation(result) {
+            KeystoreIdentity.delete(alias)
+            null
+        }
+    }
+
+    private fun runKeystoreOperation(
+        result: MethodChannel.Result,
+        operation: () -> Any?,
+    ) {
         val executor = keystoreExecutor
         if (executor == null) {
             result.error(IdentityErrorCode.UNAVAILABLE.name, "Android Keystore is unavailable", null)
@@ -65,8 +113,8 @@ class DeviceIdentityPlugin : FlutterPlugin, MethodChannel.MethodCallHandler {
         try {
             executor.execute {
                 try {
-                    val chain = KeystoreIdentity.generate(alias, challengeData)
-                    mainHandler.post { result.success(chain) }
+                    val value = operation()
+                    mainHandler.post { result.success(value) }
                 } catch (error: IdentityFailure) {
                     mainHandler.post { result.error(error.code.name, error.message, null) }
                 } catch (_: Exception) {

@@ -9,6 +9,8 @@ import java.security.KeyStore
 import java.security.KeyStoreException
 import java.security.MessageDigest
 import java.security.NoSuchAlgorithmException
+import java.security.PrivateKey
+import java.security.Signature
 import java.security.NoSuchProviderException
 import java.security.ProviderException
 import java.security.spec.ECGenParameterSpec
@@ -69,9 +71,7 @@ internal object KeystoreIdentity {
         }
 
         return try {
-            val keyStore = KeyStore.getInstance(KEYSTORE_PROVIDER)
-            keyStore.load(null)
-            val chain = keyStore.getCertificateChain(alias)
+            val chain = keyStore().getCertificateChain(alias)
             if (chain.isNullOrEmpty()) {
                 throw IdentityFailure(
                     IdentityErrorCode.UNAVAILABLE,
@@ -85,6 +85,44 @@ internal object KeystoreIdentity {
             throw failure(error)
         }
     }
+
+    fun sign(alias: String, data: ByteArray): ByteArray {
+        return try {
+            val privateKey = keyStore().getKey(alias, null) as? PrivateKey
+                ?: throw IdentityFailure(
+                    IdentityErrorCode.IDENTITY_LOST,
+                    "Identity key is missing",
+                )
+            Signature.getInstance("SHA256withECDSA").run {
+                initSign(privateKey)
+                update(data)
+                sign()
+            }
+        } catch (error: IdentityFailure) {
+            throw error
+        } catch (error: Exception) {
+            throw failure(error)
+        }
+    }
+
+    fun exists(alias: String): Boolean {
+        return try {
+            keyStore().getKey(alias, null) is PrivateKey
+        } catch (error: Exception) {
+            throw failure(error)
+        }
+    }
+
+    fun delete(alias: String) {
+        try {
+            keyStore().deleteEntry(alias)
+        } catch (error: Exception) {
+            throw failure(error)
+        }
+    }
+
+    private fun keyStore(): KeyStore =
+        KeyStore.getInstance(KEYSTORE_PROVIDER).apply { load(null) }
 
     private fun generateKeyPair(
         alias: String,
