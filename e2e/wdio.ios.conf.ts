@@ -125,6 +125,7 @@ export const config: WebdriverIO.Config = {
 			"appium:udid": udid,
 			"appium:app": app,
 			"appium:bundleId": BUNDLE_ID,
+			"appium:isHeadless": true,
 			"appium:simulatorStartupTimeout": 300_000,
 			"appium:wdaLaunchTimeout": 240_000,
 			"appium:autoAcceptAlerts": true,
@@ -141,8 +142,5 @@ export const config: WebdriverIO.Config = {
 
 	onComplete: () => {
 		spawnSync("xcrun", ["simctl", "shutdown", udid]);
-		if (listSimulators("booted").length === 0) {
-			spawnSync("osascript", ["-e", 'quit app "Simulator"']);
-		}
 	},
 };
