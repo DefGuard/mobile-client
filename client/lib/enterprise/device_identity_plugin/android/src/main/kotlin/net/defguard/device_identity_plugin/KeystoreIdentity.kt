@@ -41,7 +41,19 @@ internal object KeystoreIdentity {
     private const val CURVE = "secp256r1"
     private const val MAX_CHALLENGE_DATA_SIZE = 4 * 1024
 
-    fun generate(alias: String, challengeData: ByteArray): List<ByteArray> {
+    fun generate(alias: String, challengeData: ByteArray): List<ByteArray> =
+        generate(alias, challengeData, includeDeviceProperties = true)
+
+    internal fun generateWithoutDeviceProperties(
+        alias: String,
+        challengeData: ByteArray,
+    ): List<ByteArray> = generate(alias, challengeData, includeDeviceProperties = false)
+
+    private fun generate(
+        alias: String,
+        challengeData: ByteArray,
+        includeDeviceProperties: Boolean,
+    ): List<ByteArray> {
         if (alias.isBlank()) {
             throw IdentityFailure(IdentityErrorCode.BACKEND_FAILURE, "Identity alias is required")
         }
@@ -59,12 +71,14 @@ internal object KeystoreIdentity {
         }
 
         try {
-            generateKeyPair(alias, attestationChallenge, includeDeviceProperties = true)
-        } catch (_: ProviderException) {
-            try {
+            if (includeDeviceProperties) {
+                try {
+                    generateKeyPair(alias, attestationChallenge, includeDeviceProperties = true)
+                } catch (_: ProviderException) {
+                    generateKeyPair(alias, attestationChallenge, includeDeviceProperties = false)
+                }
+            } else {
                 generateKeyPair(alias, attestationChallenge, includeDeviceProperties = false)
-            } catch (error: Exception) {
-                throw failure(error)
             }
         } catch (error: Exception) {
             throw failure(error)

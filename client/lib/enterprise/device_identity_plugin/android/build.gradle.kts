@@ -12,10 +12,15 @@ buildscript {
     }
 }
 
+val keyAttestationMavenRepo = providers.gradleProperty("keyAttestationMavenRepo").orNull
+
 allprojects {
     repositories {
         google()
         mavenCentral()
+        if (keyAttestationMavenRepo != null) {
+            maven { url = uri(keyAttestationMavenRepo) }
+        }
     }
 }
 
@@ -40,7 +45,14 @@ android {
 
     defaultConfig {
         minSdk = 31
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
+}
+
+dependencies {
+    androidTestImplementation("androidx.test:runner:1.6.2")
+    androidTestImplementation("androidx.test.ext:junit:1.2.1")
+    androidTestImplementation("com.android.keyattestation:keyattestation:0.4")
 }
 
 kotlin {
