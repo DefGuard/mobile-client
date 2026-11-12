@@ -48,6 +48,23 @@ class DeviceIdentityContractTest {
     }
 
     @Test
+    fun emptyAndOversizedPossessionDataAreInvalidChallenges() {
+        val invalidData = listOf(
+            byteArrayOf(),
+            ByteArray(KeystoreIdentity.MAX_IDENTITY_DATA_SIZE + 1),
+        )
+
+        for (data in invalidData) {
+            try {
+                KeystoreIdentity.sign(uniqueAlias(), data)
+                throw AssertionError("Signing invalid possession data succeeded")
+            } catch (error: IdentityFailure) {
+                assertEquals(IdentityErrorCode.INVALID_CHALLENGE, error.code)
+            }
+        }
+    }
+
+    @Test
     fun signaturesUseDistinctAttestedKeysAndDeletionLosesIdentity() {
         val aliasA = uniqueAlias()
         val aliasB = uniqueAlias()

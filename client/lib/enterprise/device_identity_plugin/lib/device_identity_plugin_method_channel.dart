@@ -79,19 +79,13 @@ class MethodChannelDeviceIdentityPlugin extends DeviceIdentityPluginPlatform {
     }
   }
 
-  IdentityErrorCode _errorCode(String code) => switch (code) {
-    'UNSPECIFIED' => IdentityErrorCode.unspecified,
-    'UNAVAILABLE' => IdentityErrorCode.unavailable,
-    'TEMPORARILY_UNAVAILABLE' => IdentityErrorCode.temporarilyUnavailable,
-    'TIMEOUT' => IdentityErrorCode.timeout,
-    'RATE_LIMITED' => IdentityErrorCode.rateLimited,
-    'PERMISSION_DENIED' => IdentityErrorCode.permissionDenied,
-    'UNSUPPORTED' => IdentityErrorCode.unsupported,
-    'IDENTITY_LOST' => IdentityErrorCode.identityLost,
-    'INVALID_CHALLENGE' => IdentityErrorCode.invalidChallenge,
-    'BACKEND_FAILURE' => IdentityErrorCode.backendFailure,
-    'INVALID_EVIDENCE' => IdentityErrorCode.invalidEvidence,
-    'CHALLENGE_EXPIRED' => IdentityErrorCode.challengeExpired,
-    _ => IdentityErrorCode.backendFailure,
-  };
+  IdentityErrorCode _errorCode(String code) =>
+      IdentityErrorCode.values.firstWhere(
+        (value) =>
+            value.name
+                .replaceAllMapped(RegExp(r'[A-Z]'), (match) => '_${match[0]}')
+                .toUpperCase() ==
+            code,
+        orElse: () => IdentityErrorCode.backendFailure,
+      );
 }

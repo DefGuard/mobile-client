@@ -40,13 +40,8 @@ class DeviceIdentityPlugin : FlutterPlugin, MethodChannel.MethodCallHandler {
     }
 
     private fun generateAttestedIdentity(call: MethodCall, result: MethodChannel.Result) {
+        val alias = readAlias(call, result) ?: return
         val arguments = call.arguments as? Map<*, *>
-        val alias = arguments?.get("alias") as? String
-        if (alias.isNullOrBlank()) {
-            result.error(IdentityErrorCode.BACKEND_FAILURE.name, "Identity alias is required", null)
-            return
-        }
-
         val challengeData = arguments?.get("challengeData") as? ByteArray
         if (challengeData == null) {
             result.error(
@@ -61,16 +56,19 @@ class DeviceIdentityPlugin : FlutterPlugin, MethodChannel.MethodCallHandler {
     }
 
     private fun signPossession(call: MethodCall, result: MethodChannel.Result) {
+        val alias = readAlias(call, result) ?: return
         val arguments = call.arguments as? Map<*, *>
-        val alias = arguments?.get("alias") as? String
-        if (alias.isNullOrBlank()) {
-            result.error(IdentityErrorCode.IDENTITY_LOST.name, "Identity alias is required", null)
-            return
-        }
-
         val data = arguments?.get("data") as? ByteArray
-        if (data == null) {
-            result.error(IdentityErrorCode.BACKEND_FAILURE.name, "Signature data must be a byte array", null)
+        if (
+            data == null ||
+            data.isEmpty() ||
+            data.size > KeystoreIdentity.MAX_IDENTITY_DATA_SIZE
+        ) {
+            result.error(
+                IdentityErrorCode.INVALID_CHALLENGE.name,
+                "Possession data must be between 1 and ${KeystoreIdentity.MAX_IDENTITY_DATA_SIZE} bytes",
+                null,
+            )
             return
         }
 
@@ -78,26 +76,24 @@ class DeviceIdentityPlugin : FlutterPlugin, MethodChannel.MethodCallHandler {
     }
 
     private fun hasIdentity(call: MethodCall, result: MethodChannel.Result) {
-        val alias = (call.arguments as? Map<*, *>)?.get("alias") as? String
-        if (alias.isNullOrBlank()) {
-            result.error(IdentityErrorCode.BACKEND_FAILURE.name, "Identity alias is required", null)
-            return
-        }
-
+        val alias = readAlias(call, result) ?: return
         runKeystoreOperation(result) { KeystoreIdentity.exists(alias) }
     }
 
     private fun deleteIdentity(call: MethodCall, result: MethodChannel.Result) {
-        val alias = (call.arguments as? Map<*, *>)?.get("alias") as? String
-        if (alias.isNullOrBlank()) {
-            result.error(IdentityErrorCode.BACKEND_FAILURE.name, "Identity alias is required", null)
-            return
-        }
-
+        val alias = readAlias(call, result) ?: return
         runKeystoreOperation(result) {
             KeystoreIdentity.delete(alias)
             null
         }
+    }
+
+    private fun readAlias(call: MethodCall, result: MethodChannel.Result): String? {
+        val alias = (call.arguments as? Map<*, *>)?.get("alias") as? String
+        if (!alias.isNullOrBlank()) return alias
+
+        result.error(IdentityErrorCode.BACKEND_FAILURE.name, "Identity alias is required", null)
+        return null
     }
 
     private fun runKeystoreOperation(

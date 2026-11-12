@@ -39,7 +39,7 @@ internal class IdentityFailure(
 internal object KeystoreIdentity {
     private const val KEYSTORE_PROVIDER = "AndroidKeyStore"
     private const val CURVE = "secp256r1"
-    private const val MAX_CHALLENGE_DATA_SIZE = 4 * 1024
+    internal const val MAX_IDENTITY_DATA_SIZE = 4 * 1024
 
     fun generate(alias: String, challengeData: ByteArray): List<ByteArray> =
         generate(alias, challengeData, includeDeviceProperties = true)
@@ -57,10 +57,10 @@ internal object KeystoreIdentity {
         if (alias.isBlank()) {
             throw IdentityFailure(IdentityErrorCode.BACKEND_FAILURE, "Identity alias is required")
         }
-        if (challengeData.isEmpty() || challengeData.size > MAX_CHALLENGE_DATA_SIZE) {
+        if (challengeData.isEmpty() || challengeData.size > MAX_IDENTITY_DATA_SIZE) {
             throw IdentityFailure(
                 IdentityErrorCode.INVALID_CHALLENGE,
-                "Challenge data must be between 1 and 4096 bytes",
+                "Challenge data must be between 1 and $MAX_IDENTITY_DATA_SIZE bytes",
             )
         }
 
@@ -93,14 +93,18 @@ internal object KeystoreIdentity {
                 )
             }
             chain.map { it.encoded }
-        } catch (error: IdentityFailure) {
-            throw error
         } catch (error: Exception) {
             throw failure(error)
         }
     }
 
     fun sign(alias: String, data: ByteArray): ByteArray {
+        if (data.isEmpty() || data.size > MAX_IDENTITY_DATA_SIZE) {
+            throw IdentityFailure(
+                IdentityErrorCode.INVALID_CHALLENGE,
+                "Possession data must be between 1 and $MAX_IDENTITY_DATA_SIZE bytes",
+            )
+        }
         return try {
             val privateKey = keyStore().getKey(alias, null) as? PrivateKey
                 ?: throw IdentityFailure(
@@ -112,8 +116,6 @@ internal object KeystoreIdentity {
                 update(data)
                 sign()
             }
-        } catch (error: IdentityFailure) {
-            throw error
         } catch (error: Exception) {
             throw failure(error)
         }
