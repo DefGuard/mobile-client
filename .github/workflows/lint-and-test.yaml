@@ -294,12 +294,11 @@ jobs:
           heap-size: 512M
           disable-animations: true
           emulator-options: -no-snapshot -no-audio -no-boot-anim
-          script: |
-            cd "$GITHUB_WORKSPACE/client/android"
-            ./gradlew \
-              --project-cache-dir="$RUNNER_TEMP/gradle-project-cache" \
-              "-PkeyAttestationMavenRepo=$RUNNER_TEMP/keyattestation-m2" \
-              :device_identity_plugin:connectedDebugAndroidTest
+          script: >-
+            cd "$GITHUB_WORKSPACE/client/android" && ./gradlew
+            --project-cache-dir="$RUNNER_TEMP/gradle-project-cache"
+            "-PkeyAttestationMavenRepo=$RUNNER_TEMP/keyattestation-m2"
+            :device_identity_plugin:connectedDebugAndroidTest
 
   test-ios:
     name: Run iOS tests
