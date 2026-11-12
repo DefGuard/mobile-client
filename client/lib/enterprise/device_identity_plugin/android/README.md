@@ -55,3 +55,5 @@ adb devices -l
 ```
 
 The emulator may return a software attestation chain that is not rooted in Google's production anchors. The test first tries Google roots; only after a path-validation failure does it retry with the returned chain endpoint as a test trust anchor, and it requires the verifier to report `SOFTWARE`. This checks the certificate path signatures, challenge, and app identity, but does not establish a trusted hardware root. JUnit skips the TEE and Google-root assertions for software-level chains. A physical TEE run must execute those assertions rather than skip them.
+
+The tests do not exercise the `ProviderException` retry inside `KeystoreIdentity.generate`. `chainGeneratedWithoutDevicePropertiesPassesIndependentVerification` tests a chain generated without device properties directly, not the retry path.

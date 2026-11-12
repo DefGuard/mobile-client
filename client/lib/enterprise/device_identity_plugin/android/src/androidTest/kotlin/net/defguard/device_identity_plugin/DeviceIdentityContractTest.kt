@@ -65,6 +65,27 @@ class DeviceIdentityContractTest {
     }
 
     @Test
+    fun generatingWithAnExistingAliasFailsAndKeepsTheOriginalKeyUsable() {
+        val alias = uniqueAlias()
+        val data = byteArrayOf(9, 8, 7)
+
+        try {
+            val identity = generateAndVerify(alias, challengeData)
+            try {
+                KeystoreIdentity.generate(alias, challengeData)
+                throw AssertionError("Generating with an existing alias succeeded")
+            } catch (error: IdentityFailure) {
+                assertEquals(IdentityErrorCode.BACKEND_FAILURE, error.code)
+            }
+
+            val signature = KeystoreIdentity.sign(alias, data)
+            assertTrue(verifySignature(identity.chain.first().publicKey, data, signature))
+        } finally {
+            KeystoreIdentity.delete(alias)
+        }
+    }
+
+    @Test
     fun signaturesUseDistinctAttestedKeysAndDeletionLosesIdentity() {
         val aliasA = uniqueAlias()
         val aliasB = uniqueAlias()

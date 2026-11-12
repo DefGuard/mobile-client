@@ -71,6 +71,12 @@ internal object KeystoreIdentity {
         }
 
         try {
+            if (keyStore().containsAlias(alias)) {
+                throw IdentityFailure(
+                    IdentityErrorCode.BACKEND_FAILURE,
+                    "Identity alias already exists",
+                )
+            }
             if (includeDeviceProperties) {
                 try {
                     generateKeyPair(alias, attestationChallenge, includeDeviceProperties = true)
