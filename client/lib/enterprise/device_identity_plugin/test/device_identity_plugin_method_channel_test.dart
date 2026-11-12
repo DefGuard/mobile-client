@@ -1,5 +1,3 @@
-import 'dart:typed_data';
-
 import 'package:device_identity_plugin/device_identity_plugin.dart';
 import 'package:device_identity_plugin/device_identity_plugin_method_channel.dart';
 import 'package:flutter/services.dart';

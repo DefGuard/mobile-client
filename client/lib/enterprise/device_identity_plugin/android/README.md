@@ -13,7 +13,7 @@ The client Gradle wrapper uses the JVM settings in `client/android/gradle/gradle
 
 ## Build the verifier dependency
 
-Run from the workspace root with JDK 21 active:
+Run from the repository root with JDK 21 active:
 
 ```sh
 KEY_ATTESTATION_SRC="$(mktemp -d "${TMPDIR:-/tmp}/defguard-keyattestation-src.XXXXXX")"
@@ -41,19 +41,17 @@ Connect a TEE-only Android device running API 31 or later, unlock it, and author
 
 ## Run the instrumented tests
 
-Run this from the workspace root after building the verifier dependency and connecting one emulator or phone. The Gradle task runs on every connected device.
+Run this from the repository root after building the verifier dependency and connecting one emulator or phone. The Gradle task runs on every connected device.
 
 ```sh
 KEY_ATTESTATION_MAVEN_REPO="${TMPDIR:-/tmp}/defguard-keyattestation-m2-v0.4"
 GRADLE_PROJECT_CACHE="${TMPDIR:-/tmp}/defguard-android-attestation-gradle-cache"
-cd src/mobile-client/android-attestation/client/android
+cd client/android
 adb devices -l
 ./gradlew \
   --project-cache-dir="$GRADLE_PROJECT_CACHE" \
   "-PkeyAttestationMavenRepo=$KEY_ATTESTATION_MAVEN_REPO" \
   :device_identity_plugin:connectedDebugAndroidTest
 ```
-
-NixOS users can use `nix develop ./src/mobile-client/android-attestation` from the workspace root to provide the Flutter and Android tools; Nix is not required by these instructions.
 
 The emulator may return a software attestation chain that is not rooted in Google's production anchors. The test first tries Google roots; only after a path-validation failure does it retry with the returned chain endpoint as a test trust anchor, and it requires the verifier to report `SOFTWARE`. This checks the certificate path signatures, challenge, and app identity, but does not establish a trusted hardware root. JUnit skips the TEE and Google-root assertions for software-level chains. A physical TEE run must execute those assertions rather than skip them.

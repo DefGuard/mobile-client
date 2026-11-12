@@ -167,6 +167,26 @@ jobs:
       - name: run tests
         run: flutter test
 
+  device-identity-plugin-test:
+    name: Run device identity plugin tests
+    runs-on: [self-hosted, Linux, X64]
+    needs: lint
+    defaults:
+      run:
+        working-directory: ./client/lib/enterprise/device_identity_plugin
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Set up Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
+        with:
+          channel: stable
+          flutter-version: 3.47.9
+      - name: Get dependencies
+        run: flutter pub get
+      - name: Run tests
+        run: flutter test
+
   test-android:
     name: Run Android plugin tests
     runs-on: [self-hosted, Linux, X64]
@@ -208,6 +228,78 @@ jobs:
       - name: run plugin tests
         run: ./gradlew :wireguard_plugin:testDebugUnitTest
         working-directory: ./client/android
+
+  device-identity-android-test:
+    name: Run device identity instrumented tests
+    runs-on: [self-hosted, macOS, native]
+    needs: [lint, device-identity-plugin-test]
+    timeout-minutes: 90
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          submodules: recursive
+      - name: Checkout keyattestation verifier
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          repository: android/keyattestation
+          ref: 621149c4ebaeeea844d6f43098687c73c4d370a3
+          path: keyattestation
+      - name: Set up Java 21 for verifier build
+        uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6
+        with:
+          distribution: temurin
+          java-version: "21"
+      - name: Build keyattestation verifier
+        run: |
+          mkdir -p "$RUNNER_TEMP/keyattestation-m2"
+          cd "$GITHUB_WORKSPACE/keyattestation"
+          ./gradlew \
+            -PkeyAttestationReleaseVersion=v0.4 \
+            "-PKeyAttestationMavenRepo=$RUNNER_TEMP/keyattestation-m2" \
+            publishKeyattestationPublicationToLocalDirRepository
+      - name: Set up Java 25 for client Gradle
+        uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6
+        with:
+          distribution: temurin
+          java-version: "25"
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@be39fa834029ff78f1a44aa3bb0819b8fc2bd8fd # v4
+        with:
+          packages: tools platform-tools build-tools;36.0.0 platforms;android-37.0 ndk;28.2.13676358
+      - name: Set up Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
+        with:
+          channel: stable
+          flutter-version: 3.47.9
+      - name: Configure Flutter JDK
+        run: flutter config --jdk-dir "$JAVA_HOME"
+      - name: Get client dependencies
+        run: flutter pub get
+        working-directory: ./client
+      - name: Generate Gradle config
+        run: flutter build apk --config-only
+        working-directory: ./client
+      - name: Disable emulator console auth
+        run: ': > "$HOME/.emulator_console_auth_token"'
+      - name: Run API 34 emulator tests
+        uses: ReactiveCircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2
+        with:
+          api-level: 34
+          target: google_apis
+          arch: arm64-v8a
+          profile: pixel_6
+          cores: 4
+          ram-size: 4096M
+          heap-size: 512M
+          disable-animations: true
+          emulator-options: -no-snapshot -no-audio -no-boot-anim
+          script: |
+            cd "$GITHUB_WORKSPACE/client/android"
+            ./gradlew \
+              --project-cache-dir="$RUNNER_TEMP/gradle-project-cache" \
+              "-PkeyAttestationMavenRepo=$RUNNER_TEMP/keyattestation-m2" \
+              :device_identity_plugin:connectedDebugAndroidTest
 
   test-ios:
     name: Run iOS tests
