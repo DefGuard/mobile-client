@@ -49,10 +49,11 @@ class DeviceIdentityContractTest {
 
     @Test
     fun emptyAndOversizedPossessionDataAreInvalidChallenges() {
-        val invalidData = listOf(
-            byteArrayOf(),
-            ByteArray(KeystoreIdentity.MAX_IDENTITY_DATA_SIZE + 1),
-        )
+        val invalidData =
+            listOf(
+                byteArrayOf(),
+                ByteArray(KeystoreIdentity.MAX_IDENTITY_DATA_SIZE + 1),
+            )
 
         for (data in invalidData) {
             try {
@@ -163,17 +164,19 @@ class DeviceIdentityContractTest {
 
     private fun verifyChain(encodedChain: List<ByteArray>, challenge: ByteArray): VerifiedChain {
         val certificateFactory = CertificateFactory.getInstance("X.509")
-        val chain = encodedChain.map {
-            certificateFactory.generateCertificate(it.inputStream()) as X509Certificate
-        }
+        val chain =
+            encodedChain.map {
+                certificateFactory.generateCertificate(it.inputStream()) as X509Certificate
+            }
         assertTrue("Attestation chain is empty", chain.isNotEmpty())
 
         val googleAnchors = GoogleTrustAnchors()
         val expectedAppId = expectedApplicationId()
         val expectedChallenge = MessageDigest.getInstance("SHA-256").digest(challenge)
         val challengeMatcher = ChallengeMatcher(expectedChallenge)
-        val googleResult = verifier(expectedAppId, googleAnchors)
-            .verify(chain, challengeMatcher)
+        val googleResult =
+            verifier(expectedAppId, googleAnchors)
+                .verify(chain, challengeMatcher)
         if (googleResult is VerificationResult.Success) {
             assertArrayEquals(expectedChallenge, googleResult.challenge.toByteArray())
             return VerifiedChain(chain, googleResult, googleRooted = true)
@@ -183,69 +186,74 @@ class DeviceIdentityContractTest {
             googleResult is VerificationResult.PathValidationFailure,
         )
 
-        val fallbackAnchors = googleAnchors +
-            SoftwareRoot.SOFTWARE_ROOTS.map { TrustAnchor(it, null) } +
-            TrustAnchor(chain.last(), null)
-        val fallbackResult = verifier(expectedAppId, fallbackAnchors)
-            .verify(chain, challengeMatcher)
-        assertTrue("Independent verifier rejected generated chain: $fallbackResult", fallbackResult is VerificationResult.Success)
+        val fallbackAnchors =
+            googleAnchors +
+                SoftwareRoot.SOFTWARE_ROOTS.map { TrustAnchor(it, null) } +
+                TrustAnchor(chain.last(), null)
+        val fallbackResult =
+            verifier(expectedAppId, fallbackAnchors)
+                .verify(chain, challengeMatcher)
+        assertTrue(
+            "Independent verifier rejected generated chain: $fallbackResult",
+            fallbackResult is VerificationResult.Success,
+        )
         fallbackResult as VerificationResult.Success
         assertEquals(SecurityLevel.SOFTWARE, fallbackResult.securityLevel)
         assertArrayEquals(expectedChallenge, fallbackResult.challenge.toByteArray())
         return VerifiedChain(chain, fallbackResult, googleRooted = false)
     }
 
-    private fun verifier(
-        expectedAppId: AttestationApplicationId,
-        trustAnchors: Set<TrustAnchor>,
-    ) = Verifier(
+    private fun verifier(expectedAppId: AttestationApplicationId, trustAnchors: Set<TrustAnchor>) = Verifier(
         trustAnchorsSource = { trustAnchors },
         // The contract tests check path and attestation claims without a network revocation lookup.
         revokedSerialsSource = { emptySet() },
         instantSource = { Instant.now() },
         expectedAttestationApplicationId = expectedAppId,
-        constraintConfig = ConstraintConfig(
-            allowSoftwareRoot = true,
-            attestationApplicationId = AttestationApplicationIdConstraint.STRICT,
-            keyOrigin = IgnoredConstraint,
-            securityLevel = IgnoredConstraint,
-            rootOfTrust = IgnoredConstraint,
-        ),
+        constraintConfig =
+            ConstraintConfig(
+                allowSoftwareRoot = true,
+                attestationApplicationId = AttestationApplicationIdConstraint.STRICT,
+                keyOrigin = IgnoredConstraint,
+                securityLevel = IgnoredConstraint,
+                rootOfTrust = IgnoredConstraint,
+            ),
     )
 
     @Suppress("DEPRECATION")
     private fun expectedApplicationId(): AttestationApplicationId {
         val packageManager = InstrumentationRegistry.getInstrumentation().context.packageManager
         val packageNames = checkNotNull(packageManager.getPackagesForUid(Process.myUid()))
-        val packageInfos = packageNames.map {
-            packageManager.getPackageInfo(it, PackageManager.GET_SIGNING_CERTIFICATES)
-        }
-        val signatures = packageInfos.flatMap { packageInfo ->
-            checkNotNull(packageInfo.signingInfo).apkContentsSigners.map { signer ->
-                ByteString.copyFrom(
-                    MessageDigest.getInstance("SHA-256").digest(signer.toByteArray()),
-                )
+        val packageInfos =
+            packageNames.map {
+                packageManager.getPackageInfo(it, PackageManager.GET_SIGNING_CERTIFICATES)
             }
-        }.toSet()
+        val signatures =
+            packageInfos
+                .flatMap { packageInfo ->
+                    checkNotNull(packageInfo.signingInfo).apkContentsSigners.map { signer ->
+                        ByteString.copyFrom(
+                            MessageDigest.getInstance("SHA-256").digest(signer.toByteArray()),
+                        )
+                    }
+                }.toSet()
 
         assertTrue("No package signing certificates found for the test UID", signatures.isNotEmpty())
         return AttestationApplicationId(
-            packages = packageInfos.map {
-                AttestationPackageInfo(it.packageName, BigInteger.valueOf(it.longVersionCode))
-            }.toSet(),
+            packages =
+                packageInfos
+                    .map {
+                        AttestationPackageInfo(it.packageName, BigInteger.valueOf(it.longVersionCode))
+                    }.toSet(),
             signatures = signatures,
         )
     }
 
-    private fun verifySignature(
-        publicKey: PublicKey,
-        data: ByteArray,
-        signature: ByteArray,
-    ): Boolean = Signature.getInstance("SHA256withECDSA").run {
-        initVerify(publicKey)
-        update(data)
-        verify(signature)
-    }
+    private fun verifySignature(publicKey: PublicKey, data: ByteArray, signature: ByteArray): Boolean =
+        Signature.getInstance("SHA256withECDSA").run {
+            initVerify(publicKey)
+            update(data)
+            verify(signature)
+        }
 
     private fun uniqueAlias() = "device-identity-contract-${UUID.randomUUID()}"
 

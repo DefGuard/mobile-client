@@ -170,7 +170,11 @@ jobs:
   device-identity-plugin-test:
     name: Run device identity plugin tests
     runs-on: [self-hosted, Linux, X64]
+    permissions:
+      contents: read
     needs: lint
+    env:
+      KTLINT_VERSION: "1.8.0"
     defaults:
       run:
         working-directory: ./client/lib/enterprise/device_identity_plugin
@@ -182,10 +186,21 @@ jobs:
         with:
           channel: stable
           flutter-version: 3.47.9
+      - name: Set up Java
+        uses: actions/setup-java@e9fbacdec3bb3b6036605a3e6f7995d66773a8c6 # v3
+        with:
+          distribution: "temurin"
+          java-version: "17"
       - name: Get dependencies
         run: flutter pub get
       - name: Run tests
         run: flutter test
+      - name: Run ktlint
+        run: |
+          curl -sSfL -o "$RUNNER_TEMP/ktlint" \
+            "https://github.com/pinterest/ktlint/releases/download/${KTLINT_VERSION}/ktlint"
+          chmod +x "$RUNNER_TEMP/ktlint"
+          "$RUNNER_TEMP/ktlint" "android/**/*.kt"
 
   test-android:
     name: Run Android plugin tests
@@ -232,6 +247,8 @@ jobs:
   device-identity-android-test:
     name: Run device identity instrumented tests
     runs-on: [self-hosted, macOS, native]
+    permissions:
+      contents: read
     needs: [lint, device-identity-plugin-test]
     timeout-minutes: 90
     steps:
@@ -299,6 +316,9 @@ jobs:
             --project-cache-dir="$RUNNER_TEMP/gradle-project-cache"
             "-PkeyAttestationMavenRepo=$RUNNER_TEMP/keyattestation-m2"
             :device_identity_plugin:connectedDebugAndroidTest
+      - name: Remove emulator console auth token
+        if: always()
+        run: rm -f "$HOME/.emulator_console_auth_token"
 
   test-ios:
     name: Run iOS tests

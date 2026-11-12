@@ -9,10 +9,10 @@ import java.security.KeyStore
 import java.security.KeyStoreException
 import java.security.MessageDigest
 import java.security.NoSuchAlgorithmException
-import java.security.PrivateKey
-import java.security.Signature
 import java.security.NoSuchProviderException
+import java.security.PrivateKey
 import java.security.ProviderException
+import java.security.Signature
 import java.security.spec.ECGenParameterSpec
 
 internal enum class IdentityErrorCode {
@@ -30,11 +30,8 @@ internal enum class IdentityErrorCode {
     CHALLENGE_EXPIRED,
 }
 
-internal class IdentityFailure(
-    val code: IdentityErrorCode,
-    message: String,
-    cause: Throwable? = null,
-) : Exception(message, cause)
+internal class IdentityFailure(val code: IdentityErrorCode, message: String, cause: Throwable? = null) :
+    Exception(message, cause)
 
 internal object KeystoreIdentity {
     private const val KEYSTORE_PROVIDER = "AndroidKeyStore"
@@ -44,16 +41,10 @@ internal object KeystoreIdentity {
     fun generate(alias: String, challengeData: ByteArray): List<ByteArray> =
         generate(alias, challengeData, includeDeviceProperties = true)
 
-    internal fun generateWithoutDeviceProperties(
-        alias: String,
-        challengeData: ByteArray,
-    ): List<ByteArray> = generate(alias, challengeData, includeDeviceProperties = false)
+    internal fun generateWithoutDeviceProperties(alias: String, challengeData: ByteArray): List<ByteArray> =
+        generate(alias, challengeData, includeDeviceProperties = false)
 
-    private fun generate(
-        alias: String,
-        challengeData: ByteArray,
-        includeDeviceProperties: Boolean,
-    ): List<ByteArray> {
+    private fun generate(alias: String, challengeData: ByteArray, includeDeviceProperties: Boolean): List<ByteArray> {
         if (alias.isBlank()) {
             throw IdentityFailure(IdentityErrorCode.BACKEND_FAILURE, "Identity alias is required")
         }
@@ -64,11 +55,12 @@ internal object KeystoreIdentity {
             )
         }
 
-        val attestationChallenge = try {
-            MessageDigest.getInstance(KeyProperties.DIGEST_SHA256).digest(challengeData)
-        } catch (error: Exception) {
-            throw failure(error)
-        }
+        val attestationChallenge =
+            try {
+                MessageDigest.getInstance(KeyProperties.DIGEST_SHA256).digest(challengeData)
+            } catch (error: Exception) {
+                throw failure(error)
+            }
 
         try {
             if (keyStore().containsAlias(alias)) {
@@ -112,11 +104,12 @@ internal object KeystoreIdentity {
             )
         }
         return try {
-            val privateKey = keyStore().getKey(alias, null) as? PrivateKey
-                ?: throw IdentityFailure(
-                    IdentityErrorCode.IDENTITY_LOST,
-                    "Identity key is missing",
-                )
+            val privateKey =
+                keyStore().getKey(alias, null) as? PrivateKey
+                    ?: throw IdentityFailure(
+                        IdentityErrorCode.IDENTITY_LOST,
+                        "Identity key is missing",
+                    )
             Signature.getInstance("SHA256withECDSA").run {
                 initSign(privateKey)
                 update(data)
@@ -127,12 +120,10 @@ internal object KeystoreIdentity {
         }
     }
 
-    fun exists(alias: String): Boolean {
-        return try {
-            keyStore().getKey(alias, null) is PrivateKey
-        } catch (error: Exception) {
-            throw failure(error)
-        }
+    fun exists(alias: String): Boolean = try {
+        keyStore().getKey(alias, null) is PrivateKey
+    } catch (error: Exception) {
+        throw failure(error)
     }
 
     fun delete(alias: String) {
@@ -143,18 +134,15 @@ internal object KeystoreIdentity {
         }
     }
 
-    private fun keyStore(): KeyStore =
-        KeyStore.getInstance(KEYSTORE_PROVIDER).apply { load(null) }
+    private fun keyStore(): KeyStore = KeyStore.getInstance(KEYSTORE_PROVIDER).apply { load(null) }
 
-    private fun generateKeyPair(
-        alias: String,
-        attestationChallenge: ByteArray,
-        includeDeviceProperties: Boolean,
-    ) {
-        val spec = KeyGenParameterSpec.Builder(alias, KeyProperties.PURPOSE_SIGN)
-            .setAlgorithmParameterSpec(ECGenParameterSpec(CURVE))
-            .setDigests(KeyProperties.DIGEST_SHA256)
-            .setAttestationChallenge(attestationChallenge)
+    private fun generateKeyPair(alias: String, attestationChallenge: ByteArray, includeDeviceProperties: Boolean) {
+        val spec =
+            KeyGenParameterSpec
+                .Builder(alias, KeyProperties.PURPOSE_SIGN)
+                .setAlgorithmParameterSpec(ECGenParameterSpec(CURVE))
+                .setDigests(KeyProperties.DIGEST_SHA256)
+                .setAttestationChallenge(attestationChallenge)
         if (includeDeviceProperties) {
             spec.setDevicePropertiesAttestationIncluded(true)
         }
@@ -169,22 +157,36 @@ internal object KeystoreIdentity {
         if (error is IdentityFailure) return error
 
         val causes = generateSequence(error as Throwable?) { it.cause }.toList()
-        val code = when {
-            causes.any(::isTransientKeystoreFailure) -> IdentityErrorCode.TEMPORARILY_UNAVAILABLE
-            causes.any { it is SecurityException } -> IdentityErrorCode.PERMISSION_DENIED
-            causes.any { it is InvalidAlgorithmParameterException || it is NoSuchAlgorithmException } ->
-                IdentityErrorCode.UNSUPPORTED
-            causes.any { it is NoSuchProviderException || it is KeyStoreException } ->
-                IdentityErrorCode.UNAVAILABLE
-            else -> IdentityErrorCode.BACKEND_FAILURE
-        }
-        val message = when (code) {
-            IdentityErrorCode.UNAVAILABLE -> "Android Keystore is unavailable"
-            IdentityErrorCode.TEMPORARILY_UNAVAILABLE -> "Android Keystore is temporarily unavailable"
-            IdentityErrorCode.PERMISSION_DENIED -> "Android Keystore denied the request"
-            IdentityErrorCode.UNSUPPORTED -> "Android Keystore does not support the requested key"
-            else -> "Android Keystore operation failed"
-        }
+        val code =
+            when {
+                causes.any(::isTransientKeystoreFailure) -> {
+                    IdentityErrorCode.TEMPORARILY_UNAVAILABLE
+                }
+
+                causes.any { it is SecurityException } -> {
+                    IdentityErrorCode.PERMISSION_DENIED
+                }
+
+                causes.any { it is InvalidAlgorithmParameterException || it is NoSuchAlgorithmException } -> {
+                    IdentityErrorCode.UNSUPPORTED
+                }
+
+                causes.any { it is NoSuchProviderException || it is KeyStoreException } -> {
+                    IdentityErrorCode.UNAVAILABLE
+                }
+
+                else -> {
+                    IdentityErrorCode.BACKEND_FAILURE
+                }
+            }
+        val message =
+            when (code) {
+                IdentityErrorCode.UNAVAILABLE -> "Android Keystore is unavailable"
+                IdentityErrorCode.TEMPORARILY_UNAVAILABLE -> "Android Keystore is temporarily unavailable"
+                IdentityErrorCode.PERMISSION_DENIED -> "Android Keystore denied the request"
+                IdentityErrorCode.UNSUPPORTED -> "Android Keystore does not support the requested key"
+                else -> "Android Keystore operation failed"
+            }
         return IdentityFailure(code, message, error)
     }
 

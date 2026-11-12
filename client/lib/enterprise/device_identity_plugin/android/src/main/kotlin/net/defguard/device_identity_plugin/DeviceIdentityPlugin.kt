@@ -9,16 +9,19 @@ import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.RejectedExecutionException
 
-class DeviceIdentityPlugin : FlutterPlugin, MethodChannel.MethodCallHandler {
+class DeviceIdentityPlugin :
+    FlutterPlugin,
+    MethodChannel.MethodCallHandler {
     private lateinit var channel: MethodChannel
     private var keystoreExecutor: ExecutorService? = null
     private val mainHandler = Handler(Looper.getMainLooper())
 
     override fun onAttachedToEngine(binding: FlutterPlugin.FlutterPluginBinding) {
-        channel = MethodChannel(
-            binding.binaryMessenger,
-            "net.defguard.device_identity_plugin",
-        )
+        channel =
+            MethodChannel(
+                binding.binaryMessenger,
+                "net.defguard.device_identity_plugin",
+            )
         channel.setMethodCallHandler(this)
         keystoreExecutor = Executors.newSingleThreadExecutor()
     }
@@ -96,10 +99,7 @@ class DeviceIdentityPlugin : FlutterPlugin, MethodChannel.MethodCallHandler {
         return null
     }
 
-    private fun runKeystoreOperation(
-        result: MethodChannel.Result,
-        operation: () -> Any?,
-    ) {
+    private fun runKeystoreOperation(result: MethodChannel.Result, operation: () -> Any?) {
         val executor = keystoreExecutor
         if (executor == null) {
             result.error(IdentityErrorCode.UNAVAILABLE.name, "Android Keystore is unavailable", null)
