@@ -9,6 +9,7 @@ part of 'routes.dart';
 List<RouteBase> get $appRoutes => [
   $appSplashRoute,
   $instancesListScreenRoute,
+  $settingsScreenRoute,
   $addInstanceQrScreenRoute,
   $remoteMfaQrScreenRoute,
   $instanceScreenRoute,
@@ -58,6 +59,33 @@ mixin $InstancesListScreenRoute on GoRouteData {
 
   @override
   String get location => GoRouteData.$location('/home');
+
+  @override
+  void go(BuildContext context) => context.go(location);
+
+  @override
+  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
+
+  @override
+  void pushReplacement(BuildContext context) =>
+      context.pushReplacement(location);
+
+  @override
+  void replace(BuildContext context) => context.replace(location);
+}
+
+RouteBase get $settingsScreenRoute => GoRouteData.$route(
+  path: '/settings',
+  hasOverriddenOnExit: false,
+  factory: $SettingsScreenRoute._fromState,
+);
+
+mixin $SettingsScreenRoute on GoRouteData {
+  static SettingsScreenRoute _fromState(GoRouterState state) =>
+      const SettingsScreenRoute();
+
+  @override
+  String get location => GoRouteData.$location('/settings');
 
   @override
   void go(BuildContext context) => context.go(location);
