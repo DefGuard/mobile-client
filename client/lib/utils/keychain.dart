@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:mobile/data/db/db_file.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -19,7 +21,8 @@ const secureStorage = FlutterSecureStorage(
   aOptions: _androidOptions,
 );
 
-const _initializedKey = 'secure_storage_initialized';
+/// `_v2` re-runs the accessibility migration, which skipped items in 1.7.0.
+const _initializedKey = 'secure_storage_initialized_v2';
 
 /// Idempotent secure storage initialization; must be awaited before reading secrets.
 Future<void> initSecureStorage() async {
@@ -31,18 +34,32 @@ Future<void> initSecureStorage() async {
       // confirms a fresh install, so purge leftover secrets.
       talker.info("Fresh install, purging secrets of a previous installation");
       await secureStorage.deleteAll();
-    } else {
-      // Re-write legacy secrets to update accessibility class to `unlocked_this_device`.
-      final stored = await secureStorage.readAll();
-      for (final entry in stored.entries) {
-        await secureStorage.write(key: entry.key, value: entry.value);
-      }
-      talker.info(
-        "Applied accessibility class to ${stored.length} stored secret(s)",
-      );
+    } else if (Platform.isIOS) {
+      await _migrateLegacyAccessibility();
     }
     await prefs.setBool(_initializedKey, true);
   } catch (e) {
     talker.error("Secure storage setup failed, retrying on the next launch", e);
   }
+}
+
+/// Moves secrets from other accessibility classes to `unlocked_this_device`.
+///
+/// Reads are filtered by accessibility, so each class is read separately.
+/// Items are deleted before re-writing to avoid `errSecDuplicateItem`.
+Future<void> _migrateLegacyAccessibility() async {
+  var migrated = 0;
+  for (final accessibility in KeychainAccessibility.values) {
+    if (accessibility == _iosOptions.accessibility) continue;
+    final legacyStorage = FlutterSecureStorage(
+      iOptions: IOSOptions(accessibility: accessibility),
+    );
+    final stored = await legacyStorage.readAll();
+    for (final entry in stored.entries) {
+      await secureStorage.delete(key: entry.key);
+      await secureStorage.write(key: entry.key, value: entry.value);
+      migrated++;
+    }
+  }
+  talker.info("Migrated $migrated secret(s) to `unlocked_this_device`");
 }
