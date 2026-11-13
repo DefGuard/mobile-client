@@ -158,12 +158,23 @@ void main() {
     });
 
     test('keeps a saved biometric choice', () {
-      // Runs on the write path, where biometric availability is unknown. Only
-      // resolveMfaStepPlan may drop it.
       expect(
         sanitizeMfaStepPlan([MfaMethod.totp, MfaMethod.biometric], twoSteps),
         [MfaMethod.totp, MfaMethod.biometric],
       );
+    });
+
+    test('keeps a biometric choice the server reports as unconfigured', () {
+      final steps = [
+        _step([
+          _entry(MfaMethod.biometric, configured: false),
+          _entry(MfaMethod.totp),
+        ]),
+      ];
+      expect(sanitizeMfaStepPlan([MfaMethod.biometric], steps), [
+        MfaMethod.biometric,
+      ]);
+      expect(sanitizeMfaStepPlan(const [], steps), [MfaMethod.biometric]);
     });
 
     test('returns nothing for a flow with no steps', () {
@@ -215,16 +226,26 @@ void main() {
       );
     });
 
-    test('an unconfigured biometric reads as unconfigured', () {
+    test('biometric follows the local key and ignores the server flag', () {
+      expect(
+        mfaMethodAvailability(
+          _entry(MfaMethod.biometric, configured: false),
+          capabilities: MfaCapabilities(
+            biometricAvailable: true,
+            contract: MfaContract.multiStep,
+          ),
+        ),
+        MfaMethodAvailability.usable,
+      );
       expect(
         mfaMethodAvailability(
           _entry(MfaMethod.biometric, configured: false),
           capabilities: MfaCapabilities(
             biometricAvailable: false,
-            contract: MfaContract.legacy,
+            contract: MfaContract.multiStep,
           ),
         ),
-        MfaMethodAvailability.notConfigured,
+        MfaMethodAvailability.biometryUnavailable,
       );
     });
   });
