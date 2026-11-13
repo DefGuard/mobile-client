@@ -1,5 +1,4 @@
 import 'package:material_ui/material_ui.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mobile/data/db/database.dart';
@@ -60,18 +59,20 @@ class RemoteMfaQrScreen extends HookConsumerWidget {
               storage = await getBiometricInstanceStorage(
                 instance.secureStorageKey,
               );
-            } on PlatformException catch (e) {
-              final message = getErrorMessageFromBiometricsException(e);
-              toaster.showError(
-                message: "Biometric authentication failed.",
-                logMessage: "Failed biometric auth! Reason: $message",
-                error: e,
-              );
+            } on UserCanceledAuth {
+              talker.error("User canceled biometric auth");
               isLoading.value = false;
               await controller.resume();
               return;
-            } on UserCanceledAuth {
-              talker.error("User canceled biometric auth");
+            } on Exception catch (e) {
+              final reason = getErrorMessageFromBiometricsException(e);
+              toaster.showError(
+                message: e is MissingBiometricKey
+                    ? reason
+                    : "Biometric authentication failed.",
+                logMessage: "Failed biometric auth! Reason: $reason",
+                error: e,
+              );
               isLoading.value = false;
               await controller.resume();
               return;
