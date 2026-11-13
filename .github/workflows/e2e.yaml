@@ -97,6 +97,7 @@ jobs:
           CORE_URL: ${{ secrets.E2E_CORE_URL }}
           PROXY_URL: ${{ secrets.E2E_PROXY_URL }}
           CORE_ADMIN_PASSWORD: ${{ secrets.E2E_CORE_ADMIN_PASSWORD }}
+          NETWORK_NAME: ${{ secrets.E2E_NETWORK_NAME || 'e2e' }}
         with:
           api-level: 34
           target: google_apis
@@ -194,6 +195,7 @@ jobs:
           CORE_URL: ${{ secrets.E2E_CORE_URL }}
           PROXY_URL: ${{ secrets.E2E_PROXY_URL }}
           CORE_ADMIN_PASSWORD: ${{ secrets.E2E_CORE_ADMIN_PASSWORD }}
+          NETWORK_NAME: ${{ secrets.E2E_NETWORK_NAME || 'e2e' }}
 
   lint-e2e:
     runs-on: [self-hosted, Linux, X64]
