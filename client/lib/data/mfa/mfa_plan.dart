@@ -3,8 +3,8 @@ import 'package:mobile/data/db/database.dart';
 import 'package:mobile/data/db/enums.dart';
 import 'package:mobile/data/mfa/mfa_steps.dart';
 
-/// The flow to use for a location. A pre-2.2 server sends no steps, so they are
-/// synthesized from the legacy fields on read rather than backfilled on write.
+/// A pre-2.2 server sends no steps, so this derives them from the legacy fields
+/// on each read.
 List<MfaStep> effectiveMfaSteps(Location location) =>
     location.mfaSteps.isNotEmpty
     ? location.mfaSteps
@@ -15,16 +15,16 @@ bool shouldStartMfa(Location location) =>
 
 int mfaStepCount(Location location) => effectiveMfaSteps(location).length;
 
-/// Realigns a stored plan onto [steps] after the server changed them. Runs on
-/// the write path, so it cannot know whether biometrics are currently usable and
-/// must keep a saved biometric choice; only `resolveMfaStepPlan` gates on that.
+/// Runs on the write path, where biometric usability is unknown, so it keeps
+/// biometric as a choice. `resolveMfaStepPlan` drops it when biometrics are
+/// unusable.
 List<MfaMethod?> sanitizeMfaStepPlan(
   List<MfaMethod?> plan,
   List<MfaStep> steps,
 ) {
   return List<MfaMethod?>.generate(steps.length, (index) {
     final choices = steps[index].methods
-        .where((entry) => entry.configured && entry.method != null)
+        .where((entry) => entry.method != null && _isSetUpOnServer(entry))
         .map((entry) => entry.method!)
         .toList(growable: false);
     final saved = index < plan.length ? plan[index] : null;
@@ -63,19 +63,21 @@ enum MfaMethodAvailability {
 
   /// Biometric, but this device has no usable biometric storage.
   biometryUnavailable,
-
-  /// A factor this client cannot perform, or one the server's MFA contract
-  /// does not carry.
   unsupported,
 }
 
-/// Why a whole step cannot be passed, in the order worth telling the user about.
 enum MfaUnpassableReason {
   setUpBiometry,
   registerSecurityKey,
   notConfigured,
   desktopOnly,
 }
+
+/// Core sets `configured` before the biometric key is registered, so the stored
+/// flag for biometric can be stale. `MfaCapabilities.biometricAvailable`
+/// decides instead.
+bool _isSetUpOnServer(MfaStepMethod entry) =>
+    entry.method == MfaMethod.biometric || entry.configured;
 
 MfaMethodAvailability mfaMethodAvailability(
   MfaStepMethod entry, {
@@ -85,7 +87,7 @@ MfaMethodAvailability mfaMethodAvailability(
   if (method == null || !capabilities.supports(method)) {
     return MfaMethodAvailability.unsupported;
   }
-  if (!entry.configured) return MfaMethodAvailability.notConfigured;
+  if (!_isSetUpOnServer(entry)) return MfaMethodAvailability.notConfigured;
   if (method == MfaMethod.biometric && !capabilities.biometricAvailable) {
     return MfaMethodAvailability.biometryUnavailable;
   }
@@ -145,7 +147,6 @@ List<MfaMethod?> resolveMfaStepPlan(
   }, growable: false);
 }
 
-/// Resolves a retry only when refresh kept the contract used for this attempt.
 List<MfaMethod>? resolveMfaRetryPlan(
   Location location, {
   required MfaCapabilities attempt,
