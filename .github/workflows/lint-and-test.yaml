@@ -173,8 +173,6 @@ jobs:
     permissions:
       contents: read
     needs: lint
-    env:
-      KTLINT_VERSION: "1.8.0"
     defaults:
       run:
         working-directory: ./client/lib/enterprise/device_identity_plugin
@@ -196,11 +194,12 @@ jobs:
       - name: Run tests
         run: flutter test
       - name: Run ktlint
-        run: |
-          curl -sSfL -o "$RUNNER_TEMP/ktlint" \
-            "https://github.com/pinterest/ktlint/releases/download/${KTLINT_VERSION}/ktlint"
-          chmod +x "$RUNNER_TEMP/ktlint"
-          "$RUNNER_TEMP/ktlint" "android/**/*.kt"
+        uses: musichin/ktlint-check@d12907143c8bf0f079afbbbd624d895c562ab06b # v4.1.0
+        with:
+          ktlint-version: "1.8.0@sha256:a3fd620207d5c40da6ca789b95e7f823c54e854b7fade7f613e91096a3706d75"
+          relative: true
+          patterns: |
+            client/lib/enterprise/device_identity_plugin/android/**/*.kt
 
   test-android:
     name: Run Android plugin tests
