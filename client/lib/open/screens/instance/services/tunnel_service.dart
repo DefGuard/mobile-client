@@ -2,7 +2,9 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:drift/drift.dart' as drift;
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
+import 'package:mobile/data/app_settings.dart';
 import 'package:mobile/data/db/database.dart';
 import 'package:mobile/data/mfa/mfa_flow.dart';
 import 'package:mobile/data/mfa/mfa_transport.dart';
@@ -83,17 +85,37 @@ class TunnelService {
     List<MfaMethod?> mfaPlan = const [],
   }) async {
     final navigator = Navigator.of(context);
+    final providerContainer = Platform.isAndroid
+        ? ProviderScope.containerOf(context, listen: false)
+        : null;
 
     final privateKey = await instance.wireguardPrivateKey();
     if (privateKey == null) {
       reportMissingSecret(instance.logName, "WireGuard private key");
       return const ConnectResult.failed(message: missingSecretsMessage);
     }
+    var excludeAndroidAuto = false;
+    if (providerContainer != null) {
+      final setting = await providerContainer.read(
+        excludeAndroidAutoProvider.future,
+      );
+      if (setting.value == null && setting.error != null) {
+        return ConnectResult.failed(
+          message:
+              "Could not load the Android Auto VPN setting. Try again in Settings.",
+          logMessage:
+              "Failed to load Android Auto VPN setting before connecting",
+          error: setting.error,
+        );
+      }
+      excludeAndroidAuto = setting.value ?? false;
+    }
     PluginConnectPayload payload = _makePayload(
       instance,
       location,
       trafficMethod,
       privateKey,
+      excludeAndroidAuto: excludeAndroidAuto,
     );
     MfaMethod? authorizedWith;
 
@@ -147,6 +169,7 @@ class TunnelService {
                     retry.location,
                     trafficMethod,
                     privateKey,
+                    excludeAndroidAuto: excludeAndroidAuto,
                   );
                   if (!canReuseMfaAttempt(payload, refreshed)) {
                     talker.warning(
@@ -397,8 +420,9 @@ class TunnelService {
     DefguardInstance instance,
     Location location,
     RoutingMethod trafficMethod,
-    String privateKey,
-  ) {
+    String privateKey, {
+    required bool excludeAndroidAuto,
+  }) {
     // The administrator's instance policy outranks the caller's choice.
     final selectedTrafficMethod = switch (instance.clientTrafficPolicy) {
       ClientTrafficPolicy.disableAllTraffic => RoutingMethod.predefined,
@@ -420,6 +444,7 @@ class TunnelService {
       instanceId: instance.id,
       traffic: selectedTrafficMethod,
       postureCheckRequired: location.postureCheckRequired == true,
+      excludeAndroidAuto: excludeAndroidAuto,
     );
   }
 }

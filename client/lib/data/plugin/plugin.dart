@@ -22,6 +22,7 @@ class PluginConnectPayload {
   final int networkId;
   RoutingMethod traffic;
   final bool postureCheckRequired;
+  final bool excludeAndroidAuto;
 
   PluginConnectPayload({
     required this.publicKey,
@@ -39,6 +40,7 @@ class PluginConnectPayload {
     this.dns,
     this.presharedKey,
     required this.postureCheckRequired,
+    this.excludeAndroidAuto = false,
   });
 
   factory PluginConnectPayload.fromJson(Map<String, dynamic> json) =>

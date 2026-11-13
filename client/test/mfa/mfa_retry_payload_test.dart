@@ -7,6 +7,7 @@ PluginConnectPayload _payload({
   String devicePublicKey = 'device-key',
   int networkId = 7,
   bool postureCheckRequired = false,
+  bool excludeAndroidAuto = false,
   String endpoint = 'old.example:51820',
 }) => PluginConnectPayload(
   publicKey: 'location-key',
@@ -22,9 +23,18 @@ PluginConnectPayload _payload({
   traffic: RoutingMethod.predefined,
   networkId: networkId,
   postureCheckRequired: postureCheckRequired,
+  excludeAndroidAuto: excludeAndroidAuto,
 );
 
 void main() {
+  test('connect payload serializes Android Auto exclusion in snake case', () {
+    expect(
+      _payload(excludeAndroidAuto: true).toJson()['exclude_android_auto'],
+      isTrue,
+    );
+    expect(_payload().toJson()['exclude_android_auto'], isFalse);
+  });
+
   test('a retry reuses the attempt when only tunnel settings changed', () {
     expect(
       TunnelService.canReuseMfaAttempt(
