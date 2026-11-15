@@ -249,6 +249,9 @@ jobs:
     permissions:
       contents: read
     needs: [lint, device-identity-plugin-test]
+    concurrency:
+      group: mobile-e2e
+      queue: max
     timeout-minutes: 90
     steps:
       - name: Checkout
