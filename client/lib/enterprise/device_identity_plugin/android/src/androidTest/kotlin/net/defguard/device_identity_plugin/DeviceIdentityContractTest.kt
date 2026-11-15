@@ -202,7 +202,7 @@ class DeviceIdentityContractTest {
 
     private fun verifier(expectedAppId: AttestationApplicationId, trustAnchors: Set<TrustAnchor>) = Verifier(
         trustAnchorsSource = { trustAnchors },
-        // The contract tests check path and attestation claims without a network revocation lookup.
+        // Skip Google's online revocation list so the tests run without network access.
         revokedSerialsSource = { emptySet() },
         instantSource = { Instant.now() },
         expectedAttestationApplicationId = expectedAppId,
