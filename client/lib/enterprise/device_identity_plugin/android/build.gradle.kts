@@ -12,15 +12,14 @@ buildscript {
     }
 }
 
-val keyAttestationMavenRepo = providers.gradleProperty("keyAttestationMavenRepo").orNull
-
 allprojects {
     repositories {
+        exclusiveContent {
+            forRepository { google() }
+            filter { includeGroup("com.android.keyattestation") }
+        }
         google()
         mavenCentral()
-        if (keyAttestationMavenRepo != null) {
-            maven { url = uri(keyAttestationMavenRepo) }
-        }
     }
 }
 

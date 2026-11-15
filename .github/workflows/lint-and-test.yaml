@@ -258,25 +258,6 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           submodules: recursive
-      - name: Checkout keyattestation verifier
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-        with:
-          repository: android/keyattestation
-          ref: 621149c4ebaeeea844d6f43098687c73c4d370a3
-          path: keyattestation
-      - name: Set up Java 21 for verifier build
-        uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6
-        with:
-          distribution: temurin
-          java-version: "21"
-      - name: Build keyattestation verifier
-        run: |
-          mkdir -p "$RUNNER_TEMP/keyattestation-m2"
-          cd "$GITHUB_WORKSPACE/keyattestation"
-          ./gradlew \
-            -PkeyAttestationReleaseVersion=v0.4 \
-            "-PKeyAttestationMavenRepo=$RUNNER_TEMP/keyattestation-m2" \
-            publishKeyattestationPublicationToLocalDirRepository
       - name: Set up Java 25 for client Gradle
         uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6
         with:
@@ -316,7 +297,6 @@ jobs:
           script: >-
             cd "$GITHUB_WORKSPACE/client/android" && ./gradlew
             --project-cache-dir="$RUNNER_TEMP/gradle-project-cache"
-            "-PkeyAttestationMavenRepo=$RUNNER_TEMP/keyattestation-m2"
             :device_identity_plugin:connectedDebugAndroidTest
       - name: Remove emulator console auth token
         if: always()
