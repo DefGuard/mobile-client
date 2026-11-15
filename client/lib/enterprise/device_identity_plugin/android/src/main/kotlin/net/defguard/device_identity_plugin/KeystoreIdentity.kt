@@ -6,7 +6,6 @@ import android.security.keystore.KeyProperties
 import java.security.InvalidAlgorithmParameterException
 import java.security.KeyPairGenerator
 import java.security.KeyStore
-import java.security.KeyStoreException
 import java.security.MessageDigest
 import java.security.NoSuchAlgorithmException
 import java.security.NoSuchProviderException
@@ -48,12 +47,7 @@ internal object KeystoreIdentity {
         if (alias.isBlank()) {
             throw IdentityFailure(IdentityErrorCode.BACKEND_FAILURE, "Identity alias is required")
         }
-        if (challengeData.isEmpty() || challengeData.size > MAX_IDENTITY_DATA_SIZE) {
-            throw IdentityFailure(
-                IdentityErrorCode.INVALID_CHALLENGE,
-                "Challenge data must be between 1 and $MAX_IDENTITY_DATA_SIZE bytes",
-            )
-        }
+        requireIdentityDataSize(challengeData, "Challenge data")
 
         val attestationChallenge =
             try {
@@ -69,13 +63,10 @@ internal object KeystoreIdentity {
                     "Identity alias already exists",
                 )
             }
-            if (includeDeviceProperties) {
-                try {
-                    generateKeyPair(alias, attestationChallenge, includeDeviceProperties = true)
-                } catch (_: ProviderException) {
-                    generateKeyPair(alias, attestationChallenge, includeDeviceProperties = false)
-                }
-            } else {
+            try {
+                generateKeyPair(alias, attestationChallenge, includeDeviceProperties)
+            } catch (error: ProviderException) {
+                if (!includeDeviceProperties || causes(error).any(::isTransientKeystoreFailure)) throw error
                 generateKeyPair(alias, attestationChallenge, includeDeviceProperties = false)
             }
         } catch (error: Exception) {
@@ -97,12 +88,7 @@ internal object KeystoreIdentity {
     }
 
     fun sign(alias: String, data: ByteArray): ByteArray {
-        if (data.isEmpty() || data.size > MAX_IDENTITY_DATA_SIZE) {
-            throw IdentityFailure(
-                IdentityErrorCode.INVALID_CHALLENGE,
-                "Possession data must be between 1 and $MAX_IDENTITY_DATA_SIZE bytes",
-            )
-        }
+        requireIdentityDataSize(data, "Possession data")
         return try {
             val privateKey =
                 keyStore().getKey(alias, null) as? PrivateKey
@@ -134,7 +120,20 @@ internal object KeystoreIdentity {
         }
     }
 
-    private fun keyStore(): KeyStore = KeyStore.getInstance(KEYSTORE_PROVIDER).apply { load(null) }
+    private fun requireIdentityDataSize(data: ByteArray, label: String) {
+        if (data.isEmpty() || data.size > MAX_IDENTITY_DATA_SIZE) {
+            throw IdentityFailure(
+                IdentityErrorCode.INVALID_CHALLENGE,
+                "$label must be between 1 and $MAX_IDENTITY_DATA_SIZE bytes",
+            )
+        }
+    }
+
+    private fun keyStore(): KeyStore = try {
+        KeyStore.getInstance(KEYSTORE_PROVIDER).apply { load(null) }
+    } catch (error: Exception) {
+        throw IdentityFailure(IdentityErrorCode.UNAVAILABLE, "Android Keystore is unavailable", error)
+    }
 
     private fun generateKeyPair(alias: String, attestationChallenge: ByteArray, includeDeviceProperties: Boolean) {
         val spec =
@@ -156,7 +155,7 @@ internal object KeystoreIdentity {
     private fun failure(error: Exception): IdentityFailure {
         if (error is IdentityFailure) return error
 
-        val causes = generateSequence(error as Throwable?) { it.cause }.toList()
+        val causes = causes(error)
         val code =
             when {
                 causes.any(::isTransientKeystoreFailure) -> {
@@ -171,7 +170,7 @@ internal object KeystoreIdentity {
                     IdentityErrorCode.UNSUPPORTED
                 }
 
-                causes.any { it is NoSuchProviderException || it is KeyStoreException } -> {
+                causes.any { it is NoSuchProviderException } -> {
                     IdentityErrorCode.UNAVAILABLE
                 }
 
@@ -189,6 +188,8 @@ internal object KeystoreIdentity {
             }
         return IdentityFailure(code, message, error)
     }
+
+    private fun causes(error: Throwable): List<Throwable> = generateSequence(error) { it.cause }.toList()
 
     private fun isTransientKeystoreFailure(error: Throwable): Boolean {
         if (

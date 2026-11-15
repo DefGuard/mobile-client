@@ -29,6 +29,7 @@ import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Assume.assumeTrue
 import org.junit.Test
@@ -56,11 +57,8 @@ class DeviceIdentityContractTest {
             )
 
         for (data in invalidData) {
-            try {
+            assertIdentityFailure(IdentityErrorCode.INVALID_CHALLENGE) {
                 KeystoreIdentity.sign(uniqueAlias(), data)
-                throw AssertionError("Signing invalid possession data succeeded")
-            } catch (error: IdentityFailure) {
-                assertEquals(IdentityErrorCode.INVALID_CHALLENGE, error.code)
             }
         }
     }
@@ -72,11 +70,8 @@ class DeviceIdentityContractTest {
 
         try {
             val identity = generateAndVerify(alias, challengeData)
-            try {
+            assertIdentityFailure(IdentityErrorCode.BACKEND_FAILURE) {
                 KeystoreIdentity.generate(alias, challengeData)
-                throw AssertionError("Generating with an existing alias succeeded")
-            } catch (error: IdentityFailure) {
-                assertEquals(IdentityErrorCode.BACKEND_FAILURE, error.code)
             }
 
             val signature = KeystoreIdentity.sign(alias, data)
@@ -119,11 +114,8 @@ class DeviceIdentityContractTest {
             KeystoreIdentity.delete(aliasA)
             assertFalse(KeystoreIdentity.exists(aliasA))
             assertTrue(KeystoreIdentity.exists(aliasB))
-            try {
+            assertIdentityFailure(IdentityErrorCode.IDENTITY_LOST) {
                 KeystoreIdentity.sign(aliasA, data)
-                throw AssertionError("Signing after deletion succeeded")
-            } catch (error: IdentityFailure) {
-                assertEquals(IdentityErrorCode.IDENTITY_LOST, error.code)
             }
         } finally {
             KeystoreIdentity.delete(aliasA)
@@ -157,6 +149,11 @@ class DeviceIdentityContractTest {
         } finally {
             KeystoreIdentity.delete(alias)
         }
+    }
+
+    private fun assertIdentityFailure(expected: IdentityErrorCode, operation: () -> Unit) {
+        val error = assertThrows(IdentityFailure::class.java) { operation() }
+        assertEquals(expected, error.code)
     }
 
     private fun generateAndVerify(alias: String, challenge: ByteArray): VerifiedChain =

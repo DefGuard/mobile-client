@@ -62,14 +62,10 @@ class DeviceIdentityPlugin :
         val alias = readAlias(call, result) ?: return
         val arguments = call.arguments as? Map<*, *>
         val data = arguments?.get("data") as? ByteArray
-        if (
-            data == null ||
-            data.isEmpty() ||
-            data.size > KeystoreIdentity.MAX_IDENTITY_DATA_SIZE
-        ) {
+        if (data == null) {
             result.error(
                 IdentityErrorCode.INVALID_CHALLENGE.name,
-                "Possession data must be between 1 and ${KeystoreIdentity.MAX_IDENTITY_DATA_SIZE} bytes",
+                "Possession data must be a byte array",
                 null,
             )
             return
