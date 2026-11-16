@@ -17,9 +17,12 @@ import com.android.keyattestation.verifier.Verifier
 import com.android.keyattestation.verifier.challengecheckers.ChallengeMatcher
 import com.google.protobuf.ByteString
 import java.math.BigInteger
+import java.security.KeyStoreException
 import java.security.MessageDigest
+import java.security.ProviderException
 import java.security.PublicKey
 import java.security.Signature
+import java.security.cert.Certificate
 import java.security.cert.CertificateFactory
 import java.security.cert.TrustAnchor
 import java.security.cert.X509Certificate
@@ -124,12 +127,42 @@ class DeviceIdentityContractTest {
     }
 
     @Test
-    fun chainGeneratedWithoutDevicePropertiesPassesIndependentVerification() {
+    fun providerFailureWithDevicePropertiesRetriesWithoutThem() {
+        val alias = uniqueAlias()
+        val keys = FailingIdentityKeys(failGeneration = { includeDeviceProperties -> includeDeviceProperties })
+        try {
+            val verified = verifyChain(KeystoreIdentity.generate(alias, challengeData, keys), challengeData)
+            assertEquals(listOf(true, false), keys.generationAttempts)
+            assertNotNull(verified.chain.first().getExtensionValue(ATTESTATION_EXTENSION_OID))
+        } finally {
+            KeystoreIdentity.delete(alias)
+        }
+    }
+
+    @Test
+    fun providerFailureWithoutDevicePropertiesIsReportedAndLeavesNoKey() {
+        val alias = uniqueAlias()
+        val keys = FailingIdentityKeys(failGeneration = { true })
+        try {
+            assertIdentityFailure(IdentityErrorCode.BACKEND_FAILURE) {
+                KeystoreIdentity.generate(alias, challengeData, keys)
+            }
+            assertEquals(listOf(true, false), keys.generationAttempts)
+            assertFalse(KeystoreIdentity.exists(alias))
+        } finally {
+            KeystoreIdentity.delete(alias)
+        }
+    }
+
+    @Test
+    fun failedChainReadDeletesTheNewKeySoTheAliasCanBeRetried() {
         val alias = uniqueAlias()
         try {
-            val chain = KeystoreIdentity.generateWithoutDeviceProperties(alias, challengeData)
-            val verified = verifyChain(chain, challengeData)
-            assertNotNull(verified.chain.first().getExtensionValue(ATTESTATION_EXTENSION_OID))
+            assertIdentityFailure(IdentityErrorCode.BACKEND_FAILURE) {
+                KeystoreIdentity.generate(alias, challengeData, FailingIdentityKeys(failChainRead = true))
+            }
+            assertFalse(KeystoreIdentity.exists(alias))
+            generateAndVerify(alias, challengeData)
         } finally {
             KeystoreIdentity.delete(alias)
         }
@@ -253,6 +286,26 @@ class DeviceIdentityContractTest {
         }
 
     private fun uniqueAlias() = "device-identity-contract-${UUID.randomUUID()}"
+
+    private class FailingIdentityKeys(
+        private val failGeneration: (includeDeviceProperties: Boolean) -> Boolean = { false },
+        private val failChainRead: Boolean = false,
+    ) : IdentityKeys {
+        val generationAttempts = mutableListOf<Boolean>()
+
+        override fun generateKeyPair(alias: String, attestationChallenge: ByteArray, includeDeviceProperties: Boolean) {
+            generationAttempts += includeDeviceProperties
+            if (failGeneration(includeDeviceProperties)) {
+                throw ProviderException("Injected key generation failure")
+            }
+            AndroidIdentityKeys.generateKeyPair(alias, attestationChallenge, includeDeviceProperties)
+        }
+
+        override fun certificateChain(alias: String): Array<Certificate>? {
+            if (failChainRead) throw KeyStoreException("Injected certificate chain failure")
+            return AndroidIdentityKeys.certificateChain(alias)
+        }
+    }
 
     private data class VerifiedChain(
         val chain: List<X509Certificate>,

@@ -33,4 +33,6 @@ adb devices -l
 
 An emulator signs its chains with a software key, not one from Google's hardware attestation roots. The tests first verify against Google's roots. If that fails, they also accept Android's known software roots or the chain's own last certificate as the root, but only when the verifier reports the security level as `SOFTWARE`. That run still checks the certificate signatures, the challenge and the app identity, but not that the key sits in secure hardware. The tests that need hardware, which check for the Trusted Execution Environment (TEE) security level and a Google root, are skipped on an emulator and must pass on a real phone.
 
-The tests do not exercise the retry in `KeystoreIdentity.generate` that drops device properties after a `ProviderException`. `chainGeneratedWithoutDevicePropertiesPassesIndependentVerification` generates a chain without device properties directly.
+## Injected failures
+
+Some failure paths cannot be triggered on demand, so the tests pass `KeystoreIdentity.generate` a wrapper around the real Keystore that fails at a chosen step. They cover the retry without device properties after a `ProviderException`, and the removal of a new key whose certificate chain could not be read, so the same alias can be used again. The rule that a transient Keystore failure is not retried stays untested: a test cannot create the `android.security.KeyStoreException` that Android uses to report it.

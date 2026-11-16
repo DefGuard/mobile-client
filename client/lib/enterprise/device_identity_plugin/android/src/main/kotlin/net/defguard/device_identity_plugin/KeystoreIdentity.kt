@@ -12,6 +12,7 @@ import java.security.NoSuchProviderException
 import java.security.PrivateKey
 import java.security.ProviderException
 import java.security.Signature
+import java.security.cert.Certificate
 import java.security.spec.ECGenParameterSpec
 
 internal enum class IdentityErrorCode {
@@ -32,18 +33,49 @@ internal enum class IdentityErrorCode {
 internal class IdentityFailure(val code: IdentityErrorCode, message: String, cause: Throwable? = null) :
     Exception(message, cause)
 
+private const val KEYSTORE_PROVIDER = "AndroidKeyStore"
+private const val CURVE = "secp256r1"
+
+internal interface IdentityKeys {
+    fun generateKeyPair(alias: String, attestationChallenge: ByteArray, includeDeviceProperties: Boolean)
+
+    fun certificateChain(alias: String): Array<Certificate>?
+}
+
+internal object AndroidIdentityKeys : IdentityKeys {
+    override fun generateKeyPair(alias: String, attestationChallenge: ByteArray, includeDeviceProperties: Boolean) {
+        val spec =
+            KeyGenParameterSpec
+                .Builder(alias, KeyProperties.PURPOSE_SIGN)
+                .setAlgorithmParameterSpec(ECGenParameterSpec(CURVE))
+                .setDigests(KeyProperties.DIGEST_SHA256)
+                .setAttestationChallenge(attestationChallenge)
+        if (includeDeviceProperties) {
+            spec.setDevicePropertiesAttestationIncluded(true)
+        }
+
+        KeyPairGenerator.getInstance(KeyProperties.KEY_ALGORITHM_EC, KEYSTORE_PROVIDER).run {
+            initialize(spec.build())
+            generateKeyPair()
+        }
+    }
+
+    override fun certificateChain(alias: String): Array<Certificate>? = keyStore().getCertificateChain(alias)
+}
+
+private fun keyStore(): KeyStore = try {
+    KeyStore.getInstance(KEYSTORE_PROVIDER).apply { load(null) }
+} catch (error: Exception) {
+    throw IdentityFailure(IdentityErrorCode.UNAVAILABLE, "Android Keystore is unavailable", error)
+}
+
 internal object KeystoreIdentity {
-    private const val KEYSTORE_PROVIDER = "AndroidKeyStore"
-    private const val CURVE = "secp256r1"
     internal const val MAX_IDENTITY_DATA_SIZE = 4 * 1024
 
     fun generate(alias: String, challengeData: ByteArray): List<ByteArray> =
-        generate(alias, challengeData, includeDeviceProperties = true)
+        generate(alias, challengeData, AndroidIdentityKeys)
 
-    internal fun generateWithoutDeviceProperties(alias: String, challengeData: ByteArray): List<ByteArray> =
-        generate(alias, challengeData, includeDeviceProperties = false)
-
-    private fun generate(alias: String, challengeData: ByteArray, includeDeviceProperties: Boolean): List<ByteArray> {
+    internal fun generate(alias: String, challengeData: ByteArray, keys: IdentityKeys): List<ByteArray> {
         if (alias.isBlank()) {
             throw IdentityFailure(IdentityErrorCode.BACKEND_FAILURE, "Identity alias is required")
         }
@@ -64,17 +96,17 @@ internal object KeystoreIdentity {
                 )
             }
             try {
-                generateKeyPair(alias, attestationChallenge, includeDeviceProperties)
+                keys.generateKeyPair(alias, attestationChallenge, includeDeviceProperties = true)
             } catch (error: ProviderException) {
-                if (!includeDeviceProperties || causes(error).any(::isTransientKeystoreFailure)) throw error
-                generateKeyPair(alias, attestationChallenge, includeDeviceProperties = false)
+                if (causes(error).any(::isTransientKeystoreFailure)) throw error
+                keys.generateKeyPair(alias, attestationChallenge, includeDeviceProperties = false)
             }
         } catch (error: Exception) {
             throw failure(error)
         }
 
         return try {
-            val chain = keyStore().getCertificateChain(alias)
+            val chain = keys.certificateChain(alias)
             if (chain.isNullOrEmpty()) {
                 throw IdentityFailure(
                     IdentityErrorCode.UNAVAILABLE,
@@ -83,7 +115,14 @@ internal object KeystoreIdentity {
             }
             chain.map { it.encoded }
         } catch (error: Exception) {
-            throw failure(error)
+            // Without its chain the new key cannot be enrolled, and keeping it would block a retry with this alias.
+            val identityFailure = failure(error)
+            try {
+                keyStore().deleteEntry(alias)
+            } catch (cleanupError: Exception) {
+                identityFailure.addSuppressed(cleanupError)
+            }
+            throw identityFailure
         }
     }
 
@@ -126,29 +165,6 @@ internal object KeystoreIdentity {
                 IdentityErrorCode.INVALID_CHALLENGE,
                 "$label must be between 1 and $MAX_IDENTITY_DATA_SIZE bytes",
             )
-        }
-    }
-
-    private fun keyStore(): KeyStore = try {
-        KeyStore.getInstance(KEYSTORE_PROVIDER).apply { load(null) }
-    } catch (error: Exception) {
-        throw IdentityFailure(IdentityErrorCode.UNAVAILABLE, "Android Keystore is unavailable", error)
-    }
-
-    private fun generateKeyPair(alias: String, attestationChallenge: ByteArray, includeDeviceProperties: Boolean) {
-        val spec =
-            KeyGenParameterSpec
-                .Builder(alias, KeyProperties.PURPOSE_SIGN)
-                .setAlgorithmParameterSpec(ECGenParameterSpec(CURVE))
-                .setDigests(KeyProperties.DIGEST_SHA256)
-                .setAttestationChallenge(attestationChallenge)
-        if (includeDeviceProperties) {
-            spec.setDevicePropertiesAttestationIncluded(true)
-        }
-
-        KeyPairGenerator.getInstance(KeyProperties.KEY_ALGORITHM_EC, KEYSTORE_PROVIDER).run {
-            initialize(spec.build())
-            generateKeyPair()
         }
     }
 
