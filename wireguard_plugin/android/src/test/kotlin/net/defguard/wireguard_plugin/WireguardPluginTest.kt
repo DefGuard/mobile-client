@@ -1,6 +1,7 @@
 package net.defguard.wireguard_plugin
 
 import com.wireguard.config.Interface
+import com.wireguard.crypto.KeyPair
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import kotlinx.serialization.decodeFromString
@@ -19,9 +20,12 @@ import org.mockito.Mockito
  */
 
 internal class WireguardPluginTest {
+  private fun newInterfaceBuilder() =
+    Interface.Builder().parsePrivateKey(KeyPair().privateKey.toBase64())
+
   @Test
   fun enabledAndInstalledAddsAndroidAutoExclusion() {
-    val builder = Mockito.mock(Interface.Builder::class.java)
+    val builder = newInterfaceBuilder()
     var checkedPackage: String? = null
 
     addAndroidAutoExclusionIfInstalled(builder, true) { packageName ->
@@ -30,21 +34,21 @@ internal class WireguardPluginTest {
     }
 
     assertEquals(ANDROID_AUTO_PACKAGE, checkedPackage)
-    Mockito.verify(builder).excludeApplication(ANDROID_AUTO_PACKAGE)
+    assertEquals(setOf(ANDROID_AUTO_PACKAGE), builder.build().excludedApplications)
   }
 
   @Test
   fun enabledAndNotInstalledDoesNotAddExclusion() {
-    val builder = Mockito.mock(Interface.Builder::class.java)
+    val builder = newInterfaceBuilder()
 
     addAndroidAutoExclusionIfInstalled(builder, true) { false }
 
-    Mockito.verify(builder, Mockito.never()).excludeApplication(ANDROID_AUTO_PACKAGE)
+    assertEquals(emptySet<String>(), builder.build().excludedApplications)
   }
 
   @Test
   fun disabledDoesNotCheckOrExcludePackage() {
-    val builder = Mockito.mock(Interface.Builder::class.java)
+    val builder = newInterfaceBuilder()
     var checkedPackage = false
 
     addAndroidAutoExclusionIfInstalled(builder, false) {
@@ -53,7 +57,7 @@ internal class WireguardPluginTest {
     }
 
     assertFalse(checkedPackage)
-    Mockito.verify(builder, Mockito.never()).excludeApplication(ANDROID_AUTO_PACKAGE)
+    assertEquals(emptySet<String>(), builder.build().excludedApplications)
   }
 
   @Test
