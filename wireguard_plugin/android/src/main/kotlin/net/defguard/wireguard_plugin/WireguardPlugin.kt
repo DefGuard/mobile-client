@@ -115,6 +115,7 @@ class WireguardPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
         get() = Globals.futureBackend ?: CompletableDeferred<GoBackend>().also { Globals.futureBackend = it }
 
     override fun onAttachedToEngine(flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
+        context = flutterPluginBinding.applicationContext
         Log.d(LOG_TAG, "Plugin onAttachedToEngine - isInitialized: ${Globals.isInitialized}")
         
         // Always update method channels and event sink for Flutter communication
@@ -146,7 +147,6 @@ class WireguardPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
         if (!Globals.isInitialized) {
             // First time initialization
             Log.d(LOG_TAG, "Performing initial plugin initialization")
-            context = flutterPluginBinding.applicationContext
             scope.launch(Dispatchers.IO) {
                 try {
                     createBackend()
