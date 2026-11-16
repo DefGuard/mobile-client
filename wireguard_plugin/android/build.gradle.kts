@@ -74,6 +74,7 @@ kotlin {
 
 dependencies {
     compileOnly(files("../../lib/tunnel.aar"))
+    testImplementation(files("../../lib/tunnel.aar"))
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")
     testImplementation("org.jetbrains.kotlin:kotlin-test")
     testImplementation("org.mockito:mockito-core:5.0.0")
