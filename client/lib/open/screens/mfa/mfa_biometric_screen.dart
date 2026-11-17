@@ -61,10 +61,12 @@ class MfaBiometricScreen extends HookConsumerWidget {
         hasFailed.value = true;
         return;
       } catch (e) {
+        final reason = getErrorMessageFromBiometricsException(e);
         toaster.showError(
-          message: "Biometric authentication failed.",
-          logMessage:
-              "Biometric MFA failed! Reason: ${getErrorMessageFromBiometricsException(e)}",
+          message: e is MissingBiometricKey
+              ? reason
+              : "Biometric authentication failed.",
+          logMessage: "Biometric MFA failed! Reason: $reason",
           error: e,
         );
         isLoading.value = false;

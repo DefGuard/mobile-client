@@ -5,13 +5,27 @@ import 'package:flutter/services.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:mobile/data/proxy/mfa.dart';
 import 'package:mobile/logging.dart';
+import 'package:mobile/utils/instance_secrets.dart';
 import 'package:mobile/utils/keychain.dart';
 
 class UserCanceledAuth implements Exception {
   const UserCanceledAuth();
 }
 
+/// The biometric MFA key pair is absent from the secure storage, e.g. after
+/// restoring a backup on another device. Only re-enrollment can fix it.
+class MissingBiometricKey implements Exception {
+  const MissingBiometricKey();
+
+  @override
+  String toString() => "Biometric key is not present in the secure storage";
+}
+
 String getErrorMessageFromBiometricsException(Object e) {
+  if (e is MissingBiometricKey) {
+    talker.error("Biometrics check failed: $e");
+    return missingSecretsMessage;
+  }
   if (e is LocalAuthException) {
     talker.error("Biometrics check failed with code: ${e.code}");
     switch (e.code) {
@@ -79,7 +93,7 @@ Future<SecureInstanceStorage> getBiometricInstanceStorage(
     if (storeRawData != null) {
       return SecureInstanceStorage.fromJson(jsonDecode(storeRawData));
     }
-    throw Exception("Instance storage not found");
+    throw const MissingBiometricKey();
   }
   throw UserCanceledAuth();
 }

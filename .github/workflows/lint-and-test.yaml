@@ -14,6 +14,7 @@ on:
       - dev
       - "release/**"
       - "hotfix/**"
+      - "stable/**"
     paths-ignore: &ignored_paths
       - "*.md"
       - "LICENSE"
@@ -24,6 +25,7 @@ on:
       - dev
       - "release/**"
       - "hotfix/**"
+      - "stable/**"
     paths-ignore: *ignored_paths
 
 jobs:

@@ -34,6 +34,10 @@ PluginConnectPayload _$PluginConnectPayloadFromJson(
         'posture_check_required',
         (v) => v as bool,
       ),
+      excludeAndroidAuto: $checkedConvert(
+        'exclude_android_auto',
+        (v) => v as bool? ?? false,
+      ),
     );
     return val;
   },
@@ -48,6 +52,7 @@ PluginConnectPayload _$PluginConnectPayloadFromJson(
     'networkId': 'network_id',
     'presharedKey': 'preshared_key',
     'postureCheckRequired': 'posture_check_required',
+    'excludeAndroidAuto': 'exclude_android_auto',
   },
 );
 
@@ -67,6 +72,7 @@ const _$PluginConnectPayloadFieldMap = <String, String>{
   'networkId': 'network_id',
   'traffic': 'traffic',
   'postureCheckRequired': 'posture_check_required',
+  'excludeAndroidAuto': 'exclude_android_auto',
 };
 
 Map<String, dynamic> _$PluginConnectPayloadToJson(
@@ -87,6 +93,7 @@ Map<String, dynamic> _$PluginConnectPayloadToJson(
   'network_id': instance.networkId,
   'traffic': _$RoutingMethodEnumMap[instance.traffic]!,
   'posture_check_required': instance.postureCheckRequired,
+  'exclude_android_auto': instance.excludeAndroidAuto,
 };
 
 const _$RoutingMethodEnumMap = {

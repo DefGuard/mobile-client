@@ -27,5 +27,6 @@ data class TunnelStartData(
     // context
     val locationName: String,
     val locationId: Int,
-    val instanceId: Int
+    val instanceId: Int,
+    val excludeAndroidAuto: Boolean = false
 )

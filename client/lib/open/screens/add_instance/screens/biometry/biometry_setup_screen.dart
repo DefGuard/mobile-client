@@ -16,6 +16,7 @@ import 'package:mobile/theme/color.dart';
 import 'package:mobile/theme/spacing.dart';
 import 'package:mobile/theme/text.dart';
 import 'package:mobile/utils/secure_storage.dart';
+import 'package:mobile/utils/update_instance.dart';
 
 class BiometrySetupScreen extends StatelessWidget {
   final int instanceId;
@@ -41,6 +42,34 @@ final biometryScreenDataProvider = StreamProvider.family<DefguardInstance, int>(
         .watchSingle();
   },
 );
+
+/// Fetches the config again in the enrollment session, after the biometric key
+/// is registered, so the stored steps report biometric as configured.
+Future<void> refreshConfigAfterBiometry(
+  AppDatabase db,
+  DefguardInstance instance, {
+  ProxyApi? api,
+}) async {
+  try {
+    final networkInfo = await (api ?? proxyApi).networkInfo(
+      Uri.parse(instance.proxyUrl),
+      instance.pubKey,
+    );
+    await updateInstance(
+      db: db,
+      instance: instance,
+      configs: networkInfo.configs,
+      info: networkInfo.instance,
+      token: networkInfo.token,
+    );
+  } catch (e, st) {
+    talker.warning(
+      "Config refresh after biometric setup failed for ${instance.logName}",
+      e,
+      st,
+    );
+  }
+}
 
 class _ScreenContent extends HookConsumerWidget {
   final int instanceId;
@@ -147,6 +176,7 @@ class _ScreenContent extends HookConsumerWidget {
             .getSingle();
         instanceDb = instanceDb.copyWith(mfaKeysStored: true);
         await db.managers.defguardInstances.replace(instanceDb);
+        await refreshConfigAfterBiometry(db, instanceDb);
         isLoading.value = false;
         if (context.mounted) {
           BiometryFinishScreenRoute(id: instanceId.toString()).go(context);
