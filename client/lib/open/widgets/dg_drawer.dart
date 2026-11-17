@@ -1,3 +1,5 @@
+import 'dart:io' show Platform;
+
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
@@ -16,6 +18,8 @@ import 'dg_icon_button.dart';
 import 'icons/dg_icon.dart';
 
 const String _helpUrl = "https://docs.defguard.net/support";
+
+final isAndroidProvider = Provider<bool>((ref) => Platform.isAndroid);
 
 sealed class _DrawerEntry {}
 
@@ -50,6 +54,7 @@ class DgDrawer extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final instancesAsync = ref.watch(allInstancesProvider);
+    final isAndroid = ref.watch(isAndroidProvider);
     final router = GoRouter.of(context);
     final RouteMatch lastMatch =
         router.routerDelegate.currentConfiguration.last;
@@ -67,6 +72,15 @@ class DgDrawer extends HookConsumerWidget {
           route: TalkerScreenRoute(),
         ),
         _DrawerDividerData(),
+        if (isAndroid) ...[
+          _DrawerItemData(
+            label: "Settings",
+            iconLeft: 'settings',
+            iconRight: 'arrow_small',
+            route: const SettingsScreenRoute(),
+          ),
+          _DrawerDividerData(),
+        ],
         _DrawerItemData(
           label: "Help and Support",
           iconLeft: 'question',
@@ -87,7 +101,7 @@ class DgDrawer extends HookConsumerWidget {
         }
         return true;
       }).toList();
-    }, [location, instancesAsync]);
+    }, [location, instancesAsync, isAndroid]);
 
     return Container(
       decoration: const BoxDecoration(gradient: DgColor.gradientPrimary),

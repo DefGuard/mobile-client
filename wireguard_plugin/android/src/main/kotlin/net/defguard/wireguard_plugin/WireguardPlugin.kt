@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.SystemClock
 import com.wireguard.android.backend.GoBackend
 import com.wireguard.android.backend.Tunnel
@@ -44,6 +45,23 @@ const val METHOD_CHANNEL_NAME = "net.defguard.wireguard_plugin/channel"
 const val METHOD_EVENT_NAME = "net.defguard.wireguard_plugin/event"
 const val DEFAULT_ROUTE_IPV4 = "0.0.0.0/0"
 const val DEFAULT_ROUTE_IPV6 = "::/0"
+internal const val ANDROID_AUTO_PACKAGE = "com.google.android.projection.gearhead"
+
+internal fun addAndroidAutoExclusionIfInstalled(
+    interfaceBuilder: Interface.Builder,
+    excludeAndroidAuto: Boolean,
+    isPackageInstalled: (String) -> Boolean,
+) {
+    if (!excludeAndroidAuto) {
+        Log.d(LOG_TAG, "Skipping Android Auto VPN exclusion because it is disabled")
+        return
+    }
+    if (!isPackageInstalled(ANDROID_AUTO_PACKAGE)) {
+        Log.d(LOG_TAG, "Skipping Android Auto VPN exclusion because the package is not installed")
+        return
+    }
+    interfaceBuilder.excludeApplication(ANDROID_AUTO_PACKAGE)
+}
 const val VPN_PERMISSION_REQUEST_CODE = 1001
 const val LOG_TAG = "DG"
 const val HEALTH_CHECK_INTERVAL = 30000L // 30 seconds
@@ -97,6 +115,7 @@ class WireguardPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
         get() = Globals.futureBackend ?: CompletableDeferred<GoBackend>().also { Globals.futureBackend = it }
 
     override fun onAttachedToEngine(flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
+        context = flutterPluginBinding.applicationContext
         Log.d(LOG_TAG, "Plugin onAttachedToEngine - isInitialized: ${Globals.isInitialized}")
         
         // Always update method channels and event sink for Flutter communication
@@ -128,7 +147,6 @@ class WireguardPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
         if (!Globals.isInitialized) {
             // First time initialization
             Log.d(LOG_TAG, "Performing initial plugin initialization")
-            context = flutterPluginBinding.applicationContext
             scope.launch(Dispatchers.IO) {
                 try {
                     createBackend()
@@ -276,6 +294,17 @@ class WireguardPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
 
                 if (!configData.dns.isNullOrBlank()) {
                     interfaceBuilder.parseDnsServers(configData.dns)
+                }
+                addAndroidAutoExclusionIfInstalled(
+                    interfaceBuilder,
+                    configData.excludeAndroidAuto,
+                ) { packageName ->
+                    try {
+                        context.packageManager.getPackageInfo(packageName, 0)
+                        true
+                    } catch (_: PackageManager.NameNotFoundException) {
+                        false
+                    }
                 }
 
                 val iface = interfaceBuilder.build()

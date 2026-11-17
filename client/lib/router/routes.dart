@@ -10,6 +10,7 @@ import 'package:mobile/open/screens/add_instance/screens/name_device_screen.dart
 import 'package:mobile/open/screens/instance/refresh_instance_screen.dart';
 import 'package:mobile/open/screens/instances_list/instances_list_screen.dart';
 import 'package:mobile/open/screens/mfa/remote_mfa_qr_screen.dart';
+import 'package:mobile/open/screens/settings/settings_screen.dart';
 import 'package:mobile/open/screens/splash.dart';
 import 'package:talker_flutter/talker_flutter.dart';
 
@@ -38,6 +39,17 @@ class InstancesListScreenRoute extends GoRouteData
   @override
   Widget build(BuildContext context, GoRouterState state) {
     return const InstancesListScreen();
+  }
+}
+
+@TypedGoRoute<SettingsScreenRoute>(path: '/settings')
+@immutable
+class SettingsScreenRoute extends GoRouteData with $SettingsScreenRoute {
+  const SettingsScreenRoute();
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) {
+    return const SettingsScreen();
   }
 }
 
