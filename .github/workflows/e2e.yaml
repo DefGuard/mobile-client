@@ -5,14 +5,16 @@ on:
   push:
     branches: [main, dev, "stable/**"]
   pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
     branches: [main, dev, "stable/**"]
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.event.pull_request.number || github.run_id }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   e2e-android:
+    if: github.event_name != 'pull_request' || !github.event.pull_request.draft
     runs-on: [self-hosted, macOS, native]
     concurrency:
       group: mobile-e2e
@@ -112,7 +114,7 @@ jobs:
 
   e2e-ios:
     needs: [e2e-android]
-    if: success() || failure()
+    if: (success() || failure()) && (github.event_name != 'pull_request' || !github.event.pull_request.draft)
     runs-on: [self-hosted, macOS, native]
     concurrency:
       group: mobile-e2e
