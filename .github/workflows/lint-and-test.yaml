@@ -3,10 +3,6 @@ name: Run Flutter Lint and Tests
 env:
   IOS_SIMULATOR: "iPhone 18 Pro"
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
-
 on:
   push:
     branches:
@@ -27,6 +23,10 @@ on:
       - "hotfix/**"
       - "stable/**"
     paths-ignore: *ignored_paths
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   lint:
